@@ -1,0 +1,158 @@
+{
+  "method": "canonical",
+  "kwargs": {
+    "prim": {
+      "basis" : [
+        {
+          "coordinate" : [ -0.000000008333, -0.000000016667, 0.000000000000 ],
+          "occupants" : [ "Zr" ]
+        },
+        {
+          "coordinate" : [ 0.666666658333, 0.333333316667, 0.500000000000 ],
+          "occupants" : [ "Zr" ]
+        },
+        {
+          "coordinate" : [ 0.333333325000, 0.666666650000, 0.250000000000 ],
+          "occupants" : [ "Va", "O" ]
+        },
+        {
+          "coordinate" : [ 0.333333325000, 0.666666650000, 0.750000000000 ],
+          "occupants" : [ "Va", "O" ]
+        }
+      ],
+      "coordinate_mode" : "Fractional",
+      "lattice_vectors" : [
+        [ 3.233986856383, 0.000000000000, 0.000000000000 ],
+        [ -1.616993428191, 2.800714773133, 0.000000000000 ],
+        [ 0.000000000000, 0.000000000000, 5.168678340000 ]
+      ],
+      "title" : "ZrO"
+    },
+    "composition_axes": {
+      "a" : [
+        [ 2.000000000000 ],
+        [ 0.000000000000 ],
+        [ 2.000000000000 ]
+      ],
+      "components" : [ "Zr", "Va", "O" ],
+      "independent_compositions" : 1,
+      "mol_formula" : "Zr(2)Va(2-2a)O(2a)",
+      "origin" : [
+        [ 2.000000000000 ],
+        [ 2.000000000000 ],
+        [ 0.000000000000 ]
+      ],
+      "param_formula" : "a(0.5-0.25Va+0.25O)"
+    },
+    "state_generation": {
+      "method": "incremental",
+      "kwargs": {
+        "initial_configuration": {
+          "method": "fixed",
+          "kwargs": {
+            "file": "/path/to/config.json",
+            "transformation_matrix_to_supercell": [
+              [10, 0, 0],
+              [0, 10, 0],
+              [0, 0, 10]
+            ],
+            "dof": null
+          }
+        },
+        "dependent_conditions": ["comp_n"],
+        "initial_conditions" : {
+          "_comp_n" : {
+            "Zr": 2.0,
+            "O": 0.01,
+            "Va": 1.99,
+          },
+          "_comp_n" : [2.0, 0.01, 1.99],
+          "_comp_x" : {
+            "a": 0.005,
+          },
+          "_comp_x" : [0.005],
+          "_comp_n" : "from_initial_configuration",
+          "_comp_x" : "from_initial_configuration",
+          "temperature" : 600.0,
+        },
+        "incremental_conditions" : {
+          "comp_n" : {
+            "Zr": 0.0,
+            "O": 0.01,
+            "Va": -0.01
+          },
+          "temperature" : 0.0
+        },
+        "n_states": 20,
+        "dependent_runs": false
+      }
+    },
+    "formation_energy": {
+      "method": "casm_clexulator",
+      "kwargs": {
+        "clexulator": {
+          "source_file": "basis_sets/bset.formation_energy/ZrO_Clexulator.cc",
+          "compile_options": null,
+          "so_options": null,
+        },
+        "coefficients_file": "formation_energy_eci.json"
+      }
+    },
+    "sampling": {
+      "method": "linear",
+      "kwargs": {
+        "mode": "pass",
+        "parameters": [0, 1],
+        "quantities": [
+          "comp_n",
+          "comp_x",
+          "formation_energy_corr",
+          "formation_energy"
+        ],
+        "sample_trajectory": true
+      }
+    },
+    "completion_check": {
+      "cutoff": {
+        "count": {
+          "min": null,
+          "max": null
+        },
+        "min_count": null,
+        "max_count": null,
+        "min_time": null,
+        "max_time": null,
+        "min_sample": null,
+        "max_sample": null
+      },
+      "convergence": [
+        {
+          "quantity": "formation_energy",
+          "component_index": [0],
+          "confidence": 0.95,
+          "precision": 0.001
+        },
+        {
+          "quantity": "formation_energy_corr",
+          "confidence": 0.95,
+          "precision": 0.01
+        },
+        {
+          "quantity": "comp_n",
+          "component_name": ["O"],
+          "confidence": 0.95,
+          "precision": 0.001
+        }
+      ],
+      "begin": 0,
+      "frequency": 1
+    },
+    "results": {
+      "method": "json",
+      "kwargs": {
+        "output_dir": null,
+        "write_observations": true
+      }
+    }
+  }
+}
