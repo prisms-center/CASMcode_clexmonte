@@ -15,13 +15,16 @@ namespace CASM {
 namespace clexmonte {
 namespace canonical {
 
+/// \brief Run canonical Monte Carlo calculations
 void run(std::shared_ptr<system_type> const &system_data,
          state_generator_type &state_generator,
+         monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
          monte::SamplingParams const &sampling_params,
          monte::CompletionCheckParams const &completion_check_params,
          monte::ResultsIO<config_type> &results_io,
-         MTRand random_number_generator) {
-  // Final states are used by the state generator to determine the next state
+         MTRand &random_number_generator) {
+  // Final states are made available to the state generator which can use them
+  // to determine the next state
   std::vector<state_type> final_states;
 
   // Enable restarts: Check for a partically completed path
@@ -32,21 +35,16 @@ void run(std::shared_ptr<system_type> const &system_data,
     // Get initial state for the next calculation
     state_type initial_state = state_generator.next_state(final_states);
 
-    // Get supercell of initial state
-    Eigen::Matrix3l const &transformation_matrix_to_super =
-        get_transformation_matrix_to_super(initial_state.configuration);
-
     // Make supercell-specific formation energy clex calculator
     clexulator::ClusterExpansion &formation_energy_clex_calculator =
         get_formation_energy_clex(*system_data, initial_state);
 
-    // Make state sampling functions, with current supercell-specific info
-    monte::StateSamplingFunctionMap<config_type> sampling_functions =
-        make_sampling_functions(system_data);
+    // Prepare supercell-specific index conversions
+    monte::Conversions convert{
+        *get_shared_prim(*system_data),
+        get_transformation_matrix_to_super(initial_state.configuration)};
 
-    // Prepare allowed occupation swaps
-    monte::Conversions convert{*get_shared_prim(*system_data),
-                               transformation_matrix_to_super};
+    // Prepare list of allowed swaps
     monte::OccCandidateList occ_candidate_list{convert};
     std::vector<monte::OccSwap> canonical_swaps =
         make_canonical_swaps(convert, occ_candidate_list);

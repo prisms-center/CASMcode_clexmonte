@@ -1,9 +1,14 @@
-#include "casm/clexmonte/io/json/StateGenerator_json_io.hh"
+#include "casm/clexmonte/canonical/io/json/StateGenerator_json_io.hh"
 
+#include "casm/casm_io/container/json_io.hh"
+#include "casm/clexmonte/canonical/io/json/Conditions_json_io.hh"
+#include "casm/clexmonte/canonical/io/json/ConfigGenerator_json_io.hh"
 #include "casm/clexmonte/clex/Configuration.hh"
 #include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
+#include "casm/clexmonte/system/OccSystem.hh"
 #include "casm/monte/state/IncrementalConditionsStateGenerator.hh"
 #include "casm/monte/state/StateGenerator.hh"
+#include "casm/monte/state/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -36,10 +41,10 @@ void parse(
     std::shared_ptr<system_type> const &system_data,
     monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
     canonical_tag tag) {
-  PolymorphicParserFactory<config_generator_type> f;
+  PolymorphicParserFactory<state_generator_type> f;
   parse_polymorphic_method(
       parser, {f.make<incremental_state_generator_type>(
-                  "incremental", system_data, sampling_functions)});
+                  "incremental", system_data, sampling_functions, tag)});
 }
 
 /// \brief Construct IncrementalConditionsStateGenerator from JSON
@@ -165,28 +170,40 @@ void parse(
     InputParser<incremental_state_generator_type> &parser,
     std::shared_ptr<system_type> const &system_data,
     monte::StateSamplingFunctionMap<config_type> const &sampling_functions) {
+  /// Helps select otherwise overloaded `parse` methods
+  canonical_tag tag;
+
   /// Parse "initial_configuration"
-  auto config_generator_subparser =
-      parser.subparse<config_generator_type>("initial_configuration");
+  auto config_generator_subparser = parser.subparse<config_generator_type>(
+      "initial_configuration", system_data, tag);
 
   /// Parse "initial_conditions"
-  VectorValueMap default_conditions;  /// default is empty conditions
-  auto initial_conditions_subparser = parser.subparse_with_else<VectorValueMap>(
-      parse_canonical_conditions, "initial_conditions", default_conditions,
-      composition_converter);
+  auto initial_conditions_subparser =
+      parser.subparse_with<monte::VectorValueMap>(
+          canonical::parse_conditions, "initial_conditions",
+          get_composition_converter(*system_data), tag);
 
   /// Parse "conditions_increment"
   auto conditions_increment_subparser =
-      parser.subparse_with_else<VectorValueMap>(
-          parse_canonical_conditions, "conditions_increment",
-          default_conditions, composition_converter);
+      parser.subparse_with<monte::VectorValueMap>(
+          canonical::parse_conditions_increment, "conditions_increment",
+          get_composition_converter(*system_data), tag);
 
   /// Parse "dependent_conditions"
   std::vector<std::string> dependent_conditions_names;
   parser.optional(dependent_conditions_names, "dependent_conditions");
   monte::StateSamplingFunctionMap<config_type> dependent_conditions;
   for (auto const &name : dependent_conditions_names) {
-    dependent_conditions.emplace(name, sampling_functions.at(name));
+    auto it = sampling_functions.find(name);
+    if (it == sampling_functions.end()) {
+      std::stringstream msg;
+      msg << "Error in \"dependent_conditions\": Not a valid sampling function "
+             "name: \""
+          << name << "\"";
+      parser.insert_error("dependent_conditions", msg.str());
+      continue;
+    }
+    dependent_conditions.emplace(*it);
   }
 
   /// Parse "n_states"
@@ -198,8 +215,8 @@ void parse(
   parser.optional(dependent_runs, "dependent_runs");
 
   if (parser.valid()) {
-    parser.value = std::make_unique<standard::incremental_state_generator_type>(
-        *config_generator_subparser->value,
+    parser.value = std::make_unique<incremental_state_generator_type>(
+        std::move(config_generator_subparser->value),
         *initial_conditions_subparser->value,
         *conditions_increment_subparser->value, n_states, dependent_runs,
         dependent_conditions);

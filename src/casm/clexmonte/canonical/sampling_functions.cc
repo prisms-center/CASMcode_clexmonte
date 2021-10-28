@@ -14,9 +14,10 @@ namespace canonical {
 ///     sampling functions to access the cluster expansion and composition
 ///     axes. The lifetime of the object it references must be
 ///     greater than the sampling functions that use the reference.
+/// \param tag Overload disambiguator
 ///
 monte::StateSamplingFunctionMap<Configuration> make_sampling_functions(
-    std::shared_ptr<system_type> const &system_data) {
+    std::shared_ptr<system_type> const &system_data, canonical_tag tag) {
   std::vector<monte::StateSamplingFunction<Configuration>> functions = {
       make_temperature_f(system_data), make_comp_n_f(system_data),
       make_comp_x_f(system_data), make_formation_energy_corr_f(system_data),

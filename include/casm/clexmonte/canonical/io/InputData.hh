@@ -19,12 +19,14 @@ namespace canonical {
 ///     Carlo input file
 struct InputData {
   /// \brief Constructor
-  InputData(std::shared_ptr<system_type> _system_data,
-            std::unique_ptr<state_generator_type> _state_generator,
-            monte::SamplingParams _sampling_params,
-            monte::CompletionCheckParams _completion_check_params,
-            std::unique_ptr<results_io_type> _results_io,
-            MTRand _random_number_generator);
+  InputData(
+      std::shared_ptr<system_type> _system_data,
+      std::unique_ptr<state_generator_type> _state_generator,
+      monte::StateSamplingFunctionMap<config_type> const &_sampling_functions,
+      monte::SamplingParams _sampling_params,
+      monte::CompletionCheckParams _completion_check_params,
+      std::unique_ptr<results_io_type> _results_io,
+      MTRand _random_number_generator);
 
   /// System information:
   /// - prim
@@ -34,6 +36,9 @@ struct InputData {
 
   /// State generator implementation
   std::unique_ptr<state_generator_type> state_generator;
+
+  /// State sampling functions
+  monte::StateSamplingFunctionMap<config_type> sampling_functions;
 
   /// Sampling parameters
   monte::SamplingParams sampling_params;

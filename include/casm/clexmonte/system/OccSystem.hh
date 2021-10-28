@@ -2,6 +2,7 @@
 #define CASM_clexmonte_system_OccSystem
 
 #include "casm/clexmonte/clex/ClexData.hh"
+#include "casm/clexmonte/misc/Matrix3lCompare.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/NeighborList.hh"
 #include "casm/composition/CompositionCalculator.hh"
@@ -63,7 +64,8 @@ struct OccSystem {
   /// transformation_matrix_to_super as key). Contains:
   /// -  clexulator::SuperNeighborList,
   /// -  clexulator::ClusterExpansion
-  std::map<Eigen::Matrix3l, OccSystemSupercellData> supercell_data;
+  std::map<Eigen::Matrix3l, OccSystemSupercellData, Matrix3lCompare>
+      supercell_data;
 };
 
 /// \brief Data structure for holding supercell-specific Monte Carlo calculation
@@ -84,6 +86,12 @@ struct OccSystemSupercellData {
   /// -  clexulator::SparseCoefficients
   clexulator::ClusterExpansion formation_energy_clex;
 };
+
+// ---
+// The following are used to construct a common interface between "System"
+// data, in this case OccSystem, and templated CASM::clexmonte methods such as
+// sampling function factory methods
+// ---
 
 /// \brief Helper to get std::shared_ptr<xtal::BasicStructure const>
 std::shared_ptr<xtal::BasicStructure const> const &get_shared_prim(
@@ -110,16 +118,6 @@ Configuration from_standard_values(
 /// \brief Convert configuration from prim basis to standard basis
 Configuration to_standard_values(
     OccSystem const &data, Configuration const &configuration_in_prim_basis);
-
-/// \brief Helper to get OccSystemSupercellData,
-///     constructing as necessary
-OccSystemSupercellData &get_supercell_data(
-    OccSystem &data, Eigen::Matrix3l const &transformation_matrix_to_super);
-
-/// \brief Helper to get OccSystemSupercellData,
-///     constructing as necessary
-OccSystemSupercellData &get_supercell_data(
-    OccSystem &data, monte::State<Configuration> const &state);
 
 /// \brief Helper to get the ClexData for formation energy
 ClexData &get_formation_energy_clex_data(OccSystem &data);

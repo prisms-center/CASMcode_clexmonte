@@ -1,8 +1,9 @@
-#include "casm/clexmonte/io/json/Configuration_json_io.hh"
+#include "casm/clexmonte/clex/io/json/Configuration_json_io.hh"
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/Configuration.hh"
+#include "casm/clexmonte/clex/Configuration.hh"
+#include "casm/clexulator/io/json/ConfigDoFValues_json_io.hh"
 
 namespace CASM {
 
@@ -14,8 +15,9 @@ namespace CASM {
 jsonParser &to_json(clexmonte::Configuration const &configuration,
                     jsonParser &json) {
   json["transformation_matrix_to_supercell"] =
-      configuration.transformation_matrix_to_super();
+      get_transformation_matrix_to_super(configuration);
   json["dof"] = configuration.dof_values;
+  return json;
 }
 
 /// \brief Read clexmonte::Configuration from JSON
@@ -40,7 +42,7 @@ clexmonte::Configuration from_json<clexmonte::Configuration>(
       "Error reading clexmonte::Configuration from JSON input"};
   report_and_throw_if_invalid(parser, log, error_if_invalid);
 
-  return Configuration(T, dof_values);
+  return clexmonte::Configuration(T, dof_values);
 }
 
 /// \brief Read clexmonte::Configuration from JSON
@@ -51,7 +53,7 @@ clexmonte::Configuration from_json<clexmonte::Configuration>(
 /// - This does not check the validity of the DoF values dimensions
 void from_json(clexmonte::Configuration &configuration,
                jsonParser const &json) {
-  f = from_json<clexmonte::Configuration>(json);
+  configuration = from_json<clexmonte::Configuration>(json);
 }
 
 }  // namespace CASM

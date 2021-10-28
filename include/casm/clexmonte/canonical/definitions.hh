@@ -4,57 +4,26 @@
 #include <map>
 #include <string>
 
+#include "casm/monte/definitions.hh"
+
 class MTRand;
 
 namespace CASM {
 
-namespace monte {
-
-struct CompletionCheckParams;
-struct SamplingParams;
-
-template <typename _ConfigType, typename _RunInfoType>
-class ConfigGenerator;
-template <typename _ConfigType>
-class FixedConfigGenerator;
-
-template <typename _ConfigType>
-struct Results;
-
-template <typename _ConfigType>
-class ResultsIO;
-
-template <typename _ConfigType>
-struct State;
-
-template <typename _ConfigType, typename _RunInfoType>
-class StateGenerator;
-template <typename _ConfigType>
-class IncrementalConditionsStateGenerator;
-
-template <typename _ConfigType>
-class StateSampler;
-
-template <typename _ConfigType>
-struct StateSamplingFunction;
-
-template <typename _ConfigType>
-using StateSamplingFunctionMap =
-    std::map<std::string, StateSamplingFunction<_ConfigType>>;
-
-}  // namespace monte
+namespace composition {
+class CompositionCalculator;
+class CompositionConverter;
+}  // namespace composition
 
 namespace clexmonte {
-
 struct Configuration;
-
 struct OccSystem;
-
 }  // namespace clexmonte
 
 namespace clexmonte {
 namespace canonical {
 
+/// \brief Empty data structure helps with function overload selection
 struct canonical_tag {};
 
 typedef OccSystem system_type;

@@ -16,16 +16,17 @@ void parse(InputParser<OccSystem> &parser) {
       parser.require<xtal::BasicStructure>("prim", TOL);
 
   // 2) Read composition axes
-  std::unique_ptr<composition::CompositionConverter> comp_axes =
+  std::unique_ptr<composition::CompositionConverter> composition_axes =
       parser.require<composition::CompositionConverter>("composition_axes");
 
   // 3) Construct formation energy clexulator and coefficients
-  std::unique_ptr<ClexData> formation_energy_clex_data =
-      parser.require<ClexData>("formation_energy");
+  auto formation_energy_clex_data_subparser =
+      parser.subparse<ClexData>("formation_energy");
 
   if (parser.valid()) {
-    parser.value = std::make_unique<OccSystem>(shared_prim, *composition_axes,
-                                               *formation_energy_clex_data);
+    parser.value = std::make_unique<OccSystem>(
+        shared_prim, *composition_axes,
+        *formation_energy_clex_data_subparser->value);
   }
 }
 

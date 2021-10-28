@@ -9,7 +9,7 @@ namespace canonical {
 
 /// \brief Construct ConfigGenerator from JSON
 void parse(InputParser<config_generator_type> &parser,
-           std::shared_ptr<system_type> const &system_data);
+           std::shared_ptr<system_type> const &system_data, canonical_tag tag);
 
 }  // namespace canonical
 }  // namespace clexmonte

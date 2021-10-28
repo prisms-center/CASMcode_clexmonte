@@ -12,6 +12,18 @@
 namespace CASM {
 namespace clexmonte {
 
+// ---
+// These methods are used to construct sampling functions. They are templated
+// so that they can be reused. The definition documentation should
+// state interface requirements for the methods to be applicable and usable in
+// a particular context.
+//
+// Example requirements are:
+// - that a conditions `monte::VectorValueMap` contains "temperature"
+// - that the method `ClexData &get_formation_energy_clex_data(SystemType &)`
+//   exists for template type `SystemType` (i.e. when SystemType=OccSystem).
+// ---
+
 /// \brief Make temperature sampling function ("temperature")
 template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_temperature_f(
@@ -114,7 +126,7 @@ monte::StateSamplingFunction<Configuration> make_comp_x_f(
 ///
 /// Requires:
 /// - `ClexData &get_formation_energy_clex_data(SystemType &)`
-/// - `Clex &get_formation_energy_clex(SystemType &)`
+/// - `clexulator::ClusterExpansion &get_formation_energy_clex(SystemType &)`
 template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
     std::shared_ptr<SystemType> const &system_data) {
@@ -139,7 +151,7 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
 ///
 /// Requires:
 /// - `ClexData &get_formation_energy_clex_data(SystemType &)`
-/// - `Clex &get_formation_energy_clex(SystemType &)`
+/// - `clexulator::ClusterExpansion &get_formation_energy_clex(SystemType &)`
 template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_formation_energy_f(
     std::shared_ptr<SystemType> const &system_data) {

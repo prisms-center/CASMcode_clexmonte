@@ -63,7 +63,7 @@ void parse(InputParser<InputData> &parser) {
 
   // Make state sampling functions, with current supercell-specific info
   monte::StateSamplingFunctionMap<config_type> sampling_functions =
-      make_sampling_functions(system_data);
+      make_sampling_functions(system_data, canonical_tag());
 
   // Construct state generator
   auto state_generator_subparser = parser.subparse<state_generator_type>(
@@ -87,6 +87,7 @@ void parse(InputParser<InputData> &parser) {
   if (!parser.valid()) {
     parser.value = std::make_unique<InputData>(
         system_data, std::move(state_generator_subparser->value),
+        sampling_functions,
         monte::SamplingParams(),         // *sampling_params,
         monte::CompletionCheckParams(),  // *completion_check_params,
         std::make_unique<monte::jsonResultsIO<
