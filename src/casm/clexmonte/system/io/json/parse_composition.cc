@@ -20,6 +20,9 @@ namespace {
 ///   ...
 /// }
 /// \endcode
+///
+/// Requires:
+/// - size of "comp_n" matches composition_converter
 void parse_comp_n_array(
     InputParser<Eigen::VectorXd> &parser,
     composition::CompositionConverter const &composition_converter) {
@@ -274,8 +277,8 @@ void parse_composition_as_provided(
 /// \param parser JSON InputParser. If successfully parsed, `parser->value` will
 ///     contain an `Eigen::VectorXd` represent comp_x or comp_x increment.
 /// \param composition_converter Composition axes and conversions
-/// \param is_increment If true, parse input as comp_x increment. Otherwise,
-///     parse as comp_x.
+/// \param is_increment If true, parse input as comp_n increment. Otherwise,
+///     parse as comp_n.
 ///
 /// Expected JSON format:
 ///

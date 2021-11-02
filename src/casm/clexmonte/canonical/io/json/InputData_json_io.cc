@@ -4,11 +4,13 @@
 #include "casm/clexmonte/canonical/io/InputData.hh"
 #include "casm/clexmonte/canonical/io/json/StateGenerator_json_io.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
+#include "casm/clexmonte/results/io/json/ResultsIO_json_io_impl.hh"
 #include "casm/clexmonte/system/OccSystem.hh"
 #include "casm/clexmonte/system/io/json/OccSystem_json_io.hh"
 #include "casm/composition/io/json/CompositionConverter_json_io.hh"
 #include "casm/crystallography/io/BasicStructureIO.hh"
-#include "casm/monte/results/io/json/jsonResultsIO.hh"
+#include "casm/monte/checks/io/json/CompletionCheck_json_io.hh"
+#include "casm/monte/sampling/io/json/SamplingParams_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -69,17 +71,18 @@ void parse(InputParser<InputData> &parser) {
   auto state_generator_subparser = parser.subparse<state_generator_type>(
       "state_generation", system_data, sampling_functions, canonical_tag());
 
-  // // Read sampling params
-  // std::unique_ptr<monte::SamplingParams> sampling_params =
-  //     parser.require<monte::SamplingParams>("sampling");
+  // Read sampling params
+  auto sampling_params_subparser =
+      parser.subparse<monte::SamplingParams>("sampling");
 
-  // // Read completion check params
-  // std::unique_ptr<monte::CompletionCheckParams> completion_check_params =
-  //     parser.require<monte::CompletionCheckParams>("completion_check");
+  // Read completion check params
+  auto completion_check_params_subparser =
+      parser.subparse<monte::CompletionCheckParams>("completion_check",
+                                                    sampling_functions);
 
-  // // Construct results I/O instance
-  // auto results_io_subparser =
-  //     parser.subparse<ResultsIO>("results_io");
+  // Construct results I/O instance
+  auto results_io_subparser =
+      parser.subparse<results_io_type>("results_io", sampling_functions);
 
   // Construct random number generator
   MTRand random_number_generator;
@@ -87,12 +90,9 @@ void parse(InputParser<InputData> &parser) {
   if (!parser.valid()) {
     parser.value = std::make_unique<InputData>(
         system_data, std::move(state_generator_subparser->value),
-        sampling_functions,
-        monte::SamplingParams(),         // *sampling_params,
-        monte::CompletionCheckParams(),  // *completion_check_params,
-        std::make_unique<monte::jsonResultsIO<
-            config_type>>(),  // std::move(results_io_subparser->value),
-        random_number_generator);
+        sampling_functions, *sampling_params_subparser->value,
+        *completion_check_params_subparser->value,
+        std::move(results_io_subparser->value), random_number_generator);
   }
 }
 

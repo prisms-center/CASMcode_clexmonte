@@ -60,13 +60,7 @@ void run(std::shared_ptr<system_type> const &system_data,
 
     // Write results for this condition
     Index run_index = final_states.size();
-    results_io.write_initial_state(result.trajectory.front(), run_index);
-    results_io.write_final_state(result.trajectory.back(), run_index);
-    results_io.write_trajectory(result.trajectory, run_index);
-    results_io.write_observations(result.sampled_data, run_index);
-    results_io.write_completion_check_results(result.completion_check_results,
-                                              run_index);
-    results_io.write_summary(result.completion_check_results, run_index);
+    results_io.write(result, run_index);
   }
 }
 
