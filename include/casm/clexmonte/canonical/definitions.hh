@@ -45,7 +45,10 @@ typedef std::map<std::string, monte::StateSampler<config_type>>
     samplers_map_type;
 
 typedef monte::Results<config_type> results_type;
+
+// generic ResultsIO, and supported implementations
 typedef monte::ResultsIO<config_type> results_io_type;
+typedef monte::jsonResultsIO<config_type> json_results_io_type;
 
 }  // namespace canonical
 }  // namespace clexmonte

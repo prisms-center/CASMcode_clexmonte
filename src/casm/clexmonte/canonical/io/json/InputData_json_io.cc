@@ -4,11 +4,13 @@
 #include "casm/clexmonte/canonical/io/InputData.hh"
 #include "casm/clexmonte/canonical/io/json/StateGenerator_json_io.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
+#include "casm/clexmonte/results/io/json/ResultsIO_json_io_impl.hh"
 #include "casm/clexmonte/system/OccSystem.hh"
 #include "casm/clexmonte/system/io/json/OccSystem_json_io.hh"
 #include "casm/composition/io/json/CompositionConverter_json_io.hh"
 #include "casm/crystallography/io/BasicStructureIO.hh"
-#include "casm/monte/results/io/json/jsonResultsIO.hh"
+#include "casm/monte/checks/io/json/CompletionCheck_json_io.hh"
+#include "casm/monte/sampling/io/json/SamplingParams_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -50,50 +52,69 @@ namespace canonical {
 ///   }
 /// }
 void parse(InputParser<InputData> &parser) {
+  std::cout << "begin parse canonical::InputData" << std::endl;
+
   // Parse canonical MC calculation data. Includes input:
   // - "prim"
   // - "composition_axes"
   // - "formation_energy"
+  std::cout << "parse canonical::InputData 1" << std::endl;
   auto system_data_subparser = parser.subparse<system_type>("system");
   if (!system_data_subparser->valid()) {
     return;
   }
+  std::cout << "parse canonical::InputData 2" << std::endl;
   std::shared_ptr<system_type> system_data =
       std::move(system_data_subparser->value);
 
   // Make state sampling functions, with current supercell-specific info
+  std::cout << "parse canonical::InputData 3" << std::endl;
   monte::StateSamplingFunctionMap<config_type> sampling_functions =
       make_sampling_functions(system_data, canonical_tag());
 
   // Construct state generator
+  std::cout << "parse canonical::InputData 4" << std::endl;
   auto state_generator_subparser = parser.subparse<state_generator_type>(
       "state_generation", system_data, sampling_functions, canonical_tag());
 
-  // // Read sampling params
-  // std::unique_ptr<monte::SamplingParams> sampling_params =
-  //     parser.require<monte::SamplingParams>("sampling");
+  // Read sampling params
+  std::cout << "parse canonical::InputData 5" << std::endl;
+  std::set<std::string> sampling_function_names;
+  for (auto const &element : sampling_functions) {
+    sampling_function_names.insert(element.first);
+  }
+  bool time_sampling_allowed = false;
+  auto sampling_params_subparser = parser.subparse<monte::SamplingParams>(
+      "sampling", sampling_function_names, time_sampling_allowed);
 
-  // // Read completion check params
-  // std::unique_ptr<monte::CompletionCheckParams> completion_check_params =
-  //     parser.require<monte::CompletionCheckParams>("completion_check");
+  // Read completion check params
+  std::cout << "parse canonical::InputData 6" << std::endl;
+  auto completion_check_params_subparser =
+      parser.subparse<monte::CompletionCheckParams>("completion_check",
+                                                    sampling_functions);
 
-  // // Construct results I/O instance
-  // auto results_io_subparser =
-  //     parser.subparse<ResultsIO>("results_io");
+  // Construct results I/O instance
+  std::cout << "parse canonical::InputData 7" << std::endl;
+  auto results_io_subparser =
+      parser.subparse<results_io_type>("results_io", sampling_functions);
 
   // Construct random number generator
+  std::cout << "parse canonical::InputData 8" << std::endl;
   MTRand random_number_generator;
 
-  if (!parser.valid()) {
+  std::cout << "parse canonical::InputData 9" << std::endl;
+  std::cout << "state_generator: "
+            << (state_generator_subparser->value != nullptr) << std::endl;
+  std::cout << "results_io: " << (results_io_subparser->value != nullptr)
+            << std::endl;
+  if (parser.valid()) {
     parser.value = std::make_unique<InputData>(
         system_data, std::move(state_generator_subparser->value),
-        sampling_functions,
-        monte::SamplingParams(),         // *sampling_params,
-        monte::CompletionCheckParams(),  // *completion_check_params,
-        std::make_unique<monte::jsonResultsIO<
-            config_type>>(),  // std::move(results_io_subparser->value),
-        random_number_generator);
+        sampling_functions, *sampling_params_subparser->value,
+        *completion_check_params_subparser->value,
+        std::move(results_io_subparser->value), random_number_generator);
   }
+  std::cout << "finish parse canonical::InputData" << std::endl;
 }
 
 }  // namespace canonical

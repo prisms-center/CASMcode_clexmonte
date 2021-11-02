@@ -34,9 +34,16 @@ inline Eigen::VectorXi const &get_occupation(
   return configuration.dof_values.occupation;
 }
 
+/// \brief Set calculator so it evaluates using `configuration`
 inline void set(clexulator::ClusterExpansion &calculator,
                 Configuration const &configuration) {
   calculator.set(&configuration.dof_values);
+}
+
+/// \brief Set calculator so it evaluates using `state`
+inline void set(clexulator::ClusterExpansion &calculator,
+                monte::State<Configuration> const &state) {
+  set(calculator, state.configuration);
 }
 
 }  // namespace clexmonte

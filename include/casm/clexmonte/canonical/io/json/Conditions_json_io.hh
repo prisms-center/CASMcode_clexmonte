@@ -8,16 +8,14 @@ namespace clexmonte {
 namespace canonical {
 
 /// \brief Construct conditions (monte::VectorValueMap) from JSON
-void parse_conditions(
-    InputParser<monte::VectorValueMap> &parser,
-    composition::CompositionConverter const &composition_converter,
-    canonical_tag tag);
+void parse_conditions(InputParser<monte::VectorValueMap> &parser,
+                      std::shared_ptr<system_type> const &system_data,
+                      canonical_tag tag);
 
 /// \brief Construct conditions increment (monte::VectorValueMap) from JSON
-void parse_conditions_increment(
-    InputParser<monte::VectorValueMap> &parser,
-    composition::CompositionConverter const &composition_converter,
-    canonical_tag tag);
+void parse_conditions_increment(InputParser<monte::VectorValueMap> &parser,
+                                std::shared_ptr<system_type> const &system_data,
+                                canonical_tag tag);
 
 }  // namespace canonical
 }  // namespace clexmonte

@@ -9,6 +9,9 @@
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/monte/state/StateSampler.hh"
 
+// debugging
+#include "casm/casm_io/container/stream_io.hh"
+
 namespace CASM {
 namespace clexmonte {
 
@@ -62,7 +65,7 @@ monte::StateSamplingFunction<Configuration> make_temperature_f(
   return monte::StateSamplingFunction<Configuration>(
       "temperature", "Temperature (K)",
       1,  // number of components in "temperature",
-      [=](monte::State<Configuration> const &state) {
+      [](monte::State<Configuration> const &state) {
         return state.conditions.at("temperature");
       });
 }
@@ -80,7 +83,7 @@ monte::StateSamplingFunction<Configuration> make_comp_n_f(
   return monte::StateSamplingFunction<Configuration>(
       "comp_n", "Number of each component (normalized per primitive cell)",
       get_composition_converter(*system_data).components(),  // component names
-      [&](monte::State<Configuration> const &state) {
+      [system_data](monte::State<Configuration> const &state) {
         Eigen::VectorXi const &occupation = get_occupation(state.configuration);
         return get_composition_calculator(*system_data)
             .mean_num_each_component(occupation);
@@ -108,7 +111,7 @@ monte::StateSamplingFunction<Configuration> make_comp_x_f(
   return monte::StateSamplingFunction<Configuration>(
       "comp_x", "Parametric composition",
       comp_x_components,  // component names
-      [&](monte::State<Configuration> const &state) {
+      [system_data](monte::State<Configuration> const &state) {
         composition::CompositionCalculator const &composition_calculator =
             get_composition_calculator(*system_data);
         composition::CompositionConverter const &composition_converter =
@@ -139,7 +142,7 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
       "formation_energy_corr",
       "Formation energy basis set correlations (normalized per primitive cell)",
       corr_size,  // number of components in "corr"
-      [&](monte::State<Configuration> const &state) {
+      [system_data](monte::State<Configuration> const &state) {
         clexulator::Correlations &correlations =
             get_formation_energy_clex(*system_data, state).correlations();
         auto const &extensive_corr = correlations.extensive();
@@ -159,7 +162,7 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_f(
       "formation_energy",
       "Formation energy of the configuration (normalized per primitive cell)",
       1,  // number of components in "formation_energy"
-      [&](monte::State<Configuration> const &state) {
+      [system_data](monte::State<Configuration> const &state) {
         Eigen::VectorXd value(1);
         value(1) =
             get_formation_energy_clex(*system_data, state).intensive_value();

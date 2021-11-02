@@ -14,17 +14,6 @@ void parse(
     monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
     canonical_tag tag);
 
-/// \brief Construct IncrementalConditionsStateGenerator from JSON
-void parse(
-    InputParser<incremental_state_generator_type> &parser,
-    std::shared_ptr<system_type> const &system_data,
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
-    canonical_tag tag);
-
-/// \brief Construct conditions (monte::VectorValueMap) from JSON
-void parse(InputParser<monte::VectorValueMap> &parser,
-           std::shared_ptr<system_type> const &system_data, canonical_tag tag);
-
 }  // namespace canonical
 }  // namespace clexmonte
 }  // namespace CASM

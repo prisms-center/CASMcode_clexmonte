@@ -49,10 +49,9 @@ namespace canonical {
 ///       All composition axes must be included.
 ///
 ///
-void parse_conditions(
-    InputParser<monte::VectorValueMap> &parser,
-    composition::CompositionConverter const &composition_converter,
-    canonical_tag tag) {
+void parse_conditions(InputParser<monte::VectorValueMap> &parser,
+                      std::shared_ptr<system_type> const &system_data,
+                      canonical_tag tag) {
   double temperature;
   parser.require(temperature, "temperature");
 
@@ -63,7 +62,8 @@ void parse_conditions(
   //   Eigen::VectorXd representing comp_n
   bool is_increment = false;
   auto comp_n_subparser = parser.parse_as_with<Eigen::VectorXd>(
-      parse_composition_for_comp_n, composition_converter, is_increment);
+      parse_composition_for_comp_n, get_composition_converter(*system_data),
+      is_increment);
 
   if (parser.valid()) {
     parser.value = std::make_unique<monte::VectorValueMap>();
@@ -83,10 +83,9 @@ void parse_conditions(
 ///
 /// The expected JSON format is the same as documented for `parse_conditions`,
 /// but values are interpreted as increments.
-void parse_conditions_increment(
-    InputParser<monte::VectorValueMap> &parser,
-    composition::CompositionConverter const &composition_converter,
-    canonical_tag tag) {
+void parse_conditions_increment(InputParser<monte::VectorValueMap> &parser,
+                                std::shared_ptr<system_type> const &system_data,
+                                canonical_tag tag) {
   double temperature;
   parser.require(temperature, "temperature");
 
@@ -97,7 +96,8 @@ void parse_conditions_increment(
   //   Eigen::VectorXd representing comp_n increment
   bool is_increment = true;
   auto comp_n_subparser = parser.parse_as_with<Eigen::VectorXd>(
-      parse_composition_for_comp_n, composition_converter, is_increment);
+      parse_composition_for_comp_n, get_composition_converter(*system_data),
+      is_increment);
 
   if (parser.valid()) {
     parser.value = std::make_unique<monte::VectorValueMap>();
