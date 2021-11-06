@@ -170,6 +170,22 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_f(
       });
 }
 
+/// \brief Make potential energy sampling function ("potential_energy")
+///
+/// Requires:
+/// - "potential_energy" is a state property
+template <typename SystemType>
+monte::StateSamplingFunction<Configuration> make_potential_energy_f(
+    std::shared_ptr<SystemType> const &system_data) {
+  return monte::StateSamplingFunction<Configuration>(
+      "potential_energy",
+      "Potential energy of the state (normalized per primitive cell)",
+      1,  // number of components in "potential_energy"
+      [system_data](monte::State<Configuration> const &state) {
+        return state.properties.at("potential_energy");
+      });
+}
+
 }  // namespace clexmonte
 }  // namespace CASM
 

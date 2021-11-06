@@ -96,14 +96,15 @@
         "formation_energy",
         "formation_energy_corr",
         "comp_n",
-        "comp_x"],
+        "comp_x",
+        "potential_energy"],
       "sampled_trajectory": false
     },
     "completion_check": {
       "cutoff": {
         "count": {
           "min": null,
-          "max": 1000
+          "max": 10
         }
       },
       "begin": 10,
@@ -111,7 +112,7 @@
       "confidence": 0.95,
       "convergence": [
         {
-          "quantity": "comp_n",
+          "quantity": "potential_energy",
           "precision": 0.001
         }
       ]

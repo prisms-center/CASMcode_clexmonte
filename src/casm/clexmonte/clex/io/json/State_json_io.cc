@@ -16,8 +16,14 @@ namespace CASM {
 jsonParser &to_json(monte::State<clexmonte::Configuration> const &state,
                     jsonParser &json) {
   json["configuration"] = state.configuration;
-  json["conditions"] = state.conditions;
-  json["properties"] = state.properties;
+  for (auto const &value : state.conditions) {
+    to_json(value.second, json["conditions"][value.first],
+            CASM::jsonParser::as_array());
+  }
+  for (auto const &value : state.properties) {
+    to_json(value.second, json["properties"][value.first],
+            CASM::jsonParser::as_array());
+  }
   return json;
 }
 
