@@ -17,19 +17,7 @@ OccSystem::OccSystem(
       composition_converter(_composition_converter),
       composition_calculator(composition_converter.components(),
                              xtal::allowed_molecule_names(*shared_prim)),
-      formation_energy_clex_data(_formation_energy_clex_data) {
-  std::cout << "composition_converter.components(): ";
-  for (auto name : composition_converter.components()) {
-    std::cout << name << " ";
-  }
-  std::cout << std::endl;
-
-  std::cout << "composition_calculator.components(): ";
-  for (auto name : composition_calculator.components()) {
-    std::cout << name << " ";
-  }
-  std::cout << std::endl;
-}
+      formation_energy_clex_data(_formation_energy_clex_data) {}
 
 /// \brief Constructor
 OccSystemSupercellData::OccSystemSupercellData(

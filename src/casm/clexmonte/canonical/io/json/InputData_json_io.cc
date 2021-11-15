@@ -52,33 +52,26 @@ namespace canonical {
 ///   }
 /// }
 void parse(InputParser<InputData> &parser) {
-  std::cout << "begin parse canonical::InputData" << std::endl;
-
   // Parse canonical MC calculation data. Includes input:
   // - "prim"
   // - "composition_axes"
   // - "formation_energy"
-  std::cout << "parse canonical::InputData 1" << std::endl;
   auto system_data_subparser = parser.subparse<system_type>("system");
   if (!system_data_subparser->valid()) {
     return;
   }
-  std::cout << "parse canonical::InputData 2" << std::endl;
   std::shared_ptr<system_type> system_data =
       std::move(system_data_subparser->value);
 
   // Make state sampling functions, with current supercell-specific info
-  std::cout << "parse canonical::InputData 3" << std::endl;
   monte::StateSamplingFunctionMap<config_type> sampling_functions =
       make_sampling_functions(system_data, canonical_tag());
 
   // Construct state generator
-  std::cout << "parse canonical::InputData 4" << std::endl;
   auto state_generator_subparser = parser.subparse<state_generator_type>(
       "state_generation", system_data, sampling_functions, canonical_tag());
 
   // Read sampling params
-  std::cout << "parse canonical::InputData 5" << std::endl;
   std::set<std::string> sampling_function_names;
   for (auto const &element : sampling_functions) {
     sampling_function_names.insert(element.first);
@@ -88,25 +81,17 @@ void parse(InputParser<InputData> &parser) {
       "sampling", sampling_function_names, time_sampling_allowed);
 
   // Read completion check params
-  std::cout << "parse canonical::InputData 6" << std::endl;
   auto completion_check_params_subparser =
       parser.subparse<monte::CompletionCheckParams>("completion_check",
                                                     sampling_functions);
 
   // Construct results I/O instance
-  std::cout << "parse canonical::InputData 7" << std::endl;
   auto results_io_subparser =
       parser.subparse<results_io_type>("results_io", sampling_functions);
 
   // Construct random number generator
-  std::cout << "parse canonical::InputData 8" << std::endl;
   MTRand random_number_generator;
 
-  std::cout << "parse canonical::InputData 9" << std::endl;
-  std::cout << "state_generator: "
-            << (state_generator_subparser->value != nullptr) << std::endl;
-  std::cout << "results_io: " << (results_io_subparser->value != nullptr)
-            << std::endl;
   if (parser.valid()) {
     parser.value = std::make_unique<InputData>(
         system_data, std::move(state_generator_subparser->value),
@@ -114,7 +99,6 @@ void parse(InputParser<InputData> &parser) {
         *completion_check_params_subparser->value,
         std::move(results_io_subparser->value), random_number_generator);
   }
-  std::cout << "finish parse canonical::InputData" << std::endl;
 }
 
 }  // namespace canonical
