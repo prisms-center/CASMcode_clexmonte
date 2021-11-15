@@ -51,6 +51,9 @@ void parse_comp_n_array(
 ///   ...
 /// }
 /// \endcode
+///
+/// Requires:
+/// - size of "comp_x" matches composition_converter
 void parse_comp_x_array(
     InputParser<Eigen::VectorXd> &parser,
     composition::CompositionConverter const &composition_converter) {
@@ -82,6 +85,9 @@ void parse_comp_x_array(
 ///   }
 /// }
 /// \endcode
+///
+/// Requires:
+/// - size of "comp_n" matches composition_converter
 void parse_comp_n_object(
     InputParser<Eigen::VectorXd> &parser,
     composition::CompositionConverter const &composition_converter) {
@@ -152,6 +158,9 @@ void parse_comp_n_object(
 ///   }
 /// }
 /// \endcode
+///
+/// Requires:
+/// - size of "comp_x" matches composition_converter
 void parse_comp_x_object(
     InputParser<Eigen::VectorXd> &parser,
     composition::CompositionConverter const &composition_converter) {
@@ -163,8 +172,8 @@ void parse_comp_x_object(
   }
   Index n_axes = composition_converter.independent_compositions();
   if (comp_x_map->size() != n_axes) {
-    parser.insert_error("comp_n",
-                        "Error parsing \"comp_n\": size != the number of "
+    parser.insert_error("comp_x",
+                        "Error parsing \"comp_x\": size != the number of "
                         "independent composition axes in this system.");
     return;
   }
