@@ -123,6 +123,11 @@ Configuration to_standard_values(
 ClexData &get_formation_energy_clex_data(OccSystem &data);
 
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
+///     particular configuration, constructing as necessary
+clexulator::ClusterExpansion &get_formation_energy_clex(
+    OccSystem &data, Configuration const &configuration);
+
+/// \brief Helper to get the correct clexulator::ClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
 clexulator::ClusterExpansion &get_formation_energy_clex(
     OccSystem &data, monte::State<Configuration> const &state);
