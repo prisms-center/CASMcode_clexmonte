@@ -27,7 +27,7 @@ namespace canonical {
 /// potential, composition, pressure, volume, strain, magnetic field, etc.
 /// depending on the type of calculation.
 ///
-/// Expected:
+/// Expected JSON:
 ///   method: string (required)
 ///     The name of the chosen state generation method. Currently, the only
 ///     option is:

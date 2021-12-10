@@ -23,7 +23,7 @@ namespace clexmonte {
 ///      among multiple cluster expansions. If sharing, may throw if the
 ///      Clexulator require different parameters.
 ///
-/// Expected format:
+/// Expected JSON format:
 ///   source: string (required)
 ///     Path to a Clexulator source file implementing a basis set.
 ///

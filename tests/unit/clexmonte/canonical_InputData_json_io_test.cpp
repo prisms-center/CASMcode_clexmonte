@@ -8,8 +8,9 @@ using namespace CASM;
 
 TEST(canonical_InputData_json_io_test, Test1) {
   fs::path test_data_dir = test::data_dir("clexmonte") / "Clex_ZrO_Occ";
-  fs::path clexulator_src_relpath =
-      fs::path("basis_sets") / "bset.formation_energy" / "ZrO_Clexulator.cc";
+  fs::path clexulator_src_relpath = fs::path("basis_sets") /
+                                    "bset.formation_energy" /
+                                    "ZrO_Clexulator_formation_energy.cc";
   fs::path eci_relpath = "formation_energy_eci.json";
   fs::path output_dir_relpath = "output";
 

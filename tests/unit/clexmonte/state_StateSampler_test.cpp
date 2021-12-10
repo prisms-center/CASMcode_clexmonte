@@ -1,6 +1,7 @@
 #include "ZrOTestSystem.hh"
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/container/stream_io.hh"
+#include "casm/clexmonte/canonical/CanonicalPotential.hh"
 #include "casm/clexmonte/canonical/conditions.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
 #include "casm/clexmonte/clex/Configuration.hh"
@@ -30,6 +31,7 @@ class StateSamplerTest : public test::ZrOTestSystem {
   StateSamplingFunctionMap<Configuration> sampling_functions;
 };
 
+/// Test state sampling, using canonical Monte Carlo
 TEST_F(StateSamplerTest, Test1) {
   // Create conditions
   monte::VectorValueMap init_conditions =
@@ -66,28 +68,28 @@ TEST_F(StateSamplerTest, Test1) {
 
     // Make supercell-specific potential energy clex calculator
     // (equal to formation energy calculator now)
-    std::cout << "Create potential_energy_clex_calculator" << std::endl;
-    clexulator::ClusterExpansion &potential_energy_clex_calculator =
-        get_formation_energy_clex(*system_data, state.configuration);
+    std::cout << "Create potential calculator" << std::endl;
+    canonical::CanonicalPotential potential(
+        get_formation_energy_clex(*system_data, state));
+    set(potential, state);
 
     // Make StateSampler
-    // std::vector<StateSamplingFunction<Configuration>> functions;
-    // functions.push_back(sampling_functions.at("comp_n"));
-    //
-    // SAMPLE_METHOD sample_method = SAMPLE_METHOD::LINEAR;
-    // double sample_begin = 0.0;
-    // double sampling_period = 1.0;
-    // double samples_per_period = 1.0;
-    // double log_sampling_shift = 0.0;
-    // bool do_sample_trajectory = false;
-    //
-    // StateSampler state_sampler(SAMPLE_MODE::BY_PASS, functions,
-    // sample_method,
-    //                            sample_begin, sampling_period,
-    //                            samples_per_period, log_sampling_shift,
-    //                            do_sample_trajectory);
-    // state_sampler.reset(steps_per_pass);
-    // state_sampler.sample_data_if_due(state);
+    std::vector<StateSamplingFunction<Configuration>> functions;
+    functions.push_back(sampling_functions.at("comp_n"));
+
+    SAMPLE_METHOD sample_method = SAMPLE_METHOD::LINEAR;
+    double sample_begin = 0.0;
+    double sampling_period = 1.0;
+    double samples_per_period = 1.0;
+    double log_sampling_shift = 0.0;
+    bool do_sample_trajectory = false;
+
+    StateSampler state_sampler(SAMPLE_MODE::BY_PASS, functions, sample_method,
+                               sample_begin, sampling_period,
+                               samples_per_period, log_sampling_shift,
+                               do_sample_trajectory);
+    state_sampler.reset(steps_per_pass);
+    state_sampler.sample_data_if_due(state);
 
     // Main loop
     std::cout << "Prepare for main loop" << std::endl;
@@ -95,8 +97,6 @@ TEST_F(StateSamplerTest, Test1) {
     std::vector<Index> linear_site_index;
     std::vector<int> new_occ;
     double beta = 1.0 / (CASM::KB * state.conditions.at("temperature")(0));
-    double n_unitcells =
-        get_transformation_matrix_to_super(state.configuration).determinant();
     MTRand random_number_generator;
     CountType step = 0;
     CountType pass = 0;
@@ -126,8 +126,7 @@ TEST_F(StateSamplerTest, Test1) {
       // std::endl; std::cout << "dof_values: " <<
       // potential_energy_clex_calculator.get() << std::endl;
       double delta_potential_energy =
-          potential_energy_clex_calculator.occ_delta_value(linear_site_index,
-                                                           new_occ);
+          potential.occ_delta_extensive_value(linear_site_index, new_occ);
 
       // double delta_potential_energy =
       //     potential_energy_clex_calculator.extensive_value();

@@ -104,7 +104,7 @@
       "cutoff": {
         "count": {
           "min": null,
-          "max": 10
+          "max": 100
         }
       },
       "begin": 10,

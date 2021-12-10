@@ -93,6 +93,7 @@ void parse_comp_n_object(
     composition::CompositionConverter const &composition_converter) {
   // parse comp_n object
   // example: "comp_n": {"A": 1.5, "B": 0.5}
+  std::vector<std::string> components = composition_converter.components();
 
   typedef std::map<std::string, double> expected_type;
   std::unique_ptr<expected_type> comp_n_map =
@@ -100,7 +101,7 @@ void parse_comp_n_object(
   if (comp_n_map == nullptr) {
     return;
   }
-  Index n_components = composition_converter.components().size();
+  Index n_components = components.size();
   if (comp_n_map->size() != n_components) {
     parser.insert_error("comp_n",
                         "Error parsing \"comp_n\": size != the number "
@@ -110,7 +111,7 @@ void parse_comp_n_object(
 
   // check for missing components
   bool valid = true;
-  for (auto const &name : composition_converter.components()) {
+  for (auto const &name : components) {
     auto map_it = comp_n_map->find(name);
     auto map_end = comp_n_map->end();
     if (map_it == map_end) {
@@ -122,8 +123,8 @@ void parse_comp_n_object(
   }
 
   // read component compositions
-  auto vector_begin = composition_converter.components().begin();
-  auto vector_end = composition_converter.components().end();
+  auto vector_begin = components.begin();
+  auto vector_end = components.end();
   Eigen::VectorXd comp_n(n_components);
   for (auto const &pair : *comp_n_map) {
     std::string name = pair.first;

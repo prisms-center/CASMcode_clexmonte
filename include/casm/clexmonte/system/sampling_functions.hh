@@ -53,6 +53,11 @@ template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_formation_energy_f(
     std::shared_ptr<SystemType> const &system_data);
 
+/// \brief Make potential energy sampling function ("potential_energy")
+template <typename SystemType>
+monte::StateSamplingFunction<Configuration> make_potential_energy_f(
+    std::shared_ptr<SystemType> const &system_data);
+
 // --- Inline definitions ---
 
 /// \brief Make temperature sampling function ("temperature")
@@ -129,7 +134,8 @@ monte::StateSamplingFunction<Configuration> make_comp_x_f(
 ///
 /// Requires:
 /// - `ClexData &get_formation_energy_clex_data(SystemType &)`
-/// - `clexulator::ClusterExpansion &get_formation_energy_clex(SystemType &)`
+/// - `clexulator::ClusterExpansion &get_formation_energy_clex(SystemType &,
+///   StateType const &)`
 template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
     std::shared_ptr<SystemType> const &system_data) {
@@ -144,7 +150,7 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
       corr_size,  // number of components in "corr"
       [system_data](monte::State<Configuration> const &state) {
         clexulator::Correlations &correlations =
-            get_formation_energy_clex(*system_data, state).correlations();
+            get_formation_energy_clex(*system_data, state)->correlations();
         auto const &extensive_corr = correlations.extensive();
         return correlations.intensive(extensive_corr);
       });
@@ -153,8 +159,8 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
 /// \brief Make formation energy sampling function ("formation_energy")
 ///
 /// Requires:
-/// - `ClexData &get_formation_energy_clex_data(SystemType &)`
-/// - `clexulator::ClusterExpansion &get_formation_energy_clex(SystemType &)`
+/// - `clexulator::ClusterExpansion &get_formation_energy_clex(SystemType &,
+///    StateType const &)`
 template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_formation_energy_f(
     std::shared_ptr<SystemType> const &system_data) {
@@ -165,7 +171,7 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_f(
       [system_data](monte::State<Configuration> const &state) {
         Eigen::VectorXd value(1);
         value(1) =
-            get_formation_energy_clex(*system_data, state).intensive_value();
+            get_formation_energy_clex(*system_data, state)->intensive_value();
         return value;
       });
 }

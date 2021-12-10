@@ -1,5 +1,4 @@
 #include <cstddef>
-#include <iostream>
 
 #include "casm/clexulator/BaseClexulator.hh"
 #include "casm/clexulator/BasicClexParamPack.hh"
@@ -76,8 +75,10 @@
 
 **/
 
-/// \brief Returns a clexulator::BaseClexulator* owning a ZrO_Clexulator
-extern "C" CASM::clexulator::BaseClexulator *make_ZrO_Clexulator();
+/// \brief Returns a clexulator::BaseClexulator* owning a
+/// ZrO_Clexulator_formation_energy
+extern "C" CASM::clexulator::BaseClexulator *
+make_ZrO_Clexulator_formation_energy();
 
 namespace CASM {
 namespace clexulator {
@@ -88,11 +89,11 @@ typedef BasicClexParamPack ParamPack;
 
 /****** GENERATED CLEXULATOR DEFINITION ******/
 
-class ZrO_Clexulator : public clexulator::BaseClexulator {
+class ZrO_Clexulator_formation_energy : public clexulator::BaseClexulator {
  public:
-  ZrO_Clexulator();
+  ZrO_Clexulator_formation_energy();
 
-  ~ZrO_Clexulator();
+  ~ZrO_Clexulator_formation_energy();
 
   ClexParamPack const &param_pack() const override { return m_params; }
 
@@ -1128,10 +1129,11 @@ class ZrO_Clexulator : public clexulator::BaseClexulator {
   mutable ParamPack m_params;
 
   // typedef for method pointers of scalar type double
-  typedef double (ZrO_Clexulator::*BasisFuncPtr_0)() const;
+  typedef double (ZrO_Clexulator_formation_energy::*BasisFuncPtr_0)() const;
 
   // typedef for method pointers
-  typedef double (ZrO_Clexulator::*DeltaBasisFuncPtr_0)(int, int) const;
+  typedef double (ZrO_Clexulator_formation_energy::*DeltaBasisFuncPtr_0)(
+      int, int) const;
 
   // array of pointers to member functions for calculating basis functions of
   // scalar type double
@@ -1157,8 +1159,10 @@ class ZrO_Clexulator : public clexulator::BaseClexulator {
   // ClexParamPack allocation for DoF occ
   ParamPack::Key m_occ_site_func_param_key;
 
-  /// \brief Clone the ZrO_Clexulator
-  BaseClexulator *_clone() const override { return new ZrO_Clexulator(*this); }
+  /// \brief Clone the ZrO_Clexulator_formation_energy
+  BaseClexulator *_clone() const override {
+    return new ZrO_Clexulator_formation_energy(*this);
+  }
 
   /// \brief Calculate contribution to global correlations from one unit cell
   /// Result is recorded in ClexParamPack
@@ -1281,7 +1285,8 @@ class ZrO_Clexulator : public clexulator::BaseClexulator {
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ZrO_Clexulator::ZrO_Clexulator() : BaseClexulator(225, 74, 2) {
+ZrO_Clexulator_formation_energy::ZrO_Clexulator_formation_energy()
+    : BaseClexulator(225, 74, 2) {
   m_occ_func_2_0[0] = -0.0000000000, m_occ_func_2_0[1] = 1.0000000000;
 
   m_occ_func_3_0[0] = -0.0000000000, m_occ_func_3_0[1] = 1.0000000000;
@@ -1290,672 +1295,750 @@ ZrO_Clexulator::ZrO_Clexulator() : BaseClexulator(225, 74, 2) {
 
   m_corr_param_key = m_params.allocate("corr", corr_size(), 1, false);
 
-  m_orbit_func_table_0[0] = &ZrO_Clexulator::eval_bfunc_0_0<double>;
-  m_orbit_func_table_0[1] = &ZrO_Clexulator::eval_bfunc_1_0<double>;
-  m_orbit_func_table_0[2] = &ZrO_Clexulator::eval_bfunc_2_0<double>;
-  m_orbit_func_table_0[3] = &ZrO_Clexulator::eval_bfunc_3_0<double>;
-  m_orbit_func_table_0[4] = &ZrO_Clexulator::eval_bfunc_4_0<double>;
-  m_orbit_func_table_0[5] = &ZrO_Clexulator::eval_bfunc_5_0<double>;
-  m_orbit_func_table_0[6] = &ZrO_Clexulator::eval_bfunc_6_0<double>;
-  m_orbit_func_table_0[7] = &ZrO_Clexulator::eval_bfunc_7_0<double>;
-  m_orbit_func_table_0[8] = &ZrO_Clexulator::eval_bfunc_8_0<double>;
-  m_orbit_func_table_0[9] = &ZrO_Clexulator::eval_bfunc_9_0<double>;
-  m_orbit_func_table_0[10] = &ZrO_Clexulator::eval_bfunc_10_0<double>;
-  m_orbit_func_table_0[11] = &ZrO_Clexulator::eval_bfunc_11_0<double>;
-  m_orbit_func_table_0[12] = &ZrO_Clexulator::eval_bfunc_12_0<double>;
-  m_orbit_func_table_0[13] = &ZrO_Clexulator::eval_bfunc_13_0<double>;
-  m_orbit_func_table_0[14] = &ZrO_Clexulator::eval_bfunc_14_0<double>;
-  m_orbit_func_table_0[15] = &ZrO_Clexulator::eval_bfunc_15_0<double>;
-  m_orbit_func_table_0[16] = &ZrO_Clexulator::eval_bfunc_16_0<double>;
-  m_orbit_func_table_0[17] = &ZrO_Clexulator::eval_bfunc_17_0<double>;
-  m_orbit_func_table_0[18] = &ZrO_Clexulator::eval_bfunc_18_0<double>;
-  m_orbit_func_table_0[19] = &ZrO_Clexulator::eval_bfunc_19_0<double>;
-  m_orbit_func_table_0[20] = &ZrO_Clexulator::eval_bfunc_20_0<double>;
-  m_orbit_func_table_0[21] = &ZrO_Clexulator::eval_bfunc_21_0<double>;
-  m_orbit_func_table_0[22] = &ZrO_Clexulator::eval_bfunc_22_0<double>;
-  m_orbit_func_table_0[23] = &ZrO_Clexulator::eval_bfunc_23_0<double>;
-  m_orbit_func_table_0[24] = &ZrO_Clexulator::eval_bfunc_24_0<double>;
-  m_orbit_func_table_0[25] = &ZrO_Clexulator::eval_bfunc_25_0<double>;
-  m_orbit_func_table_0[26] = &ZrO_Clexulator::eval_bfunc_26_0<double>;
-  m_orbit_func_table_0[27] = &ZrO_Clexulator::eval_bfunc_27_0<double>;
-  m_orbit_func_table_0[28] = &ZrO_Clexulator::eval_bfunc_28_0<double>;
-  m_orbit_func_table_0[29] = &ZrO_Clexulator::eval_bfunc_29_0<double>;
-  m_orbit_func_table_0[30] = &ZrO_Clexulator::eval_bfunc_30_0<double>;
-  m_orbit_func_table_0[31] = &ZrO_Clexulator::eval_bfunc_31_0<double>;
-  m_orbit_func_table_0[32] = &ZrO_Clexulator::eval_bfunc_32_0<double>;
-  m_orbit_func_table_0[33] = &ZrO_Clexulator::eval_bfunc_33_0<double>;
-  m_orbit_func_table_0[34] = &ZrO_Clexulator::eval_bfunc_34_0<double>;
-  m_orbit_func_table_0[35] = &ZrO_Clexulator::eval_bfunc_35_0<double>;
-  m_orbit_func_table_0[36] = &ZrO_Clexulator::eval_bfunc_36_0<double>;
-  m_orbit_func_table_0[37] = &ZrO_Clexulator::eval_bfunc_37_0<double>;
-  m_orbit_func_table_0[38] = &ZrO_Clexulator::eval_bfunc_38_0<double>;
-  m_orbit_func_table_0[39] = &ZrO_Clexulator::eval_bfunc_39_0<double>;
-  m_orbit_func_table_0[40] = &ZrO_Clexulator::eval_bfunc_40_0<double>;
-  m_orbit_func_table_0[41] = &ZrO_Clexulator::eval_bfunc_41_0<double>;
-  m_orbit_func_table_0[42] = &ZrO_Clexulator::eval_bfunc_42_0<double>;
-  m_orbit_func_table_0[43] = &ZrO_Clexulator::eval_bfunc_43_0<double>;
-  m_orbit_func_table_0[44] = &ZrO_Clexulator::eval_bfunc_44_0<double>;
-  m_orbit_func_table_0[45] = &ZrO_Clexulator::eval_bfunc_45_0<double>;
-  m_orbit_func_table_0[46] = &ZrO_Clexulator::eval_bfunc_46_0<double>;
-  m_orbit_func_table_0[47] = &ZrO_Clexulator::eval_bfunc_47_0<double>;
-  m_orbit_func_table_0[48] = &ZrO_Clexulator::eval_bfunc_48_0<double>;
-  m_orbit_func_table_0[49] = &ZrO_Clexulator::eval_bfunc_49_0<double>;
-  m_orbit_func_table_0[50] = &ZrO_Clexulator::eval_bfunc_50_0<double>;
-  m_orbit_func_table_0[51] = &ZrO_Clexulator::eval_bfunc_51_0<double>;
-  m_orbit_func_table_0[52] = &ZrO_Clexulator::eval_bfunc_52_0<double>;
-  m_orbit_func_table_0[53] = &ZrO_Clexulator::eval_bfunc_53_0<double>;
-  m_orbit_func_table_0[54] = &ZrO_Clexulator::eval_bfunc_54_0<double>;
-  m_orbit_func_table_0[55] = &ZrO_Clexulator::eval_bfunc_55_0<double>;
-  m_orbit_func_table_0[56] = &ZrO_Clexulator::eval_bfunc_56_0<double>;
-  m_orbit_func_table_0[57] = &ZrO_Clexulator::eval_bfunc_57_0<double>;
-  m_orbit_func_table_0[58] = &ZrO_Clexulator::eval_bfunc_58_0<double>;
-  m_orbit_func_table_0[59] = &ZrO_Clexulator::eval_bfunc_59_0<double>;
-  m_orbit_func_table_0[60] = &ZrO_Clexulator::eval_bfunc_60_0<double>;
-  m_orbit_func_table_0[61] = &ZrO_Clexulator::eval_bfunc_61_0<double>;
-  m_orbit_func_table_0[62] = &ZrO_Clexulator::eval_bfunc_62_0<double>;
-  m_orbit_func_table_0[63] = &ZrO_Clexulator::eval_bfunc_63_0<double>;
-  m_orbit_func_table_0[64] = &ZrO_Clexulator::eval_bfunc_64_0<double>;
-  m_orbit_func_table_0[65] = &ZrO_Clexulator::eval_bfunc_65_0<double>;
-  m_orbit_func_table_0[66] = &ZrO_Clexulator::eval_bfunc_66_0<double>;
-  m_orbit_func_table_0[67] = &ZrO_Clexulator::eval_bfunc_67_0<double>;
-  m_orbit_func_table_0[68] = &ZrO_Clexulator::eval_bfunc_68_0<double>;
-  m_orbit_func_table_0[69] = &ZrO_Clexulator::eval_bfunc_69_0<double>;
-  m_orbit_func_table_0[70] = &ZrO_Clexulator::eval_bfunc_70_0<double>;
-  m_orbit_func_table_0[71] = &ZrO_Clexulator::eval_bfunc_71_0<double>;
-  m_orbit_func_table_0[72] = &ZrO_Clexulator::eval_bfunc_72_0<double>;
-  m_orbit_func_table_0[73] = &ZrO_Clexulator::eval_bfunc_73_0<double>;
+  m_orbit_func_table_0[0] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_0_0<double>;
+  m_orbit_func_table_0[1] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_1_0<double>;
+  m_orbit_func_table_0[2] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_2_0<double>;
+  m_orbit_func_table_0[3] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_3_0<double>;
+  m_orbit_func_table_0[4] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_4_0<double>;
+  m_orbit_func_table_0[5] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_5_0<double>;
+  m_orbit_func_table_0[6] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_6_0<double>;
+  m_orbit_func_table_0[7] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_7_0<double>;
+  m_orbit_func_table_0[8] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_8_0<double>;
+  m_orbit_func_table_0[9] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_9_0<double>;
+  m_orbit_func_table_0[10] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_10_0<double>;
+  m_orbit_func_table_0[11] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_11_0<double>;
+  m_orbit_func_table_0[12] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_12_0<double>;
+  m_orbit_func_table_0[13] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_13_0<double>;
+  m_orbit_func_table_0[14] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_14_0<double>;
+  m_orbit_func_table_0[15] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_15_0<double>;
+  m_orbit_func_table_0[16] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_16_0<double>;
+  m_orbit_func_table_0[17] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_17_0<double>;
+  m_orbit_func_table_0[18] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_18_0<double>;
+  m_orbit_func_table_0[19] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_19_0<double>;
+  m_orbit_func_table_0[20] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_20_0<double>;
+  m_orbit_func_table_0[21] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_21_0<double>;
+  m_orbit_func_table_0[22] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_22_0<double>;
+  m_orbit_func_table_0[23] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_23_0<double>;
+  m_orbit_func_table_0[24] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_24_0<double>;
+  m_orbit_func_table_0[25] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_25_0<double>;
+  m_orbit_func_table_0[26] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_26_0<double>;
+  m_orbit_func_table_0[27] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_27_0<double>;
+  m_orbit_func_table_0[28] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_28_0<double>;
+  m_orbit_func_table_0[29] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_29_0<double>;
+  m_orbit_func_table_0[30] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_30_0<double>;
+  m_orbit_func_table_0[31] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_31_0<double>;
+  m_orbit_func_table_0[32] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_32_0<double>;
+  m_orbit_func_table_0[33] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_33_0<double>;
+  m_orbit_func_table_0[34] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_34_0<double>;
+  m_orbit_func_table_0[35] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_35_0<double>;
+  m_orbit_func_table_0[36] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_36_0<double>;
+  m_orbit_func_table_0[37] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_37_0<double>;
+  m_orbit_func_table_0[38] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_38_0<double>;
+  m_orbit_func_table_0[39] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_39_0<double>;
+  m_orbit_func_table_0[40] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_40_0<double>;
+  m_orbit_func_table_0[41] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_41_0<double>;
+  m_orbit_func_table_0[42] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_42_0<double>;
+  m_orbit_func_table_0[43] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_43_0<double>;
+  m_orbit_func_table_0[44] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_44_0<double>;
+  m_orbit_func_table_0[45] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_45_0<double>;
+  m_orbit_func_table_0[46] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_46_0<double>;
+  m_orbit_func_table_0[47] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_47_0<double>;
+  m_orbit_func_table_0[48] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_48_0<double>;
+  m_orbit_func_table_0[49] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_49_0<double>;
+  m_orbit_func_table_0[50] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_50_0<double>;
+  m_orbit_func_table_0[51] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_51_0<double>;
+  m_orbit_func_table_0[52] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_52_0<double>;
+  m_orbit_func_table_0[53] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_53_0<double>;
+  m_orbit_func_table_0[54] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_54_0<double>;
+  m_orbit_func_table_0[55] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_55_0<double>;
+  m_orbit_func_table_0[56] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_56_0<double>;
+  m_orbit_func_table_0[57] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_57_0<double>;
+  m_orbit_func_table_0[58] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_58_0<double>;
+  m_orbit_func_table_0[59] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_59_0<double>;
+  m_orbit_func_table_0[60] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_60_0<double>;
+  m_orbit_func_table_0[61] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_61_0<double>;
+  m_orbit_func_table_0[62] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_62_0<double>;
+  m_orbit_func_table_0[63] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_63_0<double>;
+  m_orbit_func_table_0[64] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_64_0<double>;
+  m_orbit_func_table_0[65] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_65_0<double>;
+  m_orbit_func_table_0[66] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_66_0<double>;
+  m_orbit_func_table_0[67] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_67_0<double>;
+  m_orbit_func_table_0[68] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_68_0<double>;
+  m_orbit_func_table_0[69] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_69_0<double>;
+  m_orbit_func_table_0[70] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_70_0<double>;
+  m_orbit_func_table_0[71] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_71_0<double>;
+  m_orbit_func_table_0[72] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_72_0<double>;
+  m_orbit_func_table_0[73] =
+      &ZrO_Clexulator_formation_energy::eval_bfunc_73_0<double>;
 
-  m_flower_func_table_0[0][0] = &ZrO_Clexulator::zero_func<double>;
+  m_flower_func_table_0[0][0] =
+      &ZrO_Clexulator_formation_energy::zero_func<double>;
   m_flower_func_table_0[0][1] =
-      &ZrO_Clexulator::site_eval_bfunc_1_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_1_0_at_0<double>;
   m_flower_func_table_0[0][2] =
-      &ZrO_Clexulator::site_eval_bfunc_2_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_2_0_at_0<double>;
   m_flower_func_table_0[0][3] =
-      &ZrO_Clexulator::site_eval_bfunc_3_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_3_0_at_0<double>;
   m_flower_func_table_0[0][4] =
-      &ZrO_Clexulator::site_eval_bfunc_4_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_4_0_at_0<double>;
   m_flower_func_table_0[0][5] =
-      &ZrO_Clexulator::site_eval_bfunc_5_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_5_0_at_0<double>;
   m_flower_func_table_0[0][6] =
-      &ZrO_Clexulator::site_eval_bfunc_6_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_6_0_at_0<double>;
   m_flower_func_table_0[0][7] =
-      &ZrO_Clexulator::site_eval_bfunc_7_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_7_0_at_0<double>;
   m_flower_func_table_0[0][8] =
-      &ZrO_Clexulator::site_eval_bfunc_8_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_8_0_at_0<double>;
   m_flower_func_table_0[0][9] =
-      &ZrO_Clexulator::site_eval_bfunc_9_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_9_0_at_0<double>;
   m_flower_func_table_0[0][10] =
-      &ZrO_Clexulator::site_eval_bfunc_10_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_10_0_at_0<double>;
   m_flower_func_table_0[0][11] =
-      &ZrO_Clexulator::site_eval_bfunc_11_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_11_0_at_0<double>;
   m_flower_func_table_0[0][12] =
-      &ZrO_Clexulator::site_eval_bfunc_12_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_12_0_at_0<double>;
   m_flower_func_table_0[0][13] =
-      &ZrO_Clexulator::site_eval_bfunc_13_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_13_0_at_0<double>;
   m_flower_func_table_0[0][14] =
-      &ZrO_Clexulator::site_eval_bfunc_14_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_14_0_at_0<double>;
   m_flower_func_table_0[0][15] =
-      &ZrO_Clexulator::site_eval_bfunc_15_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_15_0_at_0<double>;
   m_flower_func_table_0[0][16] =
-      &ZrO_Clexulator::site_eval_bfunc_16_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_16_0_at_0<double>;
   m_flower_func_table_0[0][17] =
-      &ZrO_Clexulator::site_eval_bfunc_17_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_17_0_at_0<double>;
   m_flower_func_table_0[0][18] =
-      &ZrO_Clexulator::site_eval_bfunc_18_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_18_0_at_0<double>;
   m_flower_func_table_0[0][19] =
-      &ZrO_Clexulator::site_eval_bfunc_19_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_19_0_at_0<double>;
   m_flower_func_table_0[0][20] =
-      &ZrO_Clexulator::site_eval_bfunc_20_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_20_0_at_0<double>;
   m_flower_func_table_0[0][21] =
-      &ZrO_Clexulator::site_eval_bfunc_21_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_21_0_at_0<double>;
   m_flower_func_table_0[0][22] =
-      &ZrO_Clexulator::site_eval_bfunc_22_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_22_0_at_0<double>;
   m_flower_func_table_0[0][23] =
-      &ZrO_Clexulator::site_eval_bfunc_23_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_23_0_at_0<double>;
   m_flower_func_table_0[0][24] =
-      &ZrO_Clexulator::site_eval_bfunc_24_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_24_0_at_0<double>;
   m_flower_func_table_0[0][25] =
-      &ZrO_Clexulator::site_eval_bfunc_25_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_25_0_at_0<double>;
   m_flower_func_table_0[0][26] =
-      &ZrO_Clexulator::site_eval_bfunc_26_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_26_0_at_0<double>;
   m_flower_func_table_0[0][27] =
-      &ZrO_Clexulator::site_eval_bfunc_27_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_27_0_at_0<double>;
   m_flower_func_table_0[0][28] =
-      &ZrO_Clexulator::site_eval_bfunc_28_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_28_0_at_0<double>;
   m_flower_func_table_0[0][29] =
-      &ZrO_Clexulator::site_eval_bfunc_29_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_29_0_at_0<double>;
   m_flower_func_table_0[0][30] =
-      &ZrO_Clexulator::site_eval_bfunc_30_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_30_0_at_0<double>;
   m_flower_func_table_0[0][31] =
-      &ZrO_Clexulator::site_eval_bfunc_31_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_31_0_at_0<double>;
   m_flower_func_table_0[0][32] =
-      &ZrO_Clexulator::site_eval_bfunc_32_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_32_0_at_0<double>;
   m_flower_func_table_0[0][33] =
-      &ZrO_Clexulator::site_eval_bfunc_33_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_33_0_at_0<double>;
   m_flower_func_table_0[0][34] =
-      &ZrO_Clexulator::site_eval_bfunc_34_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_34_0_at_0<double>;
   m_flower_func_table_0[0][35] =
-      &ZrO_Clexulator::site_eval_bfunc_35_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_35_0_at_0<double>;
   m_flower_func_table_0[0][36] =
-      &ZrO_Clexulator::site_eval_bfunc_36_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_36_0_at_0<double>;
   m_flower_func_table_0[0][37] =
-      &ZrO_Clexulator::site_eval_bfunc_37_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_37_0_at_0<double>;
   m_flower_func_table_0[0][38] =
-      &ZrO_Clexulator::site_eval_bfunc_38_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_38_0_at_0<double>;
   m_flower_func_table_0[0][39] =
-      &ZrO_Clexulator::site_eval_bfunc_39_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_39_0_at_0<double>;
   m_flower_func_table_0[0][40] =
-      &ZrO_Clexulator::site_eval_bfunc_40_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_40_0_at_0<double>;
   m_flower_func_table_0[0][41] =
-      &ZrO_Clexulator::site_eval_bfunc_41_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_41_0_at_0<double>;
   m_flower_func_table_0[0][42] =
-      &ZrO_Clexulator::site_eval_bfunc_42_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_42_0_at_0<double>;
   m_flower_func_table_0[0][43] =
-      &ZrO_Clexulator::site_eval_bfunc_43_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_43_0_at_0<double>;
   m_flower_func_table_0[0][44] =
-      &ZrO_Clexulator::site_eval_bfunc_44_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_44_0_at_0<double>;
   m_flower_func_table_0[0][45] =
-      &ZrO_Clexulator::site_eval_bfunc_45_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_45_0_at_0<double>;
   m_flower_func_table_0[0][46] =
-      &ZrO_Clexulator::site_eval_bfunc_46_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_46_0_at_0<double>;
   m_flower_func_table_0[0][47] =
-      &ZrO_Clexulator::site_eval_bfunc_47_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_47_0_at_0<double>;
   m_flower_func_table_0[0][48] =
-      &ZrO_Clexulator::site_eval_bfunc_48_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_48_0_at_0<double>;
   m_flower_func_table_0[0][49] =
-      &ZrO_Clexulator::site_eval_bfunc_49_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_49_0_at_0<double>;
   m_flower_func_table_0[0][50] =
-      &ZrO_Clexulator::site_eval_bfunc_50_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_50_0_at_0<double>;
   m_flower_func_table_0[0][51] =
-      &ZrO_Clexulator::site_eval_bfunc_51_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_51_0_at_0<double>;
   m_flower_func_table_0[0][52] =
-      &ZrO_Clexulator::site_eval_bfunc_52_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_52_0_at_0<double>;
   m_flower_func_table_0[0][53] =
-      &ZrO_Clexulator::site_eval_bfunc_53_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_53_0_at_0<double>;
   m_flower_func_table_0[0][54] =
-      &ZrO_Clexulator::site_eval_bfunc_54_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_54_0_at_0<double>;
   m_flower_func_table_0[0][55] =
-      &ZrO_Clexulator::site_eval_bfunc_55_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_55_0_at_0<double>;
   m_flower_func_table_0[0][56] =
-      &ZrO_Clexulator::site_eval_bfunc_56_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_56_0_at_0<double>;
   m_flower_func_table_0[0][57] =
-      &ZrO_Clexulator::site_eval_bfunc_57_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_57_0_at_0<double>;
   m_flower_func_table_0[0][58] =
-      &ZrO_Clexulator::site_eval_bfunc_58_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_58_0_at_0<double>;
   m_flower_func_table_0[0][59] =
-      &ZrO_Clexulator::site_eval_bfunc_59_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_59_0_at_0<double>;
   m_flower_func_table_0[0][60] =
-      &ZrO_Clexulator::site_eval_bfunc_60_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_60_0_at_0<double>;
   m_flower_func_table_0[0][61] =
-      &ZrO_Clexulator::site_eval_bfunc_61_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_61_0_at_0<double>;
   m_flower_func_table_0[0][62] =
-      &ZrO_Clexulator::site_eval_bfunc_62_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_62_0_at_0<double>;
   m_flower_func_table_0[0][63] =
-      &ZrO_Clexulator::site_eval_bfunc_63_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_63_0_at_0<double>;
   m_flower_func_table_0[0][64] =
-      &ZrO_Clexulator::site_eval_bfunc_64_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_64_0_at_0<double>;
   m_flower_func_table_0[0][65] =
-      &ZrO_Clexulator::site_eval_bfunc_65_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_65_0_at_0<double>;
   m_flower_func_table_0[0][66] =
-      &ZrO_Clexulator::site_eval_bfunc_66_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_66_0_at_0<double>;
   m_flower_func_table_0[0][67] =
-      &ZrO_Clexulator::site_eval_bfunc_67_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_67_0_at_0<double>;
   m_flower_func_table_0[0][68] =
-      &ZrO_Clexulator::site_eval_bfunc_68_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_68_0_at_0<double>;
   m_flower_func_table_0[0][69] =
-      &ZrO_Clexulator::site_eval_bfunc_69_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_69_0_at_0<double>;
   m_flower_func_table_0[0][70] =
-      &ZrO_Clexulator::site_eval_bfunc_70_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_70_0_at_0<double>;
   m_flower_func_table_0[0][71] =
-      &ZrO_Clexulator::site_eval_bfunc_71_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_71_0_at_0<double>;
   m_flower_func_table_0[0][72] =
-      &ZrO_Clexulator::site_eval_bfunc_72_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_72_0_at_0<double>;
   m_flower_func_table_0[0][73] =
-      &ZrO_Clexulator::site_eval_bfunc_73_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_73_0_at_0<double>;
 
-  m_flower_func_table_0[1][0] = &ZrO_Clexulator::zero_func<double>;
+  m_flower_func_table_0[1][0] =
+      &ZrO_Clexulator_formation_energy::zero_func<double>;
   m_flower_func_table_0[1][1] =
-      &ZrO_Clexulator::site_eval_bfunc_1_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_1_0_at_1<double>;
   m_flower_func_table_0[1][2] =
-      &ZrO_Clexulator::site_eval_bfunc_2_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_2_0_at_1<double>;
   m_flower_func_table_0[1][3] =
-      &ZrO_Clexulator::site_eval_bfunc_3_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_3_0_at_1<double>;
   m_flower_func_table_0[1][4] =
-      &ZrO_Clexulator::site_eval_bfunc_4_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_4_0_at_1<double>;
   m_flower_func_table_0[1][5] =
-      &ZrO_Clexulator::site_eval_bfunc_5_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_5_0_at_1<double>;
   m_flower_func_table_0[1][6] =
-      &ZrO_Clexulator::site_eval_bfunc_6_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_6_0_at_1<double>;
   m_flower_func_table_0[1][7] =
-      &ZrO_Clexulator::site_eval_bfunc_7_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_7_0_at_1<double>;
   m_flower_func_table_0[1][8] =
-      &ZrO_Clexulator::site_eval_bfunc_8_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_8_0_at_1<double>;
   m_flower_func_table_0[1][9] =
-      &ZrO_Clexulator::site_eval_bfunc_9_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_9_0_at_1<double>;
   m_flower_func_table_0[1][10] =
-      &ZrO_Clexulator::site_eval_bfunc_10_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_10_0_at_1<double>;
   m_flower_func_table_0[1][11] =
-      &ZrO_Clexulator::site_eval_bfunc_11_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_11_0_at_1<double>;
   m_flower_func_table_0[1][12] =
-      &ZrO_Clexulator::site_eval_bfunc_12_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_12_0_at_1<double>;
   m_flower_func_table_0[1][13] =
-      &ZrO_Clexulator::site_eval_bfunc_13_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_13_0_at_1<double>;
   m_flower_func_table_0[1][14] =
-      &ZrO_Clexulator::site_eval_bfunc_14_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_14_0_at_1<double>;
   m_flower_func_table_0[1][15] =
-      &ZrO_Clexulator::site_eval_bfunc_15_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_15_0_at_1<double>;
   m_flower_func_table_0[1][16] =
-      &ZrO_Clexulator::site_eval_bfunc_16_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_16_0_at_1<double>;
   m_flower_func_table_0[1][17] =
-      &ZrO_Clexulator::site_eval_bfunc_17_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_17_0_at_1<double>;
   m_flower_func_table_0[1][18] =
-      &ZrO_Clexulator::site_eval_bfunc_18_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_18_0_at_1<double>;
   m_flower_func_table_0[1][19] =
-      &ZrO_Clexulator::site_eval_bfunc_19_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_19_0_at_1<double>;
   m_flower_func_table_0[1][20] =
-      &ZrO_Clexulator::site_eval_bfunc_20_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_20_0_at_1<double>;
   m_flower_func_table_0[1][21] =
-      &ZrO_Clexulator::site_eval_bfunc_21_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_21_0_at_1<double>;
   m_flower_func_table_0[1][22] =
-      &ZrO_Clexulator::site_eval_bfunc_22_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_22_0_at_1<double>;
   m_flower_func_table_0[1][23] =
-      &ZrO_Clexulator::site_eval_bfunc_23_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_23_0_at_1<double>;
   m_flower_func_table_0[1][24] =
-      &ZrO_Clexulator::site_eval_bfunc_24_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_24_0_at_1<double>;
   m_flower_func_table_0[1][25] =
-      &ZrO_Clexulator::site_eval_bfunc_25_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_25_0_at_1<double>;
   m_flower_func_table_0[1][26] =
-      &ZrO_Clexulator::site_eval_bfunc_26_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_26_0_at_1<double>;
   m_flower_func_table_0[1][27] =
-      &ZrO_Clexulator::site_eval_bfunc_27_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_27_0_at_1<double>;
   m_flower_func_table_0[1][28] =
-      &ZrO_Clexulator::site_eval_bfunc_28_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_28_0_at_1<double>;
   m_flower_func_table_0[1][29] =
-      &ZrO_Clexulator::site_eval_bfunc_29_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_29_0_at_1<double>;
   m_flower_func_table_0[1][30] =
-      &ZrO_Clexulator::site_eval_bfunc_30_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_30_0_at_1<double>;
   m_flower_func_table_0[1][31] =
-      &ZrO_Clexulator::site_eval_bfunc_31_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_31_0_at_1<double>;
   m_flower_func_table_0[1][32] =
-      &ZrO_Clexulator::site_eval_bfunc_32_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_32_0_at_1<double>;
   m_flower_func_table_0[1][33] =
-      &ZrO_Clexulator::site_eval_bfunc_33_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_33_0_at_1<double>;
   m_flower_func_table_0[1][34] =
-      &ZrO_Clexulator::site_eval_bfunc_34_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_34_0_at_1<double>;
   m_flower_func_table_0[1][35] =
-      &ZrO_Clexulator::site_eval_bfunc_35_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_35_0_at_1<double>;
   m_flower_func_table_0[1][36] =
-      &ZrO_Clexulator::site_eval_bfunc_36_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_36_0_at_1<double>;
   m_flower_func_table_0[1][37] =
-      &ZrO_Clexulator::site_eval_bfunc_37_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_37_0_at_1<double>;
   m_flower_func_table_0[1][38] =
-      &ZrO_Clexulator::site_eval_bfunc_38_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_38_0_at_1<double>;
   m_flower_func_table_0[1][39] =
-      &ZrO_Clexulator::site_eval_bfunc_39_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_39_0_at_1<double>;
   m_flower_func_table_0[1][40] =
-      &ZrO_Clexulator::site_eval_bfunc_40_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_40_0_at_1<double>;
   m_flower_func_table_0[1][41] =
-      &ZrO_Clexulator::site_eval_bfunc_41_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_41_0_at_1<double>;
   m_flower_func_table_0[1][42] =
-      &ZrO_Clexulator::site_eval_bfunc_42_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_42_0_at_1<double>;
   m_flower_func_table_0[1][43] =
-      &ZrO_Clexulator::site_eval_bfunc_43_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_43_0_at_1<double>;
   m_flower_func_table_0[1][44] =
-      &ZrO_Clexulator::site_eval_bfunc_44_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_44_0_at_1<double>;
   m_flower_func_table_0[1][45] =
-      &ZrO_Clexulator::site_eval_bfunc_45_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_45_0_at_1<double>;
   m_flower_func_table_0[1][46] =
-      &ZrO_Clexulator::site_eval_bfunc_46_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_46_0_at_1<double>;
   m_flower_func_table_0[1][47] =
-      &ZrO_Clexulator::site_eval_bfunc_47_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_47_0_at_1<double>;
   m_flower_func_table_0[1][48] =
-      &ZrO_Clexulator::site_eval_bfunc_48_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_48_0_at_1<double>;
   m_flower_func_table_0[1][49] =
-      &ZrO_Clexulator::site_eval_bfunc_49_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_49_0_at_1<double>;
   m_flower_func_table_0[1][50] =
-      &ZrO_Clexulator::site_eval_bfunc_50_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_50_0_at_1<double>;
   m_flower_func_table_0[1][51] =
-      &ZrO_Clexulator::site_eval_bfunc_51_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_51_0_at_1<double>;
   m_flower_func_table_0[1][52] =
-      &ZrO_Clexulator::site_eval_bfunc_52_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_52_0_at_1<double>;
   m_flower_func_table_0[1][53] =
-      &ZrO_Clexulator::site_eval_bfunc_53_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_53_0_at_1<double>;
   m_flower_func_table_0[1][54] =
-      &ZrO_Clexulator::site_eval_bfunc_54_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_54_0_at_1<double>;
   m_flower_func_table_0[1][55] =
-      &ZrO_Clexulator::site_eval_bfunc_55_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_55_0_at_1<double>;
   m_flower_func_table_0[1][56] =
-      &ZrO_Clexulator::site_eval_bfunc_56_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_56_0_at_1<double>;
   m_flower_func_table_0[1][57] =
-      &ZrO_Clexulator::site_eval_bfunc_57_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_57_0_at_1<double>;
   m_flower_func_table_0[1][58] =
-      &ZrO_Clexulator::site_eval_bfunc_58_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_58_0_at_1<double>;
   m_flower_func_table_0[1][59] =
-      &ZrO_Clexulator::site_eval_bfunc_59_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_59_0_at_1<double>;
   m_flower_func_table_0[1][60] =
-      &ZrO_Clexulator::site_eval_bfunc_60_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_60_0_at_1<double>;
   m_flower_func_table_0[1][61] =
-      &ZrO_Clexulator::site_eval_bfunc_61_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_61_0_at_1<double>;
   m_flower_func_table_0[1][62] =
-      &ZrO_Clexulator::site_eval_bfunc_62_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_62_0_at_1<double>;
   m_flower_func_table_0[1][63] =
-      &ZrO_Clexulator::site_eval_bfunc_63_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_63_0_at_1<double>;
   m_flower_func_table_0[1][64] =
-      &ZrO_Clexulator::site_eval_bfunc_64_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_64_0_at_1<double>;
   m_flower_func_table_0[1][65] =
-      &ZrO_Clexulator::site_eval_bfunc_65_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_65_0_at_1<double>;
   m_flower_func_table_0[1][66] =
-      &ZrO_Clexulator::site_eval_bfunc_66_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_66_0_at_1<double>;
   m_flower_func_table_0[1][67] =
-      &ZrO_Clexulator::site_eval_bfunc_67_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_67_0_at_1<double>;
   m_flower_func_table_0[1][68] =
-      &ZrO_Clexulator::site_eval_bfunc_68_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_68_0_at_1<double>;
   m_flower_func_table_0[1][69] =
-      &ZrO_Clexulator::site_eval_bfunc_69_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_69_0_at_1<double>;
   m_flower_func_table_0[1][70] =
-      &ZrO_Clexulator::site_eval_bfunc_70_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_70_0_at_1<double>;
   m_flower_func_table_0[1][71] =
-      &ZrO_Clexulator::site_eval_bfunc_71_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_71_0_at_1<double>;
   m_flower_func_table_0[1][72] =
-      &ZrO_Clexulator::site_eval_bfunc_72_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_72_0_at_1<double>;
   m_flower_func_table_0[1][73] =
-      &ZrO_Clexulator::site_eval_bfunc_73_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_eval_bfunc_73_0_at_1<double>;
 
-  m_delta_func_table_0[0][0] = &ZrO_Clexulator::zero_func<double>;
+  m_delta_func_table_0[0][0] =
+      &ZrO_Clexulator_formation_energy::zero_func<double>;
   m_delta_func_table_0[0][1] =
-      &ZrO_Clexulator::site_deval_bfunc_1_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_1_0_at_0<double>;
   m_delta_func_table_0[0][2] =
-      &ZrO_Clexulator::site_deval_bfunc_2_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_2_0_at_0<double>;
   m_delta_func_table_0[0][3] =
-      &ZrO_Clexulator::site_deval_bfunc_3_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_3_0_at_0<double>;
   m_delta_func_table_0[0][4] =
-      &ZrO_Clexulator::site_deval_bfunc_4_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_4_0_at_0<double>;
   m_delta_func_table_0[0][5] =
-      &ZrO_Clexulator::site_deval_bfunc_5_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_5_0_at_0<double>;
   m_delta_func_table_0[0][6] =
-      &ZrO_Clexulator::site_deval_bfunc_6_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_6_0_at_0<double>;
   m_delta_func_table_0[0][7] =
-      &ZrO_Clexulator::site_deval_bfunc_7_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_7_0_at_0<double>;
   m_delta_func_table_0[0][8] =
-      &ZrO_Clexulator::site_deval_bfunc_8_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_8_0_at_0<double>;
   m_delta_func_table_0[0][9] =
-      &ZrO_Clexulator::site_deval_bfunc_9_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_9_0_at_0<double>;
   m_delta_func_table_0[0][10] =
-      &ZrO_Clexulator::site_deval_bfunc_10_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_10_0_at_0<double>;
   m_delta_func_table_0[0][11] =
-      &ZrO_Clexulator::site_deval_bfunc_11_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_11_0_at_0<double>;
   m_delta_func_table_0[0][12] =
-      &ZrO_Clexulator::site_deval_bfunc_12_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_12_0_at_0<double>;
   m_delta_func_table_0[0][13] =
-      &ZrO_Clexulator::site_deval_bfunc_13_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_13_0_at_0<double>;
   m_delta_func_table_0[0][14] =
-      &ZrO_Clexulator::site_deval_bfunc_14_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_14_0_at_0<double>;
   m_delta_func_table_0[0][15] =
-      &ZrO_Clexulator::site_deval_bfunc_15_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_15_0_at_0<double>;
   m_delta_func_table_0[0][16] =
-      &ZrO_Clexulator::site_deval_bfunc_16_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_16_0_at_0<double>;
   m_delta_func_table_0[0][17] =
-      &ZrO_Clexulator::site_deval_bfunc_17_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_17_0_at_0<double>;
   m_delta_func_table_0[0][18] =
-      &ZrO_Clexulator::site_deval_bfunc_18_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_18_0_at_0<double>;
   m_delta_func_table_0[0][19] =
-      &ZrO_Clexulator::site_deval_bfunc_19_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_19_0_at_0<double>;
   m_delta_func_table_0[0][20] =
-      &ZrO_Clexulator::site_deval_bfunc_20_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_20_0_at_0<double>;
   m_delta_func_table_0[0][21] =
-      &ZrO_Clexulator::site_deval_bfunc_21_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_21_0_at_0<double>;
   m_delta_func_table_0[0][22] =
-      &ZrO_Clexulator::site_deval_bfunc_22_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_22_0_at_0<double>;
   m_delta_func_table_0[0][23] =
-      &ZrO_Clexulator::site_deval_bfunc_23_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_23_0_at_0<double>;
   m_delta_func_table_0[0][24] =
-      &ZrO_Clexulator::site_deval_bfunc_24_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_24_0_at_0<double>;
   m_delta_func_table_0[0][25] =
-      &ZrO_Clexulator::site_deval_bfunc_25_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_25_0_at_0<double>;
   m_delta_func_table_0[0][26] =
-      &ZrO_Clexulator::site_deval_bfunc_26_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_26_0_at_0<double>;
   m_delta_func_table_0[0][27] =
-      &ZrO_Clexulator::site_deval_bfunc_27_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_27_0_at_0<double>;
   m_delta_func_table_0[0][28] =
-      &ZrO_Clexulator::site_deval_bfunc_28_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_28_0_at_0<double>;
   m_delta_func_table_0[0][29] =
-      &ZrO_Clexulator::site_deval_bfunc_29_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_29_0_at_0<double>;
   m_delta_func_table_0[0][30] =
-      &ZrO_Clexulator::site_deval_bfunc_30_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_30_0_at_0<double>;
   m_delta_func_table_0[0][31] =
-      &ZrO_Clexulator::site_deval_bfunc_31_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_31_0_at_0<double>;
   m_delta_func_table_0[0][32] =
-      &ZrO_Clexulator::site_deval_bfunc_32_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_32_0_at_0<double>;
   m_delta_func_table_0[0][33] =
-      &ZrO_Clexulator::site_deval_bfunc_33_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_33_0_at_0<double>;
   m_delta_func_table_0[0][34] =
-      &ZrO_Clexulator::site_deval_bfunc_34_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_34_0_at_0<double>;
   m_delta_func_table_0[0][35] =
-      &ZrO_Clexulator::site_deval_bfunc_35_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_35_0_at_0<double>;
   m_delta_func_table_0[0][36] =
-      &ZrO_Clexulator::site_deval_bfunc_36_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_36_0_at_0<double>;
   m_delta_func_table_0[0][37] =
-      &ZrO_Clexulator::site_deval_bfunc_37_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_37_0_at_0<double>;
   m_delta_func_table_0[0][38] =
-      &ZrO_Clexulator::site_deval_bfunc_38_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_38_0_at_0<double>;
   m_delta_func_table_0[0][39] =
-      &ZrO_Clexulator::site_deval_bfunc_39_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_39_0_at_0<double>;
   m_delta_func_table_0[0][40] =
-      &ZrO_Clexulator::site_deval_bfunc_40_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_40_0_at_0<double>;
   m_delta_func_table_0[0][41] =
-      &ZrO_Clexulator::site_deval_bfunc_41_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_41_0_at_0<double>;
   m_delta_func_table_0[0][42] =
-      &ZrO_Clexulator::site_deval_bfunc_42_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_42_0_at_0<double>;
   m_delta_func_table_0[0][43] =
-      &ZrO_Clexulator::site_deval_bfunc_43_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_43_0_at_0<double>;
   m_delta_func_table_0[0][44] =
-      &ZrO_Clexulator::site_deval_bfunc_44_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_44_0_at_0<double>;
   m_delta_func_table_0[0][45] =
-      &ZrO_Clexulator::site_deval_bfunc_45_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_45_0_at_0<double>;
   m_delta_func_table_0[0][46] =
-      &ZrO_Clexulator::site_deval_bfunc_46_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_46_0_at_0<double>;
   m_delta_func_table_0[0][47] =
-      &ZrO_Clexulator::site_deval_bfunc_47_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_47_0_at_0<double>;
   m_delta_func_table_0[0][48] =
-      &ZrO_Clexulator::site_deval_bfunc_48_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_48_0_at_0<double>;
   m_delta_func_table_0[0][49] =
-      &ZrO_Clexulator::site_deval_bfunc_49_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_49_0_at_0<double>;
   m_delta_func_table_0[0][50] =
-      &ZrO_Clexulator::site_deval_bfunc_50_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_50_0_at_0<double>;
   m_delta_func_table_0[0][51] =
-      &ZrO_Clexulator::site_deval_bfunc_51_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_51_0_at_0<double>;
   m_delta_func_table_0[0][52] =
-      &ZrO_Clexulator::site_deval_bfunc_52_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_52_0_at_0<double>;
   m_delta_func_table_0[0][53] =
-      &ZrO_Clexulator::site_deval_bfunc_53_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_53_0_at_0<double>;
   m_delta_func_table_0[0][54] =
-      &ZrO_Clexulator::site_deval_bfunc_54_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_54_0_at_0<double>;
   m_delta_func_table_0[0][55] =
-      &ZrO_Clexulator::site_deval_bfunc_55_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_55_0_at_0<double>;
   m_delta_func_table_0[0][56] =
-      &ZrO_Clexulator::site_deval_bfunc_56_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_56_0_at_0<double>;
   m_delta_func_table_0[0][57] =
-      &ZrO_Clexulator::site_deval_bfunc_57_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_57_0_at_0<double>;
   m_delta_func_table_0[0][58] =
-      &ZrO_Clexulator::site_deval_bfunc_58_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_58_0_at_0<double>;
   m_delta_func_table_0[0][59] =
-      &ZrO_Clexulator::site_deval_bfunc_59_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_59_0_at_0<double>;
   m_delta_func_table_0[0][60] =
-      &ZrO_Clexulator::site_deval_bfunc_60_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_60_0_at_0<double>;
   m_delta_func_table_0[0][61] =
-      &ZrO_Clexulator::site_deval_bfunc_61_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_61_0_at_0<double>;
   m_delta_func_table_0[0][62] =
-      &ZrO_Clexulator::site_deval_bfunc_62_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_62_0_at_0<double>;
   m_delta_func_table_0[0][63] =
-      &ZrO_Clexulator::site_deval_bfunc_63_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_63_0_at_0<double>;
   m_delta_func_table_0[0][64] =
-      &ZrO_Clexulator::site_deval_bfunc_64_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_64_0_at_0<double>;
   m_delta_func_table_0[0][65] =
-      &ZrO_Clexulator::site_deval_bfunc_65_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_65_0_at_0<double>;
   m_delta_func_table_0[0][66] =
-      &ZrO_Clexulator::site_deval_bfunc_66_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_66_0_at_0<double>;
   m_delta_func_table_0[0][67] =
-      &ZrO_Clexulator::site_deval_bfunc_67_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_67_0_at_0<double>;
   m_delta_func_table_0[0][68] =
-      &ZrO_Clexulator::site_deval_bfunc_68_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_68_0_at_0<double>;
   m_delta_func_table_0[0][69] =
-      &ZrO_Clexulator::site_deval_bfunc_69_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_69_0_at_0<double>;
   m_delta_func_table_0[0][70] =
-      &ZrO_Clexulator::site_deval_bfunc_70_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_70_0_at_0<double>;
   m_delta_func_table_0[0][71] =
-      &ZrO_Clexulator::site_deval_bfunc_71_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_71_0_at_0<double>;
   m_delta_func_table_0[0][72] =
-      &ZrO_Clexulator::site_deval_bfunc_72_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_72_0_at_0<double>;
   m_delta_func_table_0[0][73] =
-      &ZrO_Clexulator::site_deval_bfunc_73_0_at_0<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_73_0_at_0<double>;
 
-  m_delta_func_table_0[1][0] = &ZrO_Clexulator::zero_func<double>;
+  m_delta_func_table_0[1][0] =
+      &ZrO_Clexulator_formation_energy::zero_func<double>;
   m_delta_func_table_0[1][1] =
-      &ZrO_Clexulator::site_deval_bfunc_1_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_1_0_at_1<double>;
   m_delta_func_table_0[1][2] =
-      &ZrO_Clexulator::site_deval_bfunc_2_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_2_0_at_1<double>;
   m_delta_func_table_0[1][3] =
-      &ZrO_Clexulator::site_deval_bfunc_3_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_3_0_at_1<double>;
   m_delta_func_table_0[1][4] =
-      &ZrO_Clexulator::site_deval_bfunc_4_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_4_0_at_1<double>;
   m_delta_func_table_0[1][5] =
-      &ZrO_Clexulator::site_deval_bfunc_5_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_5_0_at_1<double>;
   m_delta_func_table_0[1][6] =
-      &ZrO_Clexulator::site_deval_bfunc_6_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_6_0_at_1<double>;
   m_delta_func_table_0[1][7] =
-      &ZrO_Clexulator::site_deval_bfunc_7_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_7_0_at_1<double>;
   m_delta_func_table_0[1][8] =
-      &ZrO_Clexulator::site_deval_bfunc_8_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_8_0_at_1<double>;
   m_delta_func_table_0[1][9] =
-      &ZrO_Clexulator::site_deval_bfunc_9_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_9_0_at_1<double>;
   m_delta_func_table_0[1][10] =
-      &ZrO_Clexulator::site_deval_bfunc_10_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_10_0_at_1<double>;
   m_delta_func_table_0[1][11] =
-      &ZrO_Clexulator::site_deval_bfunc_11_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_11_0_at_1<double>;
   m_delta_func_table_0[1][12] =
-      &ZrO_Clexulator::site_deval_bfunc_12_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_12_0_at_1<double>;
   m_delta_func_table_0[1][13] =
-      &ZrO_Clexulator::site_deval_bfunc_13_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_13_0_at_1<double>;
   m_delta_func_table_0[1][14] =
-      &ZrO_Clexulator::site_deval_bfunc_14_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_14_0_at_1<double>;
   m_delta_func_table_0[1][15] =
-      &ZrO_Clexulator::site_deval_bfunc_15_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_15_0_at_1<double>;
   m_delta_func_table_0[1][16] =
-      &ZrO_Clexulator::site_deval_bfunc_16_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_16_0_at_1<double>;
   m_delta_func_table_0[1][17] =
-      &ZrO_Clexulator::site_deval_bfunc_17_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_17_0_at_1<double>;
   m_delta_func_table_0[1][18] =
-      &ZrO_Clexulator::site_deval_bfunc_18_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_18_0_at_1<double>;
   m_delta_func_table_0[1][19] =
-      &ZrO_Clexulator::site_deval_bfunc_19_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_19_0_at_1<double>;
   m_delta_func_table_0[1][20] =
-      &ZrO_Clexulator::site_deval_bfunc_20_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_20_0_at_1<double>;
   m_delta_func_table_0[1][21] =
-      &ZrO_Clexulator::site_deval_bfunc_21_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_21_0_at_1<double>;
   m_delta_func_table_0[1][22] =
-      &ZrO_Clexulator::site_deval_bfunc_22_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_22_0_at_1<double>;
   m_delta_func_table_0[1][23] =
-      &ZrO_Clexulator::site_deval_bfunc_23_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_23_0_at_1<double>;
   m_delta_func_table_0[1][24] =
-      &ZrO_Clexulator::site_deval_bfunc_24_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_24_0_at_1<double>;
   m_delta_func_table_0[1][25] =
-      &ZrO_Clexulator::site_deval_bfunc_25_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_25_0_at_1<double>;
   m_delta_func_table_0[1][26] =
-      &ZrO_Clexulator::site_deval_bfunc_26_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_26_0_at_1<double>;
   m_delta_func_table_0[1][27] =
-      &ZrO_Clexulator::site_deval_bfunc_27_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_27_0_at_1<double>;
   m_delta_func_table_0[1][28] =
-      &ZrO_Clexulator::site_deval_bfunc_28_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_28_0_at_1<double>;
   m_delta_func_table_0[1][29] =
-      &ZrO_Clexulator::site_deval_bfunc_29_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_29_0_at_1<double>;
   m_delta_func_table_0[1][30] =
-      &ZrO_Clexulator::site_deval_bfunc_30_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_30_0_at_1<double>;
   m_delta_func_table_0[1][31] =
-      &ZrO_Clexulator::site_deval_bfunc_31_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_31_0_at_1<double>;
   m_delta_func_table_0[1][32] =
-      &ZrO_Clexulator::site_deval_bfunc_32_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_32_0_at_1<double>;
   m_delta_func_table_0[1][33] =
-      &ZrO_Clexulator::site_deval_bfunc_33_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_33_0_at_1<double>;
   m_delta_func_table_0[1][34] =
-      &ZrO_Clexulator::site_deval_bfunc_34_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_34_0_at_1<double>;
   m_delta_func_table_0[1][35] =
-      &ZrO_Clexulator::site_deval_bfunc_35_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_35_0_at_1<double>;
   m_delta_func_table_0[1][36] =
-      &ZrO_Clexulator::site_deval_bfunc_36_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_36_0_at_1<double>;
   m_delta_func_table_0[1][37] =
-      &ZrO_Clexulator::site_deval_bfunc_37_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_37_0_at_1<double>;
   m_delta_func_table_0[1][38] =
-      &ZrO_Clexulator::site_deval_bfunc_38_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_38_0_at_1<double>;
   m_delta_func_table_0[1][39] =
-      &ZrO_Clexulator::site_deval_bfunc_39_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_39_0_at_1<double>;
   m_delta_func_table_0[1][40] =
-      &ZrO_Clexulator::site_deval_bfunc_40_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_40_0_at_1<double>;
   m_delta_func_table_0[1][41] =
-      &ZrO_Clexulator::site_deval_bfunc_41_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_41_0_at_1<double>;
   m_delta_func_table_0[1][42] =
-      &ZrO_Clexulator::site_deval_bfunc_42_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_42_0_at_1<double>;
   m_delta_func_table_0[1][43] =
-      &ZrO_Clexulator::site_deval_bfunc_43_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_43_0_at_1<double>;
   m_delta_func_table_0[1][44] =
-      &ZrO_Clexulator::site_deval_bfunc_44_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_44_0_at_1<double>;
   m_delta_func_table_0[1][45] =
-      &ZrO_Clexulator::site_deval_bfunc_45_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_45_0_at_1<double>;
   m_delta_func_table_0[1][46] =
-      &ZrO_Clexulator::site_deval_bfunc_46_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_46_0_at_1<double>;
   m_delta_func_table_0[1][47] =
-      &ZrO_Clexulator::site_deval_bfunc_47_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_47_0_at_1<double>;
   m_delta_func_table_0[1][48] =
-      &ZrO_Clexulator::site_deval_bfunc_48_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_48_0_at_1<double>;
   m_delta_func_table_0[1][49] =
-      &ZrO_Clexulator::site_deval_bfunc_49_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_49_0_at_1<double>;
   m_delta_func_table_0[1][50] =
-      &ZrO_Clexulator::site_deval_bfunc_50_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_50_0_at_1<double>;
   m_delta_func_table_0[1][51] =
-      &ZrO_Clexulator::site_deval_bfunc_51_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_51_0_at_1<double>;
   m_delta_func_table_0[1][52] =
-      &ZrO_Clexulator::site_deval_bfunc_52_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_52_0_at_1<double>;
   m_delta_func_table_0[1][53] =
-      &ZrO_Clexulator::site_deval_bfunc_53_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_53_0_at_1<double>;
   m_delta_func_table_0[1][54] =
-      &ZrO_Clexulator::site_deval_bfunc_54_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_54_0_at_1<double>;
   m_delta_func_table_0[1][55] =
-      &ZrO_Clexulator::site_deval_bfunc_55_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_55_0_at_1<double>;
   m_delta_func_table_0[1][56] =
-      &ZrO_Clexulator::site_deval_bfunc_56_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_56_0_at_1<double>;
   m_delta_func_table_0[1][57] =
-      &ZrO_Clexulator::site_deval_bfunc_57_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_57_0_at_1<double>;
   m_delta_func_table_0[1][58] =
-      &ZrO_Clexulator::site_deval_bfunc_58_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_58_0_at_1<double>;
   m_delta_func_table_0[1][59] =
-      &ZrO_Clexulator::site_deval_bfunc_59_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_59_0_at_1<double>;
   m_delta_func_table_0[1][60] =
-      &ZrO_Clexulator::site_deval_bfunc_60_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_60_0_at_1<double>;
   m_delta_func_table_0[1][61] =
-      &ZrO_Clexulator::site_deval_bfunc_61_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_61_0_at_1<double>;
   m_delta_func_table_0[1][62] =
-      &ZrO_Clexulator::site_deval_bfunc_62_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_62_0_at_1<double>;
   m_delta_func_table_0[1][63] =
-      &ZrO_Clexulator::site_deval_bfunc_63_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_63_0_at_1<double>;
   m_delta_func_table_0[1][64] =
-      &ZrO_Clexulator::site_deval_bfunc_64_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_64_0_at_1<double>;
   m_delta_func_table_0[1][65] =
-      &ZrO_Clexulator::site_deval_bfunc_65_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_65_0_at_1<double>;
   m_delta_func_table_0[1][66] =
-      &ZrO_Clexulator::site_deval_bfunc_66_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_66_0_at_1<double>;
   m_delta_func_table_0[1][67] =
-      &ZrO_Clexulator::site_deval_bfunc_67_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_67_0_at_1<double>;
   m_delta_func_table_0[1][68] =
-      &ZrO_Clexulator::site_deval_bfunc_68_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_68_0_at_1<double>;
   m_delta_func_table_0[1][69] =
-      &ZrO_Clexulator::site_deval_bfunc_69_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_69_0_at_1<double>;
   m_delta_func_table_0[1][70] =
-      &ZrO_Clexulator::site_deval_bfunc_70_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_70_0_at_1<double>;
   m_delta_func_table_0[1][71] =
-      &ZrO_Clexulator::site_deval_bfunc_71_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_71_0_at_1<double>;
   m_delta_func_table_0[1][72] =
-      &ZrO_Clexulator::site_deval_bfunc_72_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_72_0_at_1<double>;
   m_delta_func_table_0[1][73] =
-      &ZrO_Clexulator::site_deval_bfunc_73_0_at_1<double>;
+      &ZrO_Clexulator_formation_energy::site_deval_bfunc_73_0_at_1<double>;
 
   m_weight_matrix.row(0) << 2, -1, 0;
   m_weight_matrix.row(1) << -1, 2, 0;
@@ -4370,12 +4453,13 @@ ZrO_Clexulator::ZrO_Clexulator() : BaseClexulator(225, 74, 2) {
       xtal::UnitCellCoord(2, 2, 1, 0),    xtal::UnitCellCoord(3, 2, 1, 0)};
 }
 
-ZrO_Clexulator::~ZrO_Clexulator() {
+ZrO_Clexulator_formation_energy::~ZrO_Clexulator_formation_energy() {
   // nothing here for now
 }
 
 /// \brief Calculate contribution to global correlations from one unit cell
-void ZrO_Clexulator::_calc_global_corr_contribution(double *corr_begin) const {
+void ZrO_Clexulator_formation_energy::_calc_global_corr_contribution(
+    double *corr_begin) const {
   _calc_global_corr_contribution();
   for (size_type i = 0; i < corr_size(); i++) {
     *(corr_begin + i) =
@@ -4384,7 +4468,7 @@ void ZrO_Clexulator::_calc_global_corr_contribution(double *corr_begin) const {
 }
 
 /// \brief Calculate contribution to global correlations from one unit cell
-void ZrO_Clexulator::_calc_global_corr_contribution() const {
+void ZrO_Clexulator_formation_energy::_calc_global_corr_contribution() const {
   m_params.pre_eval();
   {
     _global_prepare<double>();
@@ -4398,48 +4482,35 @@ void ZrO_Clexulator::_calc_global_corr_contribution() const {
 
 /// \brief Calculate contribution to select global correlations from one unit
 /// cell
-void ZrO_Clexulator::_calc_restricted_global_corr_contribution(
+void ZrO_Clexulator_formation_energy::_calc_restricted_global_corr_contribution(
     double *corr_begin, size_type const *ind_list_begin,
     size_type const *ind_list_end) const {
-  // std::cout << "ZrO_Clexulator 0" << std::endl;
   _calc_restricted_global_corr_contribution(ind_list_begin, ind_list_end);
-  // std::cout << "ZrO_Clexulator 1" << std::endl;
   for (; ind_list_begin < ind_list_end; ind_list_begin++) {
-    // std::cout << "ZrO_Clexulator 2" << std::endl;
     *(corr_begin + *ind_list_begin) = ParamPack::Val<double>::get(
         m_params, m_corr_param_key, *ind_list_begin);
-    // std::cout << "ZrO_Clexulator 3" << std::endl;
   }
-  // std::cout << "ZrO_Clexulator 4" << std::endl;
 }
 
 /// \brief Calculate contribution to select global correlations from one unit
 /// cell
-void ZrO_Clexulator::_calc_restricted_global_corr_contribution(
+void ZrO_Clexulator_formation_energy::_calc_restricted_global_corr_contribution(
     size_type const *ind_list_begin, size_type const *ind_list_end) const {
-  // std::cout << "ZrO_Clexulator 5" << std::endl;
   m_params.pre_eval();
-  // std::cout << "ZrO_Clexulator 6" << std::endl;
   {
-    // std::cout << "ZrO_Clexulator 7" << std::endl;
     _global_prepare<double>();
-    // std::cout << "ZrO_Clexulator 8" << std::endl;
     for (; ind_list_begin < ind_list_end; ind_list_begin++) {
-      // std::cout << "ZrO_Clexulator 9" << std::endl;
       ParamPack::Val<double>::set(
           m_params, m_corr_param_key, *ind_list_begin,
           (this->*m_orbit_func_table_0[*ind_list_begin])());
-      // std::cout << "ZrO_Clexulator 10" << std::endl;
     }
-    // std::cout << "ZrO_Clexulator 11" << std::endl;
   }
-  // std::cout << "ZrO_Clexulator 12" << std::endl;
   m_params.post_eval();
-  // std::cout << "ZrO_Clexulator 13" << std::endl;
 }
 
 /// \brief Calculate point correlations about basis site 'nlist_ind'
-void ZrO_Clexulator::_calc_point_corr(int nlist_ind, double *corr_begin) const {
+void ZrO_Clexulator_formation_energy::_calc_point_corr(
+    int nlist_ind, double *corr_begin) const {
   _calc_point_corr(nlist_ind);
   for (size_type i = 0; i < corr_size(); i++) {
     *(corr_begin + i) =
@@ -4448,7 +4519,7 @@ void ZrO_Clexulator::_calc_point_corr(int nlist_ind, double *corr_begin) const {
 }
 
 /// \brief Calculate point correlations about basis site 'nlist_ind'
-void ZrO_Clexulator::_calc_point_corr(int nlist_ind) const {
+void ZrO_Clexulator_formation_energy::_calc_point_corr(int nlist_ind) const {
   m_params.pre_eval();
   {
     _point_prepare<double>(nlist_ind);
@@ -4462,7 +4533,7 @@ void ZrO_Clexulator::_calc_point_corr(int nlist_ind) const {
 }
 
 /// \brief Calculate select point correlations about basis site 'nlist_ind'
-void ZrO_Clexulator::_calc_restricted_point_corr(
+void ZrO_Clexulator_formation_energy::_calc_restricted_point_corr(
     int nlist_ind, double *corr_begin, size_type const *ind_list_begin,
     size_type const *ind_list_end) const {
   _calc_restricted_point_corr(nlist_ind, ind_list_begin, ind_list_end);
@@ -4473,7 +4544,7 @@ void ZrO_Clexulator::_calc_restricted_point_corr(
 }
 
 /// \brief Calculate select point correlations about basis site 'nlist_ind'
-void ZrO_Clexulator::_calc_restricted_point_corr(
+void ZrO_Clexulator_formation_energy::_calc_restricted_point_corr(
     int nlist_ind, size_type const *ind_list_begin,
     size_type const *ind_list_end) const {
   m_params.pre_eval();
@@ -4490,8 +4561,8 @@ void ZrO_Clexulator::_calc_restricted_point_corr(
 
 /// \brief Calculate the change in point correlations due to changing an
 /// occupant
-void ZrO_Clexulator::_calc_delta_point_corr(int nlist_ind, int occ_i, int occ_f,
-                                            double *corr_begin) const {
+void ZrO_Clexulator_formation_energy::_calc_delta_point_corr(
+    int nlist_ind, int occ_i, int occ_f, double *corr_begin) const {
   _calc_delta_point_corr(nlist_ind, occ_i, occ_f);
   for (size_type i = 0; i < corr_size(); i++) {
     *(corr_begin + i) =
@@ -4501,8 +4572,9 @@ void ZrO_Clexulator::_calc_delta_point_corr(int nlist_ind, int occ_i, int occ_f,
 
 /// \brief Calculate the change in point correlations due to changing an
 /// occupant
-void ZrO_Clexulator::_calc_delta_point_corr(int nlist_ind, int occ_i,
-                                            int occ_f) const {
+void ZrO_Clexulator_formation_energy::_calc_delta_point_corr(int nlist_ind,
+                                                             int occ_i,
+                                                             int occ_f) const {
   m_params.pre_eval();
   {
     _point_prepare<double>(nlist_ind);
@@ -4517,7 +4589,7 @@ void ZrO_Clexulator::_calc_delta_point_corr(int nlist_ind, int occ_i,
 
 /// \brief Calculate the change in select point correlations due to changing an
 /// occupant
-void ZrO_Clexulator::_calc_restricted_delta_point_corr(
+void ZrO_Clexulator_formation_energy::_calc_restricted_delta_point_corr(
     int nlist_ind, int occ_i, int occ_f, double *corr_begin,
     size_type const *ind_list_begin, size_type const *ind_list_end) const {
   _calc_restricted_delta_point_corr(nlist_ind, occ_i, occ_f, ind_list_begin,
@@ -4530,7 +4602,7 @@ void ZrO_Clexulator::_calc_restricted_delta_point_corr(
 
 /// \brief Calculate the change in select point correlations due to changing an
 /// occupant
-void ZrO_Clexulator::_calc_restricted_delta_point_corr(
+void ZrO_Clexulator_formation_energy::_calc_restricted_delta_point_corr(
     int nlist_ind, int occ_i, int occ_f, size_type const *ind_list_begin,
     size_type const *ind_list_end) const {
   m_params.pre_eval();
@@ -4547,7 +4619,7 @@ void ZrO_Clexulator::_calc_restricted_delta_point_corr(
 }
 
 template <typename Scalar>
-void ZrO_Clexulator::_point_prepare(int nlist_ind) const {
+void ZrO_Clexulator_formation_energy::_point_prepare(int nlist_ind) const {
   switch (nlist_ind) {
     case 0:
       if (m_params.eval_mode(m_occ_site_func_param_key) != ParamPack::READ) {
@@ -5140,7 +5212,7 @@ void ZrO_Clexulator::_point_prepare(int nlist_ind) const {
   }
 }
 template <typename Scalar>
-void ZrO_Clexulator::_global_prepare() const {
+void ZrO_Clexulator_formation_energy::_global_prepare() const {
   if (m_params.eval_mode(m_occ_site_func_param_key) != ParamPack::READ) {
     ParamPack::Val<Scalar>::set(m_params, m_occ_site_func_param_key, 0, 0,
                                 eval_occ_func_2_0(0));
@@ -5499,7 +5571,7 @@ void ZrO_Clexulator::_global_prepare() const {
 
 // Basis functions for empty cluster:
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_0_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_0_0() const {
   return 1;
 }
 
@@ -5508,26 +5580,28 @@ Scalar ZrO_Clexulator::eval_bfunc_0_0() const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_1_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_1_0() const {
   return (occ_func_2_0(0) + occ_func_2_0(1)) / 2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_1_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_1_0_at_0() const {
   return (occ_func_2_0(0)) / 2.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_1_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_1_0_at_1() const {
   return (occ_func_2_0(1)) / 2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_1_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_1_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) * (1) / 2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_1_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_1_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) * (1) / 2.;
 }
 
@@ -5538,33 +5612,35 @@ Scalar ZrO_Clexulator::site_deval_bfunc_1_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_2_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_2_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(16)) /
          2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_2_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_2_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) +
           occ_func_2_0(15) * occ_func_3_0(0)) /
          2.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_2_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_2_0_at_1() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(16)) /
          2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_2_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_2_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(1) + occ_func_2_0(15)) / 2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_2_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_2_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(0) + occ_func_3_0(16)) / 2.;
 }
@@ -5576,7 +5652,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_2_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_3_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_3_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) +
           occ_func_2_0(11) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(13) +
@@ -5587,7 +5663,7 @@ Scalar ZrO_Clexulator::eval_bfunc_3_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_3_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_3_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) +
           occ_func_2_0(6) * occ_func_2_0(0) +
           occ_func_2_0(12) * occ_func_2_0(0) +
@@ -5597,7 +5673,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_3_0_at_0() const {
          6.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_3_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_3_0_at_1() const {
   return (occ_func_2_0(11) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(5) +
           occ_func_2_0(1) * occ_func_2_0(13) +
@@ -5608,7 +5684,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_3_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_3_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_3_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) + occ_func_2_0(6) + occ_func_2_0(12) +
           occ_func_2_0(2) + occ_func_2_0(10) + occ_func_2_0(4)) /
@@ -5616,7 +5693,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_3_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_3_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_3_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(11) + occ_func_2_0(5) + occ_func_2_0(13) +
           occ_func_2_0(3) + occ_func_2_0(9) + occ_func_2_0(7)) /
@@ -5630,7 +5708,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_3_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_4_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_4_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(51) +
           occ_func_2_0(1) * occ_func_3_0(8) +
           occ_func_2_0(1) * occ_func_3_0(10) +
@@ -5647,7 +5725,7 @@ Scalar ZrO_Clexulator::eval_bfunc_4_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_4_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_4_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(51) +
           occ_func_2_0(7) * occ_func_3_0(0) +
           occ_func_2_0(5) * occ_func_3_0(0) +
@@ -5663,7 +5741,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_4_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_4_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_4_0_at_1() const {
   return (occ_func_2_0(32) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(8) +
           occ_func_2_0(1) * occ_func_3_0(10) +
@@ -5680,7 +5758,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_4_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_4_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_4_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(51) + occ_func_2_0(7) + occ_func_2_0(5) +
           occ_func_3_0(35) + occ_func_3_0(39) + occ_func_3_0(13) +
@@ -5690,7 +5769,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_4_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_4_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_4_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(32) + occ_func_3_0(8) + occ_func_3_0(10) +
           occ_func_2_0(48) + occ_func_2_0(44) + occ_func_2_0(2) +
@@ -5706,33 +5786,35 @@ Scalar ZrO_Clexulator::site_deval_bfunc_4_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_5_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_5_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) +
           occ_func_2_0(1) * occ_func_2_0(17)) /
          2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_5_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_5_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) +
           occ_func_2_0(14) * occ_func_2_0(0)) /
          2.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_5_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_5_0_at_1() const {
   return (occ_func_2_0(1) * occ_func_2_0(17) +
           occ_func_2_0(15) * occ_func_2_0(1)) /
          2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_5_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_5_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(16) + occ_func_2_0(14)) / 2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_5_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_5_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(17) + occ_func_2_0(15)) / 2.;
 }
@@ -5744,7 +5826,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_5_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_6_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_6_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(28) +
           occ_func_2_0(1) * occ_func_2_0(27) +
           occ_func_2_0(1) * occ_func_2_0(25) +
@@ -5755,7 +5837,7 @@ Scalar ZrO_Clexulator::eval_bfunc_6_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_6_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_6_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_2_0(0) +
           occ_func_2_0(24) * occ_func_2_0(0) +
@@ -5765,7 +5847,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_6_0_at_0() const {
          6.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_6_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_6_0_at_1() const {
   return (occ_func_2_0(1) * occ_func_2_0(27) +
           occ_func_2_0(21) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(25) +
@@ -5776,7 +5858,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_6_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_6_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_6_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(28) + occ_func_2_0(18) + occ_func_2_0(24) +
           occ_func_2_0(22) + occ_func_2_0(26) + occ_func_2_0(20)) /
@@ -5784,7 +5867,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_6_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_6_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_6_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(27) + occ_func_2_0(21) + occ_func_2_0(25) +
           occ_func_2_0(23) + occ_func_2_0(29) + occ_func_2_0(19)) /
@@ -5798,7 +5882,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_6_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_7_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_7_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) +
           occ_func_2_0(49) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(51) +
@@ -5815,7 +5899,7 @@ Scalar ZrO_Clexulator::eval_bfunc_7_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_7_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_7_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) +
           occ_func_2_0(40) * occ_func_2_0(0) +
           occ_func_2_0(52) * occ_func_2_0(0) +
@@ -5831,7 +5915,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_7_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_7_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_7_0_at_1() const {
   return (occ_func_2_0(49) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(35) +
           occ_func_2_0(1) * occ_func_2_0(51) +
@@ -5848,7 +5932,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_7_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_7_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_7_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(42) + occ_func_2_0(40) + occ_func_2_0(52) +
           occ_func_2_0(30) + occ_func_2_0(46) + occ_func_2_0(36) +
@@ -5858,7 +5943,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_7_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_7_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_7_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(49) + occ_func_2_0(35) + occ_func_2_0(51) +
           occ_func_2_0(33) + occ_func_2_0(45) + occ_func_2_0(39) +
@@ -5874,7 +5960,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_7_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_8_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_8_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(87) +
           occ_func_2_0(1) * occ_func_3_0(26) +
           occ_func_2_0(1) * occ_func_3_0(24) +
@@ -5891,7 +5977,7 @@ Scalar ZrO_Clexulator::eval_bfunc_8_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_8_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_8_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(87) +
           occ_func_2_0(21) * occ_func_3_0(0) +
           occ_func_2_0(23) * occ_func_3_0(0) +
@@ -5907,7 +5993,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_8_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_8_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_8_0_at_1() const {
   return (occ_func_2_0(68) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(26) +
           occ_func_2_0(1) * occ_func_3_0(24) +
@@ -5924,7 +6010,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_8_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_8_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_8_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(87) + occ_func_2_0(21) + occ_func_2_0(23) +
           occ_func_3_0(75) + occ_func_3_0(71) + occ_func_3_0(19) +
@@ -5934,7 +6021,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_8_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_8_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_8_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(68) + occ_func_3_0(26) + occ_func_3_0(24) +
           occ_func_2_0(80) + occ_func_2_0(84) + occ_func_2_0(28) +
@@ -5950,7 +6038,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_8_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_9_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_9_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(60) +
           occ_func_2_0(63) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(65) +
@@ -5961,7 +6049,7 @@ Scalar ZrO_Clexulator::eval_bfunc_9_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_9_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_9_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(60) +
           occ_func_2_0(58) * occ_func_2_0(0) +
           occ_func_2_0(64) * occ_func_2_0(0) +
@@ -5971,7 +6059,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_9_0_at_0() const {
          6.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_9_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_9_0_at_1() const {
   return (occ_func_2_0(63) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(57) +
           occ_func_2_0(1) * occ_func_2_0(65) +
@@ -5982,7 +6070,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_9_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_9_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_9_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(60) + occ_func_2_0(58) + occ_func_2_0(64) +
           occ_func_2_0(54) + occ_func_2_0(62) + occ_func_2_0(56)) /
@@ -5990,7 +6079,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_9_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_9_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_9_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(63) + occ_func_2_0(57) + occ_func_2_0(65) +
           occ_func_2_0(55) + occ_func_2_0(61) + occ_func_2_0(59)) /
@@ -6004,7 +6094,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_9_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_10_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_10_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(111) +
           occ_func_2_0(1) * occ_func_3_0(60) +
           occ_func_2_0(1) * occ_func_3_0(62) +
@@ -6021,7 +6111,7 @@ Scalar ZrO_Clexulator::eval_bfunc_10_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_10_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_10_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(111) +
           occ_func_2_0(59) * occ_func_3_0(0) +
           occ_func_2_0(57) * occ_func_3_0(0) +
@@ -6037,7 +6127,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_10_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_10_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_10_0_at_1() const {
   return (occ_func_2_0(92) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(60) +
           occ_func_2_0(1) * occ_func_3_0(62) +
@@ -6054,7 +6144,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_10_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_10_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_10_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(111) + occ_func_2_0(59) + occ_func_2_0(57) +
           occ_func_3_0(95) + occ_func_3_0(99) + occ_func_3_0(65) +
@@ -6064,7 +6155,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_10_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_10_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_10_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(92) + occ_func_3_0(60) + occ_func_3_0(62) +
           occ_func_2_0(108) + occ_func_2_0(104) + occ_func_2_0(54) +
@@ -6080,7 +6172,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_10_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_11_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_11_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(88) +
           occ_func_2_0(1) * occ_func_2_0(85) +
           occ_func_2_0(1) * occ_func_2_0(81) +
@@ -6091,7 +6183,7 @@ Scalar ZrO_Clexulator::eval_bfunc_11_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_11_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_11_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(88) +
           occ_func_2_0(66) * occ_func_2_0(0) +
           occ_func_2_0(78) * occ_func_2_0(0) +
@@ -6101,7 +6193,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_11_0_at_0() const {
          6.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_11_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_11_0_at_1() const {
   return (occ_func_2_0(1) * occ_func_2_0(85) +
           occ_func_2_0(71) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(81) +
@@ -6112,7 +6204,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_11_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_11_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_11_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(88) + occ_func_2_0(66) + occ_func_2_0(78) +
           occ_func_2_0(76) + occ_func_2_0(82) + occ_func_2_0(72)) /
@@ -6120,7 +6213,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_11_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_11_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_11_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(85) + occ_func_2_0(71) + occ_func_2_0(81) +
           occ_func_2_0(75) + occ_func_2_0(87) + occ_func_2_0(69)) /
@@ -6134,7 +6228,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_11_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_12_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_12_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(86) +
           occ_func_2_0(1) * occ_func_2_0(83) +
           occ_func_2_0(1) * occ_func_2_0(79) +
@@ -6145,7 +6239,7 @@ Scalar ZrO_Clexulator::eval_bfunc_12_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_12_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_12_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(86) +
           occ_func_2_0(68) * occ_func_2_0(0) +
           occ_func_2_0(80) * occ_func_2_0(0) +
@@ -6155,7 +6249,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_12_0_at_0() const {
          6.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_12_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_12_0_at_1() const {
   return (occ_func_2_0(1) * occ_func_2_0(83) +
           occ_func_2_0(73) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(79) +
@@ -6166,7 +6260,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_12_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_12_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_12_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(86) + occ_func_2_0(68) + occ_func_2_0(80) +
           occ_func_2_0(74) + occ_func_2_0(84) + occ_func_2_0(70)) /
@@ -6174,7 +6269,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_12_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_12_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_12_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(83) + occ_func_2_0(73) + occ_func_2_0(79) +
           occ_func_2_0(77) + occ_func_2_0(89) + occ_func_2_0(67)) /
@@ -6188,33 +6284,35 @@ Scalar ZrO_Clexulator::site_deval_bfunc_12_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_13_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_13_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(17) +
           occ_func_2_0(1) * occ_func_3_0(200)) /
          2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_13_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_13_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(17) +
           occ_func_2_0(199) * occ_func_3_0(0)) /
          2.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_13_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_13_0_at_1() const {
   return (occ_func_2_0(14) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(200)) /
          2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_13_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_13_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(17) + occ_func_2_0(199)) / 2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_13_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_13_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(14) + occ_func_3_0(200)) / 2.;
 }
@@ -6226,7 +6324,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_13_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_14_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_14_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(102) +
           occ_func_2_0(109) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(111) +
@@ -6243,7 +6341,7 @@ Scalar ZrO_Clexulator::eval_bfunc_14_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_14_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_14_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(102) +
           occ_func_2_0(100) * occ_func_2_0(0) +
           occ_func_2_0(112) * occ_func_2_0(0) +
@@ -6259,7 +6357,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_14_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_14_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_14_0_at_1() const {
   return (occ_func_2_0(109) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(95) +
           occ_func_2_0(1) * occ_func_2_0(111) +
@@ -6276,7 +6374,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_14_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_14_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_14_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(102) + occ_func_2_0(100) + occ_func_2_0(112) +
           occ_func_2_0(90) + occ_func_2_0(106) + occ_func_2_0(96) +
@@ -6286,7 +6385,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_14_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_14_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_14_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(109) + occ_func_2_0(95) + occ_func_2_0(111) +
           occ_func_2_0(93) + occ_func_2_0(105) + occ_func_2_0(99) +
@@ -6302,7 +6402,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_14_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_15_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_15_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(223) +
           occ_func_2_0(1) * occ_func_3_0(42) +
           occ_func_2_0(1) * occ_func_3_0(46) +
@@ -6319,7 +6419,7 @@ Scalar ZrO_Clexulator::eval_bfunc_15_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_15_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_15_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(223) +
           occ_func_2_0(41) * occ_func_3_0(0) +
           occ_func_2_0(37) * occ_func_3_0(0) +
@@ -6335,7 +6435,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_15_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_15_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_15_0_at_1() const {
   return (occ_func_2_0(204) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(42) +
           occ_func_2_0(1) * occ_func_3_0(46) +
@@ -6352,7 +6452,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_15_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_15_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_15_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(223) + occ_func_2_0(41) + occ_func_2_0(37) +
           occ_func_3_0(207) + occ_func_3_0(211) + occ_func_3_0(53) +
@@ -6362,7 +6463,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_15_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_15_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_15_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(204) + occ_func_3_0(42) + occ_func_3_0(46) +
           occ_func_2_0(220) + occ_func_2_0(216) + occ_func_2_0(30) +
@@ -6378,7 +6480,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_15_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_16_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_16_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(126) +
           occ_func_2_0(1) * occ_func_2_0(135) +
           occ_func_2_0(133) * occ_func_2_0(1) +
@@ -6395,7 +6497,7 @@ Scalar ZrO_Clexulator::eval_bfunc_16_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_16_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_16_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(126) +
           occ_func_2_0(124) * occ_func_2_0(0) +
           occ_func_2_0(0) * occ_func_2_0(132) +
@@ -6411,7 +6513,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_16_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_16_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_16_0_at_1() const {
   return (occ_func_2_0(1) * occ_func_2_0(135) +
           occ_func_2_0(117) * occ_func_2_0(1) +
           occ_func_2_0(133) * occ_func_2_0(1) +
@@ -6428,7 +6530,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_16_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_16_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_16_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(126) + occ_func_2_0(124) + occ_func_2_0(132) +
           occ_func_2_0(118) + occ_func_2_0(134) + occ_func_2_0(116) +
@@ -6438,7 +6541,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_16_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_16_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_16_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(135) + occ_func_2_0(117) + occ_func_2_0(133) +
           occ_func_2_0(119) + occ_func_2_0(127) + occ_func_2_0(125) +
@@ -6454,7 +6558,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_16_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_17_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_17_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(175) +
           occ_func_2_0(1) * occ_func_3_0(134) +
           occ_func_2_0(133) * occ_func_3_0(0) +
@@ -6483,7 +6587,7 @@ Scalar ZrO_Clexulator::eval_bfunc_17_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_17_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_17_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(175) +
           occ_func_2_0(117) * occ_func_3_0(0) +
           occ_func_2_0(133) * occ_func_3_0(0) +
@@ -6511,7 +6615,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_17_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_17_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_17_0_at_1() const {
   return (occ_func_2_0(172) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(134) +
           occ_func_2_0(1) * occ_func_3_0(118) +
@@ -6540,7 +6644,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_17_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_17_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_17_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(175) + occ_func_2_0(117) + occ_func_2_0(133) +
           occ_func_3_0(187) + occ_func_3_0(155) + occ_func_3_0(123) +
@@ -6554,7 +6659,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_17_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_17_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_17_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(172) + occ_func_3_0(134) + occ_func_3_0(118) +
           occ_func_2_0(160) + occ_func_2_0(192) + occ_func_2_0(128) +
@@ -6576,7 +6682,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_17_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_18_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_18_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(12) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(13) +
           occ_func_2_0(10) * occ_func_2_0(12) * occ_func_2_0(0) +
@@ -6585,7 +6691,7 @@ Scalar ZrO_Clexulator::eval_bfunc_18_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_18_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_18_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(12) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_2_0(10) +
           occ_func_2_0(2) * occ_func_2_0(4) * occ_func_2_0(0) +
@@ -6595,7 +6701,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_18_0_at_0() const {
          4.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_18_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_18_0_at_1() const {
   return (occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(13) +
           occ_func_2_0(1) * occ_func_2_0(5) * occ_func_2_0(9) +
           occ_func_2_0(7) * occ_func_2_0(3) * occ_func_2_0(1) +
@@ -6606,7 +6712,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_18_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_18_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_18_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_2_0(12) +
           occ_func_2_0(6) * occ_func_2_0(10) +
@@ -6618,7 +6725,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_18_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_18_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_18_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(11) * occ_func_2_0(13) +
           occ_func_2_0(5) * occ_func_2_0(9) +
@@ -6638,7 +6746,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_18_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_19_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_19_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(8) +
           occ_func_2_0(11) * occ_func_3_0(48) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(13) +
@@ -6667,7 +6775,7 @@ Scalar ZrO_Clexulator::eval_bfunc_19_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_19_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_19_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(8) +
           occ_func_2_0(6) * occ_func_3_0(7) * occ_func_2_0(0) +
           occ_func_2_0(15) * occ_func_3_0(0) * occ_func_2_0(35) +
@@ -6707,7 +6815,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_19_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_19_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_19_0_at_1() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(8) +
           occ_func_2_0(11) * occ_func_3_0(48) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(5) +
@@ -6748,7 +6856,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_19_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_19_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_19_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(1) * occ_func_2_0(8) +
           occ_func_2_0(6) * occ_func_3_0(7) +
@@ -6790,7 +6899,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_19_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_19_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_19_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(0) * occ_func_2_0(8) +
           occ_func_2_0(11) * occ_func_3_0(48) +
@@ -6840,7 +6950,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_19_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_20_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_20_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(51) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(12) +
           occ_func_2_0(1) * occ_func_2_0(13) * occ_func_3_0(10) +
@@ -6857,7 +6967,7 @@ Scalar ZrO_Clexulator::eval_bfunc_20_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_20_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_20_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(51) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_3_0(47) +
           occ_func_2_0(7) * occ_func_2_0(3) * occ_func_3_0(0) +
@@ -6879,7 +6989,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_20_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_20_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_20_0_at_1() const {
   return (occ_func_2_0(32) * occ_func_2_0(36) * occ_func_3_0(1) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(12) +
           occ_func_2_0(1) * occ_func_2_0(5) * occ_func_3_0(8) +
@@ -6902,7 +7012,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_20_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_20_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_20_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_3_0(51) +
           occ_func_2_0(6) * occ_func_3_0(47) +
@@ -6926,7 +7037,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_20_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_20_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_20_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(32) * occ_func_2_0(36) +
           occ_func_2_0(11) * occ_func_3_0(12) +
@@ -6958,7 +7070,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_20_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_21_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_21_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(13) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(52) +
           occ_func_2_0(1) * occ_func_2_0(13) * occ_func_3_0(48) +
@@ -6975,7 +7087,7 @@ Scalar ZrO_Clexulator::eval_bfunc_21_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_21_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_21_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(13) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_3_0(11) +
           occ_func_2_0(39) * occ_func_2_0(31) * occ_func_3_0(0) +
@@ -6997,7 +7109,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_21_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_21_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_21_0_at_1() const {
   return (occ_func_2_0(2) * occ_func_2_0(4) * occ_func_3_0(1) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(52) +
           occ_func_2_0(1) * occ_func_2_0(5) * occ_func_3_0(44) +
@@ -7020,7 +7132,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_21_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_21_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_21_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_3_0(13) +
           occ_func_2_0(6) * occ_func_3_0(11) +
@@ -7044,7 +7157,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_21_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_21_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_21_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(2) * occ_func_2_0(4) +
           occ_func_2_0(11) * occ_func_3_0(52) +
@@ -7076,21 +7190,21 @@ Scalar ZrO_Clexulator::site_deval_bfunc_21_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_22_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_22_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(16) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(17)) /
          2.;
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_22_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_22_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(16) +
           occ_func_2_0(14) * occ_func_3_0(15) * occ_func_2_0(0) +
           occ_func_2_0(15) * occ_func_3_0(0) * occ_func_2_0(1)) /
          2.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_22_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_22_0_at_1() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(16) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(17) +
           occ_func_2_0(15) * occ_func_3_0(0) * occ_func_2_0(1)) /
@@ -7098,7 +7212,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_22_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_22_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_22_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(1) * occ_func_2_0(16) +
           occ_func_2_0(14) * occ_func_3_0(15) +
@@ -7107,7 +7222,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_22_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_22_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_22_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(0) * occ_func_2_0(16) +
           occ_func_3_0(16) * occ_func_2_0(17) +
@@ -7124,7 +7240,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_22_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_23_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_23_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_3_0(9) +
           occ_func_2_0(47) * occ_func_2_0(11) * occ_func_3_0(0) +
           occ_func_2_0(1) * occ_func_2_0(17) * occ_func_3_0(52) +
@@ -7141,7 +7257,7 @@ Scalar ZrO_Clexulator::eval_bfunc_23_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_23_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_23_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_3_0(9) +
           occ_func_2_0(14) * occ_func_2_0(0) * occ_func_3_0(43) +
           occ_func_2_0(47) * occ_func_2_0(11) * occ_func_3_0(0) +
@@ -7163,7 +7279,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_23_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_23_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_23_0_at_1() const {
   return (occ_func_2_0(6) * occ_func_2_0(40) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_2_0(17) * occ_func_3_0(36) +
           occ_func_2_0(15) * occ_func_2_0(1) * occ_func_3_0(4) +
@@ -7186,7 +7302,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_23_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_23_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_23_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(16) * occ_func_3_0(9) +
           occ_func_2_0(14) * occ_func_3_0(43) +
@@ -7210,7 +7327,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_23_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_23_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_23_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(6) * occ_func_2_0(40) +
           occ_func_2_0(17) * occ_func_3_0(36) +
@@ -7242,7 +7360,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_23_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_24_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_24_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(10) * occ_func_2_0(28) +
           occ_func_2_0(1) * occ_func_2_0(13) * occ_func_2_0(27) +
           occ_func_2_0(9) * occ_func_2_0(1) * occ_func_2_0(11) +
@@ -7259,7 +7377,7 @@ Scalar ZrO_Clexulator::eval_bfunc_24_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_24_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_24_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(10) * occ_func_2_0(28) +
           occ_func_2_0(4) * occ_func_2_0(0) * occ_func_2_0(12) +
           occ_func_2_0(18) * occ_func_2_0(2) * occ_func_2_0(0) +
@@ -7281,7 +7399,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_24_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_24_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_24_0_at_1() const {
   return (occ_func_2_0(1) * occ_func_2_0(13) * occ_func_2_0(27) +
           occ_func_2_0(3) * occ_func_2_0(1) * occ_func_2_0(9) +
           occ_func_2_0(21) * occ_func_2_0(7) * occ_func_2_0(1) +
@@ -7304,7 +7422,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_24_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_24_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_24_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(10) * occ_func_2_0(28) +
           occ_func_2_0(4) * occ_func_2_0(12) +
@@ -7328,7 +7447,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_24_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_24_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_24_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(13) * occ_func_2_0(27) +
           occ_func_2_0(3) * occ_func_2_0(9) +
@@ -7360,7 +7480,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_24_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_25_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_25_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_3_0(47) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_3_0(28) +
           occ_func_2_0(9) * occ_func_3_0(26) * occ_func_3_0(0) +
@@ -7389,7 +7509,7 @@ Scalar ZrO_Clexulator::eval_bfunc_25_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_25_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_25_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_3_0(47) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_3_0(28) +
           occ_func_2_0(3) * occ_func_3_0(18) * occ_func_3_0(0) +
@@ -7429,7 +7549,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_25_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_25_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_25_0_at_1() const {
   return (occ_func_2_0(40) * occ_func_3_0(1) * occ_func_3_0(25) +
           occ_func_2_0(36) * occ_func_3_0(23) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(4) * occ_func_3_0(12) +
@@ -7470,7 +7590,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_25_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_25_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_25_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(43) * occ_func_3_0(47) +
           occ_func_2_0(11) * occ_func_3_0(28) +
@@ -7512,7 +7633,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_25_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_25_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_25_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(40) * occ_func_3_0(25) +
           occ_func_2_0(36) * occ_func_3_0(23) +
@@ -7562,7 +7684,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_25_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_26_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_26_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(24) * occ_func_2_0(28) +
           occ_func_2_0(1) * occ_func_2_0(29) * occ_func_2_0(27) +
           occ_func_2_0(0) * occ_func_2_0(26) * occ_func_2_0(28) +
@@ -7571,7 +7693,7 @@ Scalar ZrO_Clexulator::eval_bfunc_26_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_26_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_26_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(24) * occ_func_2_0(28) +
           occ_func_2_0(22) * occ_func_2_0(0) * occ_func_2_0(26) +
           occ_func_2_0(18) * occ_func_2_0(20) * occ_func_2_0(0) +
@@ -7581,7 +7703,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_26_0_at_0() const {
          4.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_26_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_26_0_at_1() const {
   return (occ_func_2_0(1) * occ_func_2_0(29) * occ_func_2_0(27) +
           occ_func_2_0(21) * occ_func_2_0(25) * occ_func_2_0(1) +
           occ_func_2_0(19) * occ_func_2_0(1) * occ_func_2_0(23) +
@@ -7592,7 +7714,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_26_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_26_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_26_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(24) * occ_func_2_0(28) +
           occ_func_2_0(22) * occ_func_2_0(26) +
@@ -7604,7 +7727,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_26_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_26_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_26_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(29) * occ_func_2_0(27) +
           occ_func_2_0(21) * occ_func_2_0(25) +
@@ -7624,7 +7748,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_26_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_27_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_27_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_3_0(43) +
           occ_func_2_0(11) * occ_func_3_0(48) * occ_func_3_0(0) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_3_0(12) +
@@ -7653,7 +7777,7 @@ Scalar ZrO_Clexulator::eval_bfunc_27_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_27_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_27_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_3_0(43) +
           occ_func_2_0(11) * occ_func_3_0(48) * occ_func_3_0(0) +
           occ_func_2_0(15) * occ_func_3_0(0) * occ_func_3_0(34) +
@@ -7693,7 +7817,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_27_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_27_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_27_0_at_1() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_3_0(43) +
           occ_func_2_0(40) * occ_func_3_0(41) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_3_0(4) +
@@ -7734,7 +7858,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_27_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_27_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_27_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(1) * occ_func_3_0(43) +
           occ_func_2_0(11) * occ_func_3_0(48) +
@@ -7776,7 +7901,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_27_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_27_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_27_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(0) * occ_func_3_0(43) +
           occ_func_2_0(40) * occ_func_3_0(41) +
@@ -7826,7 +7952,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_27_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_28_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_28_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(51) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(52) +
           occ_func_2_0(1) * occ_func_2_0(51) * occ_func_3_0(10) +
@@ -7855,7 +7981,7 @@ Scalar ZrO_Clexulator::eval_bfunc_28_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_28_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_28_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(51) +
           occ_func_2_0(40) * occ_func_2_0(0) * occ_func_3_0(11) +
           occ_func_2_0(7) * occ_func_2_0(31) * occ_func_3_0(0) +
@@ -7895,7 +8021,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_28_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_28_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_28_0_at_1() const {
   return (occ_func_2_0(32) * occ_func_2_0(4) * occ_func_3_0(1) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(52) +
           occ_func_2_0(1) * occ_func_2_0(35) * occ_func_3_0(8) +
@@ -7936,7 +8062,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_28_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_28_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_28_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(42) * occ_func_3_0(51) +
           occ_func_2_0(40) * occ_func_3_0(11) +
@@ -7978,7 +8105,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_28_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_28_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_28_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(32) * occ_func_2_0(4) +
           occ_func_2_0(49) * occ_func_3_0(52) +
@@ -8028,7 +8156,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_28_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_29_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_29_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_2_0(8) +
           occ_func_2_0(11) * occ_func_2_0(49) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(17) * occ_func_2_0(13) +
@@ -8057,7 +8185,7 @@ Scalar ZrO_Clexulator::eval_bfunc_29_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_29_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_29_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_2_0(8) +
           occ_func_2_0(14) * occ_func_2_0(0) * occ_func_2_0(42) +
           occ_func_2_0(6) * occ_func_2_0(40) * occ_func_2_0(0) +
@@ -8097,7 +8225,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_29_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_29_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_29_0_at_1() const {
   return (occ_func_2_0(11) * occ_func_2_0(49) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(17) * occ_func_2_0(5) +
           occ_func_2_0(15) * occ_func_2_0(1) * occ_func_2_0(35) +
@@ -8138,7 +8266,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_29_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_29_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_29_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(16) * occ_func_2_0(8) +
           occ_func_2_0(14) * occ_func_2_0(42) +
@@ -8180,7 +8309,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_29_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_29_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_29_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(11) * occ_func_2_0(49) +
           occ_func_2_0(17) * occ_func_2_0(5) +
@@ -8230,7 +8360,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_29_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_30_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_30_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(52) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(53) +
           occ_func_2_0(1) * occ_func_2_0(13) * occ_func_2_0(49) +
@@ -8247,7 +8377,7 @@ Scalar ZrO_Clexulator::eval_bfunc_30_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_30_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_30_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(52) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_2_0(48) +
           occ_func_2_0(30) * occ_func_2_0(34) * occ_func_2_0(0) +
@@ -8269,7 +8399,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_30_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_30_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_30_0_at_1() const {
   return (occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(53) +
           occ_func_2_0(1) * occ_func_2_0(5) * occ_func_2_0(45) +
           occ_func_2_0(39) * occ_func_2_0(31) * occ_func_2_0(1) +
@@ -8292,7 +8422,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_30_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_30_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_30_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_2_0(52) +
           occ_func_2_0(6) * occ_func_2_0(48) +
@@ -8316,7 +8447,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_30_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_30_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_30_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(11) * occ_func_2_0(53) +
           occ_func_2_0(5) * occ_func_2_0(45) +
@@ -8348,7 +8480,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_30_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_31_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_31_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(50) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(51) +
           occ_func_2_0(1) * occ_func_2_0(13) * occ_func_2_0(47) +
@@ -8365,7 +8497,7 @@ Scalar ZrO_Clexulator::eval_bfunc_31_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_31_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_31_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(50) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_2_0(46) +
           occ_func_2_0(32) * occ_func_2_0(36) * occ_func_2_0(0) +
@@ -8387,7 +8519,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_31_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_31_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_31_0_at_1() const {
   return (occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(51) +
           occ_func_2_0(1) * occ_func_2_0(5) * occ_func_2_0(43) +
           occ_func_2_0(41) * occ_func_2_0(33) * occ_func_2_0(1) +
@@ -8410,7 +8542,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_31_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_31_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_31_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_2_0(50) +
           occ_func_2_0(6) * occ_func_2_0(46) +
@@ -8434,7 +8567,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_31_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_31_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_31_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(11) * occ_func_2_0(51) +
           occ_func_2_0(5) * occ_func_2_0(43) +
@@ -8466,7 +8600,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_31_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_32_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_32_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_2_0(46) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_2_0(29) +
           occ_func_2_0(45) * occ_func_2_0(27) * occ_func_2_0(1) +
@@ -8495,7 +8629,7 @@ Scalar ZrO_Clexulator::eval_bfunc_32_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_32_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_32_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_2_0(46) +
           occ_func_2_0(40) * occ_func_2_0(0) * occ_func_2_0(24) +
           occ_func_2_0(36) * occ_func_2_0(22) * occ_func_2_0(0) +
@@ -8535,7 +8669,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_32_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_32_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_32_0_at_1() const {
   return (occ_func_2_0(49) * occ_func_2_0(1) * occ_func_2_0(29) +
           occ_func_2_0(1) * occ_func_2_0(35) * occ_func_2_0(51) +
           occ_func_2_0(33) * occ_func_2_0(19) * occ_func_2_0(1) +
@@ -8576,7 +8710,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_32_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_32_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_32_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(42) * occ_func_2_0(46) +
           occ_func_2_0(40) * occ_func_2_0(24) +
@@ -8618,7 +8753,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_32_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_32_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_32_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(49) * occ_func_2_0(29) +
           occ_func_2_0(35) * occ_func_2_0(51) +
@@ -8668,7 +8804,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_32_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_33_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_33_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_2_0(10) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_2_0(29) +
           occ_func_2_0(9) * occ_func_3_0(26) * occ_func_2_0(1) +
@@ -8697,7 +8833,7 @@ Scalar ZrO_Clexulator::eval_bfunc_33_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_33_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_33_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_2_0(10) +
           occ_func_2_0(4) * occ_func_3_0(75) * occ_func_2_0(0) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_2_0(29) +
@@ -8737,7 +8873,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_33_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_33_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_33_0_at_1() const {
   return (occ_func_2_0(40) * occ_func_3_0(1) * occ_func_2_0(80) +
           occ_func_2_0(1) * occ_func_3_0(4) * occ_func_2_0(13) +
           occ_func_2_0(3) * occ_func_3_0(18) * occ_func_2_0(1) +
@@ -8778,7 +8914,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_33_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_33_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_33_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(43) * occ_func_2_0(10) +
           occ_func_2_0(4) * occ_func_3_0(75) +
@@ -8820,7 +8957,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_33_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_33_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_33_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(40) * occ_func_2_0(80) +
           occ_func_3_0(4) * occ_func_2_0(13) +
@@ -8870,7 +9008,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_33_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_34_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_34_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(47) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(28) +
           occ_func_2_0(9) * occ_func_2_0(27) * occ_func_3_0(0) +
@@ -8899,7 +9037,7 @@ Scalar ZrO_Clexulator::eval_bfunc_34_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_34_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_34_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(47) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_3_0(79) +
           occ_func_2_0(3) * occ_func_2_0(19) * occ_func_3_0(0) +
@@ -8939,7 +9077,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_34_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_34_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_34_0_at_1() const {
   return (occ_func_2_0(36) * occ_func_2_0(76) * occ_func_3_0(1) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(28) +
           occ_func_2_0(1) * occ_func_2_0(5) * occ_func_3_0(12) +
@@ -8980,7 +9118,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_34_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_34_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_34_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_3_0(47) +
           occ_func_2_0(6) * occ_func_3_0(79) +
@@ -9022,7 +9161,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_34_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_34_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_34_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(36) * occ_func_2_0(76) +
           occ_func_2_0(11) * occ_func_3_0(28) +
@@ -9072,7 +9212,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_34_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_35_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_35_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(28) * occ_func_3_0(29) +
           occ_func_2_0(1) * occ_func_2_0(27) * occ_func_3_0(84) +
           occ_func_2_0(1) * occ_func_2_0(25) * occ_func_3_0(80) +
@@ -9089,7 +9229,7 @@ Scalar ZrO_Clexulator::eval_bfunc_35_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_35_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_35_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(28) * occ_func_3_0(29) +
           occ_func_2_0(18) * occ_func_2_0(0) * occ_func_3_0(1) +
           occ_func_2_0(71) * occ_func_2_0(15) * occ_func_3_0(0) +
@@ -9111,7 +9251,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_35_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_35_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_35_0_at_1() const {
   return (occ_func_2_0(18) * occ_func_2_0(0) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_2_0(27) * occ_func_3_0(84) +
           occ_func_2_0(21) * occ_func_2_0(1) * occ_func_3_0(16) +
@@ -9134,7 +9274,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_35_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_35_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_35_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(28) * occ_func_3_0(29) +
           occ_func_2_0(18) * occ_func_3_0(1) +
@@ -9158,7 +9299,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_35_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_35_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_35_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(18) * occ_func_2_0(0) +
           occ_func_2_0(27) * occ_func_3_0(84) +
@@ -9190,7 +9332,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_35_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_36_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_36_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(28) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(27) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(25) +
@@ -9207,7 +9349,7 @@ Scalar ZrO_Clexulator::eval_bfunc_36_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_36_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_36_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_3_0(19) * occ_func_2_0(0) +
           occ_func_2_0(15) * occ_func_3_0(0) * occ_func_2_0(83) +
@@ -9229,7 +9371,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_36_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_36_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_36_0_at_1() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(28) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(27) +
           occ_func_2_0(21) * occ_func_3_0(72) * occ_func_2_0(1) +
@@ -9252,7 +9394,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_36_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_36_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_36_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(1) * occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_3_0(19) +
@@ -9276,7 +9419,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_36_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_36_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_36_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(0) * occ_func_2_0(28) +
           occ_func_3_0(16) * occ_func_2_0(27) +
@@ -9308,7 +9452,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_36_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_37_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_37_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(83) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(44) +
           occ_func_2_0(1) * occ_func_2_0(51) * occ_func_3_0(28) +
@@ -9337,7 +9481,7 @@ Scalar ZrO_Clexulator::eval_bfunc_37_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_37_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_37_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(83) +
           occ_func_2_0(40) * occ_func_2_0(0) * occ_func_3_0(13) +
           occ_func_2_0(25) * occ_func_2_0(39) * occ_func_3_0(0) +
@@ -9377,7 +9521,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_37_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_37_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_37_0_at_1() const {
   return (occ_func_2_0(72) * occ_func_2_0(2) * occ_func_3_0(1) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(44) +
           occ_func_2_0(1) * occ_func_2_0(35) * occ_func_3_0(22) +
@@ -9418,7 +9562,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_37_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_37_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_37_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(42) * occ_func_3_0(83) +
           occ_func_2_0(40) * occ_func_3_0(13) +
@@ -9460,7 +9605,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_37_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_37_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_37_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(72) * occ_func_2_0(2) +
           occ_func_2_0(49) * occ_func_3_0(44) +
@@ -9510,7 +9656,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_37_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_38_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_38_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(47) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(88) +
           occ_func_2_0(9) * occ_func_2_0(83) * occ_func_3_0(0) +
@@ -9539,7 +9685,7 @@ Scalar ZrO_Clexulator::eval_bfunc_38_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_38_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_38_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(47) +
           occ_func_2_0(40) * occ_func_2_0(0) * occ_func_3_0(25) +
           occ_func_2_0(3) * occ_func_2_0(67) * occ_func_3_0(0) +
@@ -9579,7 +9725,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_38_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_38_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_38_0_at_1() const {
   return (occ_func_2_0(36) * occ_func_2_0(22) * occ_func_3_0(1) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(88) +
           occ_func_2_0(1) * occ_func_2_0(35) * occ_func_3_0(12) +
@@ -9620,7 +9766,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_38_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_38_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_38_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(42) * occ_func_3_0(47) +
           occ_func_2_0(40) * occ_func_3_0(25) +
@@ -9662,7 +9809,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_38_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_38_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_38_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(36) * occ_func_2_0(22) +
           occ_func_2_0(49) * occ_func_3_0(88) +
@@ -9712,7 +9860,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_38_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_39_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_39_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_3_0(29) +
           occ_func_2_0(1) * occ_func_2_0(17) * occ_func_3_0(84) +
           occ_func_2_0(1) * occ_func_2_0(17) * occ_func_3_0(80) +
@@ -9729,7 +9877,7 @@ Scalar ZrO_Clexulator::eval_bfunc_39_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_39_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_39_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_3_0(29) +
           occ_func_2_0(14) * occ_func_2_0(0) * occ_func_3_0(87) +
           occ_func_2_0(71) * occ_func_2_0(21) * occ_func_3_0(0) +
@@ -9751,7 +9899,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_39_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_39_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_39_0_at_1() const {
   return (occ_func_2_0(18) * occ_func_2_0(68) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_2_0(17) * occ_func_3_0(84) +
           occ_func_2_0(15) * occ_func_2_0(1) * occ_func_3_0(26) +
@@ -9774,7 +9922,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_39_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_39_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_39_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(16) * occ_func_3_0(29) +
           occ_func_2_0(14) * occ_func_3_0(87) +
@@ -9798,7 +9947,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_39_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_39_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_39_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(18) * occ_func_2_0(68) +
           occ_func_2_0(17) * occ_func_3_0(84) +
@@ -9830,7 +9980,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_39_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_40_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_40_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(79) * occ_func_3_0(87) +
           occ_func_2_0(1) * occ_func_3_0(28) * occ_func_3_0(26) +
           occ_func_2_0(27) * occ_func_3_0(0) * occ_func_3_0(28) +
@@ -9859,7 +10009,7 @@ Scalar ZrO_Clexulator::eval_bfunc_40_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_40_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_40_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(79) * occ_func_3_0(87) +
           occ_func_2_0(21) * occ_func_3_0(24) * occ_func_3_0(0) +
           occ_func_2_0(19) * occ_func_3_0(0) * occ_func_3_0(22) +
@@ -9899,7 +10049,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_40_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_40_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_40_0_at_1() const {
   return (occ_func_2_0(76) * occ_func_3_0(1) * occ_func_3_0(27) +
           occ_func_2_0(68) * occ_func_3_0(21) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(28) * occ_func_3_0(26) +
@@ -9940,7 +10090,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_40_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_40_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_40_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(79) * occ_func_3_0(87) +
           occ_func_2_0(21) * occ_func_3_0(24) +
@@ -9982,7 +10133,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_40_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_40_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_40_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(76) * occ_func_3_0(27) +
           occ_func_2_0(68) * occ_func_3_0(21) +
@@ -10032,7 +10184,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_40_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_41_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_41_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(60) +
           occ_func_2_0(63) * occ_func_2_0(11) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(13) * occ_func_2_0(65) +
@@ -10043,7 +10195,7 @@ Scalar ZrO_Clexulator::eval_bfunc_41_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_41_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_41_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(60) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_2_0(8) +
           occ_func_2_0(58) * occ_func_2_0(6) * occ_func_2_0(0) +
@@ -10056,7 +10208,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_41_0_at_0() const {
          6.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_41_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_41_0_at_1() const {
   return (occ_func_2_0(63) * occ_func_2_0(11) * occ_func_2_0(1) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(5) +
           occ_func_2_0(1) * occ_func_2_0(5) * occ_func_2_0(57) +
@@ -10070,7 +10222,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_41_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_41_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_41_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_2_0(60) +
           occ_func_2_0(6) * occ_func_2_0(8) +
@@ -10085,7 +10238,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_41_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_41_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_41_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(63) * occ_func_2_0(11) +
           occ_func_2_0(11) * occ_func_2_0(5) +
@@ -10108,7 +10262,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_41_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_42_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_42_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_2_0(60) +
           occ_func_2_0(63) * occ_func_3_0(10) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_3_0(12) * occ_func_2_0(65) +
@@ -10125,7 +10279,7 @@ Scalar ZrO_Clexulator::eval_bfunc_42_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_42_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_42_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_2_0(60) +
           occ_func_2_0(58) * occ_func_3_0(39) * occ_func_2_0(0) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_2_0(5) +
@@ -10147,7 +10301,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_42_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_42_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_42_0_at_1() const {
   return (occ_func_2_0(40) * occ_func_3_0(1) * occ_func_2_0(44) +
           occ_func_2_0(63) * occ_func_3_0(10) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_3_0(4) * occ_func_2_0(57) +
@@ -10170,7 +10324,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_42_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_42_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_42_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(43) * occ_func_2_0(60) +
           occ_func_2_0(58) * occ_func_3_0(39) +
@@ -10194,7 +10349,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_42_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_42_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_42_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(40) * occ_func_2_0(44) +
           occ_func_2_0(63) * occ_func_3_0(10) +
@@ -10226,7 +10382,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_42_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_43_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_43_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(28) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(65) +
           occ_func_2_0(1) * occ_func_2_0(13) * occ_func_2_0(25) +
@@ -10255,7 +10411,7 @@ Scalar ZrO_Clexulator::eval_bfunc_43_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_43_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_43_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(28) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_2_0(62) +
           occ_func_2_0(18) * occ_func_2_0(56) * occ_func_2_0(0) +
@@ -10295,7 +10451,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_43_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_43_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_43_0_at_1() const {
   return (occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(65) +
           occ_func_2_0(1) * occ_func_2_0(5) * occ_func_2_0(27) +
           occ_func_2_0(21) * occ_func_2_0(55) * occ_func_2_0(1) +
@@ -10336,7 +10492,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_43_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_43_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_43_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_2_0(28) +
           occ_func_2_0(6) * occ_func_2_0(62) +
@@ -10378,7 +10535,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_43_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_43_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_43_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(11) * occ_func_2_0(65) +
           occ_func_2_0(5) * occ_func_2_0(27) +
@@ -10428,7 +10586,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_43_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_44_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_44_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_2_0(60) +
           occ_func_2_0(63) * occ_func_2_0(47) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_2_0(51) * occ_func_2_0(65) +
@@ -10445,7 +10603,7 @@ Scalar ZrO_Clexulator::eval_bfunc_44_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_44_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_44_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_2_0(60) +
           occ_func_2_0(40) * occ_func_2_0(0) * occ_func_2_0(44) +
           occ_func_2_0(58) * occ_func_2_0(38) * occ_func_2_0(0) +
@@ -10467,7 +10625,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_44_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_44_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_44_0_at_1() const {
   return (occ_func_2_0(63) * occ_func_2_0(47) * occ_func_2_0(1) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_2_0(37) +
           occ_func_2_0(1) * occ_func_2_0(35) * occ_func_2_0(57) +
@@ -10490,7 +10648,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_44_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_44_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_44_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(42) * occ_func_2_0(60) +
           occ_func_2_0(40) * occ_func_2_0(44) +
@@ -10514,7 +10673,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_44_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_44_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_44_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(63) * occ_func_2_0(47) +
           occ_func_2_0(49) * occ_func_2_0(37) +
@@ -10546,7 +10706,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_44_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_45_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_45_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_3_0(87) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_3_0(64) +
           occ_func_2_0(1) * occ_func_3_0(12) * occ_func_3_0(24) +
@@ -10575,7 +10735,7 @@ Scalar ZrO_Clexulator::eval_bfunc_45_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_45_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_45_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_3_0(87) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_3_0(64) +
           occ_func_2_0(21) * occ_func_3_0(54) * occ_func_3_0(0) +
@@ -10615,7 +10775,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_45_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_45_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_45_0_at_1() const {
   return (occ_func_2_0(40) * occ_func_3_0(1) * occ_func_3_0(63) +
           occ_func_2_0(68) * occ_func_3_0(57) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(4) * occ_func_3_0(26) +
@@ -10656,7 +10816,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_45_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_45_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_45_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(43) * occ_func_3_0(87) +
           occ_func_2_0(11) * occ_func_3_0(64) +
@@ -10698,7 +10859,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_45_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_45_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_45_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(40) * occ_func_3_0(63) +
           occ_func_2_0(68) * occ_func_3_0(57) +
@@ -10748,7 +10910,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_45_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_46_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_46_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(9) * occ_func_3_0(29) +
           occ_func_2_0(47) * occ_func_3_0(0) * occ_func_3_0(64) +
           occ_func_2_0(1) * occ_func_3_0(52) * occ_func_3_0(80) +
@@ -10777,7 +10939,7 @@ Scalar ZrO_Clexulator::eval_bfunc_46_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_46_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_46_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(9) * occ_func_3_0(29) +
           occ_func_2_0(47) * occ_func_3_0(0) * occ_func_3_0(64) +
           occ_func_2_0(71) * occ_func_3_0(54) * occ_func_3_0(0) +
@@ -10817,7 +10979,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_46_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_46_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_46_0_at_1() const {
   return (occ_func_2_0(6) * occ_func_3_0(1) * occ_func_3_0(63) +
           occ_func_2_0(18) * occ_func_3_0(57) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(36) * occ_func_3_0(84) +
@@ -10858,7 +11020,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_46_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_46_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_46_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(9) * occ_func_3_0(29) +
           occ_func_2_0(47) * occ_func_3_0(64) +
@@ -10900,7 +11063,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_46_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_46_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_46_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(6) * occ_func_3_0(63) +
           occ_func_2_0(18) * occ_func_3_0(57) +
@@ -10950,7 +11114,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_46_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_47_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_47_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(60) * occ_func_2_0(64) +
           occ_func_2_0(63) * occ_func_2_0(1) * occ_func_2_0(65) +
           occ_func_2_0(62) * occ_func_2_0(64) * occ_func_2_0(0) +
@@ -10959,7 +11123,7 @@ Scalar ZrO_Clexulator::eval_bfunc_47_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_47_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_47_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(60) * occ_func_2_0(64) +
           occ_func_2_0(58) * occ_func_2_0(0) * occ_func_2_0(62) +
           occ_func_2_0(54) * occ_func_2_0(56) * occ_func_2_0(0) +
@@ -10969,7 +11133,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_47_0_at_0() const {
          4.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_47_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_47_0_at_1() const {
   return (occ_func_2_0(63) * occ_func_2_0(1) * occ_func_2_0(65) +
           occ_func_2_0(1) * occ_func_2_0(57) * occ_func_2_0(61) +
           occ_func_2_0(59) * occ_func_2_0(55) * occ_func_2_0(1) +
@@ -10980,7 +11144,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_47_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_47_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_47_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(60) * occ_func_2_0(64) +
           occ_func_2_0(58) * occ_func_2_0(62) +
@@ -10992,7 +11157,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_47_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_47_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_47_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(63) * occ_func_2_0(65) +
           occ_func_2_0(57) * occ_func_2_0(61) +
@@ -11012,7 +11178,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_47_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_48_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_48_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_3_0(103) +
           occ_func_2_0(63) * occ_func_3_0(10) * occ_func_3_0(0) +
           occ_func_2_0(1) * occ_func_3_0(12) * occ_func_3_0(64) +
@@ -11041,7 +11207,7 @@ Scalar ZrO_Clexulator::eval_bfunc_48_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_48_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_48_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_3_0(103) +
           occ_func_2_0(63) * occ_func_3_0(10) * occ_func_3_0(0) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_3_0(4) +
@@ -11081,7 +11247,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_48_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_48_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_48_0_at_1() const {
   return (occ_func_2_0(40) * occ_func_3_0(1) * occ_func_3_0(9) +
           occ_func_2_0(100) * occ_func_3_0(7) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_3_0(4) * occ_func_3_0(56) +
@@ -11122,7 +11288,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_48_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_48_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_48_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(43) * occ_func_3_0(103) +
           occ_func_2_0(63) * occ_func_3_0(10) +
@@ -11164,7 +11331,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_48_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_48_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_48_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(40) * occ_func_3_0(9) +
           occ_func_2_0(100) * occ_func_3_0(7) +
@@ -11214,7 +11382,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_48_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_49_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_49_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_2_0(28) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_2_0(65) +
           occ_func_2_0(1) * occ_func_3_0(12) * occ_func_2_0(25) +
@@ -11243,7 +11411,7 @@ Scalar ZrO_Clexulator::eval_bfunc_49_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_49_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_49_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_3_0(95) * occ_func_2_0(0) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_2_0(65) +
@@ -11283,7 +11451,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_49_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_49_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_49_0_at_1() const {
   return (occ_func_2_0(40) * occ_func_3_0(1) * occ_func_2_0(108) +
           occ_func_2_0(1) * occ_func_3_0(4) * occ_func_2_0(27) +
           occ_func_2_0(21) * occ_func_3_0(54) * occ_func_2_0(1) +
@@ -11324,7 +11492,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_49_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_49_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_49_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(43) * occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_3_0(95) +
@@ -11366,7 +11535,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_49_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_49_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_49_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(40) * occ_func_2_0(108) +
           occ_func_3_0(4) * occ_func_2_0(27) +
@@ -11416,7 +11586,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_49_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_50_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_50_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(9) * occ_func_2_0(28) +
           occ_func_2_0(47) * occ_func_3_0(0) * occ_func_2_0(111) +
           occ_func_2_0(1) * occ_func_3_0(52) * occ_func_2_0(25) +
@@ -11445,7 +11615,7 @@ Scalar ZrO_Clexulator::eval_bfunc_50_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_50_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_50_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(9) * occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_3_0(57) * occ_func_2_0(0) +
           occ_func_2_0(47) * occ_func_3_0(0) * occ_func_2_0(111) +
@@ -11485,7 +11655,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_50_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_50_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_50_0_at_1() const {
   return (occ_func_2_0(6) * occ_func_3_0(1) * occ_func_2_0(62) +
           occ_func_2_0(1) * occ_func_3_0(36) * occ_func_2_0(27) +
           occ_func_2_0(21) * occ_func_3_0(92) * occ_func_2_0(1) +
@@ -11526,7 +11696,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_50_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_50_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_50_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(9) * occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_3_0(57) +
@@ -11568,7 +11739,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_50_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_50_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_50_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(6) * occ_func_2_0(62) +
           occ_func_3_0(36) * occ_func_2_0(27) +
@@ -11618,7 +11790,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_50_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_51_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_51_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(103) +
           occ_func_2_0(63) * occ_func_2_0(47) * occ_func_3_0(0) +
           occ_func_2_0(1) * occ_func_2_0(51) * occ_func_3_0(64) +
@@ -11647,7 +11819,7 @@ Scalar ZrO_Clexulator::eval_bfunc_51_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_51_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_51_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(103) +
           occ_func_2_0(40) * occ_func_2_0(0) * occ_func_3_0(9) +
           occ_func_2_0(63) * occ_func_2_0(47) * occ_func_3_0(0) +
@@ -11687,7 +11859,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_51_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_51_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_51_0_at_1() const {
   return (occ_func_2_0(100) * occ_func_2_0(6) * occ_func_3_0(1) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(36) +
           occ_func_2_0(1) * occ_func_2_0(35) * occ_func_3_0(56) +
@@ -11728,7 +11900,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_51_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_51_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_51_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(42) * occ_func_3_0(103) +
           occ_func_2_0(40) * occ_func_3_0(9) +
@@ -11770,7 +11943,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_51_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_51_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_51_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(100) * occ_func_2_0(6) +
           occ_func_2_0(49) * occ_func_3_0(36) +
@@ -11820,7 +11994,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_51_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_52_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_52_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(87) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(64) +
           occ_func_2_0(1) * occ_func_2_0(13) * occ_func_3_0(24) +
@@ -11849,7 +12023,7 @@ Scalar ZrO_Clexulator::eval_bfunc_52_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_52_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_52_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(87) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_3_0(107) +
           occ_func_2_0(21) * occ_func_2_0(55) * occ_func_3_0(0) +
@@ -11889,7 +12063,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_52_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_52_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_52_0_at_1() const {
   return (occ_func_2_0(68) * occ_func_2_0(96) * occ_func_3_0(1) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(64) +
           occ_func_2_0(1) * occ_func_2_0(5) * occ_func_3_0(26) +
@@ -11930,7 +12104,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_52_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_52_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_52_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_3_0(87) +
           occ_func_2_0(6) * occ_func_3_0(107) +
@@ -11972,7 +12147,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_52_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_52_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_52_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(68) * occ_func_2_0(96) +
           occ_func_2_0(11) * occ_func_3_0(64) +
@@ -12022,7 +12198,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_52_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_53_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_53_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(29) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(112) +
           occ_func_2_0(1) * occ_func_2_0(13) * occ_func_3_0(80) +
@@ -12051,7 +12227,7 @@ Scalar ZrO_Clexulator::eval_bfunc_53_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_53_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_53_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(29) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_3_0(63) +
           occ_func_2_0(71) * occ_func_2_0(91) * occ_func_3_0(0) +
@@ -12091,7 +12267,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_53_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_53_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_53_0_at_1() const {
   return (occ_func_2_0(18) * occ_func_2_0(56) * occ_func_3_0(1) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(112) +
           occ_func_2_0(1) * occ_func_2_0(5) * occ_func_3_0(84) +
@@ -12132,7 +12308,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_53_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_53_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_53_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_3_0(29) +
           occ_func_2_0(6) * occ_func_3_0(63) +
@@ -12174,7 +12351,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_53_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_53_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_53_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(18) * occ_func_2_0(56) +
           occ_func_2_0(11) * occ_func_3_0(112) +
@@ -12224,7 +12402,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_53_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_54_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_54_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(87) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(112) +
           occ_func_2_0(1) * occ_func_2_0(51) * occ_func_3_0(24) +
@@ -12253,7 +12431,7 @@ Scalar ZrO_Clexulator::eval_bfunc_54_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_54_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_54_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(87) +
           occ_func_2_0(40) * occ_func_2_0(0) * occ_func_3_0(63) +
           occ_func_2_0(21) * occ_func_2_0(91) * occ_func_3_0(0) +
@@ -12293,7 +12471,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_54_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_54_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_54_0_at_1() const {
   return (occ_func_2_0(68) * occ_func_2_0(56) * occ_func_3_0(1) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(112) +
           occ_func_2_0(1) * occ_func_2_0(35) * occ_func_3_0(26) +
@@ -12334,7 +12512,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_54_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_54_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_54_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(42) * occ_func_3_0(87) +
           occ_func_2_0(40) * occ_func_3_0(63) +
@@ -12376,7 +12555,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_54_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_54_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_54_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(68) * occ_func_2_0(56) +
           occ_func_2_0(49) * occ_func_3_0(112) +
@@ -12426,7 +12606,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_54_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_55_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_55_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(111) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(84) +
           occ_func_2_0(1) * occ_func_2_0(51) * occ_func_3_0(62) +
@@ -12455,7 +12635,7 @@ Scalar ZrO_Clexulator::eval_bfunc_55_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_55_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_55_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(42) * occ_func_3_0(111) +
           occ_func_2_0(40) * occ_func_2_0(0) * occ_func_3_0(29) +
           occ_func_2_0(59) * occ_func_2_0(71) * occ_func_3_0(0) +
@@ -12495,7 +12675,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_55_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_55_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_55_0_at_1() const {
   return (occ_func_2_0(92) * occ_func_2_0(18) * occ_func_3_0(1) +
           occ_func_2_0(49) * occ_func_2_0(1) * occ_func_3_0(84) +
           occ_func_2_0(1) * occ_func_2_0(35) * occ_func_3_0(60) +
@@ -12536,7 +12716,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_55_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_55_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_55_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(42) * occ_func_3_0(111) +
           occ_func_2_0(40) * occ_func_3_0(29) +
@@ -12578,7 +12759,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_55_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_55_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_55_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(92) * occ_func_2_0(18) +
           occ_func_2_0(49) * occ_func_3_0(84) +
@@ -12628,7 +12810,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_55_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_56_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_56_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(60) +
           occ_func_2_0(63) * occ_func_3_0(108) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(65) +
@@ -12657,7 +12839,7 @@ Scalar ZrO_Clexulator::eval_bfunc_56_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_56_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_56_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(60) +
           occ_func_2_0(58) * occ_func_3_0(59) * occ_func_2_0(0) +
           occ_func_2_0(15) * occ_func_3_0(0) * occ_func_2_0(95) +
@@ -12697,7 +12879,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_56_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_56_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_56_0_at_1() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(60) +
           occ_func_2_0(63) * occ_func_3_0(108) * occ_func_2_0(1) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(57) +
@@ -12738,7 +12920,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_56_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_56_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_56_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(1) * occ_func_2_0(60) +
           occ_func_2_0(58) * occ_func_3_0(59) +
@@ -12780,7 +12963,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_56_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_56_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_56_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(0) * occ_func_2_0(60) +
           occ_func_2_0(63) * occ_func_3_0(108) +
@@ -12830,7 +13014,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_56_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_57_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_57_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_3_0(61) +
           occ_func_2_0(107) * occ_func_2_0(63) * occ_func_3_0(0) +
           occ_func_2_0(1) * occ_func_2_0(17) * occ_func_3_0(112) +
@@ -12847,7 +13031,7 @@ Scalar ZrO_Clexulator::eval_bfunc_57_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_57_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_57_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_3_0(61) +
           occ_func_2_0(14) * occ_func_2_0(0) * occ_func_3_0(103) +
           occ_func_2_0(107) * occ_func_2_0(63) * occ_func_3_0(0) +
@@ -12869,7 +13053,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_57_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_57_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_57_0_at_1() const {
   return (occ_func_2_0(58) * occ_func_2_0(100) * occ_func_3_0(1) +
           occ_func_2_0(1) * occ_func_2_0(17) * occ_func_3_0(96) +
           occ_func_2_0(15) * occ_func_2_0(1) * occ_func_3_0(56) +
@@ -12892,7 +13076,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_57_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_57_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_57_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(16) * occ_func_3_0(61) +
           occ_func_2_0(14) * occ_func_3_0(103) +
@@ -12916,7 +13101,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_57_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_57_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_57_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(58) * occ_func_2_0(100) +
           occ_func_2_0(17) * occ_func_3_0(96) +
@@ -12948,7 +13134,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_57_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_58_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_58_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(60) * occ_func_3_0(111) +
           occ_func_2_0(63) * occ_func_2_0(1) * occ_func_3_0(64) +
           occ_func_2_0(1) * occ_func_2_0(65) * occ_func_3_0(62) +
@@ -12965,7 +13151,7 @@ Scalar ZrO_Clexulator::eval_bfunc_58_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_58_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_58_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(60) * occ_func_3_0(111) +
           occ_func_2_0(58) * occ_func_2_0(0) * occ_func_3_0(107) +
           occ_func_2_0(59) * occ_func_2_0(55) * occ_func_3_0(0) +
@@ -12987,7 +13173,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_58_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_58_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_58_0_at_1() const {
   return (occ_func_2_0(92) * occ_func_2_0(96) * occ_func_3_0(1) +
           occ_func_2_0(63) * occ_func_2_0(1) * occ_func_3_0(64) +
           occ_func_2_0(1) * occ_func_2_0(57) * occ_func_3_0(60) +
@@ -13010,7 +13196,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_58_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_58_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_58_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(60) * occ_func_3_0(111) +
           occ_func_2_0(58) * occ_func_3_0(107) +
@@ -13034,7 +13221,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_58_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_58_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_58_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(92) * occ_func_2_0(96) +
           occ_func_2_0(63) * occ_func_3_0(64) +
@@ -13066,7 +13254,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_58_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_59_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_59_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(60) * occ_func_3_0(65) +
           occ_func_2_0(63) * occ_func_2_0(1) * occ_func_3_0(112) +
           occ_func_2_0(1) * occ_func_2_0(65) * occ_func_3_0(108) +
@@ -13083,7 +13271,7 @@ Scalar ZrO_Clexulator::eval_bfunc_59_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_59_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_59_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(60) * occ_func_3_0(65) +
           occ_func_2_0(58) * occ_func_2_0(0) * occ_func_3_0(63) +
           occ_func_2_0(99) * occ_func_2_0(91) * occ_func_3_0(0) +
@@ -13105,7 +13293,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_59_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_59_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_59_0_at_1() const {
   return (occ_func_2_0(54) * occ_func_2_0(56) * occ_func_3_0(1) +
           occ_func_2_0(63) * occ_func_2_0(1) * occ_func_3_0(112) +
           occ_func_2_0(1) * occ_func_2_0(57) * occ_func_3_0(104) +
@@ -13128,7 +13316,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_59_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_59_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_59_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(60) * occ_func_3_0(65) +
           occ_func_2_0(58) * occ_func_3_0(63) +
@@ -13152,7 +13341,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_59_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_59_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_59_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(54) * occ_func_2_0(56) +
           occ_func_2_0(63) * occ_func_3_0(112) +
@@ -13186,7 +13376,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_59_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_60_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_60_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(12) *
               occ_func_3_0(13) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(9) *
@@ -13203,7 +13393,7 @@ Scalar ZrO_Clexulator::eval_bfunc_60_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_60_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_60_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(12) *
               occ_func_3_0(13) +
           occ_func_2_0(2) * occ_func_3_0(3) * occ_func_2_0(0) *
@@ -13231,7 +13421,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_60_0_at_0() const {
          6.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_60_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_60_0_at_1() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(12) *
               occ_func_3_0(13) +
           occ_func_2_0(2) * occ_func_3_0(3) * occ_func_2_0(0) *
@@ -13260,7 +13450,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_60_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_60_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_60_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(1) * occ_func_2_0(12) * occ_func_3_0(13) +
           occ_func_2_0(2) * occ_func_3_0(3) * occ_func_3_0(1) +
@@ -13278,7 +13469,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_60_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_60_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_60_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(0) * occ_func_2_0(12) * occ_func_3_0(13) +
           occ_func_2_0(2) * occ_func_3_0(3) * occ_func_2_0(0) +
@@ -13306,7 +13498,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_60_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_61_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_61_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(10) *
               occ_func_2_0(12) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(13) *
@@ -13335,7 +13527,7 @@ Scalar ZrO_Clexulator::eval_bfunc_61_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_61_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_61_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(10) *
               occ_func_2_0(12) +
           occ_func_2_0(4) * occ_func_3_0(5) * occ_func_2_0(0) *
@@ -13387,7 +13579,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_61_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_61_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_61_0_at_1() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(10) *
               occ_func_2_0(12) +
           occ_func_2_0(1) * occ_func_3_0(16) * occ_func_2_0(13) *
@@ -13440,7 +13632,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_61_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_61_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_61_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(1) * occ_func_2_0(10) * occ_func_2_0(12) +
           occ_func_2_0(4) * occ_func_3_0(5) * occ_func_2_0(8) +
@@ -13470,7 +13663,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_61_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_61_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_61_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(0) * occ_func_2_0(10) * occ_func_2_0(12) +
           occ_func_3_0(16) * occ_func_2_0(13) * occ_func_2_0(9) +
@@ -13510,7 +13704,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_61_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_62_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_62_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(12) *
               occ_func_3_0(13) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(13) *
@@ -13539,7 +13733,7 @@ Scalar ZrO_Clexulator::eval_bfunc_62_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_62_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_62_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(12) *
               occ_func_3_0(13) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_2_0(10) *
@@ -13591,7 +13785,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_62_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_62_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_62_0_at_1() const {
   return (occ_func_2_0(2) * occ_func_2_0(4) * occ_func_2_0(0) *
               occ_func_3_0(1) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_2_0(13) *
@@ -13644,7 +13838,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_62_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_62_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_62_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_2_0(12) * occ_func_3_0(13) +
           occ_func_2_0(6) * occ_func_2_0(10) * occ_func_3_0(11) +
@@ -13674,7 +13869,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_62_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_62_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_62_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(2) * occ_func_2_0(4) * occ_func_2_0(0) +
           occ_func_2_0(11) * occ_func_2_0(13) * occ_func_3_0(52) +
@@ -13714,7 +13910,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_62_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_63_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_63_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_2_0(8) *
               occ_func_3_0(51) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_2_0(1) *
@@ -13743,7 +13939,7 @@ Scalar ZrO_Clexulator::eval_bfunc_63_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_63_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_63_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_2_0(8) *
               occ_func_3_0(51) +
           occ_func_2_0(6) * occ_func_3_0(15) * occ_func_2_0(0) *
@@ -13795,7 +13991,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_63_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_63_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_63_0_at_1() const {
   return (occ_func_2_0(40) * occ_func_3_0(1) * occ_func_2_0(16) *
               occ_func_3_0(11) +
           occ_func_2_0(32) * occ_func_3_0(5) * occ_func_2_0(36) *
@@ -13848,7 +14044,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_63_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_63_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_63_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(43) * occ_func_2_0(8) * occ_func_3_0(51) +
           occ_func_2_0(6) * occ_func_3_0(15) * occ_func_3_0(47) +
@@ -13878,7 +14075,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_63_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_63_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_63_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(40) * occ_func_2_0(16) * occ_func_3_0(11) +
           occ_func_2_0(32) * occ_func_3_0(5) * occ_func_2_0(36) +
@@ -13918,7 +14116,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_63_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_64_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_64_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(9) *
               occ_func_3_0(13) +
           occ_func_2_0(11) * occ_func_2_0(1) * occ_func_3_0(16) *
@@ -13947,7 +14145,7 @@ Scalar ZrO_Clexulator::eval_bfunc_64_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_64_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_64_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_3_0(9) *
               occ_func_3_0(13) +
           occ_func_2_0(6) * occ_func_2_0(0) * occ_func_3_0(1) *
@@ -13999,7 +14197,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_64_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_64_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_64_0_at_1() const {
   return (occ_func_2_0(6) * occ_func_2_0(0) * occ_func_3_0(1) *
               occ_func_3_0(11) +
           occ_func_2_0(2) * occ_func_2_0(4) * occ_func_3_0(5) *
@@ -14052,7 +14250,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_64_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_64_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_64_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(8) * occ_func_3_0(9) * occ_func_3_0(13) +
           occ_func_2_0(6) * occ_func_3_0(1) * occ_func_3_0(11) +
@@ -14082,7 +14281,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_64_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_64_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_64_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(6) * occ_func_2_0(0) * occ_func_3_0(11) +
           occ_func_2_0(2) * occ_func_2_0(4) * occ_func_3_0(5) +
@@ -14122,7 +14322,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_64_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_65_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_65_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(16) *
               occ_func_3_0(9) +
           occ_func_2_0(47) * occ_func_3_0(10) * occ_func_2_0(11) *
@@ -14151,7 +14351,7 @@ Scalar ZrO_Clexulator::eval_bfunc_65_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_65_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_65_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(16) *
               occ_func_3_0(9) +
           occ_func_2_0(14) * occ_func_3_0(15) * occ_func_2_0(0) *
@@ -14203,7 +14403,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_65_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_65_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_65_0_at_1() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(16) *
               occ_func_3_0(9) +
           occ_func_2_0(6) * occ_func_3_0(7) * occ_func_2_0(40) *
@@ -14256,7 +14456,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_65_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_65_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_65_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(1) * occ_func_2_0(16) * occ_func_3_0(9) +
           occ_func_2_0(14) * occ_func_3_0(15) * occ_func_3_0(43) +
@@ -14286,7 +14487,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_65_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_65_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_65_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_3_0(9) +
           occ_func_2_0(6) * occ_func_3_0(7) * occ_func_2_0(40) +
@@ -14326,7 +14528,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_65_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_66_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_66_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_3_0(11) *
               occ_func_3_0(13) +
           occ_func_2_0(1) * occ_func_2_0(17) * occ_func_3_0(52) *
@@ -14355,7 +14557,7 @@ Scalar ZrO_Clexulator::eval_bfunc_66_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_66_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_66_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(16) * occ_func_3_0(11) *
               occ_func_3_0(13) +
           occ_func_2_0(14) * occ_func_2_0(0) * occ_func_3_0(47) *
@@ -14407,7 +14609,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_66_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_66_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_66_0_at_1() const {
   return (occ_func_2_0(4) * occ_func_2_0(36) * occ_func_3_0(1) *
               occ_func_3_0(9) +
           occ_func_2_0(2) * occ_func_2_0(32) * occ_func_3_0(7) *
@@ -14460,7 +14662,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_66_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_66_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_66_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(16) * occ_func_3_0(11) * occ_func_3_0(13) +
           occ_func_2_0(14) * occ_func_3_0(47) * occ_func_3_0(51) +
@@ -14490,7 +14693,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_66_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_66_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_66_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(4) * occ_func_2_0(36) * occ_func_3_0(9) +
           occ_func_2_0(2) * occ_func_2_0(32) * occ_func_3_0(7) +
@@ -14530,7 +14734,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_66_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_67_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_67_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(10) * occ_func_2_0(12) *
               occ_func_2_0(28) +
           occ_func_2_0(1) * occ_func_2_0(13) * occ_func_2_0(9) *
@@ -14547,7 +14751,7 @@ Scalar ZrO_Clexulator::eval_bfunc_67_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_67_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_67_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(10) * occ_func_2_0(12) *
               occ_func_2_0(28) +
           occ_func_2_0(4) * occ_func_2_0(0) * occ_func_2_0(8) *
@@ -14575,7 +14779,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_67_0_at_0() const {
          6.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_67_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_67_0_at_1() const {
   return (occ_func_2_0(1) * occ_func_2_0(13) * occ_func_2_0(9) *
               occ_func_2_0(27) +
           occ_func_2_0(7) * occ_func_2_0(11) * occ_func_2_0(1) *
@@ -14604,7 +14808,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_67_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_67_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_67_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(10) * occ_func_2_0(12) * occ_func_2_0(28) +
           occ_func_2_0(4) * occ_func_2_0(8) * occ_func_2_0(12) +
@@ -14622,7 +14827,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_67_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_67_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_67_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(13) * occ_func_2_0(9) * occ_func_2_0(27) +
           occ_func_2_0(7) * occ_func_2_0(11) * occ_func_2_0(13) +
@@ -14650,7 +14856,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_67_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_68_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_68_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(8) *
               occ_func_2_0(10) +
           occ_func_2_0(11) * occ_func_3_0(48) * occ_func_2_0(1) *
@@ -14703,7 +14909,7 @@ Scalar ZrO_Clexulator::eval_bfunc_68_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_68_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_68_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(8) *
               occ_func_2_0(10) +
           occ_func_2_0(6) * occ_func_3_0(7) * occ_func_2_0(0) *
@@ -14803,7 +15009,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_68_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_68_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_68_0_at_1() const {
   return (occ_func_2_0(0) * occ_func_3_0(1) * occ_func_2_0(8) *
               occ_func_2_0(10) +
           occ_func_2_0(11) * occ_func_3_0(48) * occ_func_2_0(1) *
@@ -14904,7 +15110,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_68_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_68_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_68_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(1) * occ_func_2_0(8) * occ_func_2_0(10) +
           occ_func_2_0(6) * occ_func_3_0(7) * occ_func_2_0(24) +
@@ -14958,7 +15165,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_68_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_68_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_68_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(0) * occ_func_2_0(8) * occ_func_2_0(10) +
           occ_func_2_0(11) * occ_func_3_0(48) * occ_func_2_0(29) +
@@ -15022,7 +15230,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_68_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_69_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_69_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_3_0(47) *
               occ_func_3_0(51) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_3_0(28) *
@@ -15075,7 +15283,7 @@ Scalar ZrO_Clexulator::eval_bfunc_69_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_69_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_69_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(43) * occ_func_3_0(47) *
               occ_func_3_0(51) +
           occ_func_2_0(11) * occ_func_3_0(0) * occ_func_3_0(28) *
@@ -15175,7 +15383,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_69_0_at_0() const {
          24.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_69_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_69_0_at_1() const {
   return (occ_func_2_0(40) * occ_func_3_0(1) * occ_func_3_0(25) *
               occ_func_3_0(11) +
           occ_func_2_0(36) * occ_func_3_0(23) * occ_func_3_0(1) *
@@ -15276,7 +15484,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_69_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_69_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_69_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(43) * occ_func_3_0(47) * occ_func_3_0(51) +
           occ_func_2_0(11) * occ_func_3_0(28) * occ_func_3_0(12) +
@@ -15330,7 +15539,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_69_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_69_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_69_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(40) * occ_func_3_0(25) * occ_func_3_0(11) +
           occ_func_2_0(36) * occ_func_3_0(23) * occ_func_3_0(9) +
@@ -15394,7 +15604,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_69_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_70_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_70_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(47) * occ_func_3_0(51) *
               occ_func_2_0(28) +
           occ_func_2_0(1) * occ_func_3_0(12) * occ_func_3_0(8) *
@@ -15423,7 +15633,7 @@ Scalar ZrO_Clexulator::eval_bfunc_70_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_70_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_70_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(47) * occ_func_3_0(51) *
               occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_3_0(31) * occ_func_3_0(35) *
@@ -15475,7 +15685,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_70_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_70_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_70_0_at_1() const {
   return (occ_func_2_0(36) * occ_func_3_0(1) * occ_func_3_0(9) *
               occ_func_2_0(52) +
           occ_func_2_0(32) * occ_func_3_0(7) * occ_func_3_0(1) *
@@ -15528,7 +15738,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_70_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_70_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_70_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(47) * occ_func_3_0(51) * occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_3_0(31) * occ_func_3_0(35) +
@@ -15558,7 +15769,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_70_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_70_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_70_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(36) * occ_func_3_0(9) * occ_func_2_0(52) +
           occ_func_2_0(32) * occ_func_3_0(7) * occ_func_2_0(48) +
@@ -15598,7 +15810,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_70_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_71_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_71_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(47) * occ_func_3_0(11) *
               occ_func_2_0(28) +
           occ_func_2_0(1) * occ_func_3_0(12) * occ_func_3_0(52) *
@@ -15627,7 +15839,7 @@ Scalar ZrO_Clexulator::eval_bfunc_71_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_71_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_71_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_3_0(47) * occ_func_3_0(11) *
               occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_3_0(31) * occ_func_3_0(3) *
@@ -15679,7 +15891,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_71_0_at_0() const {
          12.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_71_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_71_0_at_1() const {
   return (occ_func_2_0(36) * occ_func_3_0(1) * occ_func_3_0(17) *
               occ_func_2_0(52) +
           occ_func_2_0(4) * occ_func_3_0(15) * occ_func_3_0(1) *
@@ -15732,7 +15944,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_71_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_71_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_71_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_3_0(47) * occ_func_3_0(11) * occ_func_2_0(28) +
           occ_func_2_0(18) * occ_func_3_0(31) * occ_func_3_0(3) +
@@ -15762,7 +15975,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_71_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_71_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_71_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(36) * occ_func_3_0(17) * occ_func_2_0(52) +
           occ_func_2_0(4) * occ_func_3_0(15) * occ_func_2_0(12) +
@@ -15802,7 +16016,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_71_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_72_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_72_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(24) * occ_func_2_0(10) *
               occ_func_2_0(28) +
           occ_func_2_0(1) * occ_func_2_0(29) * occ_func_2_0(13) *
@@ -15815,7 +16029,7 @@ Scalar ZrO_Clexulator::eval_bfunc_72_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_72_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_72_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(24) * occ_func_2_0(10) *
               occ_func_2_0(28) +
           occ_func_2_0(22) * occ_func_2_0(0) * occ_func_2_0(8) *
@@ -15835,7 +16049,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_72_0_at_0() const {
          4.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_72_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_72_0_at_1() const {
   return (occ_func_2_0(1) * occ_func_2_0(29) * occ_func_2_0(13) *
               occ_func_2_0(27) +
           occ_func_2_0(3) * occ_func_2_0(11) * occ_func_2_0(1) *
@@ -15856,7 +16070,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_72_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_72_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_72_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(24) * occ_func_2_0(10) * occ_func_2_0(28) +
           occ_func_2_0(22) * occ_func_2_0(8) * occ_func_2_0(26) +
@@ -15870,7 +16085,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_72_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_72_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_72_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(29) * occ_func_2_0(13) * occ_func_2_0(27) +
           occ_func_2_0(3) * occ_func_2_0(11) * occ_func_2_0(9) +
@@ -15894,7 +16110,7 @@ Scalar ZrO_Clexulator::site_deval_bfunc_72_0_at_1(int occ_i, int occ_f) const {
 
 ****/
 template <typename Scalar>
-Scalar ZrO_Clexulator::eval_bfunc_73_0() const {
+Scalar ZrO_Clexulator_formation_energy::eval_bfunc_73_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(24) * occ_func_3_0(47) *
               occ_func_2_0(28) +
           occ_func_2_0(1) * occ_func_2_0(29) * occ_func_3_0(12) *
@@ -15915,7 +16131,7 @@ Scalar ZrO_Clexulator::eval_bfunc_73_0() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_73_0_at_0() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_73_0_at_0() const {
   return (occ_func_2_0(0) * occ_func_2_0(24) * occ_func_3_0(47) *
               occ_func_2_0(28) +
           occ_func_2_0(22) * occ_func_2_0(0) * occ_func_3_0(43) *
@@ -15951,7 +16167,7 @@ Scalar ZrO_Clexulator::site_eval_bfunc_73_0_at_0() const {
          8.;
 }
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_eval_bfunc_73_0_at_1() const {
+Scalar ZrO_Clexulator_formation_energy::site_eval_bfunc_73_0_at_1() const {
   return (occ_func_2_0(36) * occ_func_2_0(40) * occ_func_3_0(1) *
               occ_func_2_0(52) +
           occ_func_2_0(1) * occ_func_2_0(29) * occ_func_3_0(12) *
@@ -15988,7 +16204,8 @@ Scalar ZrO_Clexulator::site_eval_bfunc_73_0_at_1() const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_73_0_at_0(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_73_0_at_0(
+    int occ_i, int occ_f) const {
   return (m_occ_func_2_0[occ_f] - m_occ_func_2_0[occ_i]) *
          (occ_func_2_0(24) * occ_func_3_0(47) * occ_func_2_0(28) +
           occ_func_2_0(22) * occ_func_3_0(43) * occ_func_2_0(26) +
@@ -16010,7 +16227,8 @@ Scalar ZrO_Clexulator::site_deval_bfunc_73_0_at_0(int occ_i, int occ_f) const {
 }
 
 template <typename Scalar>
-Scalar ZrO_Clexulator::site_deval_bfunc_73_0_at_1(int occ_i, int occ_f) const {
+Scalar ZrO_Clexulator_formation_energy::site_deval_bfunc_73_0_at_1(
+    int occ_i, int occ_f) const {
   return (m_occ_func_3_0[occ_f] - m_occ_func_3_0[occ_i]) *
          (occ_func_2_0(36) * occ_func_2_0(40) * occ_func_2_0(52) +
           occ_func_2_0(29) * occ_func_3_0(12) * occ_func_2_0(27) +
@@ -16035,8 +16253,9 @@ Scalar ZrO_Clexulator::site_deval_bfunc_73_0_at_1(int occ_i, int occ_f) const {
 }  // namespace CASM
 
 extern "C" {
-/// \brief Returns a clexulator::BaseClexulator* owning a ZrO_Clexulator
-CASM::clexulator::BaseClexulator *make_ZrO_Clexulator() {
-  return new CASM::clexulator::ZrO_Clexulator();
+/// \brief Returns a clexulator::BaseClexulator* owning a
+/// ZrO_Clexulator_formation_energy
+CASM::clexulator::BaseClexulator *make_ZrO_Clexulator_formation_energy() {
+  return new CASM::clexulator::ZrO_Clexulator_formation_energy();
 }
 }

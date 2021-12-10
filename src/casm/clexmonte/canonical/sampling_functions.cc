@@ -10,11 +10,10 @@ namespace canonical {
 /// \brief Construct functions that may be used to sample various quantities of
 ///     the Monte Carlo calculation as it runs
 ///
-/// \param system_data Reference to system_type, which can be used by
-///     sampling functions to access the cluster expansion and composition
-///     axes. The lifetime of the object it references must be
-///     greater than the sampling functions that use the reference.
-/// \param tag Overload disambiguator
+/// \param system_data Shared pointer to OccSystem data, which can be used by
+///     sampling functions to access data such as the prim, the cluster
+///     expansion, and the composition axes.
+/// \param tag The canonical_tag is used to help overload disambiguation
 ///
 monte::StateSamplingFunctionMap<Configuration> make_sampling_functions(
     std::shared_ptr<system_type> const &system_data, canonical_tag tag) {

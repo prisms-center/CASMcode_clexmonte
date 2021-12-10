@@ -1,6 +1,7 @@
 #include "casm/clexmonte/canonical/run.hh"
 
 #include "casm/casm_io/Log.hh"
+#include "casm/clexmonte/canonical/CanonicalPotential.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
 #include "casm/clexmonte/system/OccSystem.hh"
 #include "casm/clexmonte/system/enforce_composition.hh"
@@ -9,7 +10,7 @@
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/checks/CompletionCheck.hh"
 #include "casm/monte/events/OccCandidate.hh"
-#include "casm/monte/methods/canonical.hh"
+#include "casm/monte/methods/occupation_metropolis.hh"
 #include "casm/monte/results/Results.hh"
 #include "casm/monte/results/io/ResultsIO.hh"
 #include "casm/monte/state/StateGenerator.hh"
@@ -20,6 +21,13 @@ namespace clexmonte {
 namespace canonical {
 
 /// \brief Run canonical Monte Carlo calculations
+///
+/// Required interfaces:
+/// - get_formation_energy_clex(system_type, state_type)
+/// - get_shared_prim(system_type)
+/// - get_composition_calculator(system_type)
+/// - get_transformation_matrix_to_super(config_type)
+/// - get_occupation(config_type)
 void run(std::shared_ptr<system_type> const &system_data,
          state_generator_type &state_generator,
          monte::StateSampler<config_type> &state_sampler,
@@ -45,10 +53,9 @@ void run(std::shared_ptr<system_type> const &system_data,
     state_type initial_state = state_generator.next_state(final_states);
     log.indent() << "Done" << std::endl;
 
-    // Make supercell-specific potential energy clex calculator
-    // (equal to formation energy calculator now)
-    clexulator::ClusterExpansion &potential_energy_clex_calculator =
-        get_formation_energy_clex(*system_data, initial_state);
+    // Make supercell-specific potential calculator
+    CanonicalPotential potential(
+        get_formation_energy_clex(*system_data, initial_state));
 
     // Prepare supercell-specific index conversions
     monte::Conversions convert{
@@ -71,10 +78,10 @@ void run(std::shared_ptr<system_type> const &system_data,
 
     // Run Monte Carlo at a single condition
     log.indent() << "Beginning run " << final_states.size() + 1 << std::endl;
-    results_type result =
-        monte::canonical(initial_state, potential_energy_clex_calculator,
-                         convert, canonical_swaps, random_number_generator,
-                         state_sampler, completion_check);
+    results_type result = monte::occupation_metropolis(
+        initial_state, potential, convert, canonical_swaps,
+        monte::propose_canonical_event, random_number_generator, state_sampler,
+        completion_check);
     log.indent() << "Run complete" << std::endl;
 
     // Store final state for state generation input

@@ -138,8 +138,8 @@ void enforce_composition(
     }
 
     /// propose event of chosen candidate type and apply swap
-    monte::propose_grand_canonical_event(event, occ_location, *it,
-                                         random_number_generator);
+    monte::propose_grand_canonical_event_from_swap(event, occ_location, *it,
+                                                   random_number_generator);
     occ_location.apply(event, occupation);
   }
 }

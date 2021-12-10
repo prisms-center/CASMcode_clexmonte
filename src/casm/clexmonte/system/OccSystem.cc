@@ -26,9 +26,9 @@ OccSystemSupercellData::OccSystemSupercellData(
     : supercell_neighbor_list(std::make_shared<clexulator::SuperNeighborList>(
           _transformation_matrix_to_super,
           *(_formation_energy_clex_data.prim_neighbor_list))),
-      formation_energy_clex(supercell_neighbor_list,
-                            _formation_energy_clex_data.clexulator,
-                            _formation_energy_clex_data.eci) {}
+      formation_energy_clex(std::make_shared<clexulator::ClusterExpansion>(
+          supercell_neighbor_list, _formation_energy_clex_data.clexulator,
+          _formation_energy_clex_data.eci)) {}
 
 // --- The following are used to construct a common interface between "System"
 // data, in this case OccSystem, and templated CASM::clexmonte methods such as
@@ -124,12 +124,12 @@ ClexData &get_formation_energy_clex_data(OccSystem &data) {
 ///     particular configuration, constructing as necessary
 ///
 /// \relates OccSystem
-clexulator::ClusterExpansion &get_formation_energy_clex(
+std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
     OccSystem &data, Configuration const &configuration) {
-  auto &clex =
+  auto clex =
       get_supercell_data(data, configuration.transformation_matrix_to_super)
           .formation_energy_clex;
-  clex.set(&configuration.dof_values);
+  clex->set(&configuration.dof_values);
   return clex;
 }
 
@@ -137,10 +137,10 @@ clexulator::ClusterExpansion &get_formation_energy_clex(
 ///     particular state, constructing as necessary
 ///
 /// \relates OccSystem
-clexulator::ClusterExpansion &get_formation_energy_clex(
+std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
     OccSystem &data, monte::State<Configuration> const &state) {
-  auto &clex = get_supercell_data(data, state).formation_energy_clex;
-  clex.set(&state.configuration.dof_values);
+  auto clex = get_supercell_data(data, state).formation_energy_clex;
+  clex->set(&state.configuration.dof_values);
   return clex;
 }
 

@@ -24,7 +24,8 @@ class ZrOTestSystem : public testing::Test {
     fs::path test_data_dir = test::data_dir("clexmonte") / "ZrOTestSystem";
 
     fs::path clexulator_src = test_data_dir / "basis_sets" /
-                              "bset.formation_energy" / "ZrO_Clexulator.cc";
+                              "bset.formation_energy" /
+                              "ZrO_Clexulator_formation_energy.cc";
     fs::path coefficients_src = test_data_dir / "formation_energy_eci.json";
 
     jsonParser system_json(test_data_dir / "system.json");

@@ -84,7 +84,7 @@ struct OccSystemSupercellData {
   /// CASM::monte compatible formation energy calculator. Contains:
   /// -  clexulator::Correlations
   /// -  clexulator::SparseCoefficients
-  clexulator::ClusterExpansion formation_energy_clex;
+  std::shared_ptr<clexulator::ClusterExpansion> formation_energy_clex;
 };
 
 // ---
@@ -124,12 +124,12 @@ ClexData &get_formation_energy_clex_data(OccSystem &data);
 
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
 ///     particular configuration, constructing as necessary
-clexulator::ClusterExpansion &get_formation_energy_clex(
+std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
     OccSystem &data, Configuration const &configuration);
 
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
-clexulator::ClusterExpansion &get_formation_energy_clex(
+std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
     OccSystem &data, monte::State<Configuration> const &state);
 
 }  // namespace clexmonte
