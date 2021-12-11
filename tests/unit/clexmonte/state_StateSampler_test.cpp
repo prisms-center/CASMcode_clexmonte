@@ -54,13 +54,10 @@ TEST_F(StateSamplerTest, Test1) {
       make_canonical_swaps(convert, occ_candidate_list);
 
   // Loop over states
-  for (Index i = 0; i < 101; ++i) {
-    std::cout << "Begin state: " << i << std::endl;
-
+  for (Index i = 0; i < 8; ++i) {
     // Create state
-    std::cout << "Create state" << std::endl;
     State<Configuration> state(config, init_conditions);
-    state.conditions.at("temperature")(0) = 300.0 + i * 10.0;
+    state.conditions.at("temperature")(0) = 300.0 + i * 100.0;
 
     OccLocation occ_location(convert, occ_candidate_list);
     occ_location.initialize(get_occupation(state.configuration));
@@ -68,14 +65,20 @@ TEST_F(StateSamplerTest, Test1) {
 
     // Make supercell-specific potential energy clex calculator
     // (equal to formation energy calculator now)
-    std::cout << "Create potential calculator" << std::endl;
     canonical::CanonicalPotential potential(
         get_formation_energy_clex(*system_data, state));
     set(potential, state);
 
     // Make StateSampler
     std::vector<StateSamplingFunction<Configuration>> functions;
+    // for (auto f : sampling_functions) {
+    //   std::cout << f.first << std::endl;
+    // }
     functions.push_back(sampling_functions.at("comp_n"));
+    functions.push_back(sampling_functions.at("temperature"));
+    functions.push_back(sampling_functions.at("formation_energy_corr"));
+    functions.push_back(sampling_functions.at("formation_energy"));
+    // no: functions.push_back(sampling_functions.at("potential_energy"));
 
     SAMPLE_METHOD sample_method = SAMPLE_METHOD::LINEAR;
     double sample_begin = 0.0;
@@ -92,81 +95,41 @@ TEST_F(StateSamplerTest, Test1) {
     state_sampler.sample_data_if_due(state);
 
     // Main loop
-    std::cout << "Prepare for main loop" << std::endl;
     OccEvent event;
     std::vector<Index> linear_site_index;
     std::vector<int> new_occ;
     double beta = 1.0 / (CASM::KB * state.conditions.at("temperature")(0));
     MTRand random_number_generator;
-    CountType step = 0;
-    CountType pass = 0;
-    // std::cout << "Begin main loop" << std::endl;
-    // while (state_sampler.pass < 1000) {
-    while (pass < 10) {
-      // std::cout << "Propose canonical event" << std::endl;
+
+    while (state_sampler.pass < 100) {
       propose_canonical_event(event, occ_location, canonical_swaps,
                               random_number_generator);
 
-      // std::cout << "Calculate delta_potential_energy" << std::endl;
-      Index event_size = event.occ_transform.size();
-      linear_site_index.resize(event_size);
-      new_occ.resize(event_size);
-      for (Index i = 0; i < event_size; ++i) {
-        OccTransform const &t = event.occ_transform[i];
-        linear_site_index[i] = t.l;
-        new_occ[i] = convert.occ_index(t.asym, t.to_species);
-        // std::cout << "linear_site_index: " << linear_site_index[i] << "/" <<
-        // get_occupation(state.configuration).size() << std::endl;
-        // Eigen::VectorXd const &point_corr =
-        //     potential_energy_clex_calculator.correlations().point(
-        //         linear_site_index[i]);
-        // std::cout << "point_corr: " << point_corr.transpose() << std::endl;
-      }
-      // std::cout << "l: " << linear_site_index << " o: " << new_occ <<
-      // std::endl; std::cout << "dof_values: " <<
-      // potential_energy_clex_calculator.get() << std::endl;
-      double delta_potential_energy =
-          potential.occ_delta_extensive_value(linear_site_index, new_occ);
-
-      // double delta_potential_energy =
-      //     potential_energy_clex_calculator.extensive_value();
-      // delta_potential_energy *= random_number_generator.rand53() - 0.5;
-
-      // double delta_potential_energy = random_number_generator.rand53() - 0.5;
+      double delta_potential_energy = potential.occ_delta_extensive_value(
+          event.linear_site_index, event.new_occ);
 
       // Accept or reject event
-      // std::cout << "Check event: " << delta_potential_energy << std::endl;
       bool accept = metropolis_acceptance(delta_potential_energy, beta,
                                           random_number_generator);
 
       // Apply accepted event
       if (accept) {
-        // std::cout << "Accept event" << std::endl;
         occ_location.apply(event, get_occupation(state.configuration));
-        // std::cout << get_occupation(config).transpose() << std::endl;
-      } else {
-        // std::cout << "Reject event" << std::endl;
       }
 
-      // state_sampler.increment_step();
-      // state_sampler.sample_data_if_due(state);
-
-      ++step;
-      if (step == steps_per_pass) {
-        ++pass;
-        step = 0;
-      }
-      // std::cout << std::endl;
+      state_sampler.increment_step();
+      state_sampler.sample_data_if_due(state);
     }  // main loop
 
-    // std::cout << "samplers: " << std::endl;
-    // for (auto const &f : state_sampler.samplers) {
-    //   auto const &name = f.first;
-    //   auto const &sampler = *f.second;
-    //   std::cout << name << ":" << std::endl;
-    //   std::cout << "component_names: " << sampler.component_names() <<
-    //   std::endl; std::cout << "n_samples: " << sampler.n_samples() <<
-    //   std::endl; std::cout << "value: \n" << sampler.values() << std::endl;
-    // }
+    std::cout << "samplers: " << std::endl;
+    for (auto const &f : state_sampler.samplers) {
+      auto const &name = f.first;
+      auto const &sampler = *f.second;
+      std::cout << name << ":" << std::endl;
+      std::cout << "component_names: " << sampler.component_names()
+                << std::endl;
+      std::cout << "n_samples: " << sampler.n_samples() << std::endl;
+      std::cout << "value: \n" << sampler.values() << std::endl;
+    }
   }  // loop over states
 }

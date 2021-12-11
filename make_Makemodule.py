@@ -809,15 +809,17 @@ def _exit_on_bad_run_directory():
 
 def main():
 
-    # print("Create Makefile for ccasm program")
-    # chunk = make_add_to_PROGRAMS(
-    #     "ccasm",
-    #     "bin",
-    #     SOURCES=["apps/ccasm/ccasm.cpp"],
-    #     LDADD=["libcasm.la"],
-    # )
-    # target = os.path.join("apps", "ccasm", "Makemodule.am")
-    # string_to_file(chunk, target)
+    print("Create Makefile for ccasm-clexmonte-canonical program")
+    chunk = make_add_to_PROGRAMS(
+        "ccasm-clexmonte-canonical",
+        "bin",
+        SOURCES=["programs/ccasm_clexmonte_canonical/main.cpp"],
+        LDADD=[
+            "libcasm_clexmonte.la"
+        ],
+    )
+    target = os.path.join("programs", "ccasm_clexmonte_canonical", "Makemodule.am")
+    string_to_file(chunk, target)
 
     chunk = make_aggregated_unit_test([
         {

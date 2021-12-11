@@ -1,6 +1,8 @@
 #ifndef CASM_clexmonte_clex_State_json_io
 #define CASM_clexmonte_clex_State_json_io
 
+#include "casm/monte/definitions.hh"
+
 namespace CASM {
 
 class jsonParser;
@@ -28,6 +30,9 @@ from_json<monte::State<clexmonte::Configuration>>(jsonParser const &json);
 /// \brief Read monte::State<clexmonte::Configuration> from JSON
 void from_json(monte::State<clexmonte::Configuration> &state,
                jsonParser const &json);
+
+/// \brief Write VectorValueMap to JSON
+jsonParser as_flattest_json(monte::VectorValueMap const &vector_value_map);
 
 }  // namespace CASM
 

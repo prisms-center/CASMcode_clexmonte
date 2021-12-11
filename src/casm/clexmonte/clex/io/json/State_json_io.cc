@@ -67,4 +67,13 @@ void from_json(monte::State<clexmonte::Configuration> &state,
   state = from_json<monte::State<clexmonte::Configuration>>(json);
 }
 
+/// \brief Write VectorValueMap to JSON
+jsonParser as_flattest_json(monte::VectorValueMap const &vector_value_map) {
+  jsonParser json;
+  for (auto const &pair : vector_value_map) {
+    to_json(pair.second, json[pair.first], jsonParser::as_flattest());
+  }
+  return json;
+}
+
 }  // namespace CASM

@@ -170,7 +170,7 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_f(
       1,  // number of components in "formation_energy"
       [system_data](monte::State<Configuration> const &state) {
         Eigen::VectorXd value(1);
-        value(1) =
+        value(0) =
             get_formation_energy_clex(*system_data, state)->intensive_value();
         return value;
       });

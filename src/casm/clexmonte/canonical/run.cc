@@ -1,8 +1,10 @@
 #include "casm/clexmonte/canonical/run.hh"
 
 #include "casm/casm_io/Log.hh"
+#include "casm/casm_io/container/json_io.hh"
 #include "casm/clexmonte/canonical/CanonicalPotential.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
+#include "casm/clexmonte/clex/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/OccSystem.hh"
 #include "casm/clexmonte/system/enforce_composition.hh"
 #include "casm/clexmonte/system/sampling_functions.hh"
@@ -28,6 +30,17 @@ namespace canonical {
 /// - get_composition_calculator(system_type)
 /// - get_transformation_matrix_to_super(config_type)
 /// - get_occupation(config_type)
+///
+/// Required state conditions:
+/// - `temperature`: size=1
+///   The temperature in K.
+/// - `comp_n`: size=n_components
+///   Size must match `system_data->composition_converter.components().size()`.
+///
+/// State properties that are set:
+/// - `potential_energy`: size=1
+///   The intensive potential energy (eV / unit cell).
+///
 void run(std::shared_ptr<system_type> const &system_data,
          state_generator_type &state_generator,
          monte::StateSampler<config_type> &state_sampler,
@@ -51,6 +64,7 @@ void run(std::shared_ptr<system_type> const &system_data,
     log.indent() << "Generating next initial state..." << std::endl;
     // Get initial state for the next calculation
     state_type initial_state = state_generator.next_state(final_states);
+    log.indent() << as_flattest_json(initial_state.conditions) << std::endl;
     log.indent() << "Done" << std::endl;
 
     // Make supercell-specific potential calculator
@@ -90,6 +104,8 @@ void run(std::shared_ptr<system_type> const &system_data,
     // Write results for this condition
     Index run_index = final_states.size();
     results_io.write(result, run_index);
+
+    log.indent() << std::endl;
   }
   log.indent() << "Canonical Monte Carlo Done" << std::endl;
 }
