@@ -8,6 +8,8 @@
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/crystallography/BasicStructure.hh"
+#include "casm/monte/Conversions.hh"
+#include "casm/monte/events/OccCandidate.hh"
 
 namespace CASM {
 
@@ -73,9 +75,8 @@ struct OccSystem {
 ///     by sampling functions - occupation DoF
 struct OccSystemSupercellData {
   /// \brief Constructor
-  OccSystemSupercellData(
-      ClexData const &_formation_energy_clex_data,
-      Eigen::Matrix3l const &_transformation_matrix_to_super);
+  OccSystemSupercellData(OccSystem const &system_data,
+                         Eigen::Matrix3l const &transformation_matrix_to_super);
 
   /// SuperNeighborList, used for evaluating correlations in a particular
   /// supercell
@@ -85,6 +86,12 @@ struct OccSystemSupercellData {
   /// -  clexulator::Correlations
   /// -  clexulator::SparseCoefficients
   std::shared_ptr<clexulator::ClusterExpansion> formation_energy_clex;
+
+  /// Performs index conversions in supercell
+  monte::Conversions convert;
+
+  /// List of unique pairs of (asymmetric unit index, species index)
+  monte::OccCandidateList occ_candidate_list;
 };
 
 // ---
@@ -130,6 +137,14 @@ std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
+    OccSystem &data, monte::State<Configuration> const &state);
+
+/// \brief Helper to get supercell index conversions
+monte::Conversions const &get_index_conversions(
+    OccSystem &data, monte::State<Configuration> const &state);
+
+/// \brief Helper to get unique pairs of (asymmetric unit index, species index)
+monte::OccCandidateList const &get_occ_candidate_list(
     OccSystem &data, monte::State<Configuration> const &state);
 
 }  // namespace clexmonte

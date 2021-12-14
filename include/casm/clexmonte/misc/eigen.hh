@@ -8,13 +8,13 @@
 namespace CASM {
 namespace clexmonte {
 
-Eigen::VectorXd to_VectorXd(double value) {
+inline Eigen::VectorXd to_VectorXd(double value) {
   Eigen::VectorXd vec(1);
   vec(0) = value;
   return vec;
 }
 
-Eigen::VectorXd to_VectorXd(std::vector<double> const &value) {
+inline Eigen::VectorXd to_VectorXd(std::vector<double> const &value) {
   Eigen::VectorXd vec(value.size());
   for (int i = 0; i < value.size(); ++i) {
     vec(i) = value[i];

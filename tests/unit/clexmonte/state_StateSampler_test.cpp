@@ -74,7 +74,7 @@ TEST_F(StateSamplerTest, Test1) {
     // for (auto f : sampling_functions) {
     //   std::cout << f.first << std::endl;
     // }
-    functions.push_back(sampling_functions.at("comp_n"));
+    functions.push_back(sampling_functions.at("mol_composition"));
     functions.push_back(sampling_functions.at("temperature"));
     functions.push_back(sampling_functions.at("formation_energy_corr"));
     functions.push_back(sampling_functions.at("formation_energy"));

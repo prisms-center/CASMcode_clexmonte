@@ -1,20 +1,137 @@
 #include "casm/clexmonte/canonical/io/json/InputData_json_io.hh"
 
+#include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/canonical/io/InputData.hh"
-#include "casm/clexmonte/canonical/io/json/StateGenerator_json_io.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
+#include "casm/clexmonte/clex/Configuration.hh"
+#include "casm/clexmonte/clex/io/json/ConfigGenerator_json_io.hh"
+#include "casm/clexmonte/clex/io/json/StateGenerator_json_io.hh"
+#include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
 #include "casm/clexmonte/results/io/json/ResultsIO_json_io_impl.hh"
 #include "casm/clexmonte/system/OccSystem.hh"
 #include "casm/clexmonte/system/io/json/OccSystem_json_io.hh"
+#include "casm/clexmonte/system/io/json/parse_conditions.hh"
 #include "casm/composition/io/json/CompositionConverter_json_io.hh"
 #include "casm/crystallography/io/BasicStructureIO.hh"
 #include "casm/monte/checks/io/json/CompletionCheck_json_io.hh"
 #include "casm/monte/sampling/io/json/SamplingParams_json_io.hh"
+#include "casm/monte/state/IncrementalConditionsStateGenerator.hh"
+#include "casm/monte/state/StateGenerator.hh"
+#include "casm/monte/state/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {
 namespace canonical {
+
+/// \brief Construct conditions (monte::VectorValueMap) from JSON
+///
+/// Parses canonical Monte Carlo conditions from JSON. If successfully parsed,
+/// `parser->value` will contain a monte::VectorValueMap with:
+/// - "temperature": (size 1)
+/// - "mol_composition": (size = system components size)
+///
+/// Expected:
+///
+///   "temperature": number (required)
+///     Temperature in K.
+///
+///   "mol_composition": dict (optional)
+///     Composition in number per primitive cell. A dict, where the keys are
+///     the component names, and values are the number of that component per
+///     primitive cell. All components in the system must be included.
+///
+///   "param_composition": array of number or dict (optional)
+///     Parametric composition, in terms of the chosen composition axes. Will
+///     be converted to `"mol_composition"`. A dict, where the keys are the axes
+///     names
+///     ("a", "b", etc.), and values are the corresponding parametric
+///     composition value. All composition axes must be included.
+///
+///
+void parse_conditions(InputParser<monte::VectorValueMap> &parser,
+                      std::shared_ptr<system_type> const &system_data,
+                      canonical_tag tag) {
+  parser.value = std::make_unique<monte::VectorValueMap>();
+  parse_temperature(parser);
+  parse_mol_composition(parser, system_data);
+}
+
+/// \brief Construct conditions increment (monte::VectorValueMap) from JSON
+///
+/// Parses canonical Monte Carlo conditions increments from JSON. If
+/// successfully parsed, `parser->value` will contain a monte::VectorValueMap
+/// with:
+/// - "temperature": (size 1)
+/// - "mol_composition": (size = system components size)
+///
+/// The expected JSON format is the same as documented for `parse_conditions`,
+/// but values are interpreted as increments.
+void parse_conditions_increment(InputParser<monte::VectorValueMap> &parser,
+                                std::shared_ptr<system_type> const &system_data,
+                                canonical_tag tag) {
+  parser.value = std::make_unique<monte::VectorValueMap>();
+  parse_temperature(parser);
+  parse_mol_composition_increment(parser, system_data);
+}
+
+/// \brief Construct ConfigGenerator from JSON
+///
+/// A configuration generation method generates a configuration given a set of
+/// conditions and results from previous runs. It may be a way to customize a
+/// state generation method.
+///
+/// Expected:
+///   method: string (required)
+///     The name of the chosen config generation method. Currently, the only
+///     option is:
+///     - "fixed": monte::FixedConfigGenerator
+///
+///   kwargs: dict (optional, default={})
+///     Method-specific options. See documentation for particular methods:
+///     - "fixed": `parse(InputParser<monte::FixedConfigGenerator> &, ...)`
+void parse(InputParser<config_generator_type> &parser,
+           std::shared_ptr<system_type> const &system_data, canonical_tag tag) {
+  PolymorphicParserFactory<config_generator_type> f;
+  parse_polymorphic_method(
+      parser, {f.make<fixed_config_generator_type>("fixed", system_data)});
+}
+
+/// \brief Construct StateGenerator from JSON
+///
+/// A state generation method generates the initial state for each run in a
+/// series of Monte Carlo calculation. A state consists of:
+/// - a configuration, the choice of periodic supercell lattice vectors and the
+/// values of degrees of freedom (DoF) in that supercell along with any global
+/// DoF.
+/// - a set of thermodynamic conditions, which control the statistical ensemble
+/// used. In general, this may include quantities such as temperature, chemical
+/// potential, composition, pressure, volume, strain, magnetic field, etc.
+/// depending on the type of calculation.
+///
+/// Expected JSON:
+///   method: string (required)
+///     The name of the chosen state generation method. Currently, the only
+///     option is:
+///     - "incremental": monte::IncrementalConditionsStateGenerator
+///
+///   kwargs: dict (optional, default={})
+///     Method-specific options. See documentation for particular methods:
+///     - "incremental":
+///           `parse(InputParser<incremental_state_generator_type> &, ...)`
+///
+void parse(
+    InputParser<state_generator_type> &parser,
+    std::shared_ptr<system_type> const &system_data,
+    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
+    canonical_tag tag) {
+  PolymorphicParserFactory<state_generator_type> f;
+  parse_polymorphic_method(parser,
+                           {f.make<incremental_state_generator_type>(
+                               "incremental", system_data, sampling_functions,
+                               canonical::parse_conditions,
+                               canonical::parse_conditions_increment, tag)});
+}
 
 /// \brief Parse canonical Monte Carlo input file
 ///

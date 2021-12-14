@@ -59,7 +59,7 @@
             "dof": null
           }
         },
-        "dependent_conditions": ["comp_n"],
+        "dependent_conditions": ["mol_composition"],
         "initial_conditions" : {
           "_comp_n" : {
             "Zr": 2.0,
@@ -76,7 +76,7 @@
           "temperature" : 600.0,
         },
         "incremental_conditions" : {
-          "comp_n" : {
+          "mol_composition" : {
             "Zr": 0.0,
             "O": 0.01,
             "Va": -0.01
@@ -104,8 +104,8 @@
         "mode": "pass",
         "parameters": [0, 1],
         "quantities": [
-          "comp_n",
-          "comp_x",
+          "mol_composition",
+          "param_composition",
           "formation_energy_corr",
           "formation_energy"
         ],
@@ -138,7 +138,7 @@
           "precision": 0.01
         },
         {
-          "quantity": "comp_n",
+          "quantity": "mol_composition",
           "component_name": ["O"],
           "confidence": 0.95,
           "precision": 0.001

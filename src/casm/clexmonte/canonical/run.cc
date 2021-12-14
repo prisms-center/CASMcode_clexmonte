@@ -71,13 +71,11 @@ void run(std::shared_ptr<system_type> const &system_data,
     CanonicalPotential potential(
         get_formation_energy_clex(*system_data, initial_state));
 
-    // Prepare supercell-specific index conversions
-    monte::Conversions convert{
-        *get_shared_prim(*system_data),
-        get_transformation_matrix_to_super(initial_state.configuration)};
-
-    // Prepare list of allowed swaps -- currently using all allowed
-    monte::OccCandidateList occ_candidate_list{convert};
+    // Prepare canonical swaps -- currently all allowed, but could be selected
+    monte::Conversions convert =
+        get_index_conversions(*system_data, initial_state);
+    monte::OccCandidateList const &occ_candidate_list =
+        get_occ_candidate_list(*system_data, initial_state);
     std::vector<monte::OccSwap> canonical_swaps =
         make_canonical_swaps(convert, occ_candidate_list);
     std::vector<monte::OccSwap> grand_canonical_swaps =
@@ -85,7 +83,7 @@ void run(std::shared_ptr<system_type> const &system_data,
 
     log.indent() << "Enforcing composition..." << std::endl;
     enforce_composition(get_occupation(initial_state.configuration),
-                        initial_state.conditions.at("comp_n"),
+                        initial_state.conditions.at("mol_composition"),
                         get_composition_calculator(*system_data), convert,
                         grand_canonical_swaps, random_number_generator);
     log.indent() << "Done" << std::endl;

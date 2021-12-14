@@ -1,11 +1,15 @@
 #ifndef CASM_clexmonte_canonical_InputData_json_io
 #define CASM_clexmonte_canonical_InputData_json_io
 
-#include "casm/clexmonte/canonical/io/json/definitions.hh"
-
 namespace CASM {
+
+template <typename T>
+class InputParser;
+
 namespace clexmonte {
 namespace canonical {
+
+struct InputData;
 
 void parse(InputParser<InputData> &parser);
 

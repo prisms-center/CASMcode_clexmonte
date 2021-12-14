@@ -52,10 +52,10 @@ using namespace CASM;
 //   monte::VectorValueMap conditions;
 //   conditions["temperature"] = Eigen::VectorXd(1);
 //   conditions["temperature"](0) = 300.0;
-//   conditions["comp_n"] = Eigen::VectorXd(3);
-//   conditions["comp_n"](0) = 2.0; // Zr
-//   conditions["comp_n"](1) = 1.0; // Va
-//   conditions["comp_n"](2) = 1.0; // O
+//   conditions["mol_composition"] = Eigen::VectorXd(3);
+//   conditions["mol_composition"](0) = 2.0; // Zr
+//   conditions["mol_composition"](1) = 1.0; // Va
+//   conditions["mol_composition"](2) = 1.0; // O
 //
 //   monte::State<clexmonte::Configuration> initial_state(
 //       clexmonte::make_default_configuration(

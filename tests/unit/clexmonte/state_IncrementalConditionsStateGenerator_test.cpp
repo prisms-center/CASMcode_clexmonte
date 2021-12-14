@@ -114,9 +114,9 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test2) {
     Configuration const &config = state.configuration;
     EXPECT_EQ(config.dof_values.occupation, init_config.dof_values.occupation);
     EXPECT_TRUE(almost_equal(
-        state.conditions.at("comp_n"),
-        init_conditions.at("comp_n") +
-            conditions_increment.at("comp_n") * final_states.size()));
+        state.conditions.at("mol_composition"),
+        init_conditions.at("mol_composition") +
+            conditions_increment.at("mol_composition") * final_states.size()));
     final_states.push_back(state);
   }
 }

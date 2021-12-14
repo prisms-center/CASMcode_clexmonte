@@ -67,7 +67,7 @@
         },
         "initial_conditions": {
           "temperature": 300.0,
-          "comp_n": {
+          "mol_composition": {
             "Zr": 2.0,
             "O": 0.1,
             "Va": 1.9
@@ -75,7 +75,7 @@
         },
         "conditions_increment": {
           "temperature": 10.0,
-          "comp_n": {
+          "mol_composition": {
             "Zr": 0.0,
             "O": 0.0,
             "Va": 0.0
@@ -95,8 +95,8 @@
       "quantities": [
         "formation_energy",
         "formation_energy_corr",
-        "comp_n",
-        "comp_x",
+        "mol_composition",
+        "param_composition",
         "potential_energy"],
       "sampled_trajectory": false
     },

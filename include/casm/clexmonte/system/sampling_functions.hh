@@ -32,12 +32,12 @@ template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_temperature_f(
     std::shared_ptr<SystemType> const &system_data);
 
-/// \brief Make mol composition sampling function ("comp_n")
+/// \brief Make mol composition sampling function ("mol_composition")
 template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_comp_n_f(
     std::shared_ptr<SystemType> const &system_data);
 
-/// \brief Make parametric composition sampling function ("comp_x")
+/// \brief Make parametric composition sampling function ("param_composition")
 template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_comp_x_f(
     std::shared_ptr<SystemType> const &system_data);
@@ -75,7 +75,7 @@ monte::StateSamplingFunction<Configuration> make_temperature_f(
       });
 }
 
-/// \brief Make mol composition sampling function ("comp_n")
+/// \brief Make mol composition sampling function ("mol_composition")
 ///
 /// Requires :
 /// - `composition::CompositionConverter const &
@@ -86,7 +86,8 @@ template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_comp_n_f(
     std::shared_ptr<SystemType> const &system_data) {
   return monte::StateSamplingFunction<Configuration>(
-      "comp_n", "Number of each component (normalized per primitive cell)",
+      "mol_composition",
+      "Number of each component (normalized per primitive cell)",
       get_composition_converter(*system_data).components(),  // component names
       [system_data](monte::State<Configuration> const &state) {
         Eigen::VectorXi const &occupation = get_occupation(state.configuration);
@@ -95,7 +96,7 @@ monte::StateSamplingFunction<Configuration> make_comp_n_f(
       });
 }
 
-/// \brief Make parametric composition sampling function ("comp_x")
+/// \brief Make parametric composition sampling function ("param_composition")
 ///
 /// Requires :
 /// - `composition::CompositionConverter const &
@@ -114,7 +115,7 @@ monte::StateSamplingFunction<Configuration> make_comp_x_f(
   }
 
   return monte::StateSamplingFunction<Configuration>(
-      "comp_x", "Parametric composition",
+      "param_composition", "Parametric composition",
       comp_x_components,  // component names
       [system_data](monte::State<Configuration> const &state) {
         composition::CompositionCalculator const &composition_calculator =

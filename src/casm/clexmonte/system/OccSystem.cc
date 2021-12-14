@@ -21,14 +21,17 @@ OccSystem::OccSystem(
 
 /// \brief Constructor
 OccSystemSupercellData::OccSystemSupercellData(
-    ClexData const &_formation_energy_clex_data,
-    Eigen::Matrix3l const &_transformation_matrix_to_super)
+    OccSystem const &system_data,
+    Eigen::Matrix3l const &transformation_matrix_to_super)
     : supercell_neighbor_list(std::make_shared<clexulator::SuperNeighborList>(
-          _transformation_matrix_to_super,
-          *(_formation_energy_clex_data.prim_neighbor_list))),
+          transformation_matrix_to_super,
+          *(system_data.formation_energy_clex_data.prim_neighbor_list))),
       formation_energy_clex(std::make_shared<clexulator::ClusterExpansion>(
-          supercell_neighbor_list, _formation_energy_clex_data.clexulator,
-          _formation_energy_clex_data.eci)) {}
+          supercell_neighbor_list,
+          system_data.formation_energy_clex_data.clexulator,
+          system_data.formation_energy_clex_data.eci)),
+      convert(*system_data.shared_prim, transformation_matrix_to_super),
+      occ_candidate_list(convert) {}
 
 // --- The following are used to construct a common interface between "System"
 // data, in this case OccSystem, and templated CASM::clexmonte methods such as
@@ -43,10 +46,10 @@ OccSystemSupercellData &get_supercell_data(
   auto it = data.supercell_data.find(transformation_matrix_to_super);
   if (it == data.supercell_data.end()) {
     it = data.supercell_data
-             .emplace(std::piecewise_construct,
-                      std::forward_as_tuple(transformation_matrix_to_super),
-                      std::forward_as_tuple(data.formation_energy_clex_data,
-                                            transformation_matrix_to_super))
+             .emplace(
+                 std::piecewise_construct,
+                 std::forward_as_tuple(transformation_matrix_to_super),
+                 std::forward_as_tuple(data, transformation_matrix_to_super))
              .first;
   }
   return it->second;
@@ -142,6 +145,18 @@ std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
   auto clex = get_supercell_data(data, state).formation_energy_clex;
   clex->set(&state.configuration.dof_values);
   return clex;
+}
+
+/// \brief Helper to get supercell index conversions
+monte::Conversions const &get_index_conversions(
+    OccSystem &data, monte::State<Configuration> const &state) {
+  return get_supercell_data(data, state).convert;
+}
+
+/// \brief Helper to get unique pairs of (asymmetric unit index, species index)
+monte::OccCandidateList const &get_occ_candidate_list(
+    OccSystem &data, monte::State<Configuration> const &state) {
+  return get_supercell_data(data, state).occ_candidate_list;
 }
 
 }  // namespace clexmonte

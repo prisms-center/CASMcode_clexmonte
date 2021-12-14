@@ -78,14 +78,14 @@ void parse(
 ///
 ///   initial_conditions: object
 ///     Conditions for the initial state. For canonical Monte Carlo
-///     calculations, "temperature" is required and composition (using "comp_n"
-///     or "comp_x") must be specified for "initial_conditions" or listed in
-///     "dependent_conditions". May include:
+///     calculations, "temperature" is required and composition (using
+///     "mol_composition" or "param_composition") must be specified for
+///     "initial_conditions" or listed in "dependent_conditions". May include:
 ///
 ///       "temperature": number (required)
 ///         Temperature in K.
 ///
-///       "comp_n": array of number or dict (optional)
+///       "mol_composition": array of number or dict (optional)
 ///         Composition in number per primitive cell. May be:
 ///
 ///         - An array of number, specifying the number of each component per
@@ -97,7 +97,7 @@ void parse(
 ///           the number of that component per primitive cell. All components in
 ///           the system must be included.
 ///
-///       "comp_x": array of number or dict (optional)
+///       "param_composition": array of number or dict (optional)
 ///         Parametric composition, in terms of the chosen composition axes. May
 ///         be:
 ///
@@ -138,9 +138,9 @@ void parse(
 ///     For canonical Monte Carlo calculations, a common use case is to specify
 ///     the temperature range independently via `initial_conditions` and
 ///     `conditions_increment` while fixing the composition of the initial
-///     configuration by using `"dependent_conditions": ["comp_n"]`. This
-///     relieves the user of having to calculate the composition of the initial
-///     configuration and set it in `initial_conditions` manually.
+///     configuration by using `"dependent_conditions": ["mol_composition"]`.
+///     This relieves the user of having to calculate the composition of the
+///     initial configuration and set it in `initial_conditions` manually.
 ///
 template <typename SystemType, typename ConfigType, typename ParseConditionsF,
           typename ParseConditionsIncrementF, typename TypeTag>

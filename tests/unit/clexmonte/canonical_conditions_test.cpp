@@ -19,10 +19,10 @@ TEST_F(MakeCanonicalConditionsTest, Test1) {
 
   EXPECT_EQ(conditions.size(), 2);
   EXPECT_EQ(conditions.at("temperature")(0), 300.0);
-  EXPECT_EQ(conditions.at("comp_n").size(), 3);
-  EXPECT_EQ(conditions.at("comp_n")(0), 2.0);
-  EXPECT_EQ(conditions.at("comp_n")(1), 1.0);
-  EXPECT_EQ(conditions.at("comp_n")(2), 1.0);
+  EXPECT_EQ(conditions.at("mol_composition").size(), 3);
+  EXPECT_EQ(conditions.at("mol_composition")(0), 2.0);
+  EXPECT_EQ(conditions.at("mol_composition")(1), 1.0);
+  EXPECT_EQ(conditions.at("mol_composition")(2), 1.0);
 }
 
 TEST_F(MakeCanonicalConditionsTest, Test2) {
@@ -36,10 +36,10 @@ TEST_F(MakeCanonicalConditionsTest, Test2) {
 
   EXPECT_EQ(conditions.size(), 2);
   EXPECT_EQ(conditions.at("temperature")(0), 10.0);
-  EXPECT_EQ(conditions.at("comp_n").size(), 3);
-  EXPECT_EQ(conditions.at("comp_n")(0), 0.0);
-  EXPECT_EQ(conditions.at("comp_n")(1), -0.1);
-  EXPECT_EQ(conditions.at("comp_n")(2), 0.1);
+  EXPECT_EQ(conditions.at("mol_composition").size(), 3);
+  EXPECT_EQ(conditions.at("mol_composition")(0), 0.0);
+  EXPECT_EQ(conditions.at("mol_composition")(1), -0.1);
+  EXPECT_EQ(conditions.at("mol_composition")(2), 0.1);
 }
 
 TEST_F(MakeCanonicalConditionsTest, Test3) {
@@ -52,10 +52,10 @@ TEST_F(MakeCanonicalConditionsTest, Test3) {
 
   EXPECT_EQ(conditions.size(), 2);
   EXPECT_EQ(conditions.at("temperature")(0), 300.0);
-  EXPECT_EQ(conditions.at("comp_n").size(), 3);
-  EXPECT_EQ(conditions.at("comp_n")(0), 2.0);
-  EXPECT_EQ(conditions.at("comp_n")(1), 1.0);
-  EXPECT_EQ(conditions.at("comp_n")(2), 1.0);
+  EXPECT_EQ(conditions.at("mol_composition").size(), 3);
+  EXPECT_EQ(conditions.at("mol_composition")(0), 2.0);
+  EXPECT_EQ(conditions.at("mol_composition")(1), 1.0);
+  EXPECT_EQ(conditions.at("mol_composition")(2), 1.0);
 }
 
 TEST_F(MakeCanonicalConditionsTest, Test4) {
@@ -68,8 +68,8 @@ TEST_F(MakeCanonicalConditionsTest, Test4) {
 
   EXPECT_EQ(conditions.size(), 2);
   EXPECT_EQ(conditions.at("temperature")(0), 10.0);
-  EXPECT_EQ(conditions.at("comp_n").size(), 3);
-  EXPECT_EQ(conditions.at("comp_n")(0), 0.0);
-  EXPECT_EQ(conditions.at("comp_n")(1), -0.1);
-  EXPECT_EQ(conditions.at("comp_n")(2), 0.1);
+  EXPECT_EQ(conditions.at("mol_composition").size(), 3);
+  EXPECT_EQ(conditions.at("mol_composition")(0), 0.0);
+  EXPECT_EQ(conditions.at("mol_composition")(1), -0.1);
+  EXPECT_EQ(conditions.at("mol_composition")(2), 0.1);
 }
