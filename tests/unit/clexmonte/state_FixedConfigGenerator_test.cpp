@@ -30,12 +30,12 @@ TEST_F(FixedConfigGeneratorTest, Test1) {
   Index volume = T.determinant();
   Configuration init_config = make_default_configuration(*system_data, T);
   for (Index i = 0; i < volume; ++i) {
-    init_config.dof_values.occupation(2 * volume + i) = 1;
+    get_occupation(init_config)(2 * volume + i) = 1;
   }
 
   FixedConfigGenerator<Configuration> config_generator(init_config);
   for (Index j = 0; j < 10; ++j) {
     Configuration config = config_generator(conditions, finished_states);
-    EXPECT_EQ(config.dof_values.occupation, init_config.dof_values.occupation);
+    EXPECT_EQ(get_occupation(config), get_occupation(init_config));
   }
 }

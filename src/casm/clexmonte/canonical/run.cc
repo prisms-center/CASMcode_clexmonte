@@ -46,7 +46,7 @@ void run(std::shared_ptr<system_type> const &system_data,
          monte::StateSampler<config_type> &state_sampler,
          monte::CompletionCheck &completion_check,
          monte::ResultsIO<config_type> &results_io,
-         MTRand &random_number_generator) {
+         MTRand &random_number_generator, monte::MethodLog method_log) {
   auto &log = CASM::log();
   log.begin("Cluster expansion canonical Monte Carlo");
 
@@ -93,7 +93,7 @@ void run(std::shared_ptr<system_type> const &system_data,
     results_type result = monte::occupation_metropolis(
         initial_state, potential, convert, canonical_swaps,
         monte::propose_canonical_event, random_number_generator, state_sampler,
-        completion_check);
+        completion_check, method_log);
     log.indent() << "Run complete" << std::endl;
 
     // Store final state for state generation input

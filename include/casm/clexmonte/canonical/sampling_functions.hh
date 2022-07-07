@@ -10,7 +10,8 @@ namespace canonical {
 /// \brief Construct functions that may be used to sample various quantities of
 ///     the Monte Carlo calculation as it runs
 monte::StateSamplingFunctionMap<Configuration> make_sampling_functions(
-    std::shared_ptr<system_type> const &system_data, canonical_tag tag);
+    std::shared_ptr<system_type> const &system_data,
+    canonical_tag tag = canonical_tag());
 
 }  // namespace canonical
 }  // namespace clexmonte

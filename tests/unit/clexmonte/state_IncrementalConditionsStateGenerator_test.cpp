@@ -44,7 +44,7 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test1) {
   Index volume = T.determinant();
   Configuration init_config = make_default_configuration(*system_data, T);
   for (Index i = 0; i < volume; ++i) {
-    init_config.dof_values.occupation(2 * volume + i) = 1;
+    get_occupation(init_config)(2 * volume + i) = 1;
   }
   // config_generator
   std::unique_ptr<config_generator_type> config_generator =
@@ -61,7 +61,7 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test1) {
   while (!state_generator.is_complete(final_states)) {
     state_type state = state_generator.next_state(final_states);
     Configuration const &config = state.configuration;
-    EXPECT_EQ(config.dof_values.occupation, init_config.dof_values.occupation);
+    EXPECT_EQ(get_occupation(config), get_occupation(init_config));
     EXPECT_TRUE(CASM::almost_equal(state.conditions.at("temperature")(0),
                                    300.0 + 10.0 * final_states.size()));
     final_states.push_back(state);
@@ -95,7 +95,7 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test2) {
   Index volume = T.determinant();
   Configuration init_config = make_default_configuration(*system_data, T);
   for (Index i = 0; i < volume; ++i) {
-    init_config.dof_values.occupation(2 * volume + i) = 1;
+    get_occupation(init_config)(2 * volume + i) = 1;
   }
   // config_generator
   std::unique_ptr<config_generator_type> config_generator =
@@ -112,7 +112,7 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test2) {
   while (!state_generator.is_complete(final_states)) {
     state_type state = state_generator.next_state(final_states);
     Configuration const &config = state.configuration;
-    EXPECT_EQ(config.dof_values.occupation, init_config.dof_values.occupation);
+    EXPECT_EQ(get_occupation(config), get_occupation(init_config));
     EXPECT_TRUE(almost_equal(
         state.conditions.at("mol_composition"),
         init_conditions.at("mol_composition") +

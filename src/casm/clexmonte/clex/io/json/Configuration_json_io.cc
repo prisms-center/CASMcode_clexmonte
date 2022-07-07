@@ -56,7 +56,7 @@ jsonParser &to_json(clexmonte::Configuration const &configuration,
                     jsonParser &json) {
   json["transformation_matrix_to_supercell"] =
       get_transformation_matrix_to_super(configuration);
-  json["dof"] = configuration.dof_values;
+  json["dof"] = get_dof_values(configuration);
   return json;
 }
 

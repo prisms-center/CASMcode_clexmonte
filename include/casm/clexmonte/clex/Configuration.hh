@@ -34,6 +34,16 @@ inline Eigen::VectorXi const &get_occupation(
   return configuration.dof_values.occupation;
 }
 
+inline clexulator::ConfigDoFValues const &get_dof_values(
+    Configuration const &configuration) {
+  return configuration.dof_values;
+}
+
+inline clexulator::ConfigDoFValues &get_dof_values(
+    Configuration &configuration) {
+  return configuration.dof_values;
+}
+
 /// \brief Set calculator so it evaluates using `configuration`
 inline void set(clexulator::ClusterExpansion &calculator,
                 Configuration const &configuration) {

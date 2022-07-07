@@ -4,7 +4,9 @@
 #include "casm/clexmonte/clex/ClexData.hh"
 #include "casm/clexmonte/misc/Matrix3lCompare.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
+#include "casm/clexulator/DoFSpace.hh"
 #include "casm/clexulator/NeighborList.hh"
+#include "casm/clexulator/OrderParameter.hh"
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/crystallography/BasicStructure.hh"
@@ -39,7 +41,9 @@ struct OccSystem {
   /// \brief Constructor
   OccSystem(std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
             composition::CompositionConverter const &_composition_converter,
-            ClexData const &_formation_energy_clex_data);
+            ClexData const &_formation_energy_clex_data,
+            std::map<std::string, clexulator::DoFSpace>
+                _order_parameter_definitions = {});
 
   /// Primitive crystal structure and allowed degrees of freedom (DoF)
   std::shared_ptr<xtal::BasicStructure const> shared_prim;
@@ -62,6 +66,9 @@ struct OccSystem {
   /// - clexulator::SparseCoefficients
   ClexData formation_energy_clex_data;
 
+  /// DoFSpace that define order parameters
+  std::map<std::string, clexulator::DoFSpace> order_parameter_definitions;
+
   /// Supercell specific formation energy calculation data and methods (using
   /// transformation_matrix_to_super as key). Contains:
   /// -  clexulator::SuperNeighborList,
@@ -78,6 +85,12 @@ struct OccSystemSupercellData {
   OccSystemSupercellData(OccSystem const &system_data,
                          Eigen::Matrix3l const &transformation_matrix_to_super);
 
+  /// Performs index conversions in supercell
+  monte::Conversions convert;
+
+  /// List of unique pairs of (asymmetric unit index, species index)
+  monte::OccCandidateList occ_candidate_list;
+
   /// SuperNeighborList, used for evaluating correlations in a particular
   /// supercell
   std::shared_ptr<clexulator::SuperNeighborList> supercell_neighbor_list;
@@ -87,11 +100,9 @@ struct OccSystemSupercellData {
   /// -  clexulator::SparseCoefficients
   std::shared_ptr<clexulator::ClusterExpansion> formation_energy_clex;
 
-  /// Performs index conversions in supercell
-  monte::Conversions convert;
-
-  /// List of unique pairs of (asymmetric unit index, species index)
-  monte::OccCandidateList occ_candidate_list;
+  /// Order parameter calculators
+  std::map<std::string, std::shared_ptr<clexulator::OrderParameter>>
+      order_parameters;
 };
 
 // ---
@@ -138,6 +149,16 @@ std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
     OccSystem &data, monte::State<Configuration> const &state);
+
+/// \brief Helper to get the correct order parameter calculators for a
+///     particular configuration, constructing as necessary
+std::map<std::string, std::shared_ptr<clexulator::OrderParameter>> const &
+get_order_parameters(OccSystem &data, Configuration const &configuration);
+
+/// \brief Helper to get the correct order parameter calculators for a
+///     particular state's supercell, constructing as necessary
+std::map<std::string, std::shared_ptr<clexulator::OrderParameter>> const &
+get_order_parameters(OccSystem &data, monte::State<Configuration> const &state);
 
 /// \brief Helper to get supercell index conversions
 monte::Conversions const &get_index_conversions(
