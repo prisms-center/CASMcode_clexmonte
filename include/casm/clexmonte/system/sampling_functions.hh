@@ -2,6 +2,7 @@
 #define CASM_clexmonte_system_sampling_functions
 
 #include "casm/clexmonte/clex/Configuration.hh"
+#include "casm/clexmonte/misc/eigen.hh"
 #include "casm/clexulator/Clexulator.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/Correlations.hh"
@@ -22,7 +23,7 @@ namespace clexmonte {
 // a particular context.
 //
 // Example requirements are:
-// - that a conditions `monte::VectorValueMap` contains "temperature"
+// - that a conditions `monte::ValueMap` contains scalar "temperature"
 // - that the method `ClexData &get_formation_energy_clex_data(SystemType &)`
 //   exists for template type `SystemType` (i.e. when SystemType=OccSystem).
 // ---
@@ -63,7 +64,7 @@ monte::StateSamplingFunction<Configuration> make_potential_energy_f(
 /// \brief Make temperature sampling function ("temperature")
 ///
 /// Requires:
-/// - "temperature" is a state condition
+/// - "temperature" is a scalar state condition
 template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_temperature_f(
     std::shared_ptr<SystemType> const &system_data) {
@@ -71,7 +72,8 @@ monte::StateSamplingFunction<Configuration> make_temperature_f(
       "temperature", "Temperature (K)",
       1,  // number of components in "temperature",
       [](monte::State<Configuration> const &state) {
-        return state.conditions.at("temperature");
+        return monte::reshaped(
+            state.conditions.scalar_values.at("temperature"));
       });
 }
 
@@ -180,7 +182,7 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_f(
 /// \brief Make potential energy sampling function ("potential_energy")
 ///
 /// Requires:
-/// - "potential_energy" is a state property
+/// - "potential_energy" is a scalar state property
 template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_potential_energy_f(
     std::shared_ptr<SystemType> const &system_data) {
@@ -189,7 +191,8 @@ monte::StateSamplingFunction<Configuration> make_potential_energy_f(
       "Potential energy of the state (normalized per primitive cell)",
       1,  // number of components in "potential_energy"
       [system_data](monte::State<Configuration> const &state) {
-        return state.properties.at("potential_energy");
+        return monte::reshaped(
+            state.properties.scalar_values.at("potential_energy"));
       });
 }
 

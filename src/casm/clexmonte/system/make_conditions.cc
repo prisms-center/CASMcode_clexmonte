@@ -203,10 +203,6 @@ Eigen::VectorXd InputToVectors::make_chem_pot() {
 
 }  // namespace make_conditions_impl
 
-// Note: For double or vector<double> to Eigen::VectorXd
-// - Use `Eigen::VectorXd to_VectorXd(double value)`
-// - Use `Eigen::VectorXd to_VectorXd(double value)`
-
 /// \brief Helper for making a conditions VectorValueMap, mol_composition
 ///
 /// \param composition_converter composition::CompositionConverter, used to

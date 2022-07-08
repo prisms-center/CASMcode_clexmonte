@@ -60,6 +60,18 @@ jsonParser &to_json(clexmonte::Configuration const &configuration,
   return json;
 }
 
+void parse(InputParser<clexmonte::Configuration> &parser) {
+  Eigen::Matrix3l T;
+  parser.require(T, "transformation_matrix_to_supercell");
+  auto dof_values_subparser =
+      parser.subparse<clexulator::ConfigDoFValues>("dof");
+
+  if (parser.valid()) {
+    parser.value = std::make_unique<clexmonte::Configuration>(
+        T, *dof_values_subparser->value);
+  }
+}
+
 /// \brief Read clexmonte::Configuration from JSON
 ///
 /// Notes:
@@ -71,20 +83,12 @@ jsonParser &to_json(clexmonte::Configuration const &configuration,
 template <>
 clexmonte::Configuration from_json<clexmonte::Configuration>(
     jsonParser const &json) {
-  ParentInputParser parser{json};
-
-  Eigen::Matrix3l T;
-  parser.require(T, "transformation_matrix_to_supercell");
-
-  clexulator::ConfigDoFValues dof_values;
-  parser.require(dof_values, "dof");
-
-  auto &log = CASM::log();
-  std::runtime_error error_if_invalid{
-      "Error reading clexmonte::Configuration from JSON input"};
-  report_and_throw_if_invalid(parser, log, error_if_invalid);
-
-  return clexmonte::Configuration(T, dof_values);
+  InputParser<clexmonte::Configuration> parser{json};
+  std::stringstream ss;
+  ss << "Error reading clexmonte::Configuration from JSON input";
+  report_and_throw_if_invalid(parser, CASM::log(),
+                              std::runtime_error{ss.str()});
+  return *parser.value;
 }
 
 /// \brief Read clexmonte::Configuration from JSON

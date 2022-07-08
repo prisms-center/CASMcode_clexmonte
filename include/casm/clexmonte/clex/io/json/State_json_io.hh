@@ -7,6 +7,8 @@ namespace CASM {
 
 class jsonParser;
 template <typename T>
+class InputParser;
+template <typename T>
 T from_json(jsonParser const &);
 
 namespace clexmonte {
@@ -22,6 +24,8 @@ struct State;
 jsonParser &to_json(monte::State<clexmonte::Configuration> const &state,
                     jsonParser &json);
 
+void parse(InputParser<monte::State<clexmonte::Configuration>> &parser);
+
 /// \brief Read monte::State<clexmonte::Configuration> from JSON
 template <>
 monte::State<clexmonte::Configuration>
@@ -30,9 +34,6 @@ from_json<monte::State<clexmonte::Configuration>>(jsonParser const &json);
 /// \brief Read monte::State<clexmonte::Configuration> from JSON
 void from_json(monte::State<clexmonte::Configuration> &state,
                jsonParser const &json);
-
-/// \brief Write VectorValueMap to JSON
-jsonParser as_flattest_json(monte::VectorValueMap const &vector_value_map);
 
 }  // namespace CASM
 

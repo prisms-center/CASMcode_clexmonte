@@ -34,7 +34,7 @@ class StateSamplerTest : public test::ZrOTestSystem {
 /// Test state sampling, using canonical Monte Carlo
 TEST_F(StateSamplerTest, Test1) {
   // Create conditions
-  monte::VectorValueMap init_conditions =
+  monte::ValueMap init_conditions =
       canonical::make_conditions(600.0, system_data->composition_converter,
                                  {{"Zr", 2.0}, {"O", 1.0}, {"Va", 1.0}});
 
@@ -57,7 +57,7 @@ TEST_F(StateSamplerTest, Test1) {
   for (Index i = 0; i < 8; ++i) {
     // Create state
     State<Configuration> state(config, init_conditions);
-    state.conditions.at("temperature")(0) = 300.0 + i * 100.0;
+    state.conditions.scalar_values.at("temperature") = 300.0 + i * 100.0;
 
     OccLocation occ_location(convert, occ_candidate_list);
     occ_location.initialize(get_occupation(state.configuration));
@@ -98,7 +98,8 @@ TEST_F(StateSamplerTest, Test1) {
     OccEvent event;
     std::vector<Index> linear_site_index;
     std::vector<int> new_occ;
-    double beta = 1.0 / (CASM::KB * state.conditions.at("temperature")(0));
+    double beta =
+        1.0 / (CASM::KB * state.conditions.scalar_values.at("temperature"));
     MTRand random_number_generator;
 
     while (state_sampler.pass < 100) {
@@ -121,15 +122,16 @@ TEST_F(StateSamplerTest, Test1) {
       state_sampler.sample_data_if_due(state);
     }  // main loop
 
-    std::cout << "samplers: " << std::endl;
+    std::stringstream ss;
+    ss << "samplers: " << std::endl;
     for (auto const &f : state_sampler.samplers) {
       auto const &name = f.first;
       auto const &sampler = *f.second;
-      std::cout << name << ":" << std::endl;
-      std::cout << "component_names: " << sampler.component_names()
-                << std::endl;
-      std::cout << "n_samples: " << sampler.n_samples() << std::endl;
-      std::cout << "value: \n" << sampler.values() << std::endl;
+      ss << name << ":" << std::endl;
+      ss << "component_names: " << sampler.component_names() << std::endl;
+      ss << "n_samples: " << sampler.n_samples() << std::endl;
+      ss << "value: \n" << sampler.values() << std::endl;
     }
+    // std::cout << ss.str();
   }  // loop over states
 }

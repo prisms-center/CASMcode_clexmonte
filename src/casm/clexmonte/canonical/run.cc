@@ -5,6 +5,7 @@
 #include "casm/clexmonte/canonical/CanonicalPotential.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
 #include "casm/clexmonte/clex/io/json/State_json_io.hh"
+#include "casm/clexmonte/misc/to_json.hh"
 #include "casm/clexmonte/system/OccSystem.hh"
 #include "casm/clexmonte/system/enforce_composition.hh"
 #include "casm/clexmonte/system/sampling_functions.hh"
@@ -17,6 +18,7 @@
 #include "casm/monte/results/io/ResultsIO.hh"
 #include "casm/monte/state/StateGenerator.hh"
 #include "casm/monte/state/StateSampler.hh"
+#include "casm/monte/state/io/json/ValueMap_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -64,7 +66,7 @@ void run(std::shared_ptr<system_type> const &system_data,
     log.indent() << "Generating next initial state..." << std::endl;
     // Get initial state for the next calculation
     state_type initial_state = state_generator.next_state(final_states);
-    log.indent() << as_flattest_json(initial_state.conditions) << std::endl;
+    log.indent() << to_json(initial_state.conditions) << std::endl;
     log.indent() << "Done" << std::endl;
 
     // Make supercell-specific potential calculator
@@ -82,10 +84,11 @@ void run(std::shared_ptr<system_type> const &system_data,
         make_grand_canonical_swaps(convert, occ_candidate_list);
 
     log.indent() << "Enforcing composition..." << std::endl;
-    enforce_composition(get_occupation(initial_state.configuration),
-                        initial_state.conditions.at("mol_composition"),
-                        get_composition_calculator(*system_data), convert,
-                        grand_canonical_swaps, random_number_generator);
+    enforce_composition(
+        get_occupation(initial_state.configuration),
+        initial_state.conditions.vector_values.at("mol_composition"),
+        get_composition_calculator(*system_data), convert,
+        grand_canonical_swaps, random_number_generator);
     log.indent() << "Done" << std::endl;
 
     // Run Monte Carlo at a single condition

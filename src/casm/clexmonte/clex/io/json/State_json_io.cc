@@ -5,6 +5,7 @@
 #include "casm/clexmonte/clex/Configuration.hh"
 #include "casm/clexmonte/clex/io/json/Configuration_json_io.hh"
 #include "casm/monte/state/State.hh"
+#include "casm/monte/state/io/json/ValueMap_json_io.hh"
 
 namespace CASM {
 
@@ -16,15 +17,23 @@ namespace CASM {
 jsonParser &to_json(monte::State<clexmonte::Configuration> const &state,
                     jsonParser &json) {
   json["configuration"] = state.configuration;
-  for (auto const &value : state.conditions) {
-    to_json(value.second, json["conditions"][value.first],
-            CASM::jsonParser::as_array());
-  }
-  for (auto const &value : state.properties) {
-    to_json(value.second, json["properties"][value.first],
-            CASM::jsonParser::as_array());
-  }
+  json["conditions"] = state.conditions;
+  json["properties"] = state.properties;
   return json;
+}
+
+void parse(InputParser<monte::State<clexmonte::Configuration>> &parser) {
+  std::unique_ptr<clexmonte::Configuration> configuration =
+      parser.require<clexmonte::Configuration>("configuration");
+
+  auto conditions_subparser = parser.subparse<monte::ValueMap>("conditions");
+  auto properties_subparser = parser.subparse<monte::ValueMap>("properties");
+
+  if (parser.valid()) {
+    parser.value = std::make_unique<monte::State<clexmonte::Configuration>>(
+        *configuration, *conditions_subparser->value,
+        *properties_subparser->value);
+  }
 }
 
 /// \brief Read monte::State<clexmonte::Configuration> from JSON
@@ -36,24 +45,12 @@ jsonParser &to_json(monte::State<clexmonte::Configuration> const &state,
 template <>
 monte::State<clexmonte::Configuration>
 from_json<monte::State<clexmonte::Configuration>>(jsonParser const &json) {
-  ParentInputParser parser{json};
-
-  std::unique_ptr<clexmonte::Configuration> configuration =
-      parser.require<clexmonte::Configuration>("configuration");
-
-  monte::VectorValueMap conditions;
-  parser.optional(conditions, "conditions");
-
-  monte::VectorValueMap properties;
-  parser.optional(properties, "properties");
-
-  auto &log = CASM::log();
-  std::runtime_error error_if_invalid{
-      "Error reading monte::State<clexmonte::Configuration> from JSON input"};
-  report_and_throw_if_invalid(parser, log, error_if_invalid);
-
-  return monte::State<clexmonte::Configuration>(*configuration, conditions,
-                                                properties);
+  InputParser<monte::State<clexmonte::Configuration>> parser{json};
+  std::stringstream ss;
+  ss << "Error reading monte::State<clexmonte::Configuration> from JSON input";
+  report_and_throw_if_invalid(parser, CASM::log(),
+                              std::runtime_error{ss.str()});
+  return *parser.value;
 }
 
 /// \brief Read monte::State<clexmonte::Configuration> from JSON
@@ -65,15 +62,6 @@ from_json<monte::State<clexmonte::Configuration>>(jsonParser const &json) {
 void from_json(monte::State<clexmonte::Configuration> &state,
                jsonParser const &json) {
   state = from_json<monte::State<clexmonte::Configuration>>(json);
-}
-
-/// \brief Write VectorValueMap to JSON
-jsonParser as_flattest_json(monte::VectorValueMap const &vector_value_map) {
-  jsonParser json;
-  for (auto const &pair : vector_value_map) {
-    to_json(pair.second, json[pair.first], jsonParser::as_flattest());
-  }
-  return json;
 }
 
 }  // namespace CASM

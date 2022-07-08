@@ -5,6 +5,8 @@ namespace CASM {
 
 class jsonParser;
 template <typename T>
+class InputParser;
+template <typename T>
 T from_json(jsonParser const &);
 
 namespace clexmonte {
@@ -14,6 +16,8 @@ struct Configuration;
 /// \brief Write clexmonte::Configuration to JSON
 jsonParser &to_json(clexmonte::Configuration const &configuration,
                     jsonParser &json);
+
+void parse(InputParser<clexmonte::Configuration> &parser);
 
 /// \brief Read clexmonte::Configuration from JSON
 template <>

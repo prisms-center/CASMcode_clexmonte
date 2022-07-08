@@ -15,29 +15,25 @@ class CompositionConverter;
 
 namespace clexmonte {
 
-// Note: For double (ex. "temperature") or vector<double> to Eigen::VectorXd
-// - Use `Eigen::VectorXd to_VectorXd(double value)`
-// - Use `Eigen::VectorXd to_VectorXd(std::vector<double> const &value)`
-
 // --- Composition ---
 
-/// \brief Helper for making a conditions VectorValueMap, mol_composition
+/// \brief Helper for making a conditions ValueMap, mol_composition
 Eigen::VectorXd make_mol_composition(
     composition::CompositionConverter const &composition_converter,
     std::map<std::string, double> comp);
 
-/// \brief Helper for making a conditions VectorValueMap, mol_composition
+/// \brief Helper for making a conditions ValueMap, mol_composition
 /// increment
 Eigen::VectorXd make_mol_composition_increment(
     composition::CompositionConverter const &composition_converter,
     std::map<std::string, double> comp);
 
-/// \brief Helper for making a conditions VectorValueMap, param_composition
+/// \brief Helper for making a conditions ValueMap, param_composition
 Eigen::VectorXd make_param_composition(
     composition::CompositionConverter const &composition_converter,
     std::map<std::string, double> comp);
 
-/// \brief Helper for making a conditions VectorValueMap, param_composition
+/// \brief Helper for making a conditions ValueMap, param_composition
 /// increment
 Eigen::VectorXd make_param_composition_increment(
     composition::CompositionConverter const &composition_converter,
@@ -45,22 +41,22 @@ Eigen::VectorXd make_param_composition_increment(
 
 // --- Chemical potential ---
 
-/// \brief Helper for making a conditions VectorValueMap, mol_chem_pot
+/// \brief Helper for making a conditions ValueMap, mol_chem_pot
 Eigen::VectorXd make_mol_chem_pot(
     composition::CompositionConverter const &composition_converter,
     std::map<std::string, double> chem_pot);
 
-/// \brief Helper for making a conditions VectorValueMap, mol_chem_pot increment
+/// \brief Helper for making a conditions ValueMap, mol_chem_pot increment
 Eigen::VectorXd make_mol_chem_pot_increment(
     composition::CompositionConverter const &composition_converter,
     std::map<std::string, double> chem_pot);
 
-/// \brief Helper for making a conditions VectorValueMap, param_chem_pot
+/// \brief Helper for making a conditions ValueMap, param_chem_pot
 Eigen::VectorXd make_param_chem_pot(
     composition::CompositionConverter const &composition_converter,
     std::map<std::string, double> chem_pot);
 
-/// \brief Helper for making a conditions VectorValueMap, param_chem_pot
+/// \brief Helper for making a conditions ValueMap, param_chem_pot
 ///     increment
 Eigen::VectorXd make_param_chem_pot_increment(
     composition::CompositionConverter const &composition_converter,

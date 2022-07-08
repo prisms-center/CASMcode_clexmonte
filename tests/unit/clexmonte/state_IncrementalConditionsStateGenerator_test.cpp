@@ -30,10 +30,10 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test1) {
 
   EXPECT_EQ(system_data->shared_prim->basis().size(), 4);
 
-  VectorValueMap init_conditions =
+  ValueMap init_conditions =
       canonical::make_conditions(300.0, system_data->composition_converter,
                                  {{"Zr", 2.0}, {"O", 0.2}, {"Va", 1.8}});
-  VectorValueMap conditions_increment = canonical::make_conditions_increment(
+  ValueMap conditions_increment = canonical::make_conditions_increment(
       10.0, system_data->composition_converter,
       {{"Zr", 0.0}, {"O", 0.0}, {"Va", 0.0}});
   Index n_states = 11;
@@ -62,8 +62,9 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test1) {
     state_type state = state_generator.next_state(final_states);
     Configuration const &config = state.configuration;
     EXPECT_EQ(get_occupation(config), get_occupation(init_config));
-    EXPECT_TRUE(CASM::almost_equal(state.conditions.at("temperature")(0),
-                                   300.0 + 10.0 * final_states.size()));
+    EXPECT_TRUE(
+        CASM::almost_equal(state.conditions.scalar_values.at("temperature"),
+                           300.0 + 10.0 * final_states.size()));
     final_states.push_back(state);
   }
 }
@@ -81,10 +82,10 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test2) {
 
   EXPECT_EQ(system_data->shared_prim->basis().size(), 4);
 
-  VectorValueMap init_conditions =
+  ValueMap init_conditions =
       canonical::make_conditions(300.0, system_data->composition_converter,
                                  {{"Zr", 2.0}, {"O", 0.2}, {"Va", 1.8}});
-  VectorValueMap conditions_increment = canonical::make_conditions_increment(
+  ValueMap conditions_increment = canonical::make_conditions_increment(
       0.0, system_data->composition_converter,
       {{"Zr", 0.0}, {"O", 0.2}, {"Va", -0.2}});
   Index n_states = 9;
@@ -114,9 +115,10 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test2) {
     Configuration const &config = state.configuration;
     EXPECT_EQ(get_occupation(config), get_occupation(init_config));
     EXPECT_TRUE(almost_equal(
-        state.conditions.at("mol_composition"),
-        init_conditions.at("mol_composition") +
-            conditions_increment.at("mol_composition") * final_states.size()));
+        state.conditions.vector_values.at("mol_composition"),
+        init_conditions.vector_values.at("mol_composition") +
+            conditions_increment.vector_values.at("mol_composition") *
+                final_states.size()));
     final_states.push_back(state);
   }
 }

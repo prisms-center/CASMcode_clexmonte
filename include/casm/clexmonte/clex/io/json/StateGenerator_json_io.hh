@@ -162,15 +162,12 @@ void parse(
       "initial_configuration", system_data, tag);
 
   /// Parse "initial_conditions"
-  auto initial_conditions_subparser =
-      parser.subparse_with<monte::VectorValueMap>(
-          parse_conditions_f, "initial_conditions", system_data, tag);
+  auto initial_conditions_subparser = parser.subparse_with<monte::ValueMap>(
+      parse_conditions_f, "initial_conditions", system_data, tag);
 
   /// Parse "conditions_increment"
-  auto conditions_increment_subparser =
-      parser.subparse_with<monte::VectorValueMap>(parse_conditions_increment_f,
-                                                  "conditions_increment",
-                                                  system_data, tag);
+  auto conditions_increment_subparser = parser.subparse_with<monte::ValueMap>(
+      parse_conditions_increment_f, "conditions_increment", system_data, tag);
 
   /// Parse "dependent_conditions"
   std::vector<std::string> dependent_conditions_names;

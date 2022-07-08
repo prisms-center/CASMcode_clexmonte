@@ -167,16 +167,15 @@ TEST(canonical_fullrun_test, Test1) {
       initial_configuration);
 
   // - Construct initial conditions
-  monte::VectorValueMap initial_conditions =
-      clexmonte::canonical::make_conditions(
-          300.0,                  // temperature (K)
-          composition_converter,  // composition converter
-          {{"Zr", 2.},            // composition values (#/unit cell)
-           {"O", 2. / 6.},
-           {"Va", 10. / 6.}});
+  monte::ValueMap initial_conditions = clexmonte::canonical::make_conditions(
+      300.0,                  // temperature (K)
+      composition_converter,  // composition converter
+      {{"Zr", 2.},            // composition values (#/unit cell)
+       {"O", 2. / 6.},
+       {"Va", 10. / 6.}});
 
   // - Construct conditions increment
-  monte::VectorValueMap conditions_increment =
+  monte::ValueMap conditions_increment =
       clexmonte::canonical::make_conditions_increment(
           10.0,                   // temperature (K)
           composition_converter,  // composition converter

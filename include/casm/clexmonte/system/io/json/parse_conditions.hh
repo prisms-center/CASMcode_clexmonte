@@ -12,29 +12,29 @@
 namespace CASM {
 namespace clexmonte {
 
-/// \brief Parse temperature to size=1 vector
-void parse_temperature(InputParser<monte::VectorValueMap> &parser);
+/// \brief Parse temperature scalar value
+void parse_temperature(InputParser<monte::ValueMap> &parser);
 
 /// \brief Parse "mol_composition" or "param_composition" and store as
-///     "mol_composition"
+///     "mol_composition" vector values
 template <typename SystemType>
-void parse_mol_composition(InputParser<monte::VectorValueMap> &parser,
+void parse_mol_composition(InputParser<monte::ValueMap> &parser,
                            std::shared_ptr<SystemType> const &system_data);
 
 /// \brief Parse "mol_composition" or "param_composition" and store as
-///     "mol_composition" (increment)
+///     "mol_composition" vector values (increment)
 template <typename SystemType>
 void parse_mol_composition_increment(
-    InputParser<monte::VectorValueMap> &parser,
+    InputParser<monte::ValueMap> &parser,
     std::shared_ptr<SystemType> const &system_data);
 
 // --- Inline definitions ---
 
-/// \brief Parse temperature to size=1 vector
+/// \brief Parse temperature scalar value
 ///
 /// If successfully parsed, `parser->value` will contain a
-/// monte::VectorValueMap with:
-/// - "temperature": (size 1)
+/// monte::ValueMap with:
+/// - scalar_values["temperature"]: (size 1)
 ///
 /// If unsuccesfully parsed, `parser.valid() == false`.
 ///
@@ -43,18 +43,22 @@ void parse_mol_composition_increment(
 ///   "temperature": number (required)
 ///     Temperature in K.
 ///
-inline void parse_temperature(InputParser<monte::VectorValueMap> &parser) {
-  double temperature;
-  parser.require(temperature, "temperature");
-  (*parser.value)["temperature"] = to_VectorXd(temperature);
+/// \param parser InputParser, which must have non-empty value
+///
+inline void parse_temperature(InputParser<monte::ValueMap> &parser) {
+  if (parser.value == nullptr) {
+    throw std::runtime_error(
+        "Error in parse_temperature: parser must have non-empty value");
+  }
+  parser.require(parser.value->scalar_values["temperature"], "temperature");
 }
 
 /// \brief Parse "mol_composition" or "param_composition" and store as
-/// "mol_composition"
+/// "mol_composition" vector values
 ///
 /// If successfully parsed, `parser->value` will contain a
-/// monte::VectorValueMap with:
-/// - "mol_composition": (size = system components size)
+/// monte::ValueMap with:
+/// - vector_values["mol_composition"]: (size = system components size)
 ///
 /// If unsuccesfully parsed, `parser.valid() == false`.
 ///
@@ -76,8 +80,12 @@ inline void parse_temperature(InputParser<monte::VectorValueMap> &parser) {
 /// Requires:
 /// - get_composition_converter(SystemType const &system_data);
 template <typename SystemType>
-void parse_mol_composition(InputParser<monte::VectorValueMap> &parser,
+void parse_mol_composition(InputParser<monte::ValueMap> &parser,
                            std::shared_ptr<SystemType> const &system_data) {
+  if (parser.value == nullptr) {
+    throw std::runtime_error(
+        "Error in parse_mol_composition: parser must have non-empty value");
+  }
   std::map<std::string, double> input;
   std::string option;
   try {
@@ -90,7 +98,7 @@ void parse_mol_composition(InputParser<monte::VectorValueMap> &parser,
           "Missing one of \"mol_composition\" or \"param_composition\"");
     }
     parser.optional(input, option);
-    (*parser.value)["mol_composition"] =
+    parser.value->vector_values["mol_composition"] =
         make_mol_composition(get_composition_converter(*system_data), input);
   } catch (std::exception &e) {
     std::stringstream msg;
@@ -101,11 +109,11 @@ void parse_mol_composition(InputParser<monte::VectorValueMap> &parser,
 }
 
 /// \brief Parse "mol_composition" or "param_composition" and store as
-///     "mol_composition" (increment)
+///     "mol_composition" vector values (increment)
 ///
 /// If successfully parsed, `parser->value` will contain a
-/// monte::VectorValueMap with:
-/// - "mol_composition": (size = system components size)
+/// monte::ValueMap with:
+/// - vector_values["mol_composition"]: (size = system components size)
 ///
 /// If unsuccesfully parsed, `parser.valid() == false`.
 ///
@@ -128,8 +136,13 @@ void parse_mol_composition(InputParser<monte::VectorValueMap> &parser,
 /// - get_composition_converter(SystemType const &system_data);
 template <typename SystemType>
 void parse_mol_composition_increment(
-    InputParser<monte::VectorValueMap> &parser,
+    InputParser<monte::ValueMap> &parser,
     std::shared_ptr<SystemType> const &system_data) {
+  if (parser.value == nullptr) {
+    throw std::runtime_error(
+        "Error in parse_mol_composition_increment: parser must have non-empty "
+        "value");
+  }
   std::map<std::string, double> input;
   std::string option;
   try {
@@ -142,8 +155,9 @@ void parse_mol_composition_increment(
           "Missing one of \"mol_composition\" or \"param_composition\"");
     }
     parser.optional(input, option);
-    (*parser.value)["mol_composition"] = make_mol_composition_increment(
-        get_composition_converter(*system_data), input);
+    parser.value->vector_values["mol_composition"] =
+        make_mol_composition_increment(get_composition_converter(*system_data),
+                                       input);
   } catch (std::exception &e) {
     std::stringstream msg;
     msg << "Error: could not construct composition increment from option '"

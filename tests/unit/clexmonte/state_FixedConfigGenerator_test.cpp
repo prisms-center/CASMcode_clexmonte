@@ -21,7 +21,7 @@ TEST_F(FixedConfigGeneratorTest, Test1) {
 
   EXPECT_EQ(system_data->shared_prim->basis().size(), 4);
 
-  monte::VectorValueMap conditions =
+  monte::ValueMap conditions =
       canonical::make_conditions(300.0, system_data->composition_converter,
                                  {{"Zr", 2.0}, {"O", 1.0}, {"Va", 1.0}});
   std::vector<State<Configuration>> finished_states;

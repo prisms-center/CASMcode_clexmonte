@@ -53,7 +53,8 @@ TEST_F(CanonicalMetropolisTest, Test1) {
 
   // Main loop
   OccEvent event;
-  double beta = 1.0 / (CASM::KB * state.conditions.at("temperature")(0));
+  double beta =
+      1.0 / (CASM::KB * state.conditions.scalar_values.at("temperature"));
   MTRand random_number_generator;
   CountType step = 0;
   CountType pass = 0;

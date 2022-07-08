@@ -24,12 +24,12 @@ namespace CASM {
 namespace clexmonte {
 namespace canonical {
 
-/// \brief Construct conditions (monte::VectorValueMap) from JSON
+/// \brief Construct conditions (monte::ValueMap) from JSON
 ///
 /// Parses canonical Monte Carlo conditions from JSON. If successfully parsed,
-/// `parser->value` will contain a monte::VectorValueMap with:
-/// - "temperature": (size 1)
-/// - "mol_composition": (size = system components size)
+/// `parser->value` will contain a monte::ValueMap with:
+/// - scalar_values["temperature"]
+/// - vector_values["mol_composition"]: (size = system components size)
 ///
 /// Expected:
 ///
@@ -49,28 +49,28 @@ namespace canonical {
 ///     composition value. All composition axes must be included.
 ///
 ///
-void parse_conditions(InputParser<monte::VectorValueMap> &parser,
+void parse_conditions(InputParser<monte::ValueMap> &parser,
                       std::shared_ptr<system_type> const &system_data,
                       canonical_tag tag) {
-  parser.value = std::make_unique<monte::VectorValueMap>();
+  parser.value = std::make_unique<monte::ValueMap>();
   parse_temperature(parser);
   parse_mol_composition(parser, system_data);
 }
 
-/// \brief Construct conditions increment (monte::VectorValueMap) from JSON
+/// \brief Construct conditions increment (monte::ValueMap) from JSON
 ///
 /// Parses canonical Monte Carlo conditions increments from JSON. If
-/// successfully parsed, `parser->value` will contain a monte::VectorValueMap
+/// successfully parsed, `parser->value` will contain a monte::ValueMap
 /// with:
 /// - "temperature": (size 1)
 /// - "mol_composition": (size = system components size)
 ///
 /// The expected JSON format is the same as documented for `parse_conditions`,
 /// but values are interpreted as increments.
-void parse_conditions_increment(InputParser<monte::VectorValueMap> &parser,
+void parse_conditions_increment(InputParser<monte::ValueMap> &parser,
                                 std::shared_ptr<system_type> const &system_data,
                                 canonical_tag tag) {
-  parser.value = std::make_unique<monte::VectorValueMap>();
+  parser.value = std::make_unique<monte::ValueMap>();
   parse_temperature(parser);
   parse_mol_composition_increment(parser, system_data);
 }
