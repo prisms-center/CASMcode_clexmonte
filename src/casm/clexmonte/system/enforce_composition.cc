@@ -112,11 +112,9 @@ std::vector<Index> make_species_to_component_index_converter(
 void enforce_composition(
     Eigen::VectorXi &occupation, Eigen::VectorXd const &target_comp_n,
     composition::CompositionCalculator const &composition_calculator,
-    monte::Conversions const &convert,
     std::vector<monte::OccSwap> const &grand_canonical_swaps,
-    MTRand &random_number_generator) {
-  monte::OccCandidateList occ_candidate_list(convert);
-  monte::OccLocation occ_location(convert, occ_candidate_list);
+    monte::OccLocation &occ_location, MTRand &random_number_generator) {
+  monte::Conversions const &convert = occ_location.convert();
   occ_location.initialize(occupation);
 
   // no guarantee convert species_index corresponds to comp_n index

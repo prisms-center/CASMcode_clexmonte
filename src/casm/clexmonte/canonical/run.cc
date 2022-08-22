@@ -78,6 +78,7 @@ void run(std::shared_ptr<system_type> const &system_data,
         get_index_conversions(*system_data, initial_state);
     monte::OccCandidateList const &occ_candidate_list =
         get_occ_candidate_list(*system_data, initial_state);
+    monte::OccLocation occ_location(convert, occ_candidate_list);
     std::vector<monte::OccSwap> canonical_swaps =
         make_canonical_swaps(convert, occ_candidate_list);
     std::vector<monte::OccSwap> grand_canonical_swaps =
@@ -87,8 +88,8 @@ void run(std::shared_ptr<system_type> const &system_data,
     enforce_composition(
         get_occupation(initial_state.configuration),
         initial_state.conditions.vector_values.at("mol_composition"),
-        get_composition_calculator(*system_data), convert,
-        grand_canonical_swaps, random_number_generator);
+        get_composition_calculator(*system_data), grand_canonical_swaps,
+        occ_location, random_number_generator);
     log.indent() << "Done" << std::endl;
 
     // Run Monte Carlo at a single condition
