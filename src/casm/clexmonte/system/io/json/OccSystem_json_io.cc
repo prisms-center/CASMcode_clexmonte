@@ -25,6 +25,9 @@ void parse(InputParser<OccSystem> &parser) {
   auto formation_energy_clex_data_subparser =
       parser.subparse<ClexData>("formation_energy", prim_neighbor_list);
 
+  // 4) Construct DoFSpaces
+  // TODO...
+
   if (parser.valid()) {
     parser.value = std::make_unique<OccSystem>(
         shared_prim, *composition_axes,
