@@ -33,16 +33,13 @@ class GrandCanonicalPotential {
     m_n_unitcells = get_transformation_matrix_to_super(m_state->configuration)
                         .determinant();
 
-    // get chemical potential / parametric chemical potential
-    if (state.conditions.count("chem_pot")) {
-      m_param_chem_pot = m_composition_converter.param_chem_pot(
-          state.conditions.at("chem_pot"));
-    } else if (state.conditions.count("chem_pot")) {
-      m_param_chem_pot = state.conditions.at("param_chem_pot");
+    // get parametric chemical potential
+    if (state.conditions.scalar_values.count("param_chem_pot")) {
+      m_param_chem_pot = state.conditions.scalar_values.at("param_chem_pot");
     } else {
       throw std::runtime_error(
-          "Error in clexmonte::GrandCanonicalPotential: missing \"chem_pot\" "
-          "or \"param_chem_pot\" conditions.");
+          "Error in clexmonte::GrandCanonicalPotential: missing "
+          "\"param_chem_pot\" conditions.");
     }
     if (m_param_chem_pot.size() !=
         m_composition_converter.independent_compositions()) {
