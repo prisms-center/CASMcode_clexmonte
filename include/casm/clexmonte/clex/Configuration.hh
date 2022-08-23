@@ -3,6 +3,7 @@
 
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/ConfigDoFValues.hh"
+#include "casm/clexulator/LocalClusterExpansion.hh"
 #include "casm/monte/state/State.hh"
 
 namespace CASM {
@@ -52,6 +53,18 @@ inline void set(clexulator::ClusterExpansion &calculator,
 
 /// \brief Set calculator so it evaluates using `state`
 inline void set(clexulator::ClusterExpansion &calculator,
+                monte::State<Configuration> const &state) {
+  set(calculator, state.configuration);
+}
+
+/// \brief Set calculator so it evaluates using `configuration`
+inline void set(clexulator::LocalClusterExpansion &calculator,
+                Configuration const &configuration) {
+  calculator.set(&configuration.dof_values);
+}
+
+/// \brief Set calculator so it evaluates using `state`
+inline void set(clexulator::LocalClusterExpansion &calculator,
                 monte::State<Configuration> const &state) {
   set(calculator, state.configuration);
 }

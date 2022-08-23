@@ -5,6 +5,7 @@
 #include "casm/clexmonte/misc/Matrix3lCompare.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/DoFSpace.hh"
+#include "casm/clexulator/LocalClusterExpansion.hh"
 #include "casm/clexulator/NeighborList.hh"
 #include "casm/clexulator/OrderParameter.hh"
 #include "casm/composition/CompositionCalculator.hh"
@@ -42,6 +43,7 @@ struct OccSystem {
   OccSystem(std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
             composition::CompositionConverter const &_composition_converter,
             ClexData const &_formation_energy_clex_data,
+            std::map<LocalClexKey, LocalClexData> _local_clex_data = {},
             std::map<std::string, clexulator::DoFSpace>
                 _order_parameter_definitions = {});
 
@@ -65,6 +67,12 @@ struct OccSystem {
   /// - clexulator::Clexulator,
   /// - clexulator::SparseCoefficients
   ClexData formation_energy_clex_data;
+
+  /// Local cluster expansion data and methods. Contains:
+  /// - clexulator::PrimNeighborList,
+  /// - clexulator::Clexulator,
+  /// - clexulator::SparseCoefficients
+  std::map<LocalClexKey, LocalClexData> local_clex_data;
 
   /// DoFSpace that define order parameters
   std::map<std::string, clexulator::DoFSpace> order_parameter_definitions;
@@ -99,6 +107,12 @@ struct OccSystemSupercellData {
   /// -  clexulator::Correlations
   /// -  clexulator::SparseCoefficients
   std::shared_ptr<clexulator::ClusterExpansion> formation_energy_clex;
+
+  /// CASM::monte compatible formation energy calculator. Contains:
+  /// -  clexulator::LocalCorrelations
+  /// -  clexulator::SparseCoefficients
+  std::map<LocalClexKey, std::shared_ptr<clexulator::LocalClusterExpansion>>
+      local_clex;
 
   /// Order parameter calculators
   std::map<std::string, std::shared_ptr<clexulator::OrderParameter>>
@@ -140,6 +154,9 @@ Configuration to_standard_values(
 /// \brief Helper to get the ClexData for formation energy
 ClexData &get_formation_energy_clex_data(OccSystem &data);
 
+/// \brief Helper to get LocalClexData
+LocalClexData &get_local_clex_data(OccSystem &data, LocalClexKey const &key);
+
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
 ///     particular configuration, constructing as necessary
 std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
@@ -149,6 +166,18 @@ std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
     OccSystem &data, monte::State<Configuration> const &state);
+
+/// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
+///     particular configuration, constructing as necessary
+std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
+    OccSystem &data, LocalClexKey const &key,
+    Configuration const &configuration);
+
+/// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
+///     particular state's supercell, constructing as necessary
+std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
+    OccSystem &data, LocalClexKey const &key,
+    monte::State<Configuration> const &state);
 
 /// \brief Helper to get the correct order parameter calculators for a
 ///     particular configuration, constructing as necessary

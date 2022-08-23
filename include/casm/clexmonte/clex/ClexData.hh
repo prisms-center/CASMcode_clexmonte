@@ -1,6 +1,7 @@
 #ifndef CASM_clexmonte_clex_ClexData
 #define CASM_clexmonte_clex_ClexData
 
+#include "casm/clexmonte/definitions.hh"
 #include "casm/clexulator/Clexulator.hh"
 #include "casm/clexulator/NeighborList.hh"
 #include "casm/clexulator/SparseCoefficients.hh"
