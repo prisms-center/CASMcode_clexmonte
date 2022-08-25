@@ -134,9 +134,9 @@ TEST(canonical_run_test, Test1) {
   fs::create_directories(tmp_dir / output_dir_relpath);
 
   jsonParser json(test_data_dir / "input_1.json");
-  json["kwargs"]["system"]["formation_energy"]["source"] =
+  json["kwargs"]["system"]["basis_sets"]["formation_energy"]["source"] =
       (tmp_dir / clexulator_src_relpath).string();
-  json["kwargs"]["system"]["formation_energy"]["coefficients"] =
+  json["kwargs"]["system"]["clex"]["formation_energy"]["coefficients"] =
       (tmp_dir / eci_relpath).string();
   json["kwargs"]["results_io"]["kwargs"]["output_dir"] =
       (tmp_dir / output_dir_relpath).string();

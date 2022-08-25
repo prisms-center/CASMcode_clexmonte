@@ -1,0 +1,83 @@
+{
+  "method": "kmc",
+  "kwargs": {
+    "system": {
+      "prim": {
+        "basis": [
+          {
+            "coordinate": [0.0, 0.0, 0.0],
+            "occupants": ["A", "B", "Va"]
+          }
+        ],
+        "coordinate_mode": "Fractional",
+        "lattice_vectors": [
+          [0.0, 2.0, 2.0],
+          [2.0, 0.0, 2.0],
+          [2.0, 2.0, 0.0]
+        ],
+        "title": "FCC_binary_vacancy"
+      },
+      "composition_axes": {
+        "a" : [ 0.000000000000, 1.000000000000, 0.000000000000 ],
+        "b" : [ 0.000000000000, 0.000000000000, 1.000000000000 ],
+        "components" : [ "A", "B", "Va" ],
+        "independent_compositions" : 2,
+        "mol_formula" : "A(1-a-b)B(a)Va(b)",
+        "origin" : [ 1.000000000000, 0.000000000000, 0.000000000000 ],
+        "param_formula" : "a(0.333333-0.333333A+0.666667B-0.333333Va)b(0.333333-0.333333A-0.333333B+0.666667Va)"
+      },
+      "basis_sets": {
+        "formation_energy": {
+          "source": "TODO"
+        }
+      },
+      "local_basis_sets": {
+        "A_Va_1NN": {
+          "source": "TODO"
+          "equivalents_info": "TODO"
+        },
+        "B_Va_1NN": {
+          "source": "TODO"
+          "equivalents_info": "TODO"
+        }
+      },
+      "clex": {
+        "formation_energy": {
+          "basis_set": "formation_energy",
+          "coefficients": "TODO"
+        },
+      },
+      "local_clex": {
+        "A_Va_1NN_kra": {
+          "local_basis_set": "TODO",
+          "coefficients": "TODO",
+        },
+        "A_Va_1NN_freq": {
+          "local_basis_set": "TODO",
+          "coefficients": "TODO",
+        },
+        "B_Va_1NN_kra": {
+          "local_basis_set": "TODO",
+          "coefficients": "TODO",
+        },
+        "B_Va_1NN_freq": {
+          "local_basis_set": "TODO",
+          "coefficients": "TODO",
+        }
+      },
+      "events": {
+        "A_Va_1NN": {
+          "event": "/path/to/event.json",
+          "kra": "A_Va_1NN_kra",
+          "freq": "A_Va_1NN_freq"
+        },
+        "B_Va_1NN": {
+          "event": "/path/to/event.json",
+          "kra": "B_Va_1NN",
+          "freq": "A_Va_1NN_freq"
+        }
+      },
+      "event_system": "/path/to/event_system.json"
+    }
+  }
+}

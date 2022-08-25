@@ -31,19 +31,14 @@ make_order_parameters(
 /// \brief Constructor
 OccSystem::OccSystem(
     std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
-    composition::CompositionConverter const &_composition_converter,
-    ClexData const &_formation_energy_clex_data,
-    std::map<LocalClexKey, LocalClexData> _local_clex_data,
-    std::map<std::string, clexulator::DoFSpace> _order_parameter_definitions)
-    : shared_prim(_shared_prim),
+    composition::CompositionConverter const &_composition_converter)
+    : prim(_shared_prim),
+      shared_prim(_shared_prim),
       global_dof_info(clexulator::make_global_dof_info(*shared_prim)),
       local_dof_info(clexulator::make_local_dof_info(*shared_prim)),
       composition_converter(_composition_converter),
       composition_calculator(composition_converter.components(),
-                             xtal::allowed_molecule_names(*shared_prim)),
-      formation_energy_clex_data(_formation_energy_clex_data),
-      local_clex_data(_local_clex_data),
-      order_parameter_definitions(_order_parameter_definitions) {}
+                             xtal::allowed_molecule_names(*shared_prim)) {}
 
 /// \brief Constructor
 OccSystemSupercellData::OccSystemSupercellData(
@@ -53,21 +48,38 @@ OccSystemSupercellData::OccSystemSupercellData(
       occ_candidate_list(convert),
       supercell_neighbor_list(std::make_shared<clexulator::SuperNeighborList>(
           transformation_matrix_to_super,
-          *(system_data.formation_energy_clex_data.prim_neighbor_list))),
-      formation_energy_clex(std::make_shared<clexulator::ClusterExpansion>(
-          supercell_neighbor_list,
-          system_data.formation_energy_clex_data.clexulator,
-          system_data.formation_energy_clex_data.eci)),
+          *system_data.prim_neighbor_list)),
       order_parameters(
           make_order_parameters(system_data.order_parameter_definitions,
                                 convert.transformation_matrix_to_super(),
                                 convert.index_converter())) {
+
+  // make clex
+  for (auto const &pair : system_data.clex_data) {
+    auto const &key = pair.first;
+    auto const &data = pair.second;
+    auto _clex = std::make_shared<clexulator::ClusterExpansion>(
+        supercell_neighbor_list, data.clexulator, data.eci);
+    clex.emplace(key, _clex);
+  }
+
+  // make local_clex
   for (auto const &pair : system_data.local_clex_data) {
     auto const &key = pair.first;
     auto const &data = pair.second;
-    auto clex = std::make_shared<clexulator::LocalClusterExpansion>(
+    auto _local_clex = std::make_shared<clexulator::LocalClusterExpansion>(
         supercell_neighbor_list, data.clexulator, data.eci);
-    local_clex.emplace(key, clex);
+    local_clex.emplace(key, _local_clex);
+  }
+
+  // make order_parameters
+  for (auto const &pair : system_data.order_parameter_definitions) {
+    auto const &key = pair.first;
+    auto const &definition = pair.second;
+    auto _order_parameter = std::make_shared<clexulator::OrderParameter>(definition);
+    _order_parameter.update(convert.transformation_matrix_to_super(),
+                            convert.index_converter());
+    order_parameters.emplace(key, _order_parameter);
   }
 }
 
@@ -158,11 +170,16 @@ Configuration to_standard_values(
 
 /// \brief Helper to get the ClexData for formation energy
 ClexData &get_formation_energy_clex_data(OccSystem &data) {
-  return data.formation_energy_clex_data;
+  return get_clex_data(data, "formation_energy");
+}
+
+/// \brief Helper to get ClexData
+ClexData &get_clex_data(OccSystem &data, std::string const &key) {
+  return data.clex_data.at(key);
 }
 
 /// \brief Helper to get LocalClexData
-LocalClexData &get_local_clex_data(OccSystem &data, LocalClexKey const &key) {
+LocalClexData &get_local_clex_data(OccSystem &data, std::string const &key) {
   return data.local_clex_data.at(key);
 }
 
@@ -172,11 +189,7 @@ LocalClexData &get_local_clex_data(OccSystem &data, LocalClexKey const &key) {
 /// \relates OccSystem
 std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
     OccSystem &data, Configuration const &configuration) {
-  auto clex =
-      get_supercell_data(data, configuration.transformation_matrix_to_super)
-          .formation_energy_clex;
-  set(*clex, configuration);
-  return clex;
+  return get_clex(data, "formation_energy", configuration);
 }
 
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
@@ -185,13 +198,35 @@ std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
 /// \relates OccSystem
 std::shared_ptr<clexulator::ClusterExpansion> get_formation_energy_clex(
     OccSystem &data, monte::State<Configuration> const &state) {
-  return get_formation_energy_clex(data, state.configuration);
+  return get_clex(data, "formation_energy", state.configuration);
+}
+
+/// \brief Helper to get the correct clexulator::ClusterExpansion for a
+///     particular configuration, constructing as necessary
+///
+/// \relates OccSystem
+std::shared_ptr<clexulator::ClusterExpansion> get_clex(
+    OccSystem &data, std::string const &key, Configuration const &configuration) {
+  auto clex =
+      get_supercell_data(data, configuration.transformation_matrix_to_super)
+          .clex.at(key);
+  set(*clex, configuration);
+  return clex;
+}
+
+/// \brief Helper to get the correct clexulator::ClusterExpansion for a
+///     particular state, constructing as necessary
+///
+/// \relates OccSystem
+std::shared_ptr<clexulator::ClusterExpansion> get_clex(
+    OccSystem &data, std::string const &key, monte::State<Configuration> const &state) {
+  return get_clex(data, key, state.configuration);
 }
 
 /// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
 ///     particular configuration, constructing as necessary
 std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
-    OccSystem &data, LocalClexKey const &key,
+    OccSystem &data, std::string const &key,
     Configuration const &configuration) {
   auto clex =
       get_supercell_data(data, configuration.transformation_matrix_to_super)
@@ -203,7 +238,7 @@ std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
 /// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
-    OccSystem &data, LocalClexKey const &key,
+    OccSystem &data, std::string const &key,
     monte::State<Configuration> const &state) {
   return get_local_clex(data, key, state.configuration);
 }
