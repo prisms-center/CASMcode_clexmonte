@@ -847,6 +847,7 @@ def main():
                             "-lcasm_crystallography",
                             "-lcasm_clexulator",
                             "-lcasm_composition",
+                            "-lcasm_configuration",
                             "-lcasm_monte"
                          ])
     target = os.path.join("src", "casm", "Makemodule.am")

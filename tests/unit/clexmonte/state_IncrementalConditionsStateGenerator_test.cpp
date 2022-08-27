@@ -1,8 +1,8 @@
 #include "ZrOTestSystem.hh"
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/clexmonte/canonical/conditions.hh"
-#include "casm/clexmonte/clex/Configuration.hh"
-#include "casm/clexmonte/system/OccSystem.hh"
+#include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/system/System.hh"
 #include "casm/crystallography/BasicStructure.hh"
 #include "casm/misc/CASM_Eigen_math.hh"
 #include "casm/misc/CASM_math.hh"
@@ -28,13 +28,13 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test1) {
   typedef IncrementalConditionsStateGenerator<config_type>
       incremental_state_generator_type;
 
-  EXPECT_EQ(system_data->shared_prim->basis().size(), 4);
+  EXPECT_EQ(get_basis_size(*system), 4);
 
   ValueMap init_conditions =
-      canonical::make_conditions(300.0, system_data->composition_converter,
+      canonical::make_conditions(300.0, get_composition_converter(*system),
                                  {{"Zr", 2.0}, {"O", 0.2}, {"Va", 1.8}});
   ValueMap conditions_increment = canonical::make_conditions_increment(
-      10.0, system_data->composition_converter,
+      10.0, get_composition_converter(*system),
       {{"Zr", 0.0}, {"O", 0.0}, {"Va", 0.0}});
   Index n_states = 11;
   bool dependent_runs = false;
@@ -42,9 +42,9 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test1) {
   // init_config (for config_generator)
   Eigen::Matrix3l T = Eigen::Matrix3l::Identity() * 2;
   Index volume = T.determinant();
-  Configuration init_config = make_default_configuration(*system_data, T);
+  Configuration init_config = make_default_configuration(*system, T);
   for (Index i = 0; i < volume; ++i) {
-    get_occupation(init_config)(2 * volume + i) = 1;
+    init_config.dof_values.occupation(2 * volume + i) = 1;
   }
   // config_generator
   std::unique_ptr<config_generator_type> config_generator =
@@ -60,8 +60,7 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test1) {
 
   while (!state_generator.is_complete(final_states)) {
     state_type state = state_generator.next_state(final_states);
-    Configuration const &config = state.configuration;
-    EXPECT_EQ(get_occupation(config), get_occupation(init_config));
+    EXPECT_EQ(get_occupation(state), init_config.dof_values.occupation);
     EXPECT_TRUE(
         CASM::almost_equal(state.conditions.scalar_values.at("temperature"),
                            300.0 + 10.0 * final_states.size()));
@@ -80,13 +79,13 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test2) {
   typedef IncrementalConditionsStateGenerator<config_type>
       incremental_state_generator_type;
 
-  EXPECT_EQ(system_data->shared_prim->basis().size(), 4);
+  EXPECT_EQ(get_basis_size(*system), 4);
 
   ValueMap init_conditions =
-      canonical::make_conditions(300.0, system_data->composition_converter,
+      canonical::make_conditions(300.0, get_composition_converter(*system),
                                  {{"Zr", 2.0}, {"O", 0.2}, {"Va", 1.8}});
   ValueMap conditions_increment = canonical::make_conditions_increment(
-      0.0, system_data->composition_converter,
+      0.0, get_composition_converter(*system),
       {{"Zr", 0.0}, {"O", 0.2}, {"Va", -0.2}});
   Index n_states = 9;
   bool dependent_runs = false;
@@ -94,9 +93,9 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test2) {
   // init_config (for config_generator)
   Eigen::Matrix3l T = Eigen::Matrix3l::Identity() * 2;
   Index volume = T.determinant();
-  Configuration init_config = make_default_configuration(*system_data, T);
+  Configuration init_config = make_default_configuration(*system, T);
   for (Index i = 0; i < volume; ++i) {
-    get_occupation(init_config)(2 * volume + i) = 1;
+    init_config.dof_values.occupation(2 * volume + i) = 1;
   }
   // config_generator
   std::unique_ptr<config_generator_type> config_generator =
@@ -112,8 +111,7 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test2) {
 
   while (!state_generator.is_complete(final_states)) {
     state_type state = state_generator.next_state(final_states);
-    Configuration const &config = state.configuration;
-    EXPECT_EQ(get_occupation(config), get_occupation(init_config));
+    EXPECT_EQ(get_occupation(state), init_config.dof_values.occupation);
     EXPECT_TRUE(almost_equal(
         state.conditions.vector_values.at("mol_composition"),
         init_conditions.vector_values.at("mol_composition") +

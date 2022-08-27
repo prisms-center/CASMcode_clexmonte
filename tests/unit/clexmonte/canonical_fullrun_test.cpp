@@ -4,9 +4,9 @@
 #include "casm/clexmonte/canonical/io/json/InputData_json_io.hh"
 #include "casm/clexmonte/canonical/run.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
-#include "casm/clexmonte/clex/ClexData.hh"
-#include "casm/clexmonte/clex/io/json/State_json_io.hh"
-#include "casm/clexmonte/system/OccSystem.hh"
+#include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
+#include "casm/clexmonte/state/io/json/State_json_io.hh"
+#include "casm/clexmonte/system/System.hh"
 #include "casm/clexulator/Clexulator.hh"
 #include "casm/clexulator/NeighborList.hh"
 #include "casm/clexulator/io/json/SparseCoefficients_json_io.hh"
@@ -21,9 +21,9 @@
 #include "testdir.hh"
 
 // // Test0
-// #include "casm/clexmonte/system/OccSystem.hh"
-// #include "casm/clexmonte/system/io/json/OccSystem_json_io.hh"
-// #include "casm/clexmonte/system/sampling_functions.hh"
+// #include "casm/clexmonte/system/System.hh"
+// #include "casm/clexmonte/system/io/json/System_json_io.hh"
+// #include "casm/clexmonte/state/sampling_functions.hh"
 // #include "casm/monte/Conversions.hh"
 // #include "casm/monte/checks/CompletionCheck.hh"
 // #include "casm/monte/events/OccCandidate.hh"
@@ -115,8 +115,12 @@ TEST(canonical_fullrun_test, Test1) {
   composition::CompositionConverter composition_converter(components, origin,
                                                           end_members);
 
-  // - Construct clexulator::PrimNeighborList
-  std::shared_ptr<clexulator::PrimNeighborList> prim_neighbor_list;
+  // - Construct system data
+  std::shared_ptr<clexmonte::System> system =
+      std::make_shared<clexmonte::System>(
+          shared_prim,  // std::shared_ptr<xtal::BasicStructure const> const &
+          composition_converter  // composition::CompositionConverter const &
+      );
 
   // - Construct clexulator::Clexulator
   fs::path clexulator_src = tmp_dir / clexulator_src_relpath;
@@ -126,27 +130,23 @@ TEST(canonical_fullrun_test, Test1) {
   std::string clexulator_so_options = default_clexulator_so_options;
   std::shared_ptr<clexulator::Clexulator> clexulator =
       std::make_shared<clexulator::Clexulator>(clexulator::make_clexulator(
-          clexulator_name, clexulator_dirpath, prim_neighbor_list,
+          clexulator_name, clexulator_dirpath, system->prim_neighbor_list,
           clexulator_compile_options, clexulator_so_options));
 
   // - Construct clexulator::SparseCoefficients
   jsonParser eci_json(tmp_dir / eci_relpath);
   InputParser<clexulator::SparseCoefficients> eci_parser(eci_json);
   report_and_throw_if_invalid(eci_parser, CASM::log(), error_if_invalid);
+  clexulator::SparseCoefficients eci = *eci_parser.value;
 
-  clexulator::SparseCoefficients const &eci = *eci_parser.value;
+  // - Add formation energy basis set
+  system->basis_sets.emplace("formation_energy", clexulator);
 
-  // - Construct ClexData for formation energy cluster expansion
-  clexmonte::ClexData formation_energy_clex_data(prim_neighbor_list, clexulator,
-                                                 eci);
-
-  // - Construct system data
-  std::shared_ptr<clexmonte::OccSystem> system_data =
-      std::make_shared<clexmonte::OccSystem>(
-          shared_prim,  // std::shared_ptr<xtal::BasicStructure const> const &
-          composition_converter,  // composition::CompositionConverter const &
-          formation_energy_clex_data  // ClexData const &
-      );
+  // - Add formation energy clex
+  clexmonte::ClexData formation_energy_clex_data;
+  formation_energy_clex_data.basis_set_name = "formation_energy";
+  formation_energy_clex_data.coefficients = eci;
+  system->clex_data.emplace("formation_energy", formation_energy_clex_data);
 
   // ### Construct the state generator
 
@@ -158,7 +158,7 @@ TEST(canonical_fullrun_test, Test1) {
 
   // - Construct an initial configuration (use default DoF values)
   clexmonte::Configuration initial_configuration =
-      clexmonte::make_default_configuration(*system_data,
+      clexmonte::make_default_configuration(*system,
                                             transformation_matrix_to_super);
 
   // - Construct a configuration generator
@@ -206,14 +206,14 @@ TEST(canonical_fullrun_test, Test1) {
 
   // ### Construct sampling functions
   monte::StateSamplingFunctionMap<clexmonte::Configuration> sampling_functions =
-      clexmonte::canonical::make_sampling_functions(system_data);
+      clexmonte::canonical::make_sampling_functions(system);
 
   // - Add custom sampling functions if desired...
   // monte::StateSamplingFunction<Configuration> f {
   //     "potential_energy", // sampler name
   //     "Potential energy of the state (normalized per primitive cell)", //
   //     description 1,  // number of components in "potential_energy"
-  //     [system_data](monte::State<Configuration> const &state) {
+  //     [system](monte::State<Configuration> const &state) {
   //       return state.properties.at("potential_energy");
   //     });
   // sampling_functions.emplace(f.name, f);
@@ -309,7 +309,7 @@ TEST(canonical_fullrun_test, Test1) {
   method_log.log_frequency = 60;  // seconds
 
   clexmonte::canonical::run(
-      system_data,              // std::shared_ptr<OccSystem>
+      system,                   // std::shared_ptr<System>
       state_generator,          // clexmonte::canonical::state_generator_type &
       state_sampler,            // monte::StateSampler<config_type> &
       completion_check,         // monte::CompletionCheck &

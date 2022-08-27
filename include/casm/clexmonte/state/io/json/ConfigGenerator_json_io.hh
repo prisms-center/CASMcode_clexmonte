@@ -3,7 +3,7 @@
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/clex/Configuration.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexulator/io/json/ConfigDoFValues_json_io.hh"
 #include "casm/monte/state/FixedConfigGenerator.hh"
 
@@ -13,7 +13,7 @@ namespace clexmonte {
 /// \brief Construct monte::FixedConfigGenerator from JSON
 template <typename SystemType>
 void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
-           std::shared_ptr<SystemType> const &system_data);
+           std::shared_ptr<SystemType> const &system);
 
 // --- Inline implementations ---
 
@@ -21,14 +21,14 @@ void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
 ///
 /// Requires:
 /// - `Configuration from_standard_values(
-///        SystemType const &system_data,
+///        SystemType const &system,
 ///        Configuration const &configuration)`
 /// - `Configuration make_default_configuration(
-///        SystemType const &system_data,
+///        SystemType const &system,
 ///        Eigen::Matrix3l const &transformation_matrix_to_super)`
 template <typename SystemType>
 void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
-           std::shared_ptr<SystemType> const &system_data) {
+           std::shared_ptr<SystemType> const &system) {
   Eigen::Matrix3l T;
   parser.require(T, "transformation_matrix_to_super");
   if (!parser.valid()) {
@@ -44,12 +44,12 @@ void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
     if (standard_dof_values != nullptr) {
       parser.value =
           notstd::make_unique<monte::FixedConfigGenerator<Configuration>>(
-              from_standard_values(*system_data,
+              from_standard_values(*system,
                                    Configuration(T, *standard_dof_values)));
     } else {
       parser.value =
           notstd::make_unique<monte::FixedConfigGenerator<Configuration>>(
-              make_default_configuration(*system_data, T));
+              make_default_configuration(*system, T));
     }
   }
 }

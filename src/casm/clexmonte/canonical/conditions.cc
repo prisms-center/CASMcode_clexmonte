@@ -1,6 +1,6 @@
 #include "casm/clexmonte/canonical/conditions.hh"
 
-#include "casm/clexmonte/system/make_conditions.hh"
+#include "casm/clexmonte/state/make_conditions.hh"
 #include "casm/monte/state/ValueMap.hh"
 
 namespace CASM {

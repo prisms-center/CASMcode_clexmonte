@@ -17,7 +17,7 @@ class CompositionConverter;
 
 namespace clexmonte {
 struct Configuration;
-struct OccSystem;
+struct System;
 }  // namespace clexmonte
 
 namespace clexmonte {
@@ -26,7 +26,7 @@ namespace canonical {
 /// \brief Empty data structure helps with function overload selection
 struct canonical_tag {};
 
-typedef OccSystem system_type;
+typedef System system_type;
 
 typedef Configuration config_type;
 

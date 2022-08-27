@@ -42,8 +42,15 @@
     ],
     "param_formula" : "a(0.5-0.25Va+0.25O)"
   },
-  "formation_energy": {
-    "source": "TODO",
-    "coefficients": "TODO"
+  "basis_sets": {
+    "formation_energy": {
+      "source": "TODO"
+    }
+  },
+  "clex": {
+    "formation_energy": {
+      "basis_set": "formation_energy",
+      "coefficients": "TODO"
+    }
   }
 }

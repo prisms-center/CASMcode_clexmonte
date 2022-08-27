@@ -1,8 +1,8 @@
 #include "ZrOTestSystem.hh"
 #include "casm/clexmonte/canonical/CanonicalPotential.hh"
 #include "casm/clexmonte/canonical/conditions.hh"
-#include "casm/clexmonte/clex/Configuration.hh"
-#include "casm/clexmonte/system/OccSystem.hh"
+#include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/system/System.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/events/OccCandidate.hh"
@@ -26,29 +26,29 @@ TEST_F(CanonicalMetropolisTest, Test1) {
   Eigen::Matrix3l T = Eigen::Matrix3l::Identity() * 10;
   Index volume = T.determinant();
   monte::State<Configuration> state(
-      make_default_configuration(*system_data, T),
-      canonical::make_conditions(600.0, system_data->composition_converter,
+      make_default_configuration(*system, T),
+      canonical::make_conditions(600.0, system->composition_converter,
                                  {{"Zr", 2.0}, {"O", 1.0}, {"Va", 1.0}}));
 
   // Set initial occupation
   for (Index i = 0; i < volume; ++i) {
-    get_occupation(state.configuration)(2 * volume + i) = 1;
+    get_occupation(state)(2 * volume + i) = 1;
   }
 
   // Prepare supercell-specific index conversions
-  Conversions convert{*get_shared_prim(*system_data),
-                      get_transformation_matrix_to_super(state.configuration)};
+  Conversions convert{*get_prim_basicstructure(*system),
+                      get_transformation_matrix_to_super(state)};
   OccCandidateList occ_candidate_list(convert);
   std::vector<OccSwap> canonical_swaps =
       make_canonical_swaps(convert, occ_candidate_list);
   OccLocation occ_location(convert, occ_candidate_list);
-  occ_location.initialize(get_occupation(state.configuration));
+  occ_location.initialize(get_occupation(state));
   CountType steps_per_pass = occ_location.mol_size();
 
   // Make supercell-specific potential energy clex calculator
   // (equal to formation energy calculator now)
   canonical::CanonicalPotential potential(
-      get_formation_energy_clex(*system_data, state));
+      get_clex(*system, state, "formation_energy"));
   set(potential, state);
 
   // Main loop
@@ -75,8 +75,8 @@ TEST_F(CanonicalMetropolisTest, Test1) {
     // Apply accepted event
     if (accept) {
       // std::cout << "Accept event" << std::endl;
-      occ_location.apply(event, get_occupation(state.configuration));
-      // std::cout << get_occupation(state.configuration).transpose() <<
+      occ_location.apply(event, get_occupation(state));
+      // std::cout << get_occupation(state).transpose() <<
       // std::endl;
     } else {
       // std::cout << "Reject event" << std::endl;

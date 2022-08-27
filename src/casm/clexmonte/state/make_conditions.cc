@@ -1,4 +1,4 @@
-#include "casm/clexmonte/system/make_conditions.hh"
+#include "casm/clexmonte/state/make_conditions.hh"
 
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/misc/CASM_math.hh"

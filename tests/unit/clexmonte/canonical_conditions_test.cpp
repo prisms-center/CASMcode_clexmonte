@@ -1,6 +1,6 @@
 #include "ZrOTestSystem.hh"
 #include "casm/clexmonte/canonical/conditions.hh"
-#include "casm/clexmonte/system/OccSystem.hh"
+#include "casm/clexmonte/system/System.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
 
@@ -14,7 +14,7 @@ TEST_F(MakeCanonicalConditionsTest, Test1) {
   using namespace CASM::clexmonte;
 
   monte::ValueMap conditions =
-      canonical::make_conditions(300.0, system_data->composition_converter,
+      canonical::make_conditions(300.0, system->composition_converter,
                                  {{"Zr", 2.0}, {"O", 1.0}, {"Va", 1.0}});
 
   EXPECT_EQ(conditions.scalar_values.size(), 1);
@@ -32,7 +32,7 @@ TEST_F(MakeCanonicalConditionsTest, Test2) {
   using namespace CASM::clexmonte;
 
   monte::ValueMap conditions = canonical::make_conditions_increment(
-      10.0, system_data->composition_converter,
+      10.0, system->composition_converter,
       {{"Zr", 0.0}, {"O", 0.1}, {"Va", -0.1}});
 
   EXPECT_EQ(conditions.scalar_values.size(), 1);
@@ -50,7 +50,7 @@ TEST_F(MakeCanonicalConditionsTest, Test3) {
   using namespace CASM::clexmonte;
 
   monte::ValueMap conditions = canonical::make_conditions(
-      300.0, system_data->composition_converter, {{"a", 0.5}});
+      300.0, system->composition_converter, {{"a", 0.5}});
 
   EXPECT_EQ(conditions.scalar_values.size(), 1);
   EXPECT_EQ(conditions.scalar_values.at("temperature"), 300.0);
@@ -67,7 +67,7 @@ TEST_F(MakeCanonicalConditionsTest, Test4) {
   using namespace CASM::clexmonte;
 
   monte::ValueMap conditions = canonical::make_conditions_increment(
-      10.0, system_data->composition_converter, {{"a", 0.05}});
+      10.0, system->composition_converter, {{"a", 0.05}});
 
   EXPECT_EQ(conditions.scalar_values.size(), 1);
   EXPECT_EQ(conditions.scalar_values.at("temperature"), 10.0);

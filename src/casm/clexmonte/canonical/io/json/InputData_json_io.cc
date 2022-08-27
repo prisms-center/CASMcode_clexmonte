@@ -4,14 +4,14 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/canonical/io/InputData.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
-#include "casm/clexmonte/clex/Configuration.hh"
-#include "casm/clexmonte/clex/io/json/ConfigGenerator_json_io.hh"
-#include "casm/clexmonte/clex/io/json/StateGenerator_json_io.hh"
 #include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
 #include "casm/clexmonte/results/io/json/ResultsIO_json_io_impl.hh"
-#include "casm/clexmonte/system/OccSystem.hh"
-#include "casm/clexmonte/system/io/json/OccSystem_json_io.hh"
-#include "casm/clexmonte/system/io/json/parse_conditions.hh"
+#include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/state/io/json/ConfigGenerator_json_io.hh"
+#include "casm/clexmonte/state/io/json/StateGenerator_json_io.hh"
+#include "casm/clexmonte/state/io/json/parse_conditions.hh"
+#include "casm/clexmonte/system/System.hh"
+#include "casm/clexmonte/system/io/json/System_json_io.hh"
 #include "casm/composition/io/json/CompositionConverter_json_io.hh"
 #include "casm/crystallography/io/BasicStructureIO.hh"
 #include "casm/monte/checks/io/json/CompletionCheck_json_io.hh"
@@ -50,11 +50,11 @@ namespace canonical {
 ///
 ///
 void parse_conditions(InputParser<monte::ValueMap> &parser,
-                      std::shared_ptr<system_type> const &system_data,
+                      std::shared_ptr<system_type> const &system,
                       canonical_tag tag) {
   parser.value = std::make_unique<monte::ValueMap>();
   parse_temperature(parser);
-  parse_mol_composition(parser, system_data);
+  parse_mol_composition(parser, system);
 }
 
 /// \brief Construct conditions increment (monte::ValueMap) from JSON
@@ -68,11 +68,11 @@ void parse_conditions(InputParser<monte::ValueMap> &parser,
 /// The expected JSON format is the same as documented for `parse_conditions`,
 /// but values are interpreted as increments.
 void parse_conditions_increment(InputParser<monte::ValueMap> &parser,
-                                std::shared_ptr<system_type> const &system_data,
+                                std::shared_ptr<system_type> const &system,
                                 canonical_tag tag) {
   parser.value = std::make_unique<monte::ValueMap>();
   parse_temperature(parser);
-  parse_mol_composition_increment(parser, system_data);
+  parse_mol_composition_increment(parser, system);
 }
 
 /// \brief Construct ConfigGenerator from JSON
@@ -91,10 +91,10 @@ void parse_conditions_increment(InputParser<monte::ValueMap> &parser,
 ///     Method-specific options. See documentation for particular methods:
 ///     - "fixed": `parse(InputParser<monte::FixedConfigGenerator> &, ...)`
 void parse(InputParser<config_generator_type> &parser,
-           std::shared_ptr<system_type> const &system_data, canonical_tag tag) {
+           std::shared_ptr<system_type> const &system, canonical_tag tag) {
   PolymorphicParserFactory<config_generator_type> f;
   parse_polymorphic_method(
-      parser, {f.make<fixed_config_generator_type>("fixed", system_data)});
+      parser, {f.make<fixed_config_generator_type>("fixed", system)});
 }
 
 /// \brief Construct StateGenerator from JSON
@@ -122,13 +122,13 @@ void parse(InputParser<config_generator_type> &parser,
 ///
 void parse(
     InputParser<state_generator_type> &parser,
-    std::shared_ptr<system_type> const &system_data,
+    std::shared_ptr<system_type> const &system,
     monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
     canonical_tag tag) {
   PolymorphicParserFactory<state_generator_type> f;
   parse_polymorphic_method(parser,
                            {f.make<incremental_state_generator_type>(
-                               "incremental", system_data, sampling_functions,
+                               "incremental", system, sampling_functions,
                                canonical::parse_conditions,
                                canonical::parse_conditions_increment, tag)});
 }
@@ -173,20 +173,19 @@ void parse(InputParser<InputData> &parser) {
   // - "prim"
   // - "composition_axes"
   // - "formation_energy"
-  auto system_data_subparser = parser.subparse<system_type>("system");
-  if (!system_data_subparser->valid()) {
+  auto system_subparser = parser.subparse<system_type>("system");
+  if (!system_subparser->valid()) {
     return;
   }
-  std::shared_ptr<system_type> system_data =
-      std::move(system_data_subparser->value);
+  std::shared_ptr<system_type> system = std::move(system_subparser->value);
 
   // Make state sampling functions, with current supercell-specific info
   monte::StateSamplingFunctionMap<config_type> sampling_functions =
-      make_sampling_functions(system_data, canonical_tag());
+      make_sampling_functions(system, canonical_tag());
 
   // Construct state generator
   auto state_generator_subparser = parser.subparse<state_generator_type>(
-      "state_generation", system_data, sampling_functions, canonical_tag());
+      "state_generation", system, sampling_functions, canonical_tag());
 
   // Read sampling params
   std::set<std::string> sampling_function_names;
@@ -211,8 +210,8 @@ void parse(InputParser<InputData> &parser) {
 
   if (parser.valid()) {
     parser.value = std::make_unique<InputData>(
-        system_data, std::move(state_generator_subparser->value),
-        sampling_functions, *sampling_params_subparser->value,
+        system, std::move(state_generator_subparser->value), sampling_functions,
+        *sampling_params_subparser->value,
         *completion_check_params_subparser->value,
         std::move(results_io_subparser->value), random_number_generator);
   }

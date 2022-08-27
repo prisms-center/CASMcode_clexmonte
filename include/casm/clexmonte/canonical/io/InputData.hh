@@ -2,7 +2,7 @@
 #define CASM_clexmonte_canonical_io_InputData
 
 #include "casm/clexmonte/canonical/definitions.hh"
-#include "casm/clexmonte/clex/Configuration.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/checks/CompletionCheck.hh"
 #include "casm/monte/results/io/ResultsIO.hh"
@@ -20,7 +20,7 @@ namespace canonical {
 struct InputData {
   /// \brief Constructor
   InputData(
-      std::shared_ptr<system_type> _system_data,
+      std::shared_ptr<system_type> _system,
       std::unique_ptr<state_generator_type> _state_generator,
       monte::StateSamplingFunctionMap<config_type> const &_sampling_functions,
       monte::SamplingParams const &_sampling_params,
@@ -32,7 +32,7 @@ struct InputData {
   /// - prim
   /// - composition axes
   /// - formation energy clex data
-  std::shared_ptr<system_type> system_data;
+  std::shared_ptr<system_type> system;
 
   /// State generator implementation
   std::unique_ptr<state_generator_type> state_generator;

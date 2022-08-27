@@ -3,7 +3,7 @@
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/clex/Configuration.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "casm/monte/state/IncrementalConditionsStateGenerator.hh"
 
 namespace CASM {
@@ -16,7 +16,7 @@ template <typename SystemType, typename ConfigType, typename ParseConditionsF,
 void parse(
     InputParser<monte::IncrementalConditionsStateGenerator<Configuration>>
         &parser,
-    std::shared_ptr<SystemType> const &system_data,
+    std::shared_ptr<SystemType> const &system,
     monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions,
     ParseConditionsF parse_conditions_f,
     ParseConditionsIncrementF parse_conditions_increment_f, TypeTag tag);
@@ -147,7 +147,7 @@ template <typename SystemType, typename ConfigType, typename ParseConditionsF,
 void parse(
     InputParser<monte::IncrementalConditionsStateGenerator<Configuration>>
         &parser,
-    std::shared_ptr<SystemType> const &system_data,
+    std::shared_ptr<SystemType> const &system,
     monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions,
     ParseConditionsF parse_conditions_f,
     ParseConditionsIncrementF parse_conditions_increment_f, TypeTag tag) {
@@ -159,15 +159,15 @@ void parse(
 
   /// Parse "initial_configuration"
   auto config_generator_subparser = parser.subparse<config_generator_type>(
-      "initial_configuration", system_data, tag);
+      "initial_configuration", system, tag);
 
   /// Parse "initial_conditions"
   auto initial_conditions_subparser = parser.subparse_with<monte::ValueMap>(
-      parse_conditions_f, "initial_conditions", system_data, tag);
+      parse_conditions_f, "initial_conditions", system, tag);
 
   /// Parse "conditions_increment"
   auto conditions_increment_subparser = parser.subparse_with<monte::ValueMap>(
-      parse_conditions_increment_f, "conditions_increment", system_data, tag);
+      parse_conditions_increment_f, "conditions_increment", system, tag);
 
   /// Parse "dependent_conditions"
   std::vector<std::string> dependent_conditions_names;

@@ -4,11 +4,11 @@
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/clexmonte/canonical/CanonicalPotential.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
-#include "casm/clexmonte/clex/io/json/State_json_io.hh"
 #include "casm/clexmonte/misc/to_json.hh"
-#include "casm/clexmonte/system/OccSystem.hh"
-#include "casm/clexmonte/system/enforce_composition.hh"
-#include "casm/clexmonte/system/sampling_functions.hh"
+#include "casm/clexmonte/state/enforce_composition.hh"
+#include "casm/clexmonte/state/io/json/State_json_io.hh"
+#include "casm/clexmonte/state/sampling_functions.hh"
+#include "casm/clexmonte/system/System.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/checks/CompletionCheck.hh"
@@ -27,7 +27,7 @@ namespace canonical {
 /// \brief Run canonical Monte Carlo calculations
 ///
 /// Required interfaces:
-/// - get_formation_energy_clex(system_type, state_type)
+/// - get_clex(system_type, state_type, key)
 /// - get_shared_prim(system_type)
 /// - get_composition_calculator(system_type)
 /// - get_transformation_matrix_to_super(config_type)
@@ -37,13 +37,13 @@ namespace canonical {
 /// - `temperature`: size=1
 ///   The temperature in K.
 /// - `comp_n`: size=n_components
-///   Size must match `system_data->composition_converter.components().size()`.
+///   Size must match `system->composition_converter.components().size()`.
 ///
 /// State properties that are set:
 /// - `potential_energy`: size=1
 ///   The intensive potential energy (eV / unit cell).
 ///
-void run(std::shared_ptr<system_type> const &system_data,
+void run(std::shared_ptr<system_type> const &system,
          state_generator_type &state_generator,
          monte::StateSampler<config_type> &state_sampler,
          monte::CompletionCheck &completion_check,
@@ -71,13 +71,12 @@ void run(std::shared_ptr<system_type> const &system_data,
 
     // Make supercell-specific potential calculator
     CanonicalPotential potential(
-        get_formation_energy_clex(*system_data, initial_state));
+        get_clex(*system, initial_state, "formation_energy"));
 
     // Prepare canonical swaps -- currently all allowed, but could be selected
-    monte::Conversions convert =
-        get_index_conversions(*system_data, initial_state);
+    monte::Conversions convert = get_index_conversions(*system, initial_state);
     monte::OccCandidateList const &occ_candidate_list =
-        get_occ_candidate_list(*system_data, initial_state);
+        get_occ_candidate_list(*system, initial_state);
     monte::OccLocation occ_location(convert, occ_candidate_list);
     std::vector<monte::OccSwap> canonical_swaps =
         make_canonical_swaps(convert, occ_candidate_list);
@@ -86,19 +85,20 @@ void run(std::shared_ptr<system_type> const &system_data,
 
     log.indent() << "Enforcing composition..." << std::endl;
     enforce_composition(
-        get_occupation(initial_state.configuration),
+        get_occupation(initial_state),
         initial_state.conditions.vector_values.at("mol_composition"),
-        get_composition_calculator(*system_data), grand_canonical_swaps,
+        get_composition_calculator(*system), grand_canonical_swaps,
         occ_location, random_number_generator);
     log.indent() << "Done" << std::endl;
 
     // Run Monte Carlo at a single condition
-    log.indent() << "Beginning run " << final_states.size() + 1 << std::endl;
+    log.indent() << "Performing Run " << final_states.size() + 1 << "..."
+                 << std::endl;
     results_type result = monte::occupation_metropolis(
         initial_state, potential, convert, canonical_swaps,
         monte::propose_canonical_event, random_number_generator, state_sampler,
         completion_check, method_log);
-    log.indent() << "Run complete" << std::endl;
+    log.indent() << "Run " << final_states.size() + 1 << " Done" << std::endl;
 
     // Store final state for state generation input
     final_states.push_back(*result.final_state);

@@ -5,9 +5,9 @@
 #include "testdir.hh"
 
 // // Test0
-// #include "casm/clexmonte/system/OccSystem.hh"
-// #include "casm/clexmonte/system/io/json/OccSystem_json_io.hh"
-// #include "casm/clexmonte/system/sampling_functions.hh"
+// #include "casm/clexmonte/system/System.hh"
+// #include "casm/clexmonte/system/io/json/System_json_io.hh"
+// #include "casm/clexmonte/state/sampling_functions.hh"
 // #include "casm/monte/Conversions.hh"
 // #include "casm/monte/checks/CompletionCheck.hh"
 // #include "casm/monte/events/OccCandidate.hh"
@@ -41,12 +41,12 @@ using namespace CASM;
 //
 //   // ---
 //
-//   InputParser<clexmonte::OccSystem> parser(json["kwargs"]["system"]);
+//   InputParser<clexmonte::System> parser(json["kwargs"]["system"]);
 //   std::runtime_error error_if_invalid{
 //       "Error reading canonical Monte Carlo JSON input"};
 //   report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
 //   EXPECT_TRUE(parser.valid());
-//   std::shared_ptr<clexmonte::OccSystem> system_data =
+//   std::shared_ptr<clexmonte::System> system =
 //   std::move(parser.value);
 //
 //   monte::VectorValueMap conditions;
@@ -59,22 +59,22 @@ using namespace CASM;
 //
 //   monte::State<clexmonte::Configuration> initial_state(
 //       clexmonte::make_default_configuration(
-//           *system_data, Eigen::Matrix3l::Identity()*2),
+//           *system, Eigen::Matrix3l::Identity()*2),
 //       conditions);
 //
 //   // set half of sites to O
 //   for (Index i=0; i<8; ++i) {
-//     get_occupation(initial_state.configuration)(16+i) = 1;
+//     get_occupation(initial_state)(16+i) = 1;
 //   }
 //
 //   // Make supercell-specific potential energy clex calculator
 //   // (equal to formation energy calculator now)
 //   clexulator::ClusterExpansion &potential_energy_calculator =
-//       get_formation_energy_clex(*system_data, initial_state);
+//       *get_clex(*system, initial_state, "formation_energy");
 //
 //   // Prepare supercell-specific index conversions
 //   monte::Conversions convert{
-//       *get_shared_prim(*system_data),
+//       *get_shared_prim(*system),
 //       get_transformation_matrix_to_super(initial_state.configuration)};
 //
 //   // Prepare list of allowed swaps -- currently using all allowed
@@ -86,10 +86,10 @@ using namespace CASM;
 //
 //   std::vector<monte::StateSamplingFunction<clexmonte::Configuration>>
 //   functions = {
-//       make_temperature_f(system_data), make_comp_n_f(system_data),
-//       make_comp_x_f(system_data), make_formation_energy_corr_f(system_data),
-//       make_formation_energy_f(system_data),
-//       make_potential_energy_f(system_data)};
+//       make_temperature_f(system), make_comp_n_f(system),
+//       make_comp_x_f(system), make_formation_energy_corr_f(system),
+//       make_formation_energy_f(system),
+//       make_potential_energy_f(system)};
 //   monte::StateSampler<clexmonte::Configuration> state_sampler(
 //       monte::SAMPLE_MODE::BY_PASS, functions);
 //
@@ -106,7 +106,7 @@ using namespace CASM;
 //     random_number_generator, state_sampler, completion_check);
 //     monte::OccCandidateList occ_candidate_list(convert);
 //     monte::OccLocation occ_location(convert, occ_candidate_list);
-//     occ_location.initialize(get_occupation(state.configuration));
+//     occ_location.initialize(get_occupation(state));
 //     monte::CountType steps_per_pass = occ_location.mol_size();
 //
 //     for (Index k=0; k<10*steps_per_pass; ++k) {

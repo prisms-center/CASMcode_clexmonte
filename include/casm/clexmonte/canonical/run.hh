@@ -9,7 +9,7 @@ namespace clexmonte {
 namespace canonical {
 
 /// \brief Run canonical Monte Carlo calculations
-void run(std::shared_ptr<system_type> const &system_data,
+void run(std::shared_ptr<system_type> const &system,
          state_generator_type &state_generator,
          monte::StateSampler<config_type> &state_sampler,
          monte::CompletionCheck &completion_check,

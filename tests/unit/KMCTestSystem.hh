@@ -24,16 +24,14 @@ class KMCTestSystem : public testing::Test {
   /// (CASM_test_projects/<_test_dir_name>) \param _input_file_path Path to
   /// template input file that will be updated with the
   ///     paths to the copied Clexulator and ECI files
-  ///     (test::data_dir("clexmonte") / "kmc" / "system_1.json")
+  ///     (test::data_dir("clexmonte") / "kmc" / "system_template.json")
   KMCTestSystem(std::string _project_name, std::string _test_dir_name,
                 fs::path _input_file_path)
       : project_name(_project_name),
         test_data_dir(test::data_dir("clexmonte") / _project_name),
         test_dir(fs::current_path() / "CASM_test_projects" / _test_dir_name),
         copy_options(fs::copy_options::skip_existing),
-        json(_input_file_path) {
-    std::cout << "KMCTestSystem::test_dir: " << test_dir << std::endl;
-  }
+        json(_input_file_path) {}
 
   /// \brief Copy formation_energy Clexulator and ECI to test_dir and update
   ///     input json with location
@@ -55,9 +53,10 @@ class KMCTestSystem : public testing::Test {
     fs::copy_file(test_data_dir / eci_relpath, test_dir / eci_relpath,
                   copy_options);
 
-    json["kwargs"]["system"][clex_name]["source"] =
+    json["kwargs"]["system"]["basis_sets"][bset_name]["source"] =
         (test_dir / clexulator_src_relpath).string();
-    json["kwargs"]["system"][clex_name]["coefficients"] =
+    json["kwargs"]["system"]["clex"][clex_name]["basis_set"] = bset_name;
+    json["kwargs"]["system"]["clex"][clex_name]["coefficients"] =
         (test_dir / eci_relpath).string();
   }
 
@@ -106,8 +105,7 @@ class KMCTestSystem : public testing::Test {
   ///   basis_sets/bset.<bset_name>/equivalents_info.json
   /// - Assumes ECI files are: events/event.<bset_name>/eci.json
   /// - Assumes Event files are: events/event.<bset_name>/event.json
-  void set_local_clex(std::string clex_name, std::string bset_name,
-                      fs::path eci_relpath) {
+  void set_local_basis_set(std::string bset_name) {
     fs::path source_relpath =
         fs::path("basis_sets") / ("bset." + bset_name) /
         (project_name + "_Clexulator_" + bset_name + ".cc");
@@ -117,32 +115,34 @@ class KMCTestSystem : public testing::Test {
 
     copy_local_clexulator(test_data_dir / "basis_sets", test_dir / "basis_sets",
                           bset_name, project_name + "_Clexulator");
-    fs::create_directories(test_dir / eci_relpath.parent_path());
-    fs::copy_file(test_data_dir / eci_relpath, test_dir / eci_relpath,
-                  copy_options);
     fs::copy_file(test_data_dir / equivalents_info_relpath,
                   test_dir / equivalents_info_relpath, copy_options);
 
-    json["kwargs"]["system"]["local_clex"][clex_name]["source"] =
+    json["kwargs"]["system"]["local_basis_sets"][bset_name]["source"] =
         (test_dir / source_relpath).string();
-    json["kwargs"]["system"]["local_clex"][clex_name]["coefficients"] =
-        (test_dir / eci_relpath).string();
-    json["kwargs"]["system"]["local_clex"][clex_name]["equivalents_info"] =
-        (test_dir / equivalents_info_relpath).string();
+    json["kwargs"]["system"]["local_basis_sets"][bset_name]
+        ["equivalents_info"] = (test_dir / equivalents_info_relpath).string();
   }
 
-  void set_event(std::string event_name, std::string kra_clex_name,
-                 std::string freq_clex_name) {
-    auto &j = json["kwargs"]["system"]["events"][event_name];
+  void set_event(std::string event_name, std::string kra_eci_relpath,
+                 std::string freq_eci_relpath) {
+    fs::copy_file(test_data_dir / fs::path("events") / "event_system.json",
+                  test_dir / fs::path("events") / "event_system.json",
+                  copy_options);
+    json["kwargs"]["system"]["event_system"] =
+        (test_dir / fs::path("events") / "event_system.json").string();
 
     fs::path event_relpath =
-        test_dir / fs::path("events") / ("event." + event_name) / "event.json";
+        fs::path("events") / ("event." + event_name) / "event.json";
+    fs::create_directories((test_dir / event_relpath).parent_path());
     fs::copy_file(test_data_dir / event_relpath, test_dir / event_relpath,
                   copy_options);
 
-    j["event"] = event_relpath.string();
-    j["kra"] = kra_clex_name;
-    j["freq"] = freq_clex_name;
+    auto &j = json["kwargs"]["system"]["events"][event_name];
+    j["event"] = (test_data_dir / event_relpath).string();
+    j["local_basis_set"] = event_name;
+    j["kra_coefficients"] = (test_data_dir / kra_eci_relpath).string();
+    j["freq_coefficients"] = (test_data_dir / freq_eci_relpath).string();
   }
 
   void write_input() { json.write(test_dir / "input.json"); }

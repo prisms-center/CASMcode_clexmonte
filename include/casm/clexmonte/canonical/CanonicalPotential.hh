@@ -1,7 +1,7 @@
 #ifndef CASM_clexmonte_canonical_CanonicalPotential
 #define CASM_clexmonte_canonical_CanonicalPotential
 
-#include "casm/clexmonte/clex/Configuration.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"

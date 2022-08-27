@@ -1,8 +1,8 @@
-#include "casm/clexmonte/clex/io/json/Configuration_json_io.hh"
+#include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/clex/Configuration.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexulator/io/json/ConfigDoFValues_json_io.hh"
 
 namespace CASM {
@@ -55,8 +55,8 @@ namespace CASM {
 jsonParser &to_json(clexmonte::Configuration const &configuration,
                     jsonParser &json) {
   json["transformation_matrix_to_supercell"] =
-      get_transformation_matrix_to_super(configuration);
-  json["dof"] = get_dof_values(configuration);
+      configuration.transformation_matrix_to_super;
+  json["dof"] = configuration.dof_values;
   return json;
 }
 

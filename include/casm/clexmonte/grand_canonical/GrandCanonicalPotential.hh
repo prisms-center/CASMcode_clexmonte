@@ -58,7 +58,7 @@ class GrandCanonicalPotential {
 
   /// \brief Calculate (extensive) cluster expansion value
   double extensive_value() {
-    auto const &occupation = get_occupation(m_state->configuration);
+    auto const &occupation = get_occupation(*m_state);
     Eigen::VectorXd comp_n =
         m_composition_calculator.mean_num_each_component(occupation);
     Eigen::VectorXd comp_x = m_composition_converter.param_composition(comp_n);
@@ -71,7 +71,7 @@ class GrandCanonicalPotential {
   double occ_delta_extensive_value(Index linear_site_index, int new_occ) {
     Index asym_index = m_convert.l_to_asym(linear_site_index);
     Index new_species = m_convert.species_index(asym_index, new_occ);
-    Index curr_occ = get_occupation(m_state->configuration)(linear_site_index);
+    Index curr_occ = get_occupation(*m_state)(linear_site_index);
     Index curr_species = m_convert.species_index(asym_index, curr_occ);
     return m_formation_energy_clex.occ_delta_value(linear_site_index, new_occ) -
            m_exchange_chem_pot(new_species, curr_species);
@@ -83,7 +83,7 @@ class GrandCanonicalPotential {
                                    std::vector<int> const &new_occ) {
     double dE =
         m_formation_energy_clex.occ_delta_value(linear_site_index, new_occ);
-    Eigen::VectorXi const &occupation = get_occupation(m_state->configuration);
+    Eigen::VectorXi const &occupation = get_occupation(*m_state);
     for (Index i = 0; i < linear_site_index.size(); ++i) {
       Index l = linear_site_index[i];
       Index asym_index = m_convert.l_to_asym(l);

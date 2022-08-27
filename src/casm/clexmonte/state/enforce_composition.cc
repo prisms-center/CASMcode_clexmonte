@@ -1,4 +1,4 @@
-#include "casm/clexmonte/system/enforce_composition.hh"
+#include "casm/clexmonte/state/enforce_composition.hh"
 
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"

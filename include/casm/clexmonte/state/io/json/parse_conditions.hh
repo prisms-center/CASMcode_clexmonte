@@ -4,7 +4,7 @@
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/misc/eigen.hh"
-#include "casm/clexmonte/system/make_conditions.hh"
+#include "casm/clexmonte/state/make_conditions.hh"
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/composition/io/json/CompositionConverter_json_io.hh"
 #include "casm/monte/definitions.hh"
@@ -19,14 +19,13 @@ void parse_temperature(InputParser<monte::ValueMap> &parser);
 ///     "mol_composition" vector values
 template <typename SystemType>
 void parse_mol_composition(InputParser<monte::ValueMap> &parser,
-                           std::shared_ptr<SystemType> const &system_data);
+                           std::shared_ptr<SystemType> const &system);
 
 /// \brief Parse "mol_composition" or "param_composition" and store as
 ///     "mol_composition" vector values (increment)
 template <typename SystemType>
-void parse_mol_composition_increment(
-    InputParser<monte::ValueMap> &parser,
-    std::shared_ptr<SystemType> const &system_data);
+void parse_mol_composition_increment(InputParser<monte::ValueMap> &parser,
+                                     std::shared_ptr<SystemType> const &system);
 
 // --- Inline definitions ---
 
@@ -78,10 +77,10 @@ inline void parse_temperature(InputParser<monte::ValueMap> &parser) {
 ///
 ///
 /// Requires:
-/// - get_composition_converter(SystemType const &system_data);
+/// - get_composition_converter(SystemType const &system);
 template <typename SystemType>
 void parse_mol_composition(InputParser<monte::ValueMap> &parser,
-                           std::shared_ptr<SystemType> const &system_data) {
+                           std::shared_ptr<SystemType> const &system) {
   if (parser.value == nullptr) {
     throw std::runtime_error(
         "Error in parse_mol_composition: parser must have non-empty value");
@@ -99,7 +98,7 @@ void parse_mol_composition(InputParser<monte::ValueMap> &parser,
     }
     parser.optional(input, option);
     parser.value->vector_values["mol_composition"] =
-        make_mol_composition(get_composition_converter(*system_data), input);
+        make_mol_composition(get_composition_converter(*system), input);
   } catch (std::exception &e) {
     std::stringstream msg;
     msg << "Error: could not construct composition from option '" << option
@@ -133,11 +132,11 @@ void parse_mol_composition(InputParser<monte::ValueMap> &parser,
 ///
 ///
 /// Requires:
-/// - get_composition_converter(SystemType const &system_data);
+/// - get_composition_converter(SystemType const &system);
 template <typename SystemType>
 void parse_mol_composition_increment(
     InputParser<monte::ValueMap> &parser,
-    std::shared_ptr<SystemType> const &system_data) {
+    std::shared_ptr<SystemType> const &system) {
   if (parser.value == nullptr) {
     throw std::runtime_error(
         "Error in parse_mol_composition_increment: parser must have non-empty "
@@ -156,7 +155,7 @@ void parse_mol_composition_increment(
     }
     parser.optional(input, option);
     parser.value->vector_values["mol_composition"] =
-        make_mol_composition_increment(get_composition_converter(*system_data),
+        make_mol_composition_increment(get_composition_converter(*system),
                                        input);
   } catch (std::exception &e) {
     std::stringstream msg;

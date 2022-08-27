@@ -4,8 +4,8 @@
 #include "casm/clexmonte/canonical/CanonicalPotential.hh"
 #include "casm/clexmonte/canonical/conditions.hh"
 #include "casm/clexmonte/canonical/sampling_functions.hh"
-#include "casm/clexmonte/clex/Configuration.hh"
-#include "casm/clexmonte/system/OccSystem.hh"
+#include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/system/System.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/events/OccCandidate.hh"
@@ -24,8 +24,8 @@ using namespace CASM::clexmonte;
 class StateSamplerTest : public test::ZrOTestSystem {
  public:
   StateSamplerTest() {
-    sampling_functions = canonical::make_sampling_functions(
-        system_data, canonical::canonical_tag());
+    sampling_functions =
+        canonical::make_sampling_functions(system, canonical::canonical_tag());
   }
 
   StateSamplingFunctionMap<Configuration> sampling_functions;
@@ -35,20 +35,20 @@ class StateSamplerTest : public test::ZrOTestSystem {
 TEST_F(StateSamplerTest, Test1) {
   // Create conditions
   monte::ValueMap init_conditions =
-      canonical::make_conditions(600.0, system_data->composition_converter,
+      canonical::make_conditions(600.0, system->composition_converter,
                                  {{"Zr", 2.0}, {"O", 1.0}, {"Va", 1.0}});
 
   // Create config
   Eigen::Matrix3l T = Eigen::Matrix3l::Identity() * 10;
   Index volume = T.determinant();
-  Configuration config = make_default_configuration(*system_data, T);
+  monte::State<Configuration> default_state(
+      make_default_configuration(*system, T));
   for (Index i = 0; i < volume; ++i) {
-    get_occupation(config)(2 * volume + i) = 1;
+    get_occupation(default_state)(2 * volume + i) = 1;
   }
 
   // Prepare supercell-specific index conversions
-  Conversions convert{*get_shared_prim(*system_data),
-                      get_transformation_matrix_to_super(config)};
+  Conversions convert{*get_prim_basicstructure(*system), T};
   OccCandidateList occ_candidate_list(convert);
   std::vector<OccSwap> canonical_swaps =
       make_canonical_swaps(convert, occ_candidate_list);
@@ -56,17 +56,17 @@ TEST_F(StateSamplerTest, Test1) {
   // Loop over states
   for (Index i = 0; i < 8; ++i) {
     // Create state
-    State<Configuration> state(config, init_conditions);
+    State<Configuration> state(default_state.configuration, init_conditions);
     state.conditions.scalar_values.at("temperature") = 300.0 + i * 100.0;
 
     OccLocation occ_location(convert, occ_candidate_list);
-    occ_location.initialize(get_occupation(state.configuration));
+    occ_location.initialize(get_occupation(state));
     CountType steps_per_pass = occ_location.mol_size();
 
     // Make supercell-specific potential energy clex calculator
     // (equal to formation energy calculator now)
     canonical::CanonicalPotential potential(
-        get_formation_energy_clex(*system_data, state));
+        get_clex(*system, state, "formation_energy"));
     set(potential, state);
 
     // Make StateSampler
@@ -115,7 +115,7 @@ TEST_F(StateSamplerTest, Test1) {
 
       // Apply accepted event
       if (accept) {
-        occ_location.apply(event, get_occupation(state.configuration));
+        occ_location.apply(event, get_occupation(state));
       }
 
       state_sampler.increment_step();

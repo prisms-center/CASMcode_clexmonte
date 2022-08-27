@@ -1,0 +1,81 @@
+{
+  "method": "kmc",
+  "kwargs": {
+    "system": {
+      "prim": {
+        "basis": [
+          {
+            "coordinate": [0.0, 0.0, 0.0],
+            "occupants": ["A", "B", "Va"]
+          }
+        ],
+        "coordinate_mode": "Fractional",
+        "lattice_vectors": [
+          [0.0, 2.0, 2.0],
+          [2.0, 0.0, 2.0],
+          [2.0, 2.0, 0.0]
+        ],
+        "title": "FCC_binary_vacancy"
+      },
+      "composition_axes": {
+        "a" : [ 0.000000000000, 1.000000000000, 0.000000000000 ],
+        "b" : [ 0.000000000000, 0.000000000000, 1.000000000000 ],
+        "components" : [ "A", "B", "Va" ],
+        "independent_compositions" : 2,
+        "mol_formula" : "A(1-a-b)B(a)Va(b)",
+        "origin" : [ 1.000000000000, 0.000000000000, 0.000000000000 ],
+        "param_formula" : "a(0.333333-0.333333A+0.666667B-0.333333Va)b(0.333333-0.333333A-0.333333B+0.666667Va)"
+      },
+      "_basis_sets": {
+        "<name>": {
+          "source": "<path>"
+        }
+      },
+      "_local_basis_sets": {
+        "<name>": {
+          "source": "<path>",
+          "equivalents_info": "<path>"
+        }
+      },
+      "_clex": {
+        "<name>": {
+          "basis_set": "formation_energy",
+          "coefficients": "<path>"
+        }
+      },
+      "_multiclex": {
+        "<name>": {
+          "basis_set": "formation_energy",
+          "coefficients": [
+            "<path>",
+            "<path>"
+          ]
+        }
+      },
+      "_local_clex": {
+        "<name>": {
+          "local_basis_set": "formation_energy",
+          "coefficients": "<path>"
+        }
+      },
+      "_local_multiclex": {
+        "<name>": {
+          "local_basis_set": "formation_energy",
+          "coefficients": [
+            "<path>",
+            "<path>"
+          ]
+        }
+      },
+      "_events": {
+        "<name>": {
+          "event": "/path/to/event.json",
+          "local_basis_set": "<name>",
+          "kra_coefficients": "<path>",
+          "freq_coefficients": "<path>"
+        }
+      },
+      "event_system": "events/event_system.json"
+    }
+  }
+}

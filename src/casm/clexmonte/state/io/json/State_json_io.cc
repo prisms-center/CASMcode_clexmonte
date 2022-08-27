@@ -1,9 +1,9 @@
-#include "casm/clexmonte/clex/io/json/State_json_io.hh"
+#include "casm/clexmonte/state/io/json/State_json_io.hh"
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/clex/Configuration.hh"
-#include "casm/clexmonte/clex/io/json/Configuration_json_io.hh"
+#include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/monte/state/State.hh"
 #include "casm/monte/state/io/json/ValueMap_json_io.hh"
 

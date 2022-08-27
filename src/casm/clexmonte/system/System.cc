@@ -1,0 +1,477 @@
+#include "casm/clexmonte/system/System.hh"
+
+#include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexulator/ConfigDoFValuesTools_impl.hh"
+#include "casm/configuration/clusterography/orbits.hh"
+#include "casm/configuration/occ_events/OccEventRep.hh"
+
+namespace CASM {
+namespace clexmonte {
+
+namespace {
+
+std::map<std::string, std::shared_ptr<clexulator::OrderParameter>>
+make_order_parameters(
+    std::map<std::string, clexulator::DoFSpace> const
+        &order_parameter_definitions,
+    Eigen::Matrix3l const &transformation_matrix_to_super,
+    xtal::UnitCellCoordIndexConverter const &supercell_index_converter) {
+  std::map<std::string, std::shared_ptr<clexulator::OrderParameter>>
+      order_parameters;
+  for (auto const &pair : order_parameter_definitions) {
+    auto res = order_parameters.emplace(
+        pair.first, std::make_shared<clexulator::OrderParameter>(pair.second));
+    clexulator::OrderParameter &order_parameter = *res.first->second;
+    order_parameter.update(transformation_matrix_to_super,
+                           supercell_index_converter);
+  }
+  return order_parameters;
+}
+
+}  // namespace
+
+EquivalentsInfo::EquivalentsInfo(
+    config::Prim const &_prim,
+    std::vector<clust::IntegralCluster> const &_phenomenal_clusters,
+    std::vector<Index> const &_equivalent_generating_op_indices)
+    : phenomenal_clusters(_phenomenal_clusters),
+      equivalent_generating_op_indices(_equivalent_generating_op_indices) {
+  if (equivalent_generating_op_indices.size() != phenomenal_clusters.size()) {
+    throw std::runtime_error(
+        "Error constructing clexmonte::EquivalentsInfo: phenomenal_clusters "
+        "and equivalent_generating_op_indices size mismatch");
+  }
+  if (equivalent_generating_op_indices.size() == 0) {
+    throw std::runtime_error(
+        "Error constructing clexmonte::EquivalentsInfo: "
+        "equivalent_generating_op_indices size==0");
+  }
+
+  auto const &fg_element = _prim.sym_info.factor_group->element;
+  for (Index i = 0; i < equivalent_generating_op_indices.size(); ++i) {
+    Index fg_index = equivalent_generating_op_indices[i];
+    if (fg_index < 0 || fg_index >= fg_element.size()) {
+      throw std::runtime_error(
+          "Error constructing clexmonte::EquivalentsInfo: Invalid "
+          "equivalent_generating_op_indices value");
+    }
+
+    xtal::SymOp const &factor_group_op =
+        _prim.sym_info.factor_group->element[fg_index];
+    xtal::UnitCellCoordRep unitcellcoord_rep =
+        _prim.sym_info.unitcellcoord_symgroup_rep[fg_index];
+    Eigen::Matrix3d const &lat_column_mat =
+        _prim.basicstructure->lattice().lat_column_mat();
+
+    // get appropriate translation
+    xtal::UnitCell translation = equivalence_map_translation(
+        unitcellcoord_rep, phenomenal_clusters[0], phenomenal_clusters[i]);
+    translations.push_back(translation);
+
+    // get equivalence map op
+    xtal::SymOp translation_op(Eigen::Matrix3d::Identity(),
+                               lat_column_mat * translation.cast<double>(),
+                               false);
+    xtal::SymOp equivalence_map_op = translation_op * factor_group_op;
+    equivalent_generating_ops.push_back(equivalence_map_op);
+  }
+}
+
+/// \brief Make equivalents by applying symmetry.
+///
+/// Generates equivalents according to:
+/// \code
+/// Index fg_index = info.equivalent_generating_op_indices[i];
+/// equivalents[i] = copy_apply(
+///     occevent_symgroup_rep[fg_index], event) + info.translations[i];
+/// \endcode
+///
+/// \param event OccEvent to make equivalents of. Should have the same
+///     phenomenal cluster used to generate the local basis set.
+/// \param info EquivalentsInfo describing symmetry operations used to generate
+///     equivalent local basis sets.
+/// \param occevent_symgroup_rep Representation of the prim factor group.
+std::vector<occ_events::OccEvent> make_equivalents(
+    occ_events::OccEvent const &event, EquivalentsInfo const &info,
+    std::vector<occ_events::OccEventRep> const &occevent_symgroup_rep) {
+  // generate equivalent events, consistent with the symmetry used to
+  // generate the local basis set
+  std::vector<occ_events::OccEvent> equivalents;
+  for (Index i = 0; i < info.translations.size(); ++i) {
+    Index fg_index = info.equivalent_generating_op_indices[i];
+    equivalents.push_back(copy_apply(occevent_symgroup_rep[fg_index], event) +
+                          info.translations[i]);
+  }
+  return equivalents;
+}
+
+bool is_same_phenomenal_clusters(
+    std::vector<occ_events::OccEvent> const &equivalents,
+    EquivalentsInfo const &info) {
+  for (Index i = 0; i < equivalents.size(); ++i) {
+    // check that phenomenal_clusters agree
+    clust::IntegralCluster equiv_event_cluster = make_cluster(equivalents[i]);
+    equiv_event_cluster.sort();
+    clust::IntegralCluster equiv_basis_set_phenom = info.phenomenal_clusters[i];
+    equiv_basis_set_phenom.sort();
+    if (equiv_event_cluster != equiv_basis_set_phenom) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/// \brief Constructor
+System::System(std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
+               composition::CompositionConverter const &_composition_converter)
+    : prim(std::make_shared<config::Prim const>(_shared_prim)),
+      composition_converter(_composition_converter),
+      composition_calculator(composition_converter.components(),
+                             xtal::allowed_molecule_names(*_shared_prim)),
+      occevent_symgroup_rep(occ_events::make_occevent_symgroup_rep(
+          prim->sym_info.unitcellcoord_symgroup_rep,
+          prim->sym_info.occ_symgroup_rep,
+          prim->sym_info.atom_position_symgroup_rep)) {}
+
+/// \brief Constructor
+SupercellSystemData::SupercellSystemData(
+    System const &system, Eigen::Matrix3l const &transformation_matrix_to_super)
+    : convert(*system.prim->basicstructure, transformation_matrix_to_super),
+      occ_candidate_list(convert),
+      order_parameters(
+          make_order_parameters(system.order_parameter_definitions,
+                                convert.transformation_matrix_to_super(),
+                                convert.index_converter())) {
+  // make supercell_neighbor_list
+  if (system.prim_neighbor_list != nullptr) {
+    supercell_neighbor_list = std::make_shared<clexulator::SuperNeighborList>(
+        transformation_matrix_to_super, *system.prim_neighbor_list);
+  }
+
+  // make clex
+  for (auto const &pair : system.clex_data) {
+    if (supercell_neighbor_list == nullptr) {
+      throw std::runtime_error(
+          "Error constructing SupercellSystemData: Cannot construct clex with "
+          "empty neighbor list");
+    }
+    auto const &key = pair.first;
+    auto const &data = pair.second;
+    auto _clexulator = get_basis_set(system, data.basis_set_name);
+    auto _clex = std::make_shared<clexulator::ClusterExpansion>(
+        supercell_neighbor_list, _clexulator, data.coefficients);
+    clex.emplace(key, _clex);
+  }
+
+  // make multiclex
+  for (auto const &pair : system.multiclex_data) {
+    if (supercell_neighbor_list == nullptr) {
+      throw std::runtime_error(
+          "Error constructing SupercellSystemData: Cannot construct multiclex "
+          "with empty neighbor list");
+    }
+    auto const &key = pair.first;
+    auto const &data = pair.second;
+    auto _clexulator = get_basis_set(system, data.basis_set_name);
+    auto _multiclex = std::make_shared<clexulator::MultiClusterExpansion>(
+        supercell_neighbor_list, _clexulator, data.coefficients);
+    multiclex.emplace(key, _multiclex);
+  }
+
+  // make local_clex
+  for (auto const &pair : system.local_clex_data) {
+    if (supercell_neighbor_list == nullptr) {
+      throw std::runtime_error(
+          "Error constructing SupercellSystemData: Cannot construct local_clex "
+          "with empty neighbor list");
+    }
+    auto const &key = pair.first;
+    auto const &data = pair.second;
+    auto _local_clexulator =
+        get_local_basis_set(system, data.local_basis_set_name);
+    auto _local_clex = std::make_shared<clexulator::LocalClusterExpansion>(
+        supercell_neighbor_list, _local_clexulator, data.coefficients);
+    local_clex.emplace(key, _local_clex);
+  }
+
+  // make local_multiclex
+  for (auto const &pair : system.local_multiclex_data) {
+    if (supercell_neighbor_list == nullptr) {
+      throw std::runtime_error(
+          "Error constructing SupercellSystemData: Cannot construct "
+          "local_multiclex with empty neighbor list");
+    }
+    auto const &key = pair.first;
+    auto const &data = pair.second;
+    auto _local_clexulator =
+        get_local_basis_set(system, data.local_basis_set_name);
+    auto _local_multiclex =
+        std::make_shared<clexulator::MultiLocalClusterExpansion>(
+            supercell_neighbor_list, _local_clexulator, data.coefficients);
+    local_multiclex.emplace(key, _local_multiclex);
+  }
+
+  // make order_parameters
+  for (auto const &pair : system.order_parameter_definitions) {
+    auto const &key = pair.first;
+    auto const &definition = pair.second;
+    auto _order_parameter =
+        std::make_shared<clexulator::OrderParameter>(definition);
+    _order_parameter->update(convert.transformation_matrix_to_super(),
+                             convert.index_converter());
+    order_parameters.emplace(key, _order_parameter);
+  }
+}
+
+// --- The following are used to construct a common interface between "System"
+// data, in this case System, and templated CASM::clexmonte methods such as
+// sampling function factory methods ---
+
+namespace {
+
+/// \brief Helper to get SupercellSystemData,
+///     constructing as necessary
+SupercellSystemData &get_supercell_data(
+    System &system, Eigen::Matrix3l const &transformation_matrix_to_super) {
+  auto it = system.supercell_data.find(transformation_matrix_to_super);
+  if (it == system.supercell_data.end()) {
+    it = system.supercell_data
+             .emplace(
+                 std::piecewise_construct,
+                 std::forward_as_tuple(transformation_matrix_to_super),
+                 std::forward_as_tuple(system, transformation_matrix_to_super))
+             .first;
+  }
+  return it->second;
+}
+
+/// \brief Helper to get SupercellSystemData,
+///     constructing as necessary
+SupercellSystemData &get_supercell_data(
+    System &system, monte::State<Configuration> const &state) {
+  auto const &T = get_transformation_matrix_to_super(state);
+  return get_supercell_data(system, T);
+}
+
+}  // namespace
+
+/// \brief Helper to get std::shared_ptr<config::Prim const>
+std::shared_ptr<config::Prim const> const &get_prim_info(System const &system) {
+  return system.prim;
+}
+
+/// \brief Helper to get std::shared_ptr<xtal::BasicStructure const>
+std::shared_ptr<xtal::BasicStructure const> const &get_prim_basicstructure(
+    System const &system) {
+  return system.prim->basicstructure;
+}
+
+/// \brief Helper to get prim basis
+std::vector<xtal::Site> const &get_basis(System const &system) {
+  return system.prim->basicstructure->basis();
+}
+
+/// \brief Helper to get basis size
+Index get_basis_size(System const &system) {
+  return system.prim->basicstructure->basis().size();
+}
+
+/// \brief Helper to get composition::CompositionConverter
+composition::CompositionConverter const &get_composition_converter(
+    System const &system) {
+  return system.composition_converter;
+}
+
+/// \brief Helper to get composition::CompositionCalculator
+composition::CompositionCalculator const &get_composition_calculator(
+    System const &system) {
+  return system.composition_calculator;
+}
+
+/// \brief Helper to make the default configuration in a supercell
+Configuration make_default_configuration(
+    System const &system,
+    Eigen::Matrix3l const &transformation_matrix_to_super) {
+  return Configuration(
+      transformation_matrix_to_super,
+      clexulator::make_default_config_dof_values(
+          system.prim->basicstructure->basis().size(),
+          transformation_matrix_to_super.determinant(),
+          system.prim->global_dof_info, system.prim->local_dof_info));
+}
+
+/// \brief Convert configuration from standard basis to prim basis
+Configuration from_standard_values(
+    System const &system,
+    Configuration const &configuration_in_standard_basis) {
+  Eigen::Matrix3l const &T =
+      configuration_in_standard_basis.transformation_matrix_to_super;
+  return Configuration(
+      T, clexulator::from_standard_values(
+             configuration_in_standard_basis.dof_values,
+             system.prim->basicstructure->basis().size(), T.determinant(),
+             system.prim->global_dof_info, system.prim->local_dof_info));
+}
+
+/// \brief Convert configuration from prim basis to standard basis
+Configuration to_standard_values(
+    System const &system, Configuration const &configuration_in_prim_basis) {
+  Eigen::Matrix3l const &T =
+      configuration_in_prim_basis.transformation_matrix_to_super;
+  return Configuration(
+      T, clexulator::to_standard_values(
+             configuration_in_prim_basis.dof_values,
+             system.prim->basicstructure->basis().size(), T.determinant(),
+             system.prim->global_dof_info, system.prim->local_dof_info));
+}
+
+/// \brief Helper to get the Clexulator
+std::shared_ptr<clexulator::Clexulator> get_basis_set(System const &system,
+                                                      std::string const &key) {
+  return system.basis_sets.at(key);
+}
+
+/// \brief Helper to get the local Clexulator
+std::shared_ptr<std::vector<clexulator::Clexulator>> get_local_basis_set(
+    System const &system, std::string const &key) {
+  return system.local_basis_sets.at(key);
+}
+
+/// \brief Construct impact tables
+std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
+    System const &system, ClexData const &clex_data) {
+  auto const &clexulator = *system.basis_sets.at(clex_data.basis_set_name);
+
+  auto const &coeff = clex_data.coefficients;
+  auto begin = coeff.index.data();
+  auto end = begin + coeff.index.size();
+  return clexulator.site_neighborhood(begin, end);
+}
+
+/// \brief Construct impact tables
+std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
+    System const &system, MultiClexData const &multiclex_data) {
+  auto const &clexulator = *system.basis_sets.at(multiclex_data.basis_set_name);
+
+  std::set<xtal::UnitCellCoord> nhood;
+  for (auto const &coeff : multiclex_data.coefficients) {
+    auto begin = coeff.index.data();
+    auto end = begin + coeff.index.size();
+    auto tmp = clexulator.site_neighborhood(begin, end);
+    nhood.insert(tmp.begin(), tmp.end());
+  }
+  return nhood;
+}
+
+/// \brief Construct impact tables
+std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
+    System const &system, LocalClexData const &local_clex_data,
+    Index equivalent_index) {
+  auto const &clexulator =
+      *system.local_basis_sets.at(local_clex_data.local_basis_set_name);
+
+  auto const &coeff = local_clex_data.coefficients;
+  auto begin = coeff.index.data();
+  auto end = begin + coeff.index.size();
+  return clexulator[equivalent_index].site_neighborhood(begin, end);
+}
+
+/// \brief Construct impact tables
+std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
+    System const &system, LocalMultiClexData const &local_multiclex_data,
+    Index equivalent_index) {
+  auto const &clexulator =
+      *system.local_basis_sets.at(local_multiclex_data.local_basis_set_name);
+
+  std::set<xtal::UnitCellCoord> nhood;
+  for (auto const &coeff : local_multiclex_data.coefficients) {
+    auto begin = coeff.index.data();
+    auto end = begin + coeff.index.size();
+    auto tmp = clexulator[equivalent_index].site_neighborhood(begin, end);
+    nhood.insert(tmp.begin(), tmp.end());
+  }
+  return nhood;
+}
+
+/// \brief KMC events index definitions
+std::shared_ptr<occ_events::OccSystem> get_event_system(System const &system) {
+  return system.event_system;
+}
+
+/// \brief KMC events
+std::map<std::string, OccEventTypeData> const &get_event_type_data(
+    System const &system) {
+  return system.event_type_data;
+}
+
+/// \brief Helper to get the correct clexulator::ClusterExpansion for a
+///     particular state, constructing as necessary
+///
+/// \relates System
+std::shared_ptr<clexulator::ClusterExpansion> get_clex(
+    System &system, monte::State<Configuration> const &state,
+    std::string const &key) {
+  auto clex = get_supercell_data(system, state).clex.at(key);
+  set(*clex, state);
+  return clex;
+}
+
+/// \brief Helper to get the correct clexulator::ClusterExpansion for a
+///     particular state, constructing as necessary
+///
+/// \relates System
+std::shared_ptr<clexulator::MultiClusterExpansion> get_multiclex(
+    System &system, monte::State<Configuration> const &state,
+    std::string const &key) {
+  auto clex = get_supercell_data(system, state).multiclex.at(key);
+  set(*clex, state);
+  return clex;
+}
+
+/// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
+///     particular state's supercell, constructing as necessary
+std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
+    System &system, std::string const &key,
+    monte::State<Configuration> const &state) {
+  auto clex = get_supercell_data(system, state).local_clex.at(key);
+  set(*clex, state);
+  return clex;
+}
+
+/// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
+///     particular state's supercell, constructing as necessary
+std::shared_ptr<clexulator::MultiLocalClusterExpansion> get_local_multiclex(
+    System &system, std::string const &key,
+    monte::State<Configuration> const &state) {
+  auto clex = get_supercell_data(system, state).local_multiclex.at(key);
+  set(*clex, state);
+  return clex;
+}
+
+/// \brief Helper to get the correct order parameter calculators for a
+///     particular configuration, constructing as necessary
+///
+/// \relates System
+std::shared_ptr<clexulator::OrderParameter> get_order_parameter(
+    System &system, monte::State<Configuration> const &state,
+    std::string const &key) {
+  auto order_parameter =
+      get_supercell_data(system, state).order_parameters.at(key);
+  order_parameter->set(&get_dof_values(state));
+  return order_parameter;
+}
+
+/// \brief Helper to get supercell index conversions
+monte::Conversions const &get_index_conversions(
+    System &system, monte::State<Configuration> const &state) {
+  return get_supercell_data(system, state).convert;
+}
+
+/// \brief Helper to get unique pairs of (asymmetric unit index, species index)
+monte::OccCandidateList const &get_occ_candidate_list(
+    System &system, monte::State<Configuration> const &state) {
+  return get_supercell_data(system, state).occ_candidate_list;
+}
+
+}  // namespace clexmonte
+}  // namespace CASM
