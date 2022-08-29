@@ -21,15 +21,6 @@
 #include "misc.hh"
 #include "testdir.hh"
 
-// // Test0
-// #include "casm/clexmonte/system/System.hh"
-// #include "casm/clexmonte/system/io/json/System_json_io.hh"
-// #include "casm/clexmonte/state/sampling_functions.hh"
-// #include "casm/monte/Conversions.hh"
-// #include "casm/monte/checks/CompletionCheck.hh"
-// #include "casm/monte/events/OccCandidate.hh"
-// #include "casm/monte/methods/canonical.hh"
-
 using namespace CASM;
 
 TEST(canonical_fullrun_test, Test1) {

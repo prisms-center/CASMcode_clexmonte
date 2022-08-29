@@ -6,9 +6,9 @@
 
 using namespace test;
 
-class MakeCanonicalConditionsTest : public test::ZrOTestSystem {};
+class canonical_ConditionsTest : public test::ZrOTestSystem {};
 
-TEST_F(MakeCanonicalConditionsTest, Test1) {
+TEST_F(canonical_ConditionsTest, Test1) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;
@@ -26,7 +26,7 @@ TEST_F(MakeCanonicalConditionsTest, Test1) {
   EXPECT_EQ(conditions.vector_values.at("mol_composition")(2), 1.0);
 }
 
-TEST_F(MakeCanonicalConditionsTest, Test2) {
+TEST_F(canonical_ConditionsTest, Test2) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;
@@ -44,7 +44,7 @@ TEST_F(MakeCanonicalConditionsTest, Test2) {
   EXPECT_EQ(conditions.vector_values.at("mol_composition")(2), 0.1);
 }
 
-TEST_F(MakeCanonicalConditionsTest, Test3) {
+TEST_F(canonical_ConditionsTest, Test3) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;
@@ -61,7 +61,7 @@ TEST_F(MakeCanonicalConditionsTest, Test3) {
   EXPECT_EQ(conditions.vector_values.at("mol_composition")(2), 1.0);
 }
 
-TEST_F(MakeCanonicalConditionsTest, Test4) {
+TEST_F(canonical_ConditionsTest, Test4) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;

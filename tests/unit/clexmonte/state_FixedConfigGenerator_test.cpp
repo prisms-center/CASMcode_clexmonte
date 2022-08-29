@@ -12,9 +12,9 @@
 
 using namespace test;
 
-class FixedConfigGeneratorTest : public test::ZrOTestSystem {};
+class state_FixedConfigGeneratorTest : public test::ZrOTestSystem {};
 
-TEST_F(FixedConfigGeneratorTest, Test1) {
+TEST_F(state_FixedConfigGeneratorTest, Test1) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;

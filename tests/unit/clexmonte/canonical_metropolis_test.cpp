@@ -14,10 +14,10 @@
 
 using namespace test;
 
-class CanonicalMetropolisTest : public test::ZrOTestSystem {};
+class canonical_MetropolisTest : public test::ZrOTestSystem {};
 
 /// Test canonical monte carlo, without state sampling
-TEST_F(CanonicalMetropolisTest, Test1) {
+TEST_F(canonical_MetropolisTest, Test1) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;

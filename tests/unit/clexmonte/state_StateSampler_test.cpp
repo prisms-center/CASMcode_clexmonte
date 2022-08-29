@@ -21,9 +21,9 @@ using namespace CASM;
 using namespace CASM::monte;
 using namespace CASM::clexmonte;
 
-class StateSamplerTest : public test::ZrOTestSystem {
+class state_StateSamplerTest : public test::ZrOTestSystem {
  public:
-  StateSamplerTest() {
+  state_StateSamplerTest() {
     sampling_functions =
         canonical::make_sampling_functions(system, canonical::canonical_tag());
   }
@@ -32,7 +32,7 @@ class StateSamplerTest : public test::ZrOTestSystem {
 };
 
 /// Test state sampling, using canonical Monte Carlo
-TEST_F(StateSamplerTest, Test1) {
+TEST_F(state_StateSamplerTest, Test1) {
   // Create conditions
   monte::ValueMap init_conditions =
       canonical::make_conditions(600.0, system->composition_converter,

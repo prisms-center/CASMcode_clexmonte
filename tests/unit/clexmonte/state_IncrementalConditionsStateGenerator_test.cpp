@@ -15,9 +15,10 @@
 
 using namespace test;
 
-class IncrementalConditionsStateGeneratorTest : public test::ZrOTestSystem {};
+class state_IncrementalConditionsStateGeneratorTest
+    : public test::ZrOTestSystem {};
 
-TEST_F(IncrementalConditionsStateGeneratorTest, Test1) {
+TEST_F(state_IncrementalConditionsStateGeneratorTest, Test1) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;
@@ -68,7 +69,7 @@ TEST_F(IncrementalConditionsStateGeneratorTest, Test1) {
   }
 }
 
-TEST_F(IncrementalConditionsStateGeneratorTest, Test2) {
+TEST_F(state_IncrementalConditionsStateGeneratorTest, Test2) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;
