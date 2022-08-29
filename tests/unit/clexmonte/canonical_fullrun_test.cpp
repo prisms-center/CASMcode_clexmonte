@@ -117,7 +117,7 @@ TEST(canonical_fullrun_test, Test1) {
           composition_converter  // composition::CompositionConverter const &
       );
 
-  // - Construct clexulator::Clexulator
+  // - Construct clexulator::Clexulator for formation energy
   fs::path clexulator_src = test_dir / clexulator_src_relpath;
   std::string clexulator_name = clexulator_src.stem();
   fs::path clexulator_dirpath = clexulator_src.parent_path();
@@ -128,16 +128,16 @@ TEST(canonical_fullrun_test, Test1) {
           clexulator_name, clexulator_dirpath, system->prim_neighbor_list,
           clexulator_compile_options, clexulator_so_options));
 
-  // - Construct clexulator::SparseCoefficients
+  // - Construct clexulator::SparseCoefficients for formation energy
   jsonParser eci_json(test_dir / eci_relpath);
   InputParser<clexulator::SparseCoefficients> eci_parser(eci_json);
   report_and_throw_if_invalid(eci_parser, CASM::log(), error_if_invalid);
   clexulator::SparseCoefficients eci = *eci_parser.value;
 
-  // - Add formation energy basis set
+  // - Add formation energy basis set to `system`
   system->basis_sets.emplace("formation_energy", clexulator);
 
-  // - Add formation energy clex
+  // - Add formation energy clex to `system`
   clexmonte::ClexData formation_energy_clex_data;
   formation_energy_clex_data.basis_set_name = "formation_energy";
   formation_energy_clex_data.coefficients = eci;

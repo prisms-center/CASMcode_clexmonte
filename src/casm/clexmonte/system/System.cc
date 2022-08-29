@@ -325,22 +325,64 @@ Configuration to_standard_values(
              system.prim->global_dof_info, system.prim->local_dof_info));
 }
 
+/// \brief Helper to make the default configuration in prim basis
+monte::State<Configuration> make_default_state(
+    System const &system,
+    Eigen::Matrix3l const &transformation_matrix_to_super) {
+  return monte::State<Configuration>(
+      make_default_configuration(system, transformation_matrix_to_super));
+}
+
+/// \brief Convert configuration from standard basis to prim basis
+monte::State<Configuration> from_standard_values(
+    System const &system,
+    monte::State<Configuration> const &state_in_standard_basis) {
+  monte::State<Configuration> state_in_prim_basis{state_in_standard_basis};
+  state_in_prim_basis.configuration =
+      from_standard_values(system, state_in_standard_basis.configuration);
+  return state_in_prim_basis;
+}
+
+/// \brief Convert configuration from prim basis to standard basis
+monte::State<Configuration> to_standard_values(
+    System const &system,
+    monte::State<Configuration> const &state_in_prim_basis) {
+  monte::State<Configuration> state_in_standard_basis{state_in_prim_basis};
+  state_in_standard_basis.configuration =
+      to_standard_values(system, state_in_prim_basis.configuration);
+  return state_in_standard_basis;
+}
+
+template <typename MapType>
+typename MapType::mapped_type _verify(MapType const &m, std::string const &key,
+                                      std::string const &name) {
+  auto it = m.find(key);
+  if (it == m.end()) {
+    std::stringstream msg;
+    msg << "System error: '" << name << "' does not contain required '" << key
+        << "'." << std::endl;
+    throw std::runtime_error(msg.str());
+  }
+  return m.at(key);
+}
+
 /// \brief Helper to get the Clexulator
 std::shared_ptr<clexulator::Clexulator> get_basis_set(System const &system,
                                                       std::string const &key) {
-  return system.basis_sets.at(key);
+  return _verify(system.basis_sets, key, "basis_sets");
 }
 
 /// \brief Helper to get the local Clexulator
 std::shared_ptr<std::vector<clexulator::Clexulator>> get_local_basis_set(
     System const &system, std::string const &key) {
-  return system.local_basis_sets.at(key);
+  return _verify(system.local_basis_sets, key, "local_basis_sets");
 }
 
 /// \brief Construct impact tables
 std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
     System const &system, ClexData const &clex_data) {
-  auto const &clexulator = *system.basis_sets.at(clex_data.basis_set_name);
+  auto const &clexulator =
+      *_verify(system.basis_sets, clex_data.basis_set_name, "basis_sets");
 
   auto const &coeff = clex_data.coefficients;
   auto begin = coeff.index.data();
@@ -351,7 +393,8 @@ std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
 /// \brief Construct impact tables
 std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
     System const &system, MultiClexData const &multiclex_data) {
-  auto const &clexulator = *system.basis_sets.at(multiclex_data.basis_set_name);
+  auto const &clexulator =
+      *_verify(system.basis_sets, multiclex_data.basis_set_name, "basis_sets");
 
   std::set<xtal::UnitCellCoord> nhood;
   for (auto const &coeff : multiclex_data.coefficients) {
@@ -368,7 +411,8 @@ std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
     System const &system, LocalClexData const &local_clex_data,
     Index equivalent_index) {
   auto const &clexulator =
-      *system.local_basis_sets.at(local_clex_data.local_basis_set_name);
+      *_verify(system.local_basis_sets, local_clex_data.local_basis_set_name,
+               "local_basis_sets");
 
   auto const &coeff = local_clex_data.coefficients;
   auto begin = coeff.index.data();
@@ -381,7 +425,8 @@ std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
     System const &system, LocalMultiClexData const &local_multiclex_data,
     Index equivalent_index) {
   auto const &clexulator =
-      *system.local_basis_sets.at(local_multiclex_data.local_basis_set_name);
+      *_verify(system.local_basis_sets,
+               local_multiclex_data.local_basis_set_name, "local_basis_sets");
 
   std::set<xtal::UnitCellCoord> nhood;
   for (auto const &coeff : local_multiclex_data.coefficients) {
@@ -411,7 +456,8 @@ std::map<std::string, OccEventTypeData> const &get_event_type_data(
 std::shared_ptr<clexulator::ClusterExpansion> get_clex(
     System &system, monte::State<Configuration> const &state,
     std::string const &key) {
-  auto clex = get_supercell_data(system, state).clex.at(key);
+  auto clex = _verify(get_supercell_data(system, state).clex, key, "clex");
+
   set(*clex, state);
   return clex;
 }
@@ -423,7 +469,8 @@ std::shared_ptr<clexulator::ClusterExpansion> get_clex(
 std::shared_ptr<clexulator::MultiClusterExpansion> get_multiclex(
     System &system, monte::State<Configuration> const &state,
     std::string const &key) {
-  auto clex = get_supercell_data(system, state).multiclex.at(key);
+  auto clex =
+      _verify(get_supercell_data(system, state).multiclex, key, "multiclex");
   set(*clex, state);
   return clex;
 }
@@ -433,7 +480,8 @@ std::shared_ptr<clexulator::MultiClusterExpansion> get_multiclex(
 std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
     System &system, std::string const &key,
     monte::State<Configuration> const &state) {
-  auto clex = get_supercell_data(system, state).local_clex.at(key);
+  auto clex =
+      _verify(get_supercell_data(system, state).local_clex, key, "local_clex");
   set(*clex, state);
   return clex;
 }
@@ -443,7 +491,8 @@ std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
 std::shared_ptr<clexulator::MultiLocalClusterExpansion> get_local_multiclex(
     System &system, std::string const &key,
     monte::State<Configuration> const &state) {
-  auto clex = get_supercell_data(system, state).local_multiclex.at(key);
+  auto clex = _verify(get_supercell_data(system, state).local_multiclex, key,
+                      "local_multiclex");
   set(*clex, state);
   return clex;
 }
@@ -456,7 +505,8 @@ std::shared_ptr<clexulator::OrderParameter> get_order_parameter(
     System &system, monte::State<Configuration> const &state,
     std::string const &key) {
   auto order_parameter =
-      get_supercell_data(system, state).order_parameters.at(key);
+      _verify(get_supercell_data(system, state).order_parameters, key,
+              "order_parameters");
   order_parameter->set(&get_dof_values(state));
   return order_parameter;
 }

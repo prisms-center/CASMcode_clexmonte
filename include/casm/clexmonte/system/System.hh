@@ -170,11 +170,21 @@ struct System {
   // --- Cluster expansions
 
   /// Prim neighbor list
+  ///
+  /// Notes:
+  /// - Make sure to use this->prim_neighbor_list to construct
+  ///   Clexulators stored in this->basis_sets and this->local_basis_sets
+  ///   so that SupercellSystemData can properly construct
+  ///   the SuperNeighborList needed to evaluate correlations
   std::shared_ptr<clexulator::PrimNeighborList> prim_neighbor_list;
 
   /// Cluster expansion basis sets
   ///
-  /// Maps basis set name -> Clexulator
+  /// Notes:
+  /// - Maps basis set name -> Clexulator
+  /// - Make sure to use this->prim_neighbor_list to construct the
+  ///   Clexulator so that SupercellSystemData can propertly construct
+  ///   the SuperNeighborList needed to evaluate correlations
   std::map<std::string, std::shared_ptr<clexulator::Clexulator>> basis_sets;
 
   /// Data used to construct clexulator::ClusterExpansion. Contains:
@@ -191,7 +201,11 @@ struct System {
 
   /// Local cluster expansion basis sets
   ///
-  /// Maps local basis set name -> std::vector<clexulator::Clexulator>
+  /// Notes:
+  /// - Maps local basis set name -> std::vector<clexulator::Clexulator>
+  /// - Make sure to use this->prim_neighbor_list to construct the
+  ///   Clexulator so that SupercellSystemData can propertly construct
+  ///   the SuperNeighborList needed to evaluate correlations
   std::map<std::string, std::shared_ptr<std::vector<clexulator::Clexulator>>>
       local_basis_sets;
 
@@ -315,6 +329,19 @@ composition::CompositionCalculator const &get_composition_calculator(
 
 /// \brief Helper to make the default configuration in prim basis
 Configuration make_default_configuration(
+    System const &system,
+    Eigen::Matrix3l const &transformation_matrix_to_super);
+
+/// \brief Convert configuration from standard basis to prim basis
+Configuration from_standard_values(
+    System const &system, Configuration const &configuration_in_standard_basis);
+
+/// \brief Convert configuration from prim basis to standard basis
+Configuration to_standard_values(
+    System const &system, Configuration const &configuration_in_prim_basis);
+
+/// \brief Helper to make the default configuration in prim basis
+monte::State<Configuration> make_default_state(
     System const &system,
     Eigen::Matrix3l const &transformation_matrix_to_super);
 
