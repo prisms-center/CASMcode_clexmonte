@@ -58,7 +58,8 @@ TEST_F(CanonicalMetropolisTest, Test1) {
   MTRand random_number_generator;
   CountType step = 0;
   CountType pass = 0;
-  while (pass < 1000) {
+  std::cout << "Run";
+  while (pass < 100) {
     // std::cout << "Propose canonical event" << std::endl;
     propose_canonical_event(event, occ_location, canonical_swaps,
                             random_number_generator);
@@ -85,8 +86,10 @@ TEST_F(CanonicalMetropolisTest, Test1) {
     ++step;
     if (step == steps_per_pass) {
       ++pass;
+      std::cout << ".";
       step = 0;
     }
     // std::cout << step << " " << pass << std::endl;
   }
+  std::cout << std::endl << "Done" << std::endl;
 }

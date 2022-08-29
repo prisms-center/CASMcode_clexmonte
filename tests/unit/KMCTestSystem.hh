@@ -126,9 +126,9 @@ class KMCTestSystem : public testing::Test {
 
   void set_event(std::string event_name, std::string kra_eci_relpath,
                  std::string freq_eci_relpath) {
-    fs::copy_file(test_data_dir / fs::path("events") / "event_system.json",
-                  test_dir / fs::path("events") / "event_system.json",
-                  copy_options);
+    fs::create_directories(test_dir / "events");
+    fs::copy_file(test_data_dir / "events" / "event_system.json",
+                  test_dir / "events" / "event_system.json", copy_options);
     json["kwargs"]["system"]["event_system"] =
         (test_dir / fs::path("events") / "event_system.json").string();
 

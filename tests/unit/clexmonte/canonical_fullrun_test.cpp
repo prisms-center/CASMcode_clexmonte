@@ -18,6 +18,7 @@
 #include "casm/monte/state/StateSampler.hh"
 #include "casm/system/RuntimeLibrary.hh"
 #include "gtest/gtest.h"
+#include "misc.hh"
 #include "testdir.hh"
 
 // // Test0
@@ -40,13 +41,16 @@ TEST(canonical_fullrun_test, Test1) {
   fs::path eci_relpath = "formation_energy_eci.json";
   fs::path prim_relpath = "prim.json";
 
-  test::TmpDir tmp_dir;
-  tmp_dir.do_not_remove_on_destruction();
-  fs::create_directories(tmp_dir / clexulator_src_relpath.parent_path());
+  fs::path test_dir =
+      fs::current_path() / "CASM_test_projects" / "canonical_fullrun_test";
+  fs::copy_options copy_options = fs::copy_options::skip_existing;
+  fs::create_directories(test_dir / clexulator_src_relpath.parent_path());
   fs::copy_file(test_data_dir / clexulator_src_relpath,
-                tmp_dir / clexulator_src_relpath);
-  fs::copy_file(test_data_dir / eci_relpath, tmp_dir / eci_relpath);
-  fs::copy_file(test_data_dir / prim_relpath, tmp_dir / prim_relpath);
+                test_dir / clexulator_src_relpath, copy_options);
+  fs::copy_file(test_data_dir / eci_relpath, test_dir / eci_relpath,
+                copy_options);
+  fs::copy_file(test_data_dir / prim_relpath, test_dir / prim_relpath,
+                copy_options);
 
   // Set Clexulator compilation options
   //   ex: g++ -O3 -Wall -fPIC --std=c++17 -I/path/to/include
@@ -88,7 +92,7 @@ TEST(canonical_fullrun_test, Test1) {
 
   // Create an output directory
   fs::path output_dir_relpath = "output";
-  fs::create_directories(tmp_dir / output_dir_relpath);
+  fs::create_directories(test_dir / output_dir_relpath);
 
   // Error message
   std::runtime_error error_if_invalid{
@@ -97,7 +101,7 @@ TEST(canonical_fullrun_test, Test1) {
   // ### Construct system data
 
   // - Construct prim
-  jsonParser prim_json(tmp_dir / prim_relpath);
+  jsonParser prim_json(test_dir / prim_relpath);
   std::shared_ptr<xtal::BasicStructure const> shared_prim =
       std::make_shared<xtal::BasicStructure const>(read_prim(prim_json, TOL));
 
@@ -123,7 +127,7 @@ TEST(canonical_fullrun_test, Test1) {
       );
 
   // - Construct clexulator::Clexulator
-  fs::path clexulator_src = tmp_dir / clexulator_src_relpath;
+  fs::path clexulator_src = test_dir / clexulator_src_relpath;
   std::string clexulator_name = clexulator_src.stem();
   fs::path clexulator_dirpath = clexulator_src.parent_path();
   std::string clexulator_compile_options = default_clexulator_compile_options;
@@ -134,7 +138,7 @@ TEST(canonical_fullrun_test, Test1) {
           clexulator_compile_options, clexulator_so_options));
 
   // - Construct clexulator::SparseCoefficients
-  jsonParser eci_json(tmp_dir / eci_relpath);
+  jsonParser eci_json(test_dir / eci_relpath);
   InputParser<clexulator::SparseCoefficients> eci_parser(eci_json);
   report_and_throw_if_invalid(eci_parser, CASM::log(), error_if_invalid);
   clexulator::SparseCoefficients eci = *eci_parser.value;
@@ -276,7 +280,7 @@ TEST(canonical_fullrun_test, Test1) {
   completion_check_params.check_frequency = 10;  // default=1
 
   // ### Construct monte::jsonResultsIO
-  fs::path output_dir = tmp_dir / output_dir_relpath;
+  fs::path output_dir = test_dir / output_dir_relpath;
   bool write_trajectory = true;
   bool write_observations = true;
   monte::jsonResultsIO<clexmonte::Configuration> results_io(
@@ -305,7 +309,7 @@ TEST(canonical_fullrun_test, Test1) {
 
   // Create monte::MethodLog
   monte::MethodLog method_log;
-  method_log.logfile_path = tmp_dir / output_dir_relpath / "status.json";
+  method_log.logfile_path = test_dir / output_dir_relpath / "status.json";
   method_log.log_frequency = 60;  // seconds
 
   clexmonte::canonical::run(
@@ -316,4 +320,30 @@ TEST(canonical_fullrun_test, Test1) {
       results_io,               // clexmonte::canonical::results_io_type &
       random_number_generator,  // MTRand
       method_log);
+
+  // check output files
+  EXPECT_TRUE(fs::exists(output_dir));
+  if (fs::exists(output_dir / "status.json")) {
+    fs::remove(output_dir / "status.json");
+  }
+
+  EXPECT_TRUE(fs::exists(output_dir / "summary.json"));
+  EXPECT_EQ(test::file_count(output_dir), 12);
+  for (int i = 1; i <= 11; ++i) {
+    fs::path run_dir = output_dir / (std::string("run.") + std::to_string(i));
+    EXPECT_TRUE(fs::exists(run_dir));
+    EXPECT_EQ(test::file_count(run_dir), 2);
+    EXPECT_TRUE(fs::exists(run_dir / "observations.json"));
+    EXPECT_TRUE(fs::exists(run_dir / "trajectory.json"));
+  }
+
+  // remove
+  for (int i = 1; i <= 11; ++i) {
+    fs::path run_dir = output_dir / (std::string("run.") + std::to_string(i));
+    fs::remove(run_dir / "observations.json");
+    fs::remove(run_dir / "trajectory.json");
+    fs::remove(run_dir);
+  }
+  fs::remove(output_dir / "summary.json");
+  fs::remove(output_dir);
 }

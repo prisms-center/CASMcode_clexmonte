@@ -2,6 +2,7 @@
 #include "casm/clexmonte/canonical/io/InputData.hh"
 #include "casm/clexmonte/canonical/io/json/InputData_json_io.hh"
 #include "gtest/gtest.h"
+#include "misc.hh"
 #include "testdir.hh"
 
 // // Test0
@@ -23,21 +24,21 @@ using namespace CASM;
 //   fs::path eci_relpath = "formation_energy_eci.json";
 //   fs::path output_dir_relpath = "output";
 //
-//   test::TmpDir tmp_dir;
-//   tmp_dir.do_not_remove_on_destruction();
-//   fs::create_directories(tmp_dir / clexulator_src_relpath.parent_path());
+//   test::TmpDir test_dir;
+//   test_dir.do_not_remove_on_destruction();
+//   fs::create_directories(test_dir / clexulator_src_relpath.parent_path());
 //   fs::copy_file(test_data_dir / clexulator_src_relpath,
-//                 tmp_dir / clexulator_src_relpath);
-//   fs::copy_file(test_data_dir / eci_relpath, tmp_dir / eci_relpath);
-//   fs::create_directories(tmp_dir / output_dir_relpath);
+//                 test_dir / clexulator_src_relpath);
+//   fs::copy_file(test_data_dir / eci_relpath, test_dir / eci_relpath);
+//   fs::create_directories(test_dir / output_dir_relpath);
 //
 //   jsonParser json(test_data_dir / "input_1.json");
 //   json["kwargs"]["system"]["formation_energy"]["source"] =
-//       (tmp_dir / clexulator_src_relpath).string();
+//       (test_dir / clexulator_src_relpath).string();
 //   json["kwargs"]["system"]["formation_energy"]["coefficients"] =
-//       (tmp_dir / eci_relpath).string();
+//       (test_dir / eci_relpath).string();
 //   json["kwargs"]["results_io"]["kwargs"]["output_dir"] =
-//       (tmp_dir / output_dir_relpath).string();
+//       (test_dir / output_dir_relpath).string();
 //
 //   // ---
 //
@@ -125,21 +126,23 @@ TEST(canonical_run_test, Test1) {
   fs::path eci_relpath = "formation_energy_eci.json";
   fs::path output_dir_relpath = "output";
 
-  test::TmpDir tmp_dir;
-  tmp_dir.do_not_remove_on_destruction();
-  fs::create_directories(tmp_dir / clexulator_src_relpath.parent_path());
+  fs::path test_dir =
+      fs::current_path() / "CASM_test_projects" / "canonical_run_test";
+  fs::copy_options copy_options = fs::copy_options::skip_existing;
+  fs::create_directories(test_dir / clexulator_src_relpath.parent_path());
   fs::copy_file(test_data_dir / clexulator_src_relpath,
-                tmp_dir / clexulator_src_relpath);
-  fs::copy_file(test_data_dir / eci_relpath, tmp_dir / eci_relpath);
-  fs::create_directories(tmp_dir / output_dir_relpath);
+                test_dir / clexulator_src_relpath, copy_options);
+  fs::copy_file(test_data_dir / eci_relpath, test_dir / eci_relpath,
+                copy_options);
+  fs::create_directories(test_dir / output_dir_relpath);
 
   jsonParser json(test_data_dir / "input_1.json");
   json["kwargs"]["system"]["basis_sets"]["formation_energy"]["source"] =
-      (tmp_dir / clexulator_src_relpath).string();
+      (test_dir / clexulator_src_relpath).string();
   json["kwargs"]["system"]["clex"]["formation_energy"]["coefficients"] =
-      (tmp_dir / eci_relpath).string();
+      (test_dir / eci_relpath).string();
   json["kwargs"]["results_io"]["kwargs"]["output_dir"] =
-      (tmp_dir / output_dir_relpath).string();
+      (test_dir / output_dir_relpath).string();
 
   ParentInputParser parser(json);
   auto subparser = parser.subparse<clexmonte::canonical::InputData>("kwargs");
@@ -150,4 +153,11 @@ TEST(canonical_run_test, Test1) {
 
   clexmonte::canonical::InputData &input_data = *subparser->value;
   clexmonte::canonical::run(input_data);
+
+  EXPECT_TRUE(fs::exists(test_dir / "output"));
+  EXPECT_TRUE(fs::exists(test_dir / "output" / "summary.json"));
+  EXPECT_EQ(test::file_count(test_dir / "output"), 1);
+
+  fs::remove(test_dir / "output" / "summary.json");
+  fs::remove(test_dir / "output");
 }
