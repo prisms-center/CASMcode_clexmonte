@@ -1,4 +1,11 @@
-#include "casm/casm_io/json/jsonParser.hh"
+#ifndef CASM_unittest_KMCTestSystem
+#define CASM_unittest_KMCTestSystem
+
+#include <filesystem>
+
+#include "casm/casm_io/json/InputParser_impl.hh"
+#include "casm/clexmonte/system/System.hh"
+#include "casm/clexmonte/system/io/json/System_json_io.hh"
 #include "casm/global/definitions.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
@@ -18,13 +25,52 @@ class KMCTestSystem : public testing::Test {
   fs::copy_options copy_options;
   jsonParser json;
 
+  std::shared_ptr<clexmonte::System> system;
+
+  /// \brief Default test project - if you use this, don't copy other
+  ///     files into the test project, just use the default test fixture
+  KMCTestSystem()
+      : KMCTestSystem(
+            "FCC_binary_vacancy", "FCCBinaryVacancy_default",
+            test::data_dir("clexmonte") / "kmc" / "system_template.json") {
+    set_clex("formation_energy", "default", "formation_energy_eci.json");
+
+    {
+      fs::path event_relpath = fs::path("events") / "event.A_Va_1NN";
+      set_local_basis_set("A_Va_1NN");
+      set_event("A_Va_1NN", event_relpath / "kra_eci.json",
+                event_relpath / "freq_eci.json");
+    }
+
+    {
+      fs::path event_relpath = fs::path("events") / "event.B_Va_1NN";
+      set_local_basis_set("B_Va_1NN");
+      set_event("B_Va_1NN", event_relpath / "kra_eci.json",
+                event_relpath / "freq_eci.json");
+    }
+    write_input();
+    make_system();
+  }
+
   /// \param _project_name Name of project test files to use
-  /// (clexmonte/data/<_project_name>) \param _test_dir_name Name of directory
-  /// where test files should be copied and tested
-  /// (CASM_test_projects/<_test_dir_name>) \param _input_file_path Path to
-  /// template input file that will be updated with the
-  ///     paths to the copied Clexulator and ECI files
-  ///     (test::data_dir("clexmonte") / "kmc" / "system_template.json")
+  ///     (clexmonte/data/<_project_name>)
+  /// \param _test_dir_name Name of directory where test files should be
+  ///     copied and tested (CASM_test_projects/<_test_dir_name>)
+  /// \param _input_file_path Path to template input file that will be
+  ///     updated and parsed to construct the System. For example,
+  ///     use `test::data_dir("clexmonte") / "kmc" / "system_template.json".
+  ///     It is expected to have at least:
+  ///     \code
+  ///     {
+  ///       "kwargs": {
+  ///          "system": {
+  ///            "prim": {...},
+  ///            "composition_axes": {...}
+  ///          }
+  ///     }
+  ///     \endcode
+  ///     .
+  ///
   KMCTestSystem(std::string _project_name, std::string _test_dir_name,
                 fs::path _input_file_path)
       : project_name(_project_name),
@@ -146,4 +192,17 @@ class KMCTestSystem : public testing::Test {
   }
 
   void write_input() { json.write(test_dir / "input.json"); }
+
+  void make_system() {
+    EXPECT_TRUE(json.find_at(fs::path("kwargs") / "system") != json.end())
+        << "Bad KMCTestSystem JSON input";
+    InputParser<clexmonte::System> parser(json["kwargs"]["system"]);
+    std::runtime_error error_if_invalid{"Error reading KMC System JSON input"};
+    report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
+
+    EXPECT_TRUE(parser.value != nullptr) << "Bad KMCTestSystem parsing";
+    system = std::shared_ptr<clexmonte::System>(parser.value.release());
+  }
 };
+
+#endif

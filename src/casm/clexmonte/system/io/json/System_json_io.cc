@@ -41,9 +41,11 @@ bool parse_from_files_array(ParserType &parser, fs::path option,
 }
 
 /// \brief Parse from file
-template <typename ParserType, typename RequiredType>
-bool parse_from_file(ParserType &parser, fs::path option, RequiredType &value) {
-  auto subparser = parser.template subparse_from_file<RequiredType>(option);
+template <typename ParserType, typename RequiredType, typename... Args>
+bool parse_from_file(ParserType &parser, fs::path option, RequiredType &value,
+                     Args &&...args) {
+  auto subparser = parser.template subparse_from_file<RequiredType>(
+      option, std::forward<Args>(args)...);
   if (!subparser->valid()) {
     return false;
   }
@@ -163,49 +165,6 @@ bool parse_event(
 
 }  // namespace
 
-/// \brief Parse equivalents_info.json
-///
-/// TODO: document format (see
-/// tests/unit/clexmonte/data/kmc/system_template.json)
-void parse(InputParser<EquivalentsInfo> &parser, config::Prim const &prim) {
-  xtal::BasicStructure const &basicstructure = *prim.basicstructure;
-
-  std::vector<Index> equivalent_generating_op_indices;
-  parser.require(equivalent_generating_op_indices, "equivalent_generating_ops");
-
-  std::vector<clust::IntegralCluster> phenomenal_clusters;
-  if (parser.self.contains("equivalents")) {
-    auto begin = parser.self["equivalents"].begin();
-    auto end = parser.self["equivalents"].end();
-    int i = 0;
-    for (auto it = begin; it != end; ++it) {
-      auto subparser = parser.subparse<clust::IntegralCluster>(
-          fs::path("equivalents") / std::to_string(i) / "phenomenal",
-          basicstructure);
-      if (subparser->valid()) {
-        phenomenal_clusters.push_back(*subparser->value);
-      }
-      ++i;
-    }
-  }
-
-  if (equivalent_generating_op_indices.size() != phenomenal_clusters.size()) {
-    parser.insert_error("equivalent_generating_ops",
-                        "Size mismatch with 'equivalents'");
-  }
-
-  if (equivalent_generating_op_indices.size() == 0) {
-    parser.insert_error("equivalent_generating_ops", "Size==0");
-  }
-
-  if (!parser.valid()) {
-    return;
-  }
-
-  parser.value = std::make_unique<EquivalentsInfo>(
-      prim, phenomenal_clusters, equivalent_generating_op_indices);
-}
-
 /// \brief Parse System from JSON
 ///
 /// TODO: document format (see
@@ -278,6 +237,7 @@ void parse(InputParser<System> &parser) {
 
   // Parse "clex"
   if (parser.self.contains("clex")) {
+    auto &prim = *system.prim;
     auto &clex_data = system.clex_data;
     auto const &basis_sets = system.basis_sets;
 
@@ -293,9 +253,15 @@ void parse(InputParser<System> &parser) {
         continue;
       }
 
-      // "clex"/<name>/"coefficients"
+      // "clex"/<name>/"coefficients" (SparseCoefficients)
       if (!parse_from_file(parser, clex_path / "coefficients",
                            curr.coefficients)) {
+        continue;
+      }
+
+      // "clex"/<name>/"coefficients" (BasisSetClusterInfo)
+      if (!parse_from_file(parser, clex_path / "coefficients",
+                           curr.cluster_info, prim, basis_sets)) {
         continue;
       }
 
@@ -305,6 +271,7 @@ void parse(InputParser<System> &parser) {
 
   // Parse "multiclex"
   if (parser.self.contains("multiclex")) {
+    auto &prim = *system.prim;
     auto &multiclex_data = system.multiclex_data;
     auto const &basis_sets = system.basis_sets;
 
@@ -323,6 +290,12 @@ void parse(InputParser<System> &parser) {
       // "multiclex"/<name>/"coefficients"
       if (!parse_from_files_array(parser, clex_path / "coefficients",
                                   curr.coefficients)) {
+        continue;
+      }
+
+      // "multiclex"/<name>/"coefficients" (BasisSetClusterInfo)
+      if (!parse_from_file(parser, clex_path / "coefficients",
+                           curr.cluster_info, prim, basis_sets)) {
         continue;
       }
 

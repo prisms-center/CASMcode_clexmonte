@@ -75,7 +75,7 @@
           "freq_coefficients": "<path>"
         }
       },
-      "event_system": "events/event_system.json"
+      "_event_system": "events/event_system.json"
     }
   }
 }

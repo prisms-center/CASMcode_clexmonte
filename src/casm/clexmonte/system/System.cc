@@ -2,8 +2,9 @@
 
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexulator/ConfigDoFValuesTools_impl.hh"
-#include "casm/configuration/clusterography/orbits.hh"
-#include "casm/configuration/occ_events/OccEventRep.hh"
+// #include "casm/configuration/clusterography/impact_neighborhood.hh"
+// #include "casm/configuration/clusterography/orbits.hh"
+// #include "casm/configuration/occ_events/OccEventRep.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -29,97 +30,6 @@ make_order_parameters(
 }
 
 }  // namespace
-
-EquivalentsInfo::EquivalentsInfo(
-    config::Prim const &_prim,
-    std::vector<clust::IntegralCluster> const &_phenomenal_clusters,
-    std::vector<Index> const &_equivalent_generating_op_indices)
-    : phenomenal_clusters(_phenomenal_clusters),
-      equivalent_generating_op_indices(_equivalent_generating_op_indices) {
-  if (equivalent_generating_op_indices.size() != phenomenal_clusters.size()) {
-    throw std::runtime_error(
-        "Error constructing clexmonte::EquivalentsInfo: phenomenal_clusters "
-        "and equivalent_generating_op_indices size mismatch");
-  }
-  if (equivalent_generating_op_indices.size() == 0) {
-    throw std::runtime_error(
-        "Error constructing clexmonte::EquivalentsInfo: "
-        "equivalent_generating_op_indices size==0");
-  }
-
-  auto const &fg_element = _prim.sym_info.factor_group->element;
-  for (Index i = 0; i < equivalent_generating_op_indices.size(); ++i) {
-    Index fg_index = equivalent_generating_op_indices[i];
-    if (fg_index < 0 || fg_index >= fg_element.size()) {
-      throw std::runtime_error(
-          "Error constructing clexmonte::EquivalentsInfo: Invalid "
-          "equivalent_generating_op_indices value");
-    }
-
-    xtal::SymOp const &factor_group_op =
-        _prim.sym_info.factor_group->element[fg_index];
-    xtal::UnitCellCoordRep unitcellcoord_rep =
-        _prim.sym_info.unitcellcoord_symgroup_rep[fg_index];
-    Eigen::Matrix3d const &lat_column_mat =
-        _prim.basicstructure->lattice().lat_column_mat();
-
-    // get appropriate translation
-    xtal::UnitCell translation = equivalence_map_translation(
-        unitcellcoord_rep, phenomenal_clusters[0], phenomenal_clusters[i]);
-    translations.push_back(translation);
-
-    // get equivalence map op
-    xtal::SymOp translation_op(Eigen::Matrix3d::Identity(),
-                               lat_column_mat * translation.cast<double>(),
-                               false);
-    xtal::SymOp equivalence_map_op = translation_op * factor_group_op;
-    equivalent_generating_ops.push_back(equivalence_map_op);
-  }
-}
-
-/// \brief Make equivalents by applying symmetry.
-///
-/// Generates equivalents according to:
-/// \code
-/// Index fg_index = info.equivalent_generating_op_indices[i];
-/// equivalents[i] = copy_apply(
-///     occevent_symgroup_rep[fg_index], event) + info.translations[i];
-/// \endcode
-///
-/// \param event OccEvent to make equivalents of. Should have the same
-///     phenomenal cluster used to generate the local basis set.
-/// \param info EquivalentsInfo describing symmetry operations used to generate
-///     equivalent local basis sets.
-/// \param occevent_symgroup_rep Representation of the prim factor group.
-std::vector<occ_events::OccEvent> make_equivalents(
-    occ_events::OccEvent const &event, EquivalentsInfo const &info,
-    std::vector<occ_events::OccEventRep> const &occevent_symgroup_rep) {
-  // generate equivalent events, consistent with the symmetry used to
-  // generate the local basis set
-  std::vector<occ_events::OccEvent> equivalents;
-  for (Index i = 0; i < info.translations.size(); ++i) {
-    Index fg_index = info.equivalent_generating_op_indices[i];
-    equivalents.push_back(copy_apply(occevent_symgroup_rep[fg_index], event) +
-                          info.translations[i]);
-  }
-  return equivalents;
-}
-
-bool is_same_phenomenal_clusters(
-    std::vector<occ_events::OccEvent> const &equivalents,
-    EquivalentsInfo const &info) {
-  for (Index i = 0; i < equivalents.size(); ++i) {
-    // check that phenomenal_clusters agree
-    clust::IntegralCluster equiv_event_cluster = make_cluster(equivalents[i]);
-    equiv_event_cluster.sort();
-    clust::IntegralCluster equiv_basis_set_phenom = info.phenomenal_clusters[i];
-    equiv_basis_set_phenom.sort();
-    if (equiv_event_cluster != equiv_basis_set_phenom) {
-      return false;
-    }
-  }
-  return true;
-}
 
 /// \brief Constructor
 System::System(std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
@@ -354,8 +264,8 @@ monte::State<Configuration> to_standard_values(
 }
 
 template <typename MapType>
-typename MapType::mapped_type _verify(MapType const &m, std::string const &key,
-                                      std::string const &name) {
+typename MapType::mapped_type &_verify(MapType &m, std::string const &key,
+                                       std::string const &name) {
   auto it = m.find(key);
   if (it == m.end()) {
     std::stringstream msg;
@@ -363,7 +273,21 @@ typename MapType::mapped_type _verify(MapType const &m, std::string const &key,
         << "'." << std::endl;
     throw std::runtime_error(msg.str());
   }
-  return m.at(key);
+  return it->second;
+}
+
+template <typename MapType>
+typename MapType::mapped_type const &_verify(MapType const &m,
+                                             std::string const &key,
+                                             std::string const &name) {
+  auto it = m.find(key);
+  if (it == m.end()) {
+    std::stringstream msg;
+    msg << "System error: '" << name << "' does not contain required '" << key
+        << "'." << std::endl;
+    throw std::runtime_error(msg.str());
+  }
+  return it->second;
 }
 
 /// \brief Helper to get the Clexulator
@@ -378,32 +302,35 @@ std::shared_ptr<std::vector<clexulator::Clexulator>> get_local_basis_set(
   return _verify(system.local_basis_sets, key, "local_basis_sets");
 }
 
-/// \brief Construct impact tables
-std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
-    System const &system, ClexData const &clex_data) {
-  auto const &clexulator =
-      *_verify(system.basis_sets, clex_data.basis_set_name, "basis_sets");
-
-  auto const &coeff = clex_data.coefficients;
-  auto begin = coeff.index.data();
-  auto end = begin + coeff.index.size();
-  return clexulator.site_neighborhood(begin, end);
+/// \brief Helper to get ClexData
+///
+/// \relates System
+ClexData const &get_clex_data(System const &system, std::string const &key) {
+  return _verify(system.clex_data, key, "clex");
 }
 
-/// \brief Construct impact tables
-std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
-    System const &system, MultiClexData const &multiclex_data) {
-  auto const &clexulator =
-      *_verify(system.basis_sets, multiclex_data.basis_set_name, "basis_sets");
+/// \brief Helper to get MultiClexData
+///
+/// \relates System
+MultiClexData const &get_multiclex_data(System const &system,
+                                        std::string const &key) {
+  return _verify(system.multiclex_data, key, "multiclex");
+}
 
-  std::set<xtal::UnitCellCoord> nhood;
-  for (auto const &coeff : multiclex_data.coefficients) {
-    auto begin = coeff.index.data();
-    auto end = begin + coeff.index.size();
-    auto tmp = clexulator.site_neighborhood(begin, end);
-    nhood.insert(tmp.begin(), tmp.end());
-  }
-  return nhood;
+/// \brief Helper to get LocalClexData
+///
+/// \relates System
+LocalClexData const &get_local_clex_data(System const &system,
+                                         std::string const &key) {
+  return _verify(system.local_clex_data, key, "local_clex");
+}
+
+/// \brief Helper to get LocalMultiClexData
+///
+/// \relates System
+LocalMultiClexData const &get_local_multiclex_data(System const &system,
+                                                   std::string const &key) {
+  return _verify(system.local_multiclex_data, key, "local_multiclex");
 }
 
 /// \brief Construct impact tables
@@ -447,6 +374,12 @@ std::shared_ptr<occ_events::OccSystem> get_event_system(System const &system) {
 std::map<std::string, OccEventTypeData> const &get_event_type_data(
     System const &system) {
   return system.event_type_data;
+}
+
+/// \brief KMC events
+OccEventTypeData const &get_event_type_data(System const &system,
+                                            std::string const &key) {
+  return _verify(system.event_type_data, key, "events");
 }
 
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a

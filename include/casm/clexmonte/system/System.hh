@@ -2,6 +2,7 @@
 #define CASM_clexmonte_system_System
 
 #include "casm/clexmonte/misc/Matrix3lCompare.hh"
+#include "casm/clexmonte/system/system_data.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/DoFSpace.hh"
 #include "casm/clexulator/LocalClusterExpansion.hh"
@@ -30,108 +31,6 @@ namespace clexmonte {
 struct Configuration;
 struct System;
 struct SupercellSystemData;
-
-struct ClexData {
-  std::string basis_set_name;
-  clexulator::SparseCoefficients coefficients;
-};
-
-struct MultiClexData {
-  std::string basis_set_name;
-  std::vector<clexulator::SparseCoefficients> coefficients;
-};
-
-/// \brief Info on local cluster expansion basis sets
-///
-/// Note:
-/// - This is meant to be constructed from the information stored in
-///   an "equivalents_info.json" file when CASM generates a local
-///   Clexulator. It specifies the phenomenal clusters for each local
-///   basis set, and the prim factor group operations that can be used
-///   to construct the equivalent local basis sets from the first.
-///   Proper operation requires that the same prim factor group, in the
-///   same order, is used to generate the local basis set and to
-///   construct this.
-///
-/// TODO: This should in CASMcode_clexulator,
-/// using std::vector<xtal::UnitCellCoord> for cluster
-struct EquivalentsInfo {
-  EquivalentsInfo(
-      config::Prim const &_prim,
-      std::vector<clust::IntegralCluster> const &_phenomenal_clusters,
-      std::vector<Index> const &_equivalent_generating_op_indices);
-
-  /// \brief Phenomenal clusters for each equivalent local basis set
-  std::vector<clust::IntegralCluster> phenomenal_clusters;
-
-  /// \brief Indices of prim factor group operations that generate
-  ///     the equivalent local basis sets from the first
-  std::vector<Index> equivalent_generating_op_indices;
-
-  /// \brief xtal::Symop operations that generate
-  ///     the equivalent phenomenal clusters from the first, including
-  ///     the proper translation
-  std::vector<xtal::SymOp> equivalent_generating_ops;
-
-  /// \brief The proper translations (applied after factor group op)
-  std::vector<xtal::UnitCell> translations;
-};
-
-/// \brief Make equivalents by applying symmetry,
-///     such that `equivalents[i] == copy_apply(occevent_symgroup_rep[i], event)
-///     + info.translations[i]`
-std::vector<occ_events::OccEvent> make_equivalents(
-    occ_events::OccEvent const &event, EquivalentsInfo const &info,
-    std::vector<occ_events::OccEventRep> const &occevent_symgroup_rep);
-
-bool is_same_phenomenal_clusters(
-    std::vector<occ_events::OccEvent> const &equivalents,
-    EquivalentsInfo const &info);
-
-struct LocalClexData {
-  std::string local_basis_set_name;
-  clexulator::SparseCoefficients coefficients;
-};
-
-struct LocalMultiClexData {
-  std::string local_basis_set_name;
-  std::vector<clexulator::SparseCoefficients> coefficients;
-};
-
-enum class EVENT_CLEX_INDEX : unsigned long { KRA = 0, FREQ = 1 };
-
-/// \brief KMC event data
-///
-/// Note:
-/// - These events should agree in translation and orientation with
-///   the local cluster expansion basis set(s) used to calculate
-///   properties. To ensure this, the first event should have the
-///   same phenomenal cluster as the first local basis set, and
-///   EquivalentsInfo::equivalent_generating_ops should be used
-///   to construct the equivalent events.
-struct OccEventTypeData {
-  /// \brief Vector of symmetrically equivalent events
-  ///
-  /// For consistency between local basis set and the equivalent events,
-  /// this should be generated with:
-  /// \code
-  /// make_equivalents(
-  ///     occ_events::OccEvent const &event,
-  ///     EquivalentsInfo const &info,
-  ///     std::vector<occ_events::OccEventRep> const &occevent_symgroup_rep);
-  /// \endcode
-  /// where `event` shares the phenomenal cluster used to generate the
-  /// local basis set, `info` is read from an `equivalents_info.json`
-  /// file generated when the local basis set is generated, and
-  /// `occevent_symgroup_rep` is a representation of the prim factor group.
-  std::vector<occ_events::OccEvent> events;
-
-  /// \brief The name of the local_multiclex used for:
-  /// - the KRA (in coefficients[EVENT_CLEX_INDEX::KRA])
-  /// - the attempt frequency (in coefficients[EVENT_CLEX_INDEX::FREQ])
-  ///
-  std::string local_multiclex_name;
-};
 
 /// \brief Data structure for holding Monte Carlo calculation data and methods
 ///     that should only exist once, and should be accessible by
@@ -361,13 +260,20 @@ std::shared_ptr<clexulator::Clexulator> get_basis_set(System const &system,
 std::shared_ptr<std::vector<clexulator::Clexulator>> get_local_basis_set(
     System const &system, std::string const &key);
 
-/// \brief Construct impact tables
-std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
-    System const &system, ClexData const &clex_data);
+/// \brief Helper to get ClexData
+ClexData const &get_clex_data(System const &system, std::string const &key);
 
-/// \brief Construct impact tables
-std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
-    System const &system, MultiClexData const &multiclex_data);
+/// \brief Helper to get MultiClexData
+MultiClexData const &get_multiclex_data(System const &system,
+                                        std::string const &key);
+
+/// \brief Helper to get LocalClexData
+LocalClexData const &get_local_clex_data(System const &system,
+                                         std::string const &key);
+
+/// \brief Helper to get LocalMultiClexData
+LocalMultiClexData const &get_local_multiclex_data(System const &system,
+                                                   std::string const &key);
 
 /// \brief Construct impact tables
 std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
@@ -383,8 +289,12 @@ std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
 std::shared_ptr<occ_events::OccSystem> get_event_system(System const &system);
 
 /// \brief KMC events
-std::map<std::string, OccEventTypeData> const &get_event_data(
+std::map<std::string, OccEventTypeData> const &get_event_type_data(
     System const &system);
+
+/// \brief KMC events
+OccEventTypeData const &get_event_type_data(System const &system,
+                                            std::string const &key);
 
 // --- Supercell-specific
 

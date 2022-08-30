@@ -1,12 +1,5 @@
 #include "KMCTestSystem.hh"
-#include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/system/System.hh"
-#include "casm/clexmonte/system/io/json/System_json_io.hh"
 #include "gtest/gtest.h"
-
-// write neighborhoods to json:
-#include "casm/casm_io/container/json_io.hh"
-#include "casm/crystallography/io/UnitCellCoordIO.hh"
 
 using namespace CASM;
 
@@ -40,35 +33,12 @@ TEST_F(kmc_FCCBinaryVacancySystemJsonIOTest, Test1) {
               event_relpath / "freq_eci.json");
   }
   write_input();
+  make_system();
 
-  ParentInputParser parser(json["kwargs"]);
-  auto subparser = parser.subparse<clexmonte::System>("system");
-  std::runtime_error error_if_invalid{"Error reading KMC System JSON input"};
-  report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
-
-  EXPECT_TRUE(subparser->valid());
-
-  clexmonte::System &system = *subparser->value;
-  EXPECT_EQ(system.basis_sets.size(), 1);
-  EXPECT_EQ(system.local_basis_sets.size(), 2);
-  EXPECT_EQ(system.clex_data.size(), 1);
-  EXPECT_EQ(system.local_multiclex_data.size(), 2);
-  EXPECT_EQ(system.event_type_data.size(), 2);
-
-  // jsonParser njson;
-  // njson["formation_energy"] = get_required_update_neighborhood(
-  //     system, system.clex_data.at("formation_energy"));
-  // for (auto const &pair : system.event_type_data) {
-  //   auto const &local_multiclex_data =
-  //       system.local_multiclex_data.at(pair.second.local_multiclex_name);
-  //   auto n_equivalents = pair.second.events.size();
-  //   for (Index equivalent_index = 0; equivalent_index < n_equivalents;
-  //        ++equivalent_index) {
-  //     njson["local_clex"][pair.first][std::to_string(equivalent_index)] =
-  //         get_required_update_neighborhood(system, local_multiclex_data,
-  //                                          equivalent_index);
-  //   }
-  // }
-  // std::cout << "update neighborhoods:" << std::endl;
-  // std::cout << njson << std::endl;
+  EXPECT_TRUE(system != nullptr);
+  EXPECT_EQ(system->basis_sets.size(), 1);
+  EXPECT_EQ(system->local_basis_sets.size(), 2);
+  EXPECT_EQ(system->clex_data.size(), 1);
+  EXPECT_EQ(system->local_multiclex_data.size(), 2);
+  EXPECT_EQ(system->event_type_data.size(), 2);
 }
