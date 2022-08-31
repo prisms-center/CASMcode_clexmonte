@@ -7,6 +7,10 @@
 #include "casm/configuration/occ_events/OccEvent.hh"
 
 namespace CASM {
+namespace monte {
+class OccLocation;
+}
+
 namespace clexmonte {
 
 /// \brief Make event required update neighborhood
@@ -27,6 +31,13 @@ std::vector<EventImpactInfo> make_prim_impact_info_list(
 /// cell
 template <typename SystemType>
 std::vector<PrimEventData> make_prim_event_list(SystemType const &system);
+
+/// \brief Sets a monte::OccEvent consistent with the PrimEventData and
+/// OccLocation
+monte::OccEvent &set_event(monte::OccEvent &event,
+                           PrimEventData const &prim_event_data,
+                           xtal::UnitCell const &translation,
+                           monte::OccLocation const &occ_location);
 
 // --- Inline definitions ---
 
