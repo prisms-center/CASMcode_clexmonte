@@ -411,8 +411,8 @@ std::shared_ptr<clexulator::MultiClusterExpansion> get_multiclex(
 /// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
-    System &system, std::string const &key,
-    monte::State<Configuration> const &state) {
+    System &system, monte::State<Configuration> const &state,
+    std::string const &key) {
   auto clex =
       _verify(get_supercell_data(system, state).local_clex, key, "local_clex");
   set(*clex, state);
@@ -422,8 +422,8 @@ std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
 /// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::MultiLocalClusterExpansion> get_local_multiclex(
-    System &system, std::string const &key,
-    monte::State<Configuration> const &state) {
+    System &system, monte::State<Configuration> const &state,
+    std::string const &key) {
   auto clex = _verify(get_supercell_data(system, state).local_multiclex, key,
                       "local_multiclex");
   set(*clex, state);

@@ -57,8 +57,9 @@ TEST_F(kmc_impact_table_Test, Test1) {
                                   get_occ_candidate_list(*system, state)};
   occ_location.initialize(get_occupation(state));
 
-  clexmonte::CompleteEventList event_list = make_complete_event_list(
-      prim_event_list, prim_impact_info_list, occ_location);
+  clexmonte::kmc::CompleteEventList event_list =
+      clexmonte::kmc::make_complete_event_list(
+          prim_event_list, prim_impact_info_list, occ_location);
   EXPECT_EQ(event_list.impact_table.size(), 1000 * 24);
 
   for (auto const &impacted : event_list.impact_table) {
@@ -114,8 +115,9 @@ TEST_F(kmc_impact_table_Test, Test2) {
                                   get_occ_candidate_list(*system, state)};
   occ_location.initialize(get_occupation(state));
 
-  clexmonte::CompleteEventList event_list = make_complete_event_list(
-      prim_event_list, prim_impact_info_list, occ_location);
+  clexmonte::kmc::CompleteEventList event_list =
+      clexmonte::kmc::make_complete_event_list(
+          prim_event_list, prim_impact_info_list, occ_location);
   EXPECT_EQ(event_list.impact_table.size(), 1000 * 12);
 
   for (auto const &impacted : event_list.impact_table) {
@@ -162,9 +164,9 @@ TEST_F(kmc_impact_table_Test, Test2) {
 //
 //   Index vol = dim * dim * dim;
 //   std::cout << "Construct event list and impact table... " << std::endl;
-//   clexmonte::CompleteEventList event_list =
-//   make_complete_event_list(prim_event_list, prim_impact_info_list,
-//   occ_location); std::cout << "  Done" << std::endl;
+//   clexmonte::kmc::CompleteEventList event_list =
+//   clexmonte::kmc::make_complete_event_list(prim_event_list,
+//   prim_impact_info_list, occ_location); std::cout << "  Done" << std::endl;
 //   EXPECT_EQ(event_list.impact_table.size(), vol * 24);
 //
 //   for (auto const &impacted : event_list.impact_table) {

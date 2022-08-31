@@ -11,37 +11,6 @@
 namespace CASM {
 namespace clexmonte {
 
-/// \brief Identifies an event via translation from the `origin` unit cell
-///
-/// This data structure is used to build a "relative impact table" listing which
-/// events are impacted by the occurance of each possible event in the origin
-/// unit cell.
-struct RelativeEventID {
-  /// \brief Index specifying a possible event in the `origin` unit cell
-  Index prim_event_index;
-
-  /// \brief Translation of the event from the origin unit cell
-  xtal::UnitCell translation;
-};
-
-bool operator<(RelativeEventID const &lhs, RelativeEventID const &rhs);
-
-/// \brief Identifies an event via linear unit cell index in some supercell
-///
-/// Thie unitcell index and prim event index can be used to lookup the correct
-/// local clexulator and neighbor list information for evaluating local
-/// correlations and updating global correlations.
-struct EventID {
-  /// \brief Index specifying a possible event in the `origin` unit cell
-  Index prim_event_index;
-
-  /// \brief Linear unit cell index into a supercell, as determined by
-  /// xtal::UnitCellIndexConverter
-  Index unitcell_index;
-};
-
-bool operator<(EventID const &lhs, EventID const &rhs);
-
 /// \brief Implements an event impact table, storing only relative interations
 /// explicitly
 ///
@@ -92,26 +61,6 @@ std::vector<std::vector<RelativeEventID>> make_relative_impact_table(
     std::vector<EventImpactInfo> const &prim_event_list);
 
 // -- Inline definitions --
-
-inline bool operator<(RelativeEventID const &lhs, RelativeEventID const &rhs) {
-  if (lhs.translation < rhs.translation) {
-    return true;
-  }
-  if (rhs.translation < lhs.translation) {
-    return false;
-  }
-  return lhs.prim_event_index < rhs.prim_event_index;
-}
-
-inline bool operator<(EventID const &lhs, EventID const &rhs) {
-  if (lhs.unitcell_index < rhs.unitcell_index) {
-    return true;
-  }
-  if (lhs.unitcell_index > rhs.unitcell_index) {
-    return false;
-  }
-  return lhs.prim_event_index < rhs.prim_event_index;
-}
 
 inline std::vector<EventID> const &RelativeEventImpactTable::operator()(
     EventID const &event_id) const {

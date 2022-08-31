@@ -15,13 +15,13 @@ namespace clexmonte {
 
 /// \brief Data calculated for a single event in a single state
 struct EventState {
-  bool is_allowed;  ///< Is allowed given current configuration
-  bool is_normal;   ///< Is "normal" (dEa > 0.0) && (dEa > dEf)
-  double dEf;       ///< Final state energy, relative to initial state
-  double Ekra;      ///< KRA energy
-  double dEa;       ///< Activation energy, relative to initial state
-  double freq;      ///< Attempt frequency
-  double rate;      ///< Occurance rate
+  bool is_allowed;      ///< Is allowed given current configuration
+  bool is_normal;       ///< Is "normal" (dEa > 0.0) && (dEa > dEf)
+  double dE_final;      ///< Final state energy, relative to initial state
+  double Ekra;          ///< KRA energy
+  double dE_activated;  ///< Activation energy, relative to initial state
+  double freq;          ///< Attempt frequency
+  double rate;          ///< Occurance rate
 };
 
 /// \brief Data particular to a single translationally distinct event
@@ -31,9 +31,6 @@ struct EventData {
 
   /// \brief Used to apply event and track occupants in monte::OccLocation
   monte::OccEvent event;
-
-  /// \brief Calculated event properties in current state
-  EventState event_state;
 };
 
 /// \brief Data common to all translationally equivalent events
@@ -46,6 +43,9 @@ struct PrimEventData {
 
   /// \brief Is forward trajectory (else reverse)
   bool is_forward;
+
+  /// \brief Linear index for this prim event
+  Index prim_event_index;
 
   /// \brief Defines event
   occ_events::OccEvent event;
@@ -70,6 +70,59 @@ struct EventImpactInfo {
   ///     change in the event propensity
   std::set<xtal::UnitCellCoord> required_update_neighborhood;
 };
+
+/// \brief Identifies an event via translation from the `origin` unit cell
+///
+/// This data structure is used to build a "relative impact table" listing which
+/// events are impacted by the occurance of each possible event in the origin
+/// unit cell.
+struct RelativeEventID {
+  /// \brief Index specifying a possible event in the `origin` unit cell
+  Index prim_event_index;
+
+  /// \brief Translation of the event from the origin unit cell
+  xtal::UnitCell translation;
+};
+
+bool operator<(RelativeEventID const &lhs, RelativeEventID const &rhs);
+
+/// \brief Identifies an event via linear unit cell index in some supercell
+///
+/// Thie unitcell index and prim event index can be used to lookup the correct
+/// local clexulator and neighbor list information for evaluating local
+/// correlations and updating global correlations.
+struct EventID {
+  /// \brief Index specifying a possible event in the `origin` unit cell
+  Index prim_event_index;
+
+  /// \brief Linear unit cell index into a supercell, as determined by
+  /// xtal::UnitCellIndexConverter
+  Index unitcell_index;
+};
+
+bool operator<(EventID const &lhs, EventID const &rhs);
+
+// -- Inline definitions --
+
+inline bool operator<(RelativeEventID const &lhs, RelativeEventID const &rhs) {
+  if (lhs.translation < rhs.translation) {
+    return true;
+  }
+  if (rhs.translation < lhs.translation) {
+    return false;
+  }
+  return lhs.prim_event_index < rhs.prim_event_index;
+}
+
+inline bool operator<(EventID const &lhs, EventID const &rhs) {
+  if (lhs.unitcell_index < rhs.unitcell_index) {
+    return true;
+  }
+  if (lhs.unitcell_index > rhs.unitcell_index) {
+    return false;
+  }
+  return lhs.prim_event_index < rhs.prim_event_index;
+}
 
 }  // namespace clexmonte
 }  // namespace CASM

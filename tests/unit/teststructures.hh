@@ -9,6 +9,12 @@
 
 namespace test {
 
+inline Eigen::Matrix3l fcc_conventional_transf_mat() {
+  Eigen::Matrix3l transf_mat;
+  transf_mat << -1, 1, 1, 1, -1, 1, 1, 1, -1;
+  return transf_mat;
+}
+
 inline CASM::xtal::BasicStructure no_basis_prim() {
   using namespace CASM;
   using namespace CASM::xtal;

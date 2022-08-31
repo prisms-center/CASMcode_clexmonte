@@ -13,6 +13,7 @@ class OccLocation;
 }
 
 namespace clexmonte {
+namespace kmc {
 
 struct CompleteEventList {
   std::map<EventID, std::vector<EventID>> impact_table;
@@ -28,6 +29,7 @@ CompleteEventList make_complete_event_list(
 std::vector<EventID> make_event_id_list(
     std::vector<PrimEventData> const &prim_event_list, Index n_unitcells);
 
+}  // namespace kmc
 }  // namespace clexmonte
 }  // namespace CASM
 

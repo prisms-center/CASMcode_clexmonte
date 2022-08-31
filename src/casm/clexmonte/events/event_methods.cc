@@ -6,6 +6,45 @@
 namespace CASM {
 namespace clexmonte {
 
+/// \brief Construct linear list of events associated with the origin unit cell
+std::vector<PrimEventData> make_prim_event_list(
+    std::map<std::string, OccEventTypeData> const &event_type_data) {
+  std::vector<PrimEventData> prim_event_list;
+
+  Index event_type_index = 0;
+  for (auto const &pair : event_type_data) {
+    Index equivalent_index = 0;
+    for (occ_events::OccEvent const &equiv : pair.second.events) {
+      // forward
+      PrimEventData data;
+      data.event_type_name = pair.first;
+      data.equivalent_index = equivalent_index;
+      data.is_forward = true;
+      data.prim_event_index = prim_event_list.size();
+      data.event = equiv;
+      auto clust_occupation = make_cluster_occupation(data.event);
+      data.sites = clust_occupation.first.elements();
+      data.occ_init = clust_occupation.second[0];
+      data.occ_final = clust_occupation.second[1];
+      prim_event_list.push_back(data);
+
+      occ_events::OccEvent reverse_equiv = copy_reverse(equiv);
+      if (reverse_equiv != equiv) {
+        PrimEventData rev_data = data;
+        rev_data.is_forward = false;
+        rev_data.prim_event_index = prim_event_list.size();
+        rev_data.event = reverse_equiv;
+        rev_data.occ_init = data.occ_final;
+        rev_data.occ_final = data.occ_init;
+        prim_event_list.push_back(rev_data);
+      }
+      ++equivalent_index;
+    }
+    ++event_type_index;
+  }
+  return prim_event_list;
+}
+
 /// \brief Sets a monte::OccEvent consistent with the PrimEventData and
 /// OccLocation
 ///

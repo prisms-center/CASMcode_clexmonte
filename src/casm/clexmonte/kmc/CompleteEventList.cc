@@ -6,6 +6,7 @@
 
 namespace CASM {
 namespace clexmonte {
+namespace kmc {
 
 CompleteEventList make_complete_event_list(
     std::vector<PrimEventData> const &prim_event_list,
@@ -70,5 +71,6 @@ std::vector<EventID> make_complete_event_id_list(
   return event_id_list;
 }
 
+}  // namespace kmc
 }  // namespace clexmonte
 }  // namespace CASM
