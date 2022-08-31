@@ -24,11 +24,11 @@ struct CompleteEventListEventCalculator {
   /// \brief Complete event list
   std::map<EventID, EventData> const &event_list;
 
-  /// \brief Write to warn about non-normal events
-  Log &event_log;
-
   /// \brief Conditions (i.e. beta)
   Conditions conditions;
+
+  /// \brief Write to warn about non-normal events
+  Log &event_log;
 
   /// \brief Holds last calculated event state
   EventState event_state;
@@ -44,14 +44,15 @@ struct CompleteEventListEventCalculator {
       : prim_event_list(_prim_event_list),
         prim_event_calculators(_prim_event_calculators),
         event_list(_event_list),
+        conditions(_conditions),
         event_log(_event_log),
         not_normal_count(0) {}
 
-  set_conditions(Conditions _conditions) { conditions = _conditions; }
+  void set_conditions(Conditions _conditions) { conditions = _conditions; }
 
   /// \brief Get CASM::monte::OccEvent corresponding to given event ID
-  double calculate_rate(EventIDType const &id) const {
-    EventData const &event_data = event_list.at(id.prim_event_index);
+  double calculate_rate(EventID const &id) {
+    EventData const &event_data = event_list.at(id);
     PrimEventData const &prim_event_data =
         prim_event_list.at(id.prim_event_index);
     prim_event_calculators.at(id.prim_event_index)
@@ -71,3 +72,9 @@ struct CompleteEventListEventCalculator {
     return event_state.rate;
   }
 };
+
+}  // namespace kmc
+}  // namespace clexmonte
+}  // namespace CASM
+
+#endif

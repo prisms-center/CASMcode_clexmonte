@@ -1,6 +1,6 @@
 #include "KMCCompleteEventListTestSystem.hh"
 #include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
-#include "casm/clexmonte/kmc/PrimEventCalculator.hh"
+#include "casm/clexmonte/kmc/CompleteEventListEventCalculator.hh"
 #include "gtest/gtest.h"
 #include "teststructures.hh"
 
@@ -11,7 +11,8 @@ using namespace CASM;
 ///   that the Clexulators do not need to be re-compiled.
 /// - To clear existing data, remove the directory:
 //    CASM_test_projects/FCCBinaryVacancy_default directory
-class kmc_PrimEventCalculator_Test : public KMCCompleteEventListTestSystem {};
+class kmc_CompleteEventListEventCalculator_Test
+    : public KMCCompleteEventListTestSystem {};
 
 /// \brief Test constructing event lists and calculating initial event states
 ///
@@ -19,24 +20,25 @@ class kmc_PrimEventCalculator_Test : public KMCCompleteEventListTestSystem {};
 /// - FCC A-B-Va, 1NN interactions, A-Va and B-Va hops
 /// - 10 x 10 x 10 (of the conventional 4-atom cell)
 /// - expected runtime ~5s
-TEST_F(kmc_PrimEventCalculator_Test, Test1) {
+TEST_F(kmc_CompleteEventListEventCalculator_Test, Test1) {
   using namespace clexmonte;
   make_prim_event_list();
   // std::cout << "#prim events: " << prim_event_list.size() << std::endl;
 
   // Create default state
-  Eigen::Matrix3l T = test::fcc_conventional_transf_mat() * 10;
+  Index dim = 10;
+  Eigen::Matrix3l T = test::fcc_conventional_transf_mat() * dim;
   monte::State<clexmonte::Configuration> state(
       make_default_configuration(*system, T));
+
   // Set configuration - A, with single Va
   Eigen::VectorXi &occupation = get_occupation(state);
   occupation(0) = 2;
 
-  // Note: This calls occ_location->initialize. For correct atom tracking and
-  // stochastic canonical / grand canoncical event choosing,
-  // occ_location->initialize must be called again if the configuration is
-  // modified directly instead of via occ_location->apply. Event calculations
-  // would be still be correct.
+  // Note: For correct atom tracking and stochastic canonical / grand canoncical
+  //  event choosing, after this, occ_location->initialize must be called again
+  // if the configuration is modified directly instead of via
+  // occ_location->apply. Event calculations would be still be correct.
   make_complete_event_list(state);
   // std::cout << "#events: " << event_list.events.size() << std::endl;
 
@@ -50,24 +52,37 @@ TEST_F(kmc_PrimEventCalculator_Test, Test1) {
   monte::ValueMap conditions_map;
   conditions_map.scalar_values["temperature"] = 600.0;
   kmc::Conditions conditions(conditions_map);
+
+  // Construct CompleteEventListEventCalculator
+  auto event_calculator =
+      std::make_shared<clexmonte::kmc::CompleteEventListEventCalculator>(
+          prim_event_list, prim_event_calculators, event_list.events,
+          conditions);
+
   // std::cout << "beta: " << conditions.beta << std::endl;
   double expected_Ekra = 1.0;
   double expected_freq = 1e12;
   double expected_rate = expected_freq * exp(-conditions.beta * expected_Ekra);
 
   Index i = 0;
+  Index n_not_allowed = 0;
   Index n_allowed = 0;
-  EventState event_state;
   for (auto const &event : event_list.events) {
     auto const &event_id = event.first;
     auto const &event_data = event.second;
     auto const &prim_event_data = prim_event_list[event_id.prim_event_index];
-    auto const &prim_event_calculator =
-        prim_event_calculators[event_id.prim_event_index];
-    prim_event_calculator.calculate_event_state(event_state, conditions,
-                                                event_data, prim_event_data);
+    double rate = event_calculator->calculate_rate(event_id);
 
-    if (event_state.is_allowed) {
+    if (CASM::almost_equal(rate, 0.0)) {
+      ++n_not_allowed;
+      // auto const &event_state = event_calculator->event_state;
+      // std::cout << "--- " << i << " ---" << std::endl;
+      // print(std::cout, event_state, event_data, prim_event_data);
+      // std::cout << std::endl;
+    } else {
+      EXPECT_EQ(rate, expected_rate);
+
+      // auto const &event_state = event_calculator->event_state;
       // std::cout << "--- " << i << " ---" << std::endl;
       // print(std::cout, event_state, event_data, prim_event_data);
       // std::cout << std::endl;
@@ -80,5 +95,6 @@ TEST_F(kmc_PrimEventCalculator_Test, Test1) {
     }
     ++i;
   }
+  EXPECT_EQ(n_not_allowed, occupation.size() * 24 - 12);
   EXPECT_EQ(n_allowed, 12);
 }
