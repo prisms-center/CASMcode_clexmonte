@@ -21,8 +21,7 @@ class kmc_PrimEventCalculator_Test : public KMCCompleteEventListTestSystem {};
 /// - expected runtime ~5s
 TEST_F(kmc_PrimEventCalculator_Test, Test1) {
   using namespace clexmonte;
-  make_prim_event_list();
-  // std::cout << "#prim events: " << prim_event_list.size() << std::endl;
+  // --- State setup ---
 
   // Create default state
   Eigen::Matrix3l T = test::fcc_conventional_transf_mat() * 10;
@@ -32,6 +31,14 @@ TEST_F(kmc_PrimEventCalculator_Test, Test1) {
   Eigen::VectorXi &occupation = get_occupation(state);
   occupation(0) = 2;
 
+  // Set conditions
+  state.conditions.scalar_values.emplace("temperature", 600.0);
+
+  /// --- KMC implementation ---
+
+  make_prim_event_list();
+  // std::cout << "#prim events: " << prim_event_list.size() << std::endl;
+
   // Note: This calls occ_location->initialize. For correct atom tracking and
   // stochastic canonical / grand canoncical event choosing,
   // occ_location->initialize must be called again if the configuration is
@@ -40,20 +47,23 @@ TEST_F(kmc_PrimEventCalculator_Test, Test1) {
   make_complete_event_list(state);
   // std::cout << "#events: " << event_list.events.size() << std::endl;
 
+  /// Make std::shared_ptr<clexmonte::Conditions> object from state.conditions
+  auto conditions = std::make_shared<clexmonte::Conditions>(
+      clexmonte::make_conditions_from_value_map(
+          state.conditions, *system->prim->basicstructure,
+          system->composition_converter, clexmonte::CorrCalculatorFunction(),
+          CASM::TOL));
+
   std::vector<kmc::PrimEventCalculator> prim_event_calculators =
-      kmc::make_prim_event_calculators(*system, state, prim_event_list);
+      clexmonte::kmc::make_prim_event_calculators(*system, state,
+                                                  prim_event_list, conditions);
   EXPECT_EQ(prim_event_calculators.size(), 24);
   // std::cout << "#prim event calculators: " << prim_event_calculators.size()
   //           << std::endl;
 
-  // Set conditions
-  monte::ValueMap conditions_map;
-  conditions_map.scalar_values["temperature"] = 600.0;
-  kmc::Conditions conditions(conditions_map);
-  // std::cout << "beta: " << conditions.beta << std::endl;
   double expected_Ekra = 1.0;
   double expected_freq = 1e12;
-  double expected_rate = expected_freq * exp(-conditions.beta * expected_Ekra);
+  double expected_rate = expected_freq * exp(-conditions->beta * expected_Ekra);
 
   Index i = 0;
   Index n_allowed = 0;
@@ -64,8 +74,8 @@ TEST_F(kmc_PrimEventCalculator_Test, Test1) {
     auto const &prim_event_data = prim_event_list[event_id.prim_event_index];
     auto const &prim_event_calculator =
         prim_event_calculators[event_id.prim_event_index];
-    prim_event_calculator.calculate_event_state(event_state, conditions,
-                                                event_data, prim_event_data);
+    prim_event_calculator.calculate_event_state(event_state, event_data,
+                                                prim_event_data);
 
     if (event_state.is_allowed) {
       // std::cout << "--- " << i << " ---" << std::endl;

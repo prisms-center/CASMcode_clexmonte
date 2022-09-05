@@ -1,5 +1,5 @@
-#ifndef CASM_clexmonte_clex_Configuration
-#define CASM_clexmonte_clex_Configuration
+#ifndef CASM_clexmonte_state_Configuration
+#define CASM_clexmonte_state_Configuration
 
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/ConfigDoFValues.hh"

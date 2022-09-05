@@ -1,5 +1,5 @@
-#ifndef CASM_clexmonte_system_make_conditions
-#define CASM_clexmonte_system_make_conditions
+#ifndef CASM_clexmonte_state_make_conditions
+#define CASM_clexmonte_state_make_conditions
 
 #include <map>
 #include <string>
@@ -40,16 +40,6 @@ Eigen::VectorXd make_param_composition_increment(
     std::map<std::string, double> comp);
 
 // --- Chemical potential ---
-
-/// \brief Helper for making a conditions ValueMap, mol_chem_pot
-Eigen::VectorXd make_mol_chem_pot(
-    composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> chem_pot);
-
-/// \brief Helper for making a conditions ValueMap, mol_chem_pot increment
-Eigen::VectorXd make_mol_chem_pot_increment(
-    composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> chem_pot);
 
 /// \brief Helper for making a conditions ValueMap, param_chem_pot
 Eigen::VectorXd make_param_chem_pot(

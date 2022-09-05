@@ -1,5 +1,5 @@
-#ifndef CASM_clexmonte_system_sampling_functions
-#define CASM_clexmonte_system_sampling_functions
+#ifndef CASM_clexmonte_state_sampling_functions
+#define CASM_clexmonte_state_sampling_functions
 
 #include "casm/clexmonte/misc/eigen.hh"
 #include "casm/clexmonte/state/Configuration.hh"
@@ -37,12 +37,12 @@ monte::StateSamplingFunction<Configuration> make_temperature_f(
 
 /// \brief Make mol composition sampling function ("mol_composition")
 template <typename SystemType>
-monte::StateSamplingFunction<Configuration> make_comp_n_f(
+monte::StateSamplingFunction<Configuration> make_mol_composition_f(
     std::shared_ptr<SystemType> const &system);
 
 /// \brief Make parametric composition sampling function ("param_composition")
 template <typename SystemType>
-monte::StateSamplingFunction<Configuration> make_comp_x_f(
+monte::StateSamplingFunction<Configuration> make_param_composition_f(
     std::shared_ptr<SystemType> const &system);
 
 /// \brief Make formation energy correlations sampling function
@@ -87,7 +87,7 @@ monte::StateSamplingFunction<Configuration> make_temperature_f(
 /// - `composition::CompositionCalculator const &
 ///   get_composition_calculator(SystemType &)`
 template <typename SystemType>
-monte::StateSamplingFunction<Configuration> make_comp_n_f(
+monte::StateSamplingFunction<Configuration> make_mol_composition_f(
     std::shared_ptr<SystemType> const &system) {
   return monte::StateSamplingFunction<Configuration>(
       "mol_composition",
@@ -108,7 +108,7 @@ monte::StateSamplingFunction<Configuration> make_comp_n_f(
 /// - `composition::CompositionCalculator
 ///   get_composition_calculator(SystemType &)`
 template <typename SystemType>
-monte::StateSamplingFunction<Configuration> make_comp_x_f(
+monte::StateSamplingFunction<Configuration> make_param_composition_f(
     std::shared_ptr<SystemType> const &system) {
   // name comp_x components "a", "b", ... for each independent composition axis
   composition::CompositionConverter const &composition_converter =

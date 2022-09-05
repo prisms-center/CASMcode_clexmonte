@@ -12,8 +12,10 @@ namespace canonical {
 ///
 /// \param temperature The temperature
 /// \param composition_converter composition::CompositionConverter, used to
-///     validate `comp` input and convert to  `comp_n` (mol_composition).
-/// \param comp A map of component names (for mol per unit cell composition) or
+///     validate input and convert between species per unit cell
+///     (mol_composition) and parameteric composition (param_composition).
+/// \param comp A map of component names (for species per unit cell composition)
+/// or
 ///     axes names (for parametric composition) to value.
 ///
 /// \returns ValueMap which contains scalar "temperature" and vector
@@ -34,7 +36,7 @@ namespace canonical {
 /// ValueMap conditions = canonical::make_conditions(
 ///    300.0,                   // temperature (K)
 ///    composition_converter,   // composition converter
-///    {{"a", 1./6.}});         // composition values (comp_x)
+///    {{"a", 1./6.}});         // composition values (param_composition)
 /// \endcode
 ///
 monte::ValueMap make_conditions(
@@ -53,7 +55,8 @@ monte::ValueMap make_conditions(
 ///
 /// \param temperature The change in temperature
 /// \param composition_converter composition::CompositionConverter, used to
-///     validate `comp` input and convert to  `comp_n` (dmol_composition).
+///     validate input and convert between species per unit cell
+///     (mol_composition) and parameteric composition (param_composition).
 /// \param comp A map of component names (for change in mol per unit cell
 ///     composition) or axes names (for change in parametric composition) to
 ///     value.
@@ -76,7 +79,7 @@ monte::ValueMap make_conditions(
 /// ValueMap conditions_increment = canonical::make_conditions_increment(
 ///    10.0,                    // temperature (K)
 ///    composition_converter,   // composition converter
-///    {{"a", 0.02}});          // composition values (comp_x)
+///    {{"a", 0.02}});          // composition values (param_composition)
 /// \endcode
 ///
 monte::ValueMap make_conditions_increment(

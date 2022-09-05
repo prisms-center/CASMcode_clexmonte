@@ -13,23 +13,23 @@ namespace clexmonte {
 
 namespace {
 std::vector<monte::OccSwap>::const_iterator find_grand_canonical_swap(
-    Eigen::VectorXi &occupation, Eigen::VectorXd const &target_comp_n,
+    Eigen::VectorXi &occupation, Eigen::VectorXd const &target_mol_composition,
     composition::CompositionCalculator const &composition_calculator,
     std::vector<Index> const &species_to_component_index_converter,
     MTRand &random_number_generator, monte::OccLocation const &occ_location,
     std::vector<monte::OccSwap>::const_iterator begin,
     std::vector<monte::OccSwap>::const_iterator end) {
-  Eigen::VectorXd current_comp_n =
+  Eigen::VectorXd current_mol_composition =
       composition_calculator.mean_num_each_component(occupation);
   auto const &index_converter = species_to_component_index_converter;
 
-  double best_dist = (current_comp_n - target_comp_n).norm();
+  double best_dist = (current_mol_composition - target_mol_composition).norm();
 
   double volume = occupation.size() / composition_calculator.n_sublat();
   double dn = 1. / volume;
   double tol = CASM::TOL;
 
-  // store <distance_to_target_comp_n>:{swap_iterator, number of swaps}
+  // store <distance_to_target_mol_composition>:{swap_iterator, number of swaps}
   typedef std::vector<monte::OccSwap>::const_iterator iterator_type;
   typedef std::pair<iterator_type, Index> cand_and_count_pair;
   std::vector<cand_and_count_pair> choices;
@@ -37,10 +37,10 @@ std::vector<monte::OccSwap>::const_iterator find_grand_canonical_swap(
   // check each possible swap for how close the composition is afterwards
   for (auto it = begin; it != end; ++it) {
     if (occ_location.cand_size(it->cand_a)) {
-      Eigen::VectorXd tcomp_n = current_comp_n;
-      tcomp_n[index_converter[it->cand_a.species_index]] -= dn;
-      tcomp_n[index_converter[it->cand_b.species_index]] += dn;
-      double dist = (tcomp_n - target_comp_n).norm();
+      Eigen::VectorXd tmol_composition = current_mol_composition;
+      tmol_composition[index_converter[it->cand_a.species_index]] -= dn;
+      tmol_composition[index_converter[it->cand_b.species_index]] += dn;
+      double dist = (tmol_composition - target_mol_composition).norm();
       if (dist < best_dist - tol) {
         choices.clear();
         choices.push_back({it, occ_location.cand_size(it->cand_a)});
@@ -110,14 +110,14 @@ std::vector<Index> make_species_to_component_index_converter(
 /// - Propose and apply an event consistent with the found swap type
 /// - Repeat
 void enforce_composition(
-    Eigen::VectorXi &occupation, Eigen::VectorXd const &target_comp_n,
+    Eigen::VectorXi &occupation, Eigen::VectorXd const &target_mol_composition,
     composition::CompositionCalculator const &composition_calculator,
     std::vector<monte::OccSwap> const &grand_canonical_swaps,
     monte::OccLocation &occ_location, MTRand &random_number_generator) {
   monte::Conversions const &convert = occ_location.convert();
   occ_location.initialize(occupation);
 
-  // no guarantee convert species_index corresponds to comp_n index
+  // no guarantee convert species_index corresponds to mol_composition index
   std::vector<Index> species_to_component_index_converter =
       make_species_to_component_index_converter(composition_calculator,
                                                 convert);
@@ -127,7 +127,7 @@ void enforce_composition(
   monte::OccEvent event;
   while (true) {
     auto it = find_grand_canonical_swap(
-        occupation, target_comp_n, composition_calculator,
+        occupation, target_mol_composition, composition_calculator,
         species_to_component_index_converter, random_number_generator,
         occ_location, begin, end);
 

@@ -40,9 +40,9 @@ struct InputToVectors {
   ///     `is_increment`, `as_mol`
   Eigen::VectorXd make_comp();
 
-  /// \brief Return mol_chem_pot / mol_chem_pot_increment / param_chem_pot /
-  ///     param_chem_pot_increment, based on choice of `is_increment`, `as_mol`
-  Eigen::VectorXd make_chem_pot();
+  /// \brief Return param_chem_pot / param_chem_pot_increment,
+  ///     based on choice of `is_increment`
+  Eigen::VectorXd make_param_chem_pot();
 };
 
 InputToVectors::InputToVectors(
@@ -177,27 +177,21 @@ Eigen::VectorXd InputToVectors::make_comp() {
   }
 }
 
-Eigen::VectorXd InputToVectors::make_chem_pot() {
-  // If returning as chem_pot (conjugage to number per unit cell)
-  if (as_mol) {
-    if (found_n) {
-      return vector_n;
-    } else {
-      std::stringstream msg;
-      msg << err_msg
-          << "conversion from param_chem_pot to chem_pot is not fully defined";
-      throw std::runtime_error(msg.str());
-    }
+Eigen::VectorXd InputToVectors::make_param_chem_pot() {
+  // If requesting `as_mol==true` (conjugage to number per unit cell)
+  if (as_mol || found_n) {
+    std::stringstream msg;
+    msg << err_msg
+        << "chemical potential must be specified in terms of the parameteric "
+           "composition axes";
+    throw std::runtime_error(msg.str());
   }
-  // If returning composition as param_chem_pot (conjugate to parametric
-  // composition)
-  else {
-    if (found_x) {
-      return vector_x;
-    } else {
-      // same whether value or increment
-      return composition_converter.param_chem_pot(vector_n);
-    }
+  if (found_x) {
+    return vector_x;
+  } else {
+    std::stringstream msg;
+    msg << err_msg << "parameteric chemical potential not found";
+    throw std::runtime_error(msg.str());
   }
 }
 
@@ -291,50 +285,11 @@ Eigen::VectorXd make_param_composition_increment(
 
 // --- Chemical potential ---
 
-/// \brief Helper for making a conditions VectorValueMap, mol_chem_pot
-///
-/// \param composition_converter composition::CompositionConverter, used to
-///     validate input and convert composition.
-/// \param input A map of component names (for chemical potential conjugate to
-///     mol per unit cell composition) or axes names (for chemical potential
-///     conjugate to parametric composition) to value.
-///
-Eigen::VectorXd make_mol_chem_pot(
-    composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> input) {
-  bool is_composition = false;
-  bool is_increment = false;
-  bool as_mol = true;
-  make_conditions_impl::InputToVectors f(composition_converter, input,
-                                         is_composition, is_increment, as_mol);
-  return f.make_chem_pot();
-}
-
-/// \brief Helper for making a conditions VectorValueMap, mol_chem_pot increment
-///
-/// \param composition_converter composition::CompositionConverter, used to
-///     validate input and convert composition.
-/// \param input A map of component names (for chemical potential conjugate to
-///     mol per unit cell composition) or axes names (for chemical potential
-///     conjugate to parametric composition) to value.
-///
-Eigen::VectorXd make_mol_chem_pot_increment(
-    composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> input) {
-  bool is_composition = false;
-  bool is_increment = true;
-  bool as_mol = true;
-  make_conditions_impl::InputToVectors f(composition_converter, input,
-                                         is_composition, is_increment, as_mol);
-  return f.make_chem_pot();
-}
-
 /// \brief Helper for making a conditions VectorValueMap, param_chem_pot
 ///
 /// \param composition_converter composition::CompositionConverter, used to
 ///     validate input and convert composition.
-/// \param input A map of component names (for chemical potential conjugate to
-///     mol per unit cell composition) or axes names (for chemical potential
+/// \param input A map of axes names (for chemical potential
 ///     conjugate to parametric composition) to value.
 ///
 Eigen::VectorXd make_param_chem_pot(
@@ -345,7 +300,7 @@ Eigen::VectorXd make_param_chem_pot(
   bool as_mol = false;
   make_conditions_impl::InputToVectors f(composition_converter, input,
                                          is_composition, is_increment, as_mol);
-  return f.make_chem_pot();
+  return f.make_param_chem_pot();
 }
 
 /// \brief Helper for making a conditions VectorValueMap, param_chem_pot
@@ -353,8 +308,7 @@ Eigen::VectorXd make_param_chem_pot(
 ///
 /// \param composition_converter composition::CompositionConverter, used to
 ///     validate input and convert composition.
-/// \param input A map of component names (for chemical potential conjugate to
-///     mol per unit cell composition) or axes names (for chemical potential
+/// \param input A map of axes names (for chemical potential
 ///     conjugate to parametric composition) to value.
 ///
 Eigen::VectorXd make_param_chem_pot_increment(
@@ -365,7 +319,7 @@ Eigen::VectorXd make_param_chem_pot_increment(
   bool as_mol = false;
   make_conditions_impl::InputToVectors f(composition_converter, input,
                                          is_composition, is_increment, as_mol);
-  return f.make_chem_pot();
+  return f.make_param_chem_pot();
 }
 
 }  // namespace clexmonte

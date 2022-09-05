@@ -18,9 +18,9 @@ namespace canonical {
 monte::StateSamplingFunctionMap<Configuration> make_sampling_functions(
     std::shared_ptr<system_type> const &system, canonical_tag tag) {
   std::vector<monte::StateSamplingFunction<Configuration>> functions = {
-      make_temperature_f(system),      make_comp_n_f(system),
-      make_comp_x_f(system),           make_formation_energy_corr_f(system),
-      make_formation_energy_f(system), make_potential_energy_f(system)};
+      make_temperature_f(system),       make_mol_composition_f(system),
+      make_param_composition_f(system), make_formation_energy_corr_f(system),
+      make_formation_energy_f(system),  make_potential_energy_f(system)};
 
   monte::StateSamplingFunctionMap<Configuration> function_map;
   for (auto const &f : functions) {

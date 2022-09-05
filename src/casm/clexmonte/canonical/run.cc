@@ -36,7 +36,7 @@ namespace canonical {
 /// Required state conditions:
 /// - `temperature`: size=1
 ///   The temperature in K.
-/// - `comp_n`: size=n_components
+/// - `mol_composition`: size=n_components
 ///   Size must match `system->composition_converter.components().size()`.
 ///
 /// State properties that are set:

@@ -26,8 +26,8 @@ CompleteEventList make_complete_event_list(
     std::vector<EventImpactInfo> const &prim_impact_info_list,
     monte::OccLocation const &occ_location);
 
-std::vector<EventID> make_event_id_list(
-    std::vector<PrimEventData> const &prim_event_list, Index n_unitcells);
+std::vector<EventID> make_complete_event_id_list(
+    Index n_unitcells, std::vector<PrimEventData> const &prim_event_list);
 
 }  // namespace kmc
 }  // namespace clexmonte

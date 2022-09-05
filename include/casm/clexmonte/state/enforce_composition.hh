@@ -1,5 +1,5 @@
-#ifndef CASM_clexmonte_system_enforce_composition
-#define CASM_clexmonte_system_enforce_composition
+#ifndef CASM_clexmonte_state_enforce_composition
+#define CASM_clexmonte_state_enforce_composition
 
 #include <vector>
 
@@ -22,7 +22,7 @@ namespace clexmonte {
 
 /// \brief Apply grand canonical swaps to enforce target composition
 void enforce_composition(
-    Eigen::VectorXi &occupation, Eigen::VectorXd const &target_comp_n,
+    Eigen::VectorXi &occupation, Eigen::VectorXd const &target_mol_composition,
     composition::CompositionCalculator const &composition_calculator,
     std::vector<monte::OccSwap> const &grand_canonical_swaps,
     monte::OccLocation &occ_location, MTRand &random_number_generator);
