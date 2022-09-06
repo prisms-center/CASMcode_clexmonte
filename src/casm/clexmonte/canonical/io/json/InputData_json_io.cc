@@ -205,15 +205,12 @@ void parse(InputParser<InputData> &parser) {
   auto results_io_subparser =
       parser.subparse<results_io_type>("results_io", sampling_functions);
 
-  // Construct random number generator
-  MTRand random_number_generator;
-
   if (parser.valid()) {
     parser.value = std::make_unique<InputData>(
         system, std::move(state_generator_subparser->value), sampling_functions,
         *sampling_params_subparser->value,
         *completion_check_params_subparser->value,
-        std::move(results_io_subparser->value), random_number_generator);
+        std::move(results_io_subparser->value));
   }
 }
 

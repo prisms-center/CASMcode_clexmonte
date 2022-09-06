@@ -5,6 +5,7 @@
 #include "casm/clexmonte/system/System.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/Conversions.hh"
+#include "casm/monte/RandomNumberGenerator.hh"
 #include "casm/monte/events/OccCandidate.hh"
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/events/OccLocation.hh"
@@ -55,7 +56,7 @@ TEST_F(canonical_MetropolisTest, Test1) {
   OccEvent event;
   double beta =
       1.0 / (CASM::KB * state.conditions.scalar_values.at("temperature"));
-  MTRand random_number_generator;
+  monte::RandomNumberGenerator<std::mt19937_64> random_number_generator;
   CountType step = 0;
   CountType pass = 0;
   std::cout << "Run";

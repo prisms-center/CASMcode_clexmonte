@@ -13,15 +13,13 @@ InputData::InputData(
     monte::StateSamplingFunctionMap<config_type> const &_sampling_functions,
     monte::SamplingParams const &_sampling_params,
     monte::CompletionCheckParams const &_completion_check_params,
-    std::unique_ptr<results_io_type> _results_io,
-    MTRand _random_number_generator)
+    std::unique_ptr<results_io_type> _results_io)
     : system(_system),
       state_generator(std::move(_state_generator)),
       sampling_functions(_sampling_functions),
       sampling_params(_sampling_params),
       completion_check_params(_completion_check_params),
-      results_io(std::move(_results_io)),
-      random_number_generator(_random_number_generator) {}
+      results_io(std::move(_results_io)) {}
 
 /// \brief Run canonical Monte Carlo calculations
 void run(InputData &input_data) {
@@ -37,9 +35,11 @@ void run(InputData &input_data) {
   // - This object checks for min/max cutoffs and automatic convergence
   monte::CompletionCheck completion_check(input_data.completion_check_params);
 
+  // Default construct an empty random number generator ptr
+  auto random_number_engine = std::make_shared<std::mt19937_64>();
+
   run(input_data.system, *input_data.state_generator, state_sampler,
-      completion_check, *input_data.results_io,
-      input_data.random_number_generator);
+      completion_check, *input_data.results_io, random_number_engine);
 }
 
 }  // namespace canonical

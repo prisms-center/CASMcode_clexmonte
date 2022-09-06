@@ -8,6 +8,7 @@
 #include "casm/clexmonte/system/System.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/Conversions.hh"
+#include "casm/monte/RandomNumberGenerator.hh"
 #include "casm/monte/events/OccCandidate.hh"
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/events/OccLocation.hh"
@@ -100,7 +101,7 @@ TEST_F(state_StateSamplerTest, Test1) {
     std::vector<int> new_occ;
     double beta =
         1.0 / (CASM::KB * state.conditions.scalar_values.at("temperature"));
-    MTRand random_number_generator;
+    monte::RandomNumberGenerator<std::mt19937_64> random_number_generator;
 
     while (state_sampler.pass < 100) {
       propose_canonical_event(event, occ_location, canonical_swaps,

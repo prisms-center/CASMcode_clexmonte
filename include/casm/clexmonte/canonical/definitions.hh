@@ -6,8 +6,6 @@
 
 #include "casm/monte/definitions.hh"
 
-class MTRand;
-
 namespace CASM {
 
 namespace composition {

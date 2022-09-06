@@ -281,8 +281,8 @@ TEST(canonical_fullrun_test, Test1) {
       write_observations  // bool
   );
 
-  // ### Construct MTRand
-  MTRand random_number_generator;
+  // ### Random number generator engine pointer (empty)
+  std::shared_ptr<std::mt19937_64> random_number_engine;
 
   // ~~~~ Run ~~~~
 
@@ -309,7 +309,7 @@ TEST(canonical_fullrun_test, Test1) {
       state_sampler,            // monte::StateSampler<config_type> &
       completion_check,         // monte::CompletionCheck &
       results_io,               // clexmonte::canonical::results_io_type &
-      random_number_generator,  // MTRand
+      random_number_engine,     // monte::RandomNumberGenerator<EngineType>
       method_log);
 
   // check output files
