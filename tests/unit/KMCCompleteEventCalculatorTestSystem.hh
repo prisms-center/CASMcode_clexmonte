@@ -10,7 +10,7 @@ class KMCCompleteEventCalculatorTestSystem
     : public KMCCompleteEventListTestSystem {
  public:
   std::shared_ptr<clexmonte::Conditions> conditions;
-  std::vector<clexmonte::kmc::PrimEventCalculator> prim_event_calculators;
+  std::vector<clexmonte::kmc::EventStateCalculator> prim_event_calculators;
   std::shared_ptr<clexmonte::kmc::CompleteEventCalculator> event_calculator;
 
   KMCCompleteEventCalculatorTestSystem() : KMCCompleteEventListTestSystem() {}

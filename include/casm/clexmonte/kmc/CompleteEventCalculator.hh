@@ -3,7 +3,7 @@
 
 #include "casm/clexmonte/events/event_data.hh"
 #include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
-#include "casm/clexmonte/kmc/PrimEventCalculator.hh"
+#include "casm/clexmonte/kmc/EventStateCalculator.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -19,7 +19,7 @@ struct CompleteEventCalculator {
   std::vector<PrimEventData> const &prim_event_list;
 
   /// \brief Prim event calculators - order must match prim_event_list
-  std::vector<PrimEventCalculator> const &prim_event_calculators;
+  std::vector<EventStateCalculator> const &prim_event_calculators;
 
   /// \brief Complete event list
   std::map<EventID, EventData> const &event_list;
@@ -35,7 +35,7 @@ struct CompleteEventCalculator {
 
   CompleteEventCalculator(
       std::vector<PrimEventData> const &_prim_event_list,
-      std::vector<PrimEventCalculator> const &_prim_event_calculators,
+      std::vector<EventStateCalculator> const &_prim_event_calculators,
       std::map<EventID, EventData> const &_event_list,
       Log &_event_log = CASM::err_log())
       : prim_event_list(_prim_event_list),

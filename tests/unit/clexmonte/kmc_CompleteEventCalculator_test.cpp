@@ -54,7 +54,7 @@ TEST_F(kmc_CompleteEventCalculator_Test, Test1) {
           system->composition_converter, clexmonte::CorrCalculatorFunction(),
           CASM::TOL));
 
-  std::vector<kmc::PrimEventCalculator> prim_event_calculators =
+  std::vector<kmc::EventStateCalculator> prim_event_calculators =
       clexmonte::kmc::make_prim_event_calculators(*system, state,
                                                   prim_event_list, conditions);
   EXPECT_EQ(prim_event_calculators.size(), 24);

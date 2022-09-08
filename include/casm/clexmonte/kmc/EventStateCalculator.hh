@@ -1,5 +1,5 @@
-#ifndef CASM_clexmonte_kmc_PrimEventCalculator
-#define CASM_clexmonte_kmc_PrimEventCalculator
+#ifndef CASM_clexmonte_kmc_EventStateCalculator
+#define CASM_clexmonte_kmc_EventStateCalculator
 
 #include <memory>
 
@@ -15,12 +15,12 @@ namespace kmc {
 
 /// \brief Event rate calculation for a particular KMC event
 ///
-/// PrimEventCalculator is used to separate the event calculation from the
+/// EventStateCalculator is used to separate the event calculation from the
 /// event definition data in PrimEventData. All symmetrically equivalent
-/// events could use the same PrimEventCalculator, but a simple approach
+/// events can use the same EventStateCalculator, but a simple approach
 /// is to create one for each distinct event associated with the primitive
 /// cell.
-struct PrimEventCalculator {
+struct EventStateCalculator {
   std::shared_ptr<Conditions> conditions;
   std::shared_ptr<clexulator::ClusterExpansion> formation_energy_clex;
   std::shared_ptr<clexulator::MultiLocalClusterExpansion> event_clex;
@@ -29,7 +29,7 @@ struct PrimEventCalculator {
   Index freq_index;
 
   /// \brief Constructor
-  PrimEventCalculator(
+  EventStateCalculator(
       std::shared_ptr<Conditions> _conditions,
       std::shared_ptr<clexulator::ClusterExpansion> _formation_energy_clex,
       std::shared_ptr<clexulator::MultiLocalClusterExpansion> _event_clex,
@@ -51,7 +51,7 @@ struct PrimEventCalculator {
 /// \param _glossary Map of <key>:<index> giving the index in
 ///     `_event_clex` for the coefficients / resulting values for
 ///     kra (key="kra") and attempt frequency (key="freq") calculations.
-inline PrimEventCalculator::PrimEventCalculator(
+inline EventStateCalculator::EventStateCalculator(
     std::shared_ptr<Conditions> _conditions,
     std::shared_ptr<clexulator::ClusterExpansion> _formation_energy_clex,
     std::shared_ptr<clexulator::MultiLocalClusterExpansion> _event_clex,
@@ -63,14 +63,14 @@ inline PrimEventCalculator::PrimEventCalculator(
   auto _check_coeffs = [&](Index &coeff_index, std::string key) {
     if (!_glossary.count(key)) {
       std::stringstream ss;
-      ss << "Error constructing " << name << " PrimEventCalculator: No " << key
+      ss << "Error constructing " << name << " EventStateCalculator: No " << key
          << " cluster expansion";
       throw std::runtime_error(ss.str());
     }
     coeff_index = _glossary.at(key);
     if (coeff_index < 0 || coeff_index >= event_clex->coefficients().size()) {
       std::stringstream ss;
-      ss << "Error constructing " << name << " PrimEventCalculator: " << key
+      ss << "Error constructing " << name << " EventStateCalculator: " << key
          << " index out of range";
       throw std::runtime_error(ss.str());
     }
@@ -91,7 +91,7 @@ inline PrimEventCalculator::PrimEventCalculator(
 /// \param event_data Holds information about the event that does not
 ///     depend on the particular translational instance, such as the
 ///     initial and final occupation variables.
-inline void PrimEventCalculator::calculate_event_state(
+inline void EventStateCalculator::calculate_event_state(
     EventState &state, EventData const &event_data,
     PrimEventData const &prim_event_data) const {
   clexulator::ConfigDoFValues const *dof_values = formation_energy_clex->get();
@@ -126,13 +126,14 @@ inline void PrimEventCalculator::calculate_event_state(
   state.rate = state.freq * exp(-conditions->beta * state.dE_activated);
 }
 
-/// \brief Construct PrimEventCalculator list
+/// \brief Construct a vector EventStateCalculator, one per event in a
+///     vector of PrimEventData
 template <typename SystemType>
-std::vector<kmc::PrimEventCalculator> make_prim_event_calculators(
+std::vector<kmc::EventStateCalculator> make_prim_event_calculators(
     SystemType &system, monte::State<clexmonte::Configuration> const &state,
     std::vector<PrimEventData> const &prim_event_list,
     std::shared_ptr<Conditions> conditions) {
-  std::vector<kmc::PrimEventCalculator> prim_event_calculators;
+  std::vector<kmc::EventStateCalculator> prim_event_calculators;
   for (auto const &prim_event_data : prim_event_list) {
     LocalMultiClexData event_local_multiclex_data =
         get_local_multiclex_data(system, prim_event_data.event_type_name);

@@ -1,6 +1,6 @@
 #include "KMCCompleteEventListTestSystem.hh"
 #include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
-#include "casm/clexmonte/kmc/PrimEventCalculator.hh"
+#include "casm/clexmonte/kmc/EventStateCalculator.hh"
 #include "gtest/gtest.h"
 #include "teststructures.hh"
 
@@ -11,7 +11,7 @@ using namespace CASM;
 ///   that the Clexulators do not need to be re-compiled.
 /// - To clear existing data, remove the directory:
 //    CASM_test_projects/FCCBinaryVacancy_default directory
-class kmc_PrimEventCalculator_Test : public KMCCompleteEventListTestSystem {};
+class kmc_EventStateCalculator_Test : public KMCCompleteEventListTestSystem {};
 
 /// \brief Test constructing event lists and calculating initial event states
 ///
@@ -19,7 +19,7 @@ class kmc_PrimEventCalculator_Test : public KMCCompleteEventListTestSystem {};
 /// - FCC A-B-Va, 1NN interactions, A-Va and B-Va hops
 /// - 10 x 10 x 10 (of the conventional 4-atom cell)
 /// - expected runtime ~5s
-TEST_F(kmc_PrimEventCalculator_Test, Test1) {
+TEST_F(kmc_EventStateCalculator_Test, Test1) {
   using namespace clexmonte;
   // --- State setup ---
 
@@ -54,7 +54,7 @@ TEST_F(kmc_PrimEventCalculator_Test, Test1) {
           system->composition_converter, clexmonte::CorrCalculatorFunction(),
           CASM::TOL));
 
-  std::vector<kmc::PrimEventCalculator> prim_event_calculators =
+  std::vector<kmc::EventStateCalculator> prim_event_calculators =
       clexmonte::kmc::make_prim_event_calculators(*system, state,
                                                   prim_event_list, conditions);
   EXPECT_EQ(prim_event_calculators.size(), 24);
