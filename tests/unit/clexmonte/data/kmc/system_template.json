@@ -46,10 +46,10 @@
       "_multiclex": {
         "<name>": {
           "basis_set": "formation_energy",
-          "coefficients": [
-            "<path>",
-            "<path>"
-          ]
+          "coefficients": {
+            "<key>": "<path>",
+            "<key>": "<path>"
+          }
         }
       },
       "_local_clex": {
@@ -61,18 +61,20 @@
       "_local_multiclex": {
         "<name>": {
           "local_basis_set": "formation_energy",
-          "coefficients": [
-            "<path>",
-            "<path>"
-          ]
+          "coefficients": {
+            "<key>": "<path>",
+            "<key>": "<path>"
+          }
         }
       },
       "_events": {
         "<name>": {
           "event": "/path/to/event.json",
           "local_basis_set": "<name>",
-          "kra_coefficients": "<path>",
-          "freq_coefficients": "<path>"
+          "coefficients": {
+            "kra": "<path>",
+            "freq": "<path>"
+          }
         }
       },
       "_event_system": "events/event_system.json"

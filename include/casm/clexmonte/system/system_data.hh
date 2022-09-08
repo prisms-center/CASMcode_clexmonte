@@ -49,6 +49,9 @@ struct MultiClexData {
   std::string basis_set_name;
   std::vector<clexulator::SparseCoefficients> coefficients;
   BasisSetClusterInfo cluster_info;
+
+  /// \brief Map of key ("kra", "freq", etc.) to coefficients index
+  std::map<std::string, Index> coefficients_glossary;
 };
 
 /// \brief Info on local cluster expansion basis sets
@@ -106,9 +109,10 @@ struct LocalClexData {
 struct LocalMultiClexData {
   std::string local_basis_set_name;
   std::vector<clexulator::SparseCoefficients> coefficients;
-};
 
-enum class EVENT_CLEX_INDEX : unsigned long { KRA = 0, FREQ = 1 };
+  /// \brief Map of key ("kra", "freq", etc.) to coefficients index
+  std::map<std::string, Index> coefficients_glossary;
+};
 
 /// \brief KMC event data
 ///
@@ -136,10 +140,7 @@ struct OccEventTypeData {
   /// `occevent_symgroup_rep` is a representation of the prim factor group.
   std::vector<occ_events::OccEvent> events;
 
-  /// \brief The name of the local_multiclex used for:
-  /// - the KRA (in coefficients[EVENT_CLEX_INDEX::KRA])
-  /// - the attempt frequency (in coefficients[EVENT_CLEX_INDEX::FREQ])
-  ///
+  /// \brief The name of the local_multiclex used for event properties
   std::string local_multiclex_name;
 };
 

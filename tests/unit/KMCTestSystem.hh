@@ -187,8 +187,8 @@ class KMCTestSystem : public testing::Test {
     auto &j = json["kwargs"]["system"]["events"][event_name];
     j["event"] = (test_data_dir / event_relpath).string();
     j["local_basis_set"] = event_name;
-    j["kra_coefficients"] = (test_data_dir / kra_eci_relpath).string();
-    j["freq_coefficients"] = (test_data_dir / freq_eci_relpath).string();
+    j["coefficients"]["kra"] = (test_data_dir / kra_eci_relpath).string();
+    j["coefficients"]["freq"] = (test_data_dir / freq_eci_relpath).string();
   }
 
   void write_input() { json.write(test_dir / "input.json"); }

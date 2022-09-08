@@ -20,21 +20,23 @@ namespace {
 
 /// \brief Parse
 template <typename ParserType, typename RequiredType>
-bool parse_from_files_array(ParserType &parser, fs::path option,
-                            std::vector<RequiredType> &vec) {
-  auto array_it = parser.self.find(option);
-  if (array_it == parser.self.end() || !array_it->is_array()) {
-    parser.insert_error(option, "Missing required array");
+bool parse_from_files_object(ParserType &parser, fs::path option,
+                             std::vector<RequiredType> &vec,
+                             std::map<std::string, Index> &glossary) {
+  auto obj_it = parser.self.find(option);
+  if (obj_it == parser.self.end() || !obj_it->is_obj()) {
+    parser.insert_error(option, "Missing required JSON object");
     return false;
   }
   Index i = 0;
-  for (auto it = array_it->begin(); it != array_it->end(); ++it) {
+  for (auto it = obj_it->begin(); it != obj_it->end(); ++it) {
     auto subparser = parser.template subparse_from_file<RequiredType>(
         option / std::to_string(i));
     if (!subparser->valid()) {
       return false;
     }
     vec.push_back(std::move(*subparser->value));
+    glossary.emplace(it.name(), i);
     ++i;
   }
   return true;
@@ -76,8 +78,8 @@ bool parse_and_validate_basis_set_name(ParserType &parser, fs::path option,
 /// - event : occ_events::OccEvent file path
 /// - local_basis_set: name (matching one in System::local_basis_sets /
 /// equivalents_info)
-/// - kra_coefficients: SparseCoefficients file path
-/// - freq_coefficients: SparseCoefficients file path
+/// - coefficients/kra: SparseCoefficients file path
+/// - coefficients/freq: SparseCoefficients file path
 template <typename ParserType>
 bool parse_event(
     ParserType &parser, fs::path option,
@@ -92,24 +94,34 @@ bool parse_event(
     occ_events::OccSystem const &event_system) {
   std::string event_name = option.filename();
 
-  // --- Create a local multi-cluster expansion for the event type ---
-  LocalMultiClexData curr_local_multiclex;
-  curr_local_multiclex.coefficients.resize(2);
-
-  // parse "kra_coefficients"
-  if (!parse_from_file(
-          parser, option / "kra_coefficients",
-          curr_local_multiclex.coefficients[static_cast<unsigned long>(
-              EVENT_CLEX_INDEX::KRA)])) {
+  auto coeffs_it = parser.self.find_at(option / "coefficients");
+  if (coeffs_it == parser.self.end()) {
+    parser.insert_error(option / "coefficients",
+                        "Missing coefficients info for this local basis set");
     return false;
   }
-
-  // parse "freq_coefficients"
-  if (!parse_from_file(
-          parser, option / "freq_coefficients",
-          curr_local_multiclex.coefficients[static_cast<unsigned long>(
-              EVENT_CLEX_INDEX::FREQ)])) {
+  if (!coeffs_it->is_obj()) {
+    parser.insert_error(
+        option / "coefficients",
+        "Coefficients info must be a JSON object of <key>:<file path>");
     return false;
+  }
+  Index coeffs_size = coeffs_it->size();
+
+  // --- Create a local multi-cluster expansion for the event type ---
+  LocalMultiClexData curr_local_multiclex;
+  curr_local_multiclex.coefficients.resize(coeffs_size);
+
+  // parse option / "coefficients" / <name> : <coefficients file path>
+  Index i = 0;
+  for (auto it = coeffs_it->begin(); it != coeffs_it->end(); ++it) {
+    std::string key = it.name();
+    if (!parse_from_file(parser, option / "coefficients" / key,
+                         curr_local_multiclex.coefficients[i])) {
+      return false;
+    }
+    curr_local_multiclex.coefficients_glossary.emplace(key, i);
+    ++i;
   }
 
   // parse and validate "local_basis_set"
@@ -288,8 +300,9 @@ void parse(InputParser<System> &parser) {
       }
 
       // "multiclex"/<name>/"coefficients"
-      if (!parse_from_files_array(parser, clex_path / "coefficients",
-                                  curr.coefficients)) {
+      if (!parse_from_files_object(parser, clex_path / "coefficients",
+                                   curr.coefficients,
+                                   curr.coefficients_glossary)) {
         continue;
       }
 
@@ -350,8 +363,9 @@ void parse(InputParser<System> &parser) {
       }
 
       // "local_multiclex"/<name>/"coefficients"
-      if (!parse_from_files_array(parser, clex_path / "coefficients",
-                                  curr.coefficients)) {
+      if (!parse_from_files_object(parser, clex_path / "coefficients",
+                                   curr.coefficients,
+                                   curr.coefficients_glossary)) {
         continue;
       }
 
