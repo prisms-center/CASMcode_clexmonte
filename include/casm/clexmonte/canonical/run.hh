@@ -31,14 +31,16 @@ namespace canonical {
 
 /// \brief Run canonical Monte Carlo calculations
 template <typename EngineType>
-void run(std::shared_ptr<system_type> const &system,
-         state_generator_type &state_generator,
-         monte::StateSampler<config_type> &state_sampler,
-         monte::CompletionCheck &completion_check,
-         monte::ResultsIO<config_type> &results_io,
-         std::shared_ptr<EngineType> &random_number_engine =
-             std::shared_ptr<EngineType>(),
-         monte::MethodLog method_log = monte::MethodLog());
+void run(
+    std::shared_ptr<system_type> const &system,
+    state_generator_type &state_generator,
+    monte::StateSampler<config_type> &state_sampler,
+    monte::CompletionCheck &completion_check,
+    monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
+    monte::ResultsIO<config_type> &results_io,
+    std::shared_ptr<EngineType> &random_number_engine =
+        std::shared_ptr<EngineType>(),
+    monte::MethodLog method_log = monte::MethodLog());
 
 // --- Implementation ---
 
@@ -65,13 +67,15 @@ void run(std::shared_ptr<system_type> const &system,
 ///   The intensive potential energy (eV / unit cell).
 ///
 template <typename EngineType>
-void run(std::shared_ptr<system_type> const &system,
-         state_generator_type &state_generator,
-         monte::StateSampler<config_type> &state_sampler,
-         monte::CompletionCheck &completion_check,
-         monte::ResultsIO<config_type> &results_io,
-         std::shared_ptr<EngineType> &random_number_engine,
-         monte::MethodLog method_log) {
+void run(
+    std::shared_ptr<system_type> const &system,
+    state_generator_type &state_generator,
+    monte::StateSampler<config_type> &state_sampler,
+    monte::CompletionCheck &completion_check,
+    monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
+    monte::ResultsIO<config_type> &results_io,
+    std::shared_ptr<EngineType> &random_number_engine,
+    monte::MethodLog method_log) {
   auto &log = CASM::log();
   log.begin("Cluster expansion canonical Monte Carlo");
 
@@ -89,8 +93,8 @@ void run(std::shared_ptr<system_type> const &system,
 
   // For all states generated, prepare input and run canonical Monte Carlo
   while (!state_generator.is_complete(final_states)) {
-    log.indent() << "Generating next initial state..." << std::endl;
     // Get initial state for the next calculation
+    log.indent() << "Generating next initial state..." << std::endl;
     state_type initial_state = state_generator.next_state(final_states);
     log.indent() << to_json(initial_state.conditions) << std::endl;
     log.indent() << "Done" << std::endl;
@@ -99,17 +103,17 @@ void run(std::shared_ptr<system_type> const &system,
     CanonicalPotential potential(
         get_clex(*system, initial_state, "formation_energy"));
 
-    // Prepare canonical swaps -- currently all allowed, but could be selected
-    monte::Conversions convert = get_index_conversions(*system, initial_state);
+    // Get supercell-specific index conversions and candidate list
+    monte::Conversions const &convert =
+        get_index_conversions(*system, initial_state);
     monte::OccCandidateList const &occ_candidate_list =
         get_occ_candidate_list(*system, initial_state);
+
+    // Enforce mol_composition
+    log.indent() << "Enforcing composition..." << std::endl;
     monte::OccLocation occ_location(convert, occ_candidate_list);
-    std::vector<monte::OccSwap> canonical_swaps =
-        make_canonical_swaps(convert, occ_candidate_list);
     std::vector<monte::OccSwap> grand_canonical_swaps =
         make_grand_canonical_swaps(convert, occ_candidate_list);
-
-    log.indent() << "Enforcing composition..." << std::endl;
     enforce_composition(
         get_occupation(initial_state),
         initial_state.conditions.vector_values.at("mol_composition"),
@@ -117,13 +121,17 @@ void run(std::shared_ptr<system_type> const &system,
         occ_location, random_number_generator);
     log.indent() << "Done" << std::endl;
 
+    // Prepare canonical swaps -- currently all allowed, but could be selected
+    std::vector<monte::OccSwap> canonical_swaps =
+        make_canonical_swaps(convert, occ_candidate_list);
+
     // Run Monte Carlo at a single condition
     log.indent() << "Performing Run " << final_states.size() + 1 << "..."
                  << std::endl;
     results_type result = monte::occupation_metropolis(
         initial_state, potential, convert, canonical_swaps,
         monte::propose_canonical_event<generator_type>, random_number_generator,
-        state_sampler, completion_check, method_log);
+        state_sampler, completion_check, analysis_functions, method_log);
     log.indent() << "Run " << final_states.size() + 1 << " Done" << std::endl;
 
     // Store final state for state generation input

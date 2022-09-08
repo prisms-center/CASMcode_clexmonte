@@ -14,13 +14,15 @@ namespace clexmonte {
 template <typename ConfigType>
 void parse(
     InputParser<monte::ResultsIO<ConfigType>> &parser,
-    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions);
+    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions,
+    monte::ResultsAnalysisFunctionMap<ConfigType> const &analysis_functions);
 
 /// \brief Construct jsonResultsIO from JSON
 template <typename ConfigType>
 void parse(
     InputParser<monte::jsonResultsIO<ConfigType>> &parser,
-    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions);
+    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions,
+    monte::ResultsAnalysisFunctionMap<ConfigType> const &analysis_functions);
 
 }  // namespace clexmonte
 }  // namespace CASM

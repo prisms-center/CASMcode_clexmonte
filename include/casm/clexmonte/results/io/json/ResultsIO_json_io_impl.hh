@@ -32,11 +32,12 @@ namespace clexmonte {
 template <typename ConfigType>
 void parse(
     InputParser<monte::ResultsIO<ConfigType>> &parser,
-    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions) {
+    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions,
+    monte::ResultsAnalysisFunctionMap<ConfigType> const &analysis_functions) {
   PolymorphicParserFactory<monte::ResultsIO<ConfigType>> f;
-  parse_polymorphic_method(parser,
-                           {f.template make<monte::jsonResultsIO<ConfigType>>(
-                               "json", sampling_functions)});
+  parse_polymorphic_method(
+      parser, {f.template make<monte::jsonResultsIO<ConfigType>>(
+                  "json", sampling_functions, analysis_functions)});
 }
 
 /// \brief Construct jsonResultsIO from JSON
@@ -62,7 +63,8 @@ void parse(
 template <typename ConfigType>
 void parse(
     InputParser<monte::jsonResultsIO<ConfigType>> &parser,
-    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions) {
+    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions,
+    monte::ResultsAnalysisFunctionMap<ConfigType> const &analysis_functions) {
   std::string output_dir;
   parser.require(output_dir, "output_dir");
 
@@ -74,7 +76,8 @@ void parse(
 
   if (parser.valid()) {
     parser.value = std::make_unique<monte::jsonResultsIO<ConfigType>>(
-        output_dir, sampling_functions, write_trajectory, write_observations);
+        output_dir, sampling_functions, analysis_functions, write_trajectory,
+        write_observations);
   }
 }
 

@@ -13,12 +13,14 @@ InputData::InputData(
     monte::StateSamplingFunctionMap<config_type> const &_sampling_functions,
     monte::SamplingParams const &_sampling_params,
     monte::CompletionCheckParams const &_completion_check_params,
+    monte::ResultsAnalysisFunctionMap<config_type> const &_analysis_functions,
     std::unique_ptr<results_io_type> _results_io)
     : system(_system),
       state_generator(std::move(_state_generator)),
       sampling_functions(_sampling_functions),
       sampling_params(_sampling_params),
       completion_check_params(_completion_check_params),
+      analysis_functions(_analysis_functions),
       results_io(std::move(_results_io)) {}
 
 /// \brief Run canonical Monte Carlo calculations
@@ -39,7 +41,8 @@ void run(InputData &input_data) {
   auto random_number_engine = std::make_shared<std::mt19937_64>();
 
   run(input_data.system, *input_data.state_generator, state_sampler,
-      completion_check, *input_data.results_io, random_number_engine);
+      completion_check, input_data.analysis_functions, *input_data.results_io,
+      random_number_engine);
 }
 
 }  // namespace canonical

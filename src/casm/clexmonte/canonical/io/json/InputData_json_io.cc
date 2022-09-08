@@ -183,6 +183,8 @@ void parse(InputParser<InputData> &parser) {
   monte::StateSamplingFunctionMap<config_type> sampling_functions =
       make_sampling_functions(system, canonical_tag());
 
+  monte::ResultsAnalysisFunctionMap<config_type> analysis_functions;
+
   // Construct state generator
   auto state_generator_subparser = parser.subparse<state_generator_type>(
       "state_generation", system, sampling_functions, canonical_tag());
@@ -202,14 +204,14 @@ void parse(InputParser<InputData> &parser) {
                                                     sampling_functions);
 
   // Construct results I/O instance
-  auto results_io_subparser =
-      parser.subparse<results_io_type>("results_io", sampling_functions);
+  auto results_io_subparser = parser.subparse<results_io_type>(
+      "results_io", sampling_functions, analysis_functions);
 
   if (parser.valid()) {
     parser.value = std::make_unique<InputData>(
         system, std::move(state_generator_subparser->value), sampling_functions,
         *sampling_params_subparser->value,
-        *completion_check_params_subparser->value,
+        *completion_check_params_subparser->value, analysis_functions,
         std::move(results_io_subparser->value));
   }
 }

@@ -13,6 +13,7 @@
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/crystallography/io/BasicStructureIO.hh"
 #include "casm/monte/MethodLog.hh"
+#include "casm/monte/results/ResultsAnalysisFunction.hh"
 #include "casm/monte/results/io/json/jsonResultsIO_impl.hh"
 #include "casm/monte/state/FixedConfigGenerator.hh"
 #include "casm/monte/state/StateSampler.hh"
@@ -270,6 +271,10 @@ TEST(canonical_fullrun_test, Test1) {
   // completion_check_params.check_begin = 10; // default=10
   completion_check_params.check_frequency = 10;  // default=1
 
+  // ### Construct analysis_functions (TODO)
+  monte::ResultsAnalysisFunctionMap<clexmonte::Configuration>
+      analysis_functions;
+
   // ### Construct monte::jsonResultsIO
   fs::path output_dir = test_dir / output_dir_relpath;
   bool write_trajectory = true;
@@ -277,6 +282,7 @@ TEST(canonical_fullrun_test, Test1) {
   monte::jsonResultsIO<clexmonte::Configuration> results_io(
       output_dir,          // fs::path,
       sampling_functions,  // monte::StateSamplingFunctionMap<clexmonte::Configuration>
+      analysis_functions,  // monte::ResultsAnalysisFunctionMap<clexmonte::Configuration>
       write_trajectory,   // bool
       write_observations  // bool
   );
@@ -304,12 +310,14 @@ TEST(canonical_fullrun_test, Test1) {
   method_log.log_frequency = 60;  // seconds
 
   clexmonte::canonical::run(
-      system,                   // std::shared_ptr<System>
-      state_generator,          // clexmonte::canonical::state_generator_type &
-      state_sampler,            // monte::StateSampler<config_type> &
-      completion_check,         // monte::CompletionCheck &
-      results_io,               // clexmonte::canonical::results_io_type &
-      random_number_engine,     // monte::RandomNumberGenerator<EngineType>
+      system,                // std::shared_ptr<System>
+      state_generator,       // clexmonte::canonical::state_generator_type &
+      state_sampler,         // monte::StateSampler<config_type> &
+      completion_check,      // monte::CompletionCheck &
+      analysis_functions,    // monte::ResultsAnalysisFunctionMap<config_type>
+                             // const &
+      results_io,            // clexmonte::canonical::results_io_type &
+      random_number_engine,  // monte::RandomNumberGenerator<EngineType>
       method_log);
 
   // check output files

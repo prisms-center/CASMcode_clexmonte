@@ -5,6 +5,7 @@
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/checks/CompletionCheck.hh"
+#include "casm/monte/results/ResultsAnalysisFunction.hh"
 #include "casm/monte/results/io/ResultsIO.hh"
 #include "casm/monte/sampling/SamplingParams.hh"
 #include "casm/monte/state/IncrementalConditionsStateGenerator.hh"
@@ -25,6 +26,7 @@ struct InputData {
       monte::StateSamplingFunctionMap<config_type> const &_sampling_functions,
       monte::SamplingParams const &_sampling_params,
       monte::CompletionCheckParams const &_completion_check_params,
+      monte::ResultsAnalysisFunctionMap<config_type> const &_analysis_functions,
       std::unique_ptr<results_io_type> _results_io);
 
   /// System information:
@@ -44,6 +46,9 @@ struct InputData {
 
   /// Completion check params
   monte::CompletionCheckParams completion_check_params;
+
+  /// Results analysis functions
+  monte::ResultsAnalysisFunctionMap<config_type> analysis_functions;
 
   /// Results I/O implementation
   std::unique_ptr<results_io_type> results_io;
