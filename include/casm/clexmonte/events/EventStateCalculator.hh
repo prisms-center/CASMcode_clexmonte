@@ -1,5 +1,5 @@
-#ifndef CASM_clexmonte_kmc_EventStateCalculator
-#define CASM_clexmonte_kmc_EventStateCalculator
+#ifndef CASM_clexmonte_events_EventStateCalculator
+#define CASM_clexmonte_events_EventStateCalculator
 
 #include <memory>
 
@@ -11,7 +11,6 @@
 
 namespace CASM {
 namespace clexmonte {
-namespace kmc {
 
 /// \brief Event rate calculation for a particular KMC event
 ///
@@ -129,11 +128,11 @@ inline void EventStateCalculator::calculate_event_state(
 /// \brief Construct a vector EventStateCalculator, one per event in a
 ///     vector of PrimEventData
 template <typename SystemType>
-std::vector<kmc::EventStateCalculator> make_prim_event_calculators(
+std::vector<EventStateCalculator> make_prim_event_calculators(
     SystemType &system, monte::State<clexmonte::Configuration> const &state,
     std::vector<PrimEventData> const &prim_event_list,
     std::shared_ptr<Conditions> conditions) {
-  std::vector<kmc::EventStateCalculator> prim_event_calculators;
+  std::vector<EventStateCalculator> prim_event_calculators;
   for (auto const &prim_event_data : prim_event_list) {
     LocalMultiClexData event_local_multiclex_data =
         get_local_multiclex_data(system, prim_event_data.event_type_name);
@@ -146,7 +145,6 @@ std::vector<kmc::EventStateCalculator> make_prim_event_calculators(
   return prim_event_calculators;
 }
 
-}  // namespace kmc
 }  // namespace clexmonte
 }  // namespace CASM
 

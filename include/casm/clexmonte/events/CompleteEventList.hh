@@ -1,5 +1,5 @@
-#ifndef CASM_clexmonte_kmc_CompleteEventList
-#define CASM_clexmonte_kmc_CompleteEventList
+#ifndef CASM_clexmonte_events_CompleteEventList
+#define CASM_clexmonte_events_CompleteEventList
 
 #include <map>
 #include <vector>
@@ -13,7 +13,6 @@ class OccLocation;
 }
 
 namespace clexmonte {
-namespace kmc {
 
 struct CompleteEventList {
   std::map<EventID, std::vector<EventID>> impact_table;
@@ -29,7 +28,6 @@ CompleteEventList make_complete_event_list(
 std::vector<EventID> make_complete_event_id_list(
     Index n_unitcells, std::vector<PrimEventData> const &prim_event_list);
 
-}  // namespace kmc
 }  // namespace clexmonte
 }  // namespace CASM
 

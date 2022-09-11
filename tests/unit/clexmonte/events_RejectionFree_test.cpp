@@ -1,7 +1,7 @@
 #include "KMCCompleteEventCalculatorTestSystem.hh"
+#include "casm/clexmonte/events/CompleteEventCalculator.hh"
 #include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
-#include "casm/clexmonte/kmc/CompleteEventCalculator.hh"
-#include "casm/clexmonte/kmc/lotto.hh"
+#include "casm/clexmonte/events/lotto.hh"
 #include "gtest/gtest.h"
 #include "teststructures.hh"
 
@@ -12,7 +12,8 @@ using namespace CASM;
 ///   that the Clexulators do not need to be re-compiled.
 /// - To clear existing data, remove the directory:
 //    CASM_test_projects/FCCBinaryVacancy_default directory
-class kmc_RejectionFree_Test : public KMCCompleteEventCalculatorTestSystem {};
+class events_RejectionFree_Test : public KMCCompleteEventCalculatorTestSystem {
+};
 
 /// \brief Test constructing event lists and calculating initial event states
 ///
@@ -20,7 +21,7 @@ class kmc_RejectionFree_Test : public KMCCompleteEventCalculatorTestSystem {};
 /// - FCC A-B-Va, 1NN interactions, A-Va and B-Va hops
 /// - 10 x 10 x 10 (of the conventional 4-atom cell)
 /// - expected runtime ~8s
-TEST_F(kmc_RejectionFree_Test, Test1) {
+TEST_F(events_RejectionFree_Test, Test1) {
   using namespace clexmonte;
 
   // --- State setup ---
@@ -48,8 +49,7 @@ TEST_F(kmc_RejectionFree_Test, Test1) {
   // Make selector
   lotto::RejectionFreeEventSelector selector(
       event_calculator,
-      clexmonte::kmc::make_complete_event_id_list(T.determinant(),
-                                                  prim_event_list),
+      clexmonte::make_complete_event_id_list(T.determinant(), prim_event_list),
       event_list.impact_table);
 
   // Run

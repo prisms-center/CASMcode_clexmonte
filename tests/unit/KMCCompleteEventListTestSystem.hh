@@ -2,8 +2,8 @@
 #define CASM_unittest_KMCCompleteEventListTestSystem
 
 #include "KMCTestSystem.hh"
+#include "casm/clexmonte/events/CompleteEventList.hh"
 #include "casm/clexmonte/events/event_methods.hh"
-#include "casm/clexmonte/kmc/CompleteEventList.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/monte/events/OccLocation.hh"
 
@@ -15,7 +15,7 @@ class KMCCompleteEventListTestSystem : public KMCTestSystem {
   std::vector<clexmonte::EventImpactInfo> prim_impact_info_list;
 
   std::unique_ptr<monte::OccLocation> occ_location;
-  clexmonte::kmc::CompleteEventList event_list;
+  clexmonte::CompleteEventList event_list;
 
   KMCCompleteEventListTestSystem() : KMCTestSystem() {}
 
@@ -46,7 +46,7 @@ class KMCCompleteEventListTestSystem : public KMCTestSystem {
         get_occ_candidate_list(*system, state));
     occ_location->initialize(get_occupation(state));
 
-    event_list = clexmonte::kmc::make_complete_event_list(
+    event_list = clexmonte::make_complete_event_list(
         prim_event_list, prim_impact_info_list, *occ_location);
   }
 };

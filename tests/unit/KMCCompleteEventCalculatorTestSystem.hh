@@ -2,7 +2,7 @@
 #define CASM_unittest_KMCCompleteEventCalculatorTestSystem
 
 #include "KMCCompleteEventListTestSystem.hh"
-#include "casm/clexmonte/kmc/CompleteEventCalculator.hh"
+#include "casm/clexmonte/events/CompleteEventCalculator.hh"
 
 using namespace CASM;
 
@@ -10,8 +10,8 @@ class KMCCompleteEventCalculatorTestSystem
     : public KMCCompleteEventListTestSystem {
  public:
   std::shared_ptr<clexmonte::Conditions> conditions;
-  std::vector<clexmonte::kmc::EventStateCalculator> prim_event_calculators;
-  std::shared_ptr<clexmonte::kmc::CompleteEventCalculator> event_calculator;
+  std::vector<clexmonte::EventStateCalculator> prim_event_calculators;
+  std::shared_ptr<clexmonte::CompleteEventCalculator> event_calculator;
 
   KMCCompleteEventCalculatorTestSystem() : KMCCompleteEventListTestSystem() {}
 
@@ -46,13 +46,12 @@ class KMCCompleteEventCalculatorTestSystem
             system->composition_converter, clexmonte::CorrCalculatorFunction(),
             CASM::TOL));
 
-    prim_event_calculators = clexmonte::kmc::make_prim_event_calculators(
+    prim_event_calculators = clexmonte::make_prim_event_calculators(
         *system, state, prim_event_list, conditions);
 
     // Construct CompleteEventCalculator
-    event_calculator =
-        std::make_shared<clexmonte::kmc::CompleteEventCalculator>(
-            prim_event_list, prim_event_calculators, event_list.events);
+    event_calculator = std::make_shared<clexmonte::CompleteEventCalculator>(
+        prim_event_list, prim_event_calculators, event_list.events);
   }
 };
 

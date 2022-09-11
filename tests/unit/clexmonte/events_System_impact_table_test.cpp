@@ -2,8 +2,8 @@
 #include "gtest/gtest.h"
 
 // impact table & event lists
+#include "casm/clexmonte/events/CompleteEventList.hh"
 #include "casm/clexmonte/events/event_methods.hh"
-#include "casm/clexmonte/kmc/CompleteEventList.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/monte/events/OccLocation.hh"
 
@@ -18,7 +18,7 @@ using namespace CASM;
 ///   that the Clexulators do not need to be re-compiled.
 /// - To clear existing data, remove the directory:
 //    CASM_test_projects/FCCBinaryVacancy_default directory
-class kmc_impact_table_Test : public KMCTestSystem {
+class events_impact_table_Test : public KMCTestSystem {
   void print_impact_info(
       std::vector<clexmonte::EventImpactInfo> const &prim_impact_info_list) {
     jsonParser json;
@@ -35,7 +35,7 @@ class kmc_impact_table_Test : public KMCTestSystem {
 };
 
 /// \brief Impact neighborhood && Event lists test (FCC, 1NN interactions)
-TEST_F(kmc_impact_table_Test, Test1) {
+TEST_F(events_impact_table_Test, Test1) {
   std::vector<clexmonte::PrimEventData> prim_event_list =
       make_prim_event_list(*system);
   EXPECT_EQ(prim_event_list.size(), 24);
@@ -57,9 +57,8 @@ TEST_F(kmc_impact_table_Test, Test1) {
                                   get_occ_candidate_list(*system, state)};
   occ_location.initialize(get_occupation(state));
 
-  clexmonte::kmc::CompleteEventList event_list =
-      clexmonte::kmc::make_complete_event_list(
-          prim_event_list, prim_impact_info_list, occ_location);
+  clexmonte::CompleteEventList event_list = clexmonte::make_complete_event_list(
+      prim_event_list, prim_impact_info_list, occ_location);
   EXPECT_EQ(event_list.impact_table.size(), 1000 * 24);
 
   for (auto const &impacted : event_list.impact_table) {
@@ -76,7 +75,7 @@ TEST_F(kmc_impact_table_Test, Test1) {
 ///   - 10 * 4 (unaligned events)
 ///     + 1 * 3 (aligned reverse events)
 ///     + 1 * 2 (aligned equivalent events)
-TEST_F(kmc_impact_table_Test, Test2) {
+TEST_F(events_impact_table_Test, Test2) {
   clexulator::SparseCoefficients constant_eci;
   constant_eci.index = {0};
   constant_eci.value = {0.};
@@ -115,9 +114,8 @@ TEST_F(kmc_impact_table_Test, Test2) {
                                   get_occ_candidate_list(*system, state)};
   occ_location.initialize(get_occupation(state));
 
-  clexmonte::kmc::CompleteEventList event_list =
-      clexmonte::kmc::make_complete_event_list(
-          prim_event_list, prim_impact_info_list, occ_location);
+  clexmonte::CompleteEventList event_list = clexmonte::make_complete_event_list(
+      prim_event_list, prim_impact_info_list, occ_location);
   EXPECT_EQ(event_list.impact_table.size(), 1000 * 12);
 
   for (auto const &impacted : event_list.impact_table) {
@@ -127,7 +125,7 @@ TEST_F(kmc_impact_table_Test, Test2) {
 }
 
 // /// \brief Useful for big supercell tests
-// TEST_F(kmc_impact_table_Test, Test3) {
+// TEST_F(events_impact_table_Test, Test3) {
 //
 //   std::cout << "Construct prim event list... " << std::endl;
 //   std::vector<clexmonte::PrimEventData> prim_event_list =
@@ -164,8 +162,8 @@ TEST_F(kmc_impact_table_Test, Test2) {
 //
 //   Index vol = dim * dim * dim;
 //   std::cout << "Construct event list and impact table... " << std::endl;
-//   clexmonte::kmc::CompleteEventList event_list =
-//   clexmonte::kmc::make_complete_event_list(prim_event_list,
+//   clexmonte::CompleteEventList event_list =
+//   clexmonte::make_complete_event_list(prim_event_list,
 //   prim_impact_info_list, occ_location); std::cout << "  Done" << std::endl;
 //   EXPECT_EQ(event_list.impact_table.size(), vol * 24);
 //

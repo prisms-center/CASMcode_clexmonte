@@ -8,15 +8,15 @@ using namespace CASM;
 ///   that the Clexulators do not need to be re-compiled.
 /// - To clear existing data, remove the directory:
 //    CASM_test_projects/FCCBinaryVacancySystemJsonIOTest directory
-class kmc_FCCBinaryVacancySystemJsonIOTest : public KMCTestSystem {
+class system_FCCBinaryVacancySystemJsonIOTest : public KMCTestSystem {
  protected:
-  kmc_FCCBinaryVacancySystemJsonIOTest()
+  system_FCCBinaryVacancySystemJsonIOTest()
       : KMCTestSystem(
             "FCC_binary_vacancy", "FCCBinaryVacancySystemJsonIOTest",
             test::data_dir("clexmonte") / "kmc" / "system_template.json") {}
 };
 
-TEST_F(kmc_FCCBinaryVacancySystemJsonIOTest, Test1) {
+TEST_F(system_FCCBinaryVacancySystemJsonIOTest, Test1) {
   set_clex("formation_energy", "default", "formation_energy_eci.json");
 
   {

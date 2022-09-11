@@ -1,19 +1,21 @@
-#ifndef CASM_clexmonte_kmc_CompleteEventCalculator
-#define CASM_clexmonte_kmc_CompleteEventCalculator
+#ifndef CASM_clexmonte_events_CompleteEventCalculator
+#define CASM_clexmonte_events_CompleteEventCalculator
 
+#include "casm/clexmonte/events/EventStateCalculator.hh"
 #include "casm/clexmonte/events/event_data.hh"
 #include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
-#include "casm/clexmonte/kmc/EventStateCalculator.hh"
 
 namespace CASM {
 namespace clexmonte {
-namespace kmc {
 
-/// \brief Light-weight EventCalculator holds references to external data
-/// structures
+/// \brief CompleteEventCalculator is an event calculator with the required
+/// interface for the
+///     classes `lotto::RejectionFree` and `lotto::Rejection`.
 ///
 /// Notes:
 /// - Expected to be constructed as shared_ptr
+/// - Mostly holds references to external data structures
+/// - Stores one `EventState` which is used to perform the calculations
 struct CompleteEventCalculator {
   /// \brief Prim event list
   std::vector<PrimEventData> const &prim_event_list;
@@ -66,7 +68,6 @@ struct CompleteEventCalculator {
   }
 };
 
-}  // namespace kmc
 }  // namespace clexmonte
 }  // namespace CASM
 
