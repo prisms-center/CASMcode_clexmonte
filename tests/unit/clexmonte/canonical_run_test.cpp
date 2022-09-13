@@ -1,6 +1,10 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/canonical/io/InputData.hh"
-#include "casm/clexmonte/canonical/io/json/InputData_json_io.hh"
+#include "casm/clexmonte/canonical/functions.hh"
+#include "casm/clexmonte/canonical/run.hh"
+#include "casm/clexmonte/run/io/RunParams.hh"
+#include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
+#include "casm/clexmonte/system/System.hh"
+#include "casm/clexmonte/system/io/json/System_json_io.hh"
 #include "gtest/gtest.h"
 #include "misc.hh"
 #include "testdir.hh"
@@ -34,14 +38,43 @@ TEST(canonical_run_test, Test1) {
       (test_dir / output_dir_relpath).string();
 
   ParentInputParser parser(json);
-  auto subparser = parser.subparse<clexmonte::canonical::InputData>("kwargs");
-  std::runtime_error error_if_invalid{
-      "Error reading canonical Monte Carlo JSON input"};
-  report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
-  EXPECT_TRUE(subparser->valid());
 
-  clexmonte::canonical::InputData &input_data = *subparser->value;
-  clexmonte::canonical::run(input_data);
+  /// Parse and construct system
+  auto system_subparser =
+      parser.subparse<clexmonte::System>(fs::path("kwargs") / "system");
+  std::runtime_error system_error_if_invalid{
+      "Error reading canonical Monte Carlo system JSON input"};
+  report_and_throw_if_invalid(*system_subparser, CASM::log(),
+                              system_error_if_invalid);
+
+  std::shared_ptr<clexmonte::System> system(system_subparser->value.release());
+
+  /// Make sampling & analysis functions
+  auto sampling_functions =
+      clexmonte::canonical::make_sampling_functions(system);
+  auto analysis_functions =
+      clexmonte::canonical::make_analysis_functions(system);
+
+  /// Parse and construct RunParams
+  auto run_subparser = parser.subparse<clexmonte::RunParams>(
+      "kwargs", system, sampling_functions, analysis_functions);
+  std::runtime_error run_error_if_invalid{
+      "Error reading canonical Monte Carlo run JSON input"};
+  report_and_throw_if_invalid(*run_subparser, CASM::log(),
+                              run_error_if_invalid);
+  EXPECT_TRUE(run_subparser->valid());
+
+  clexmonte::RunParams &run_params = *run_subparser->value;
+
+  // ### Random number generator engine pointer (empty - will be seeded by
+  // random device)
+  std::shared_ptr<std::mt19937_64> random_number_engine;
+
+  clexmonte::canonical::run(
+      system, run_params.sampling_functions, run_params.analysis_functions,
+      *run_params.state_generator, run_params.sampling_params,
+      run_params.completion_check_params, *run_params.results_io,
+      random_number_engine);
 
   EXPECT_TRUE(fs::exists(test_dir / "output"));
   EXPECT_TRUE(fs::exists(test_dir / "output" / "summary.json"));

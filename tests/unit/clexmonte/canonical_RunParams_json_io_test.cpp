@@ -1,12 +1,15 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/canonical/io/InputData.hh"
-#include "casm/clexmonte/canonical/io/json/InputData_json_io.hh"
+#include "casm/clexmonte/canonical/functions.hh"
+#include "casm/clexmonte/run/io/RunParams.hh"
+#include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
+#include "casm/clexmonte/system/System.hh"
+#include "casm/clexmonte/system/io/json/System_json_io.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
 
 using namespace CASM;
 
-TEST(canonical_InputData_json_io_test, Test1) {
+TEST(canonical_RunParams_json_io_test, Test1) {
   fs::path test_data_dir = test::data_dir("clexmonte") / "Clex_ZrO_Occ";
   fs::path clexulator_src_relpath = fs::path("basis_sets") /
                                     "bset.formation_energy" /
@@ -15,7 +18,7 @@ TEST(canonical_InputData_json_io_test, Test1) {
   fs::path output_dir_relpath = "output";
 
   fs::path test_dir = fs::current_path() / "CASM_test_projects" /
-                      "canonical_InputData_json_io_test";
+                      "canonical_RunParams_json_io_test";
   fs::copy_options copy_options = fs::copy_options::skip_existing;
   fs::create_directories(test_dir / clexulator_src_relpath.parent_path());
   fs::copy_file(test_data_dir / clexulator_src_relpath,
@@ -33,12 +36,32 @@ TEST(canonical_InputData_json_io_test, Test1) {
       (test_dir / output_dir_relpath).string();
 
   ParentInputParser parser(json);
-  auto subparser = parser.subparse<clexmonte::canonical::InputData>("kwargs");
-  std::runtime_error error_if_invalid{
-      "Error reading canonical Monte Carlo JSON input"};
-  report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
 
-  EXPECT_TRUE(subparser->valid());
+  /// Parse and construct system
+  auto system_subparser =
+      parser.subparse<clexmonte::System>(fs::path("kwargs") / "system");
+  std::runtime_error system_error_if_invalid{
+      "Error reading canonical Monte Carlo system JSON input"};
+  report_and_throw_if_invalid(*system_subparser, CASM::log(),
+                              system_error_if_invalid);
+
+  std::shared_ptr<clexmonte::System> system(system_subparser->value.release());
+
+  /// Make sampling & analysis functions
+  auto sampling_functions =
+      clexmonte::canonical::make_sampling_functions(system);
+  auto analysis_functions =
+      clexmonte::canonical::make_analysis_functions(system);
+
+  /// Parse and construct RunParams
+  auto run_subparser = parser.subparse<clexmonte::RunParams>(
+      "kwargs", system, sampling_functions, analysis_functions);
+  std::runtime_error run_error_if_invalid{
+      "Error reading canonical Monte Carlo JSON input"};
+  report_and_throw_if_invalid(*run_subparser, CASM::log(),
+                              run_error_if_invalid);
+
+  EXPECT_TRUE(run_subparser->valid());
 
   // -- remove "output" dir
   fs::remove(test_dir / "output");

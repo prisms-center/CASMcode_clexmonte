@@ -382,6 +382,16 @@ OccEventTypeData const &get_event_type_data(System const &system,
   return _verify(system.event_type_data, key, "events");
 }
 
+/// \brief Random alloy correlation matching
+CorrCalculatorFunction get_random_alloy_corr_f(System const &system) {
+  // TODO - this is a placeholder, need to implement actual function
+  throw std::runtime_error(
+      "Error: random_alloy_corr_matching_pot is not yet implemented");
+  return [=](std::vector<Eigen::VectorXd> const &sublattice_prob) {
+    return Eigen::VectorXd::Zero(1);
+  };
+}
+
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
 ///     particular state, constructing as necessary
 ///

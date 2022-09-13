@@ -1,7 +1,7 @@
 #ifndef CASM_clexmonte_clex_State_json_io
 #define CASM_clexmonte_clex_State_json_io
 
-#include "casm/monte/definitions.hh"
+#include "casm/clexmonte/definitions.hh"
 
 namespace CASM {
 
@@ -10,15 +10,6 @@ template <typename T>
 class InputParser;
 template <typename T>
 T from_json(jsonParser const &);
-
-namespace clexmonte {
-struct Configuration;
-}
-
-namespace monte {
-template <typename _ConfigType>
-struct State;
-}
 
 /// \brief Write monte::State<clexmonte::Configuration> to JSON
 jsonParser &to_json(monte::State<clexmonte::Configuration> const &state,

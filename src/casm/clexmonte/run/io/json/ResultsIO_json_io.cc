@@ -1,10 +1,8 @@
-#ifndef CASM_clexmonte_results_ResultsIO_json_io_impl
-#define CASM_clexmonte_results_ResultsIO_json_io_impl
+#include "casm/clexmonte/run/io/json/ResultsIO_json_io.hh"
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
-#include "casm/clexmonte/results/io/json/ResultsIO_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
@@ -27,16 +25,15 @@ namespace clexmonte {
 ///
 ///   kwargs: dict (optional, default={})
 ///     Method-specific options. See documentation for particular methods:
-///     - "json": `parse(monte::jsonResultsIO<ConfigType> &)`
+///     - "json": `parse(monte::jsonResultsIO<config_type> &)`
 ///
-template <typename ConfigType>
 void parse(
-    InputParser<monte::ResultsIO<ConfigType>> &parser,
-    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions,
-    monte::ResultsAnalysisFunctionMap<ConfigType> const &analysis_functions) {
-  PolymorphicParserFactory<monte::ResultsIO<ConfigType>> f;
+    InputParser<results_io_type> &parser,
+    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
+    monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions) {
+  PolymorphicParserFactory<results_io_type> f;
   parse_polymorphic_method(
-      parser, {f.template make<monte::jsonResultsIO<ConfigType>>(
+      parser, {f.template make<monte::jsonResultsIO<config_type>>(
                   "json", sampling_functions, analysis_functions)});
 }
 
@@ -60,11 +57,10 @@ void parse(
 ///   write_trajectory: bool (default=false)
 ///     If true, write an `"trajectory.json"` file for each individual run.
 ///
-template <typename ConfigType>
 void parse(
-    InputParser<monte::jsonResultsIO<ConfigType>> &parser,
-    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions,
-    monte::ResultsAnalysisFunctionMap<ConfigType> const &analysis_functions) {
+    InputParser<monte::jsonResultsIO<config_type>> &parser,
+    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
+    monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions) {
   std::string output_dir;
   parser.require(output_dir, "output_dir");
 
@@ -75,7 +71,7 @@ void parse(
   parser.optional(write_trajectory, "write_trajectory");
 
   if (parser.valid()) {
-    parser.value = std::make_unique<monte::jsonResultsIO<ConfigType>>(
+    parser.value = std::make_unique<monte::jsonResultsIO<config_type>>(
         output_dir, sampling_functions, analysis_functions, write_trajectory,
         write_observations);
   }
@@ -83,5 +79,3 @@ void parse(
 
 }  // namespace clexmonte
 }  // namespace CASM
-
-#endif

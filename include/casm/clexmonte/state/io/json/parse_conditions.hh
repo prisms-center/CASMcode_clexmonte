@@ -1,169 +1,63 @@
-#ifndef CASM_clexmonte_system_parse_conditions
-#define CASM_clexmonte_system_parse_conditions
+#ifndef CASM_clexmonte_state_parse_conditions
+#define CASM_clexmonte_state_parse_conditions
 
-#include "casm/casm_io/container/json_io.hh"
-#include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/misc/eigen.hh"
-#include "casm/clexmonte/state/make_conditions.hh"
-#include "casm/composition/CompositionConverter.hh"
-#include "casm/composition/io/json/CompositionConverter_json_io.hh"
-#include "casm/monte/definitions.hh"
+#include "casm/clexmonte/definitions.hh"
 
 namespace CASM {
+
+template <typename T>
+class InputParser;
+
 namespace clexmonte {
+
+/// \brief Parse all conditions
+void parse_conditions(InputParser<monte::ValueMap> &parser,
+                      std::shared_ptr<system_type> const &system,
+                      bool is_increment);
 
 /// \brief Parse temperature scalar value
 void parse_temperature(InputParser<monte::ValueMap> &parser);
 
-/// \brief Parse "mol_composition" or "param_composition" and store as
+/// \brief Parse "mol_composition" and store as
 ///     "mol_composition" vector values
-template <typename SystemType>
 void parse_mol_composition(InputParser<monte::ValueMap> &parser,
-                           std::shared_ptr<SystemType> const &system);
+                           std::shared_ptr<system_type> const &system,
+                           bool is_increment);
 
-/// \brief Parse "mol_composition" or "param_composition" and store as
-///     "mol_composition" vector values (increment)
-template <typename SystemType>
-void parse_mol_composition_increment(InputParser<monte::ValueMap> &parser,
-                                     std::shared_ptr<SystemType> const &system);
+/// \brief Parse "param_composition" and store as
+///     "param_composition" vector values
+void parse_param_composition(InputParser<monte::ValueMap> &parser,
+                             std::shared_ptr<system_type> const &system,
+                             bool is_increment);
 
-// --- Inline definitions ---
+/// \brief Parse "param_chem_pot" and store as
+///     "param_chem_pot" vector values
+void parse_param_chem_pot(InputParser<monte::ValueMap> &parser,
+                          std::shared_ptr<system_type> const &system);
 
-/// \brief Parse temperature scalar value
-///
-/// If successfully parsed, `parser->value` will contain a
-/// monte::ValueMap with:
-/// - scalar_values["temperature"]: (size 1)
-///
-/// If unsuccesfully parsed, `parser.valid() == false`.
-///
-/// Expected:
-///
-///   "temperature": number (required)
-///     Temperature in K.
-///
-/// \param parser InputParser, which must have non-empty value
-///
-inline void parse_temperature(InputParser<monte::ValueMap> &parser) {
-  if (parser.value == nullptr) {
-    throw std::runtime_error(
-        "Error in parse_temperature: parser must have non-empty value");
-  }
-  parser.require(parser.value->scalar_values["temperature"], "temperature");
-}
+/// \brief Parse "include_formation_energy" or set default value
+void parse_include_formation_energy(InputParser<monte::ValueMap> &parser);
 
-/// \brief Parse "mol_composition" or "param_composition" and store as
-/// "mol_composition" vector values
-///
-/// If successfully parsed, `parser->value` will contain a
-/// monte::ValueMap with:
-/// - vector_values["mol_composition"]: (size = system components size)
-///
-/// If unsuccesfully parsed, `parser.valid() == false`.
-///
-/// Expected:
-///
-///   "mol_composition": dict (optional)
-///     Composition in number per primitive cell. A dict, where the keys are
-///     the component names, and values are the number of that component per
-///     primitive cell. All components in the system must be included. Must sum
-///     to number of sites per prim cell.
-///
-///   "param_composition": array of number or dict (optional)
-///     Parametric composition, in terms of the chosen composition axes. Will
-///     be converted to `"mol_composition"`. A dict, where the keys are the
-///     axes names ("a", "b", etc.), and values are the corresponding parametric
-///     composition value. All composition axes must be included.
-///
-///
-/// Requires:
-/// - get_composition_converter(SystemType const &system);
-template <typename SystemType>
-void parse_mol_composition(InputParser<monte::ValueMap> &parser,
-                           std::shared_ptr<SystemType> const &system) {
-  if (parser.value == nullptr) {
-    throw std::runtime_error(
-        "Error in parse_mol_composition: parser must have non-empty value");
-  }
-  std::map<std::string, double> input;
-  std::string option;
-  try {
-    if (parser.self.contains("mol_composition")) {
-      option = "mol_composition";
-    } else if (parser.self.contains("param_composition")) {
-      option = "param_composition";
-    } else {
-      parser.error.insert(
-          "Missing one of \"mol_composition\" or \"param_composition\"");
-    }
-    parser.optional(input, option);
-    parser.value->vector_values["mol_composition"] =
-        make_mol_composition(get_composition_converter(*system), input);
-  } catch (std::exception &e) {
-    std::stringstream msg;
-    msg << "Error: could not construct composition from option '" << option
-        << "'.";
-    parser.insert_error(option, e.what());
-  }
-}
+/// \brief Parse boolean value to monte::ValueMap
+void parse_boolean(InputParser<monte::ValueMap> &parser, std::string option);
 
-/// \brief Parse "mol_composition" or "param_composition" and store as
-///     "mol_composition" vector values (increment)
-///
-/// If successfully parsed, `parser->value` will contain a
-/// monte::ValueMap with:
-/// - vector_values["mol_composition"]: (size = system components size)
-///
-/// If unsuccesfully parsed, `parser.valid() == false`.
-///
-/// Expected:
-///
-///   "mol_composition": dict (optional)
-///     Composition increment in number per primitive cell. A dict, where the
-///     keys are the component names, and values are the number of that
-///     component per primitive cell. All components in the system must be
-///     included. Must sum to zero.
-///
-///   "param_composition": array of number or dict (optional)
-///     Parametric composition, in terms of the chosen composition axes. Will
-///     be converted to `"mol_composition"`. A dict, where the keys are the
-///     axes names ("a", "b", etc.), and values are the corresponding parametric
-///     composition value. All composition axes must be included.
-///
-///
-/// Requires:
-/// - get_composition_converter(SystemType const &system);
-template <typename SystemType>
-void parse_mol_composition_increment(
+/// \brief Parse scalar value to monte::ValueMap
+void parse_scalar(InputParser<monte::ValueMap> &parser, std::string option);
+
+/// \brief Parse vector value to monte::ValueMap
+void parse_vector(InputParser<monte::ValueMap> &parser, std::string option);
+
+/// \brief Parse matrix value to monte::ValueMap
+void parse_matrix(InputParser<monte::ValueMap> &parser, std::string option);
+
+/// \brief Parse "corr_matching_pot"
+void parse_corr_matching_pot(InputParser<monte::ValueMap> &parser,
+                             bool is_increment);
+
+/// \brief Parse "random_alloy_corr_matching_pot"
+void parse_random_alloy_corr_matching_pot(
     InputParser<monte::ValueMap> &parser,
-    std::shared_ptr<SystemType> const &system) {
-  if (parser.value == nullptr) {
-    throw std::runtime_error(
-        "Error in parse_mol_composition_increment: parser must have non-empty "
-        "value");
-  }
-  std::map<std::string, double> input;
-  std::string option;
-  try {
-    if (parser.self.contains("mol_composition")) {
-      option = "mol_composition";
-    } else if (parser.self.contains("param_composition")) {
-      option = "param_composition";
-    } else {
-      parser.error.insert(
-          "Missing one of \"mol_composition\" or \"param_composition\"");
-    }
-    parser.optional(input, option);
-    parser.value->vector_values["mol_composition"] =
-        make_mol_composition_increment(get_composition_converter(*system),
-                                       input);
-  } catch (std::exception &e) {
-    std::stringstream msg;
-    msg << "Error: could not construct composition increment from option '"
-        << option << "'.";
-    parser.insert_error(option, e.what());
-  }
-}
+    std::shared_ptr<system_type> const &system, bool is_increment);
 
 }  // namespace clexmonte
 }  // namespace CASM

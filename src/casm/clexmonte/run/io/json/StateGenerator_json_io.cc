@@ -1,27 +1,50 @@
-#ifndef CASM_clexmonte_clex_StateGenerator_json_io
-#define CASM_clexmonte_clex_StateGenerator_json_io
+#include "casm/clexmonte/run/io/json/StateGenerator_json_io.hh"
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
+#include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
+#include "casm/clexmonte/run/io/json/ConfigGenerator_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/state/io/json/parse_conditions.hh"
 #include "casm/monte/state/IncrementalConditionsStateGenerator.hh"
+#include "casm/monte/state/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {
-namespace canonical {
 
-/// \brief Construct IncrementalConditionsStateGenerator from JSON
-template <typename SystemType, typename ConfigType, typename ParseConditionsF,
-          typename ParseConditionsIncrementF, typename TypeTag>
+/// \brief Construct StateGenerator from JSON
+///
+/// A state generation method generates the initial state for each run in a
+/// series of Monte Carlo calculation. A state consists of:
+/// - a configuration, the choice of periodic supercell lattice vectors and the
+/// values of degrees of freedom (DoF) in that supercell along with any global
+/// DoF.
+/// - a set of thermodynamic conditions, which control the statistical ensemble
+/// used. In general, this may include quantities such as temperature, chemical
+/// potential, composition, pressure, volume, strain, magnetic field, etc.
+/// depending on the type of calculation.
+///
+/// Expected JSON:
+///   method: string (required)
+///     The name of the chosen state generation method. Currently, the only
+///     option is:
+///     - "incremental": monte::IncrementalConditionsStateGenerator
+///
+///   kwargs: dict (optional, default={})
+///     Method-specific options. See documentation for particular methods:
+///     - "incremental":
+///           `parse(InputParser<incremental_state_generator_type> &, ...)`
+///
 void parse(
-    InputParser<monte::IncrementalConditionsStateGenerator<Configuration>>
-        &parser,
-    std::shared_ptr<SystemType> const &system,
-    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions,
-    ParseConditionsF parse_conditions_f,
-    ParseConditionsIncrementF parse_conditions_increment_f, TypeTag tag);
-
-// --- Inline definitions ---
+    InputParser<state_generator_type> &parser,
+    std::shared_ptr<system_type> const &system,
+    monte::StateSamplingFunctionMap<config_type> const &sampling_functions) {
+  PolymorphicParserFactory<state_generator_type> f;
+  parse_polymorphic_method(
+      parser,
+      {f.make<monte::IncrementalConditionsStateGenerator<Configuration>>(
+          "incremental", system, sampling_functions)});
+}
 
 /// \brief Construct IncrementalConditionsStateGenerator from JSON
 ///
@@ -142,32 +165,24 @@ void parse(
 ///     This relieves the user of having to calculate the composition of the
 ///     initial configuration and set it in `initial_conditions` manually.
 ///
-template <typename SystemType, typename ConfigType, typename ParseConditionsF,
-          typename ParseConditionsIncrementF, typename TypeTag>
 void parse(
     InputParser<monte::IncrementalConditionsStateGenerator<Configuration>>
         &parser,
-    std::shared_ptr<SystemType> const &system,
-    monte::StateSamplingFunctionMap<ConfigType> const &sampling_functions,
-    ParseConditionsF parse_conditions_f,
-    ParseConditionsIncrementF parse_conditions_increment_f, TypeTag tag) {
-  typedef Configuration config_type;
-  typedef monte::State<config_type> state_type;
-  typedef monte::ConfigGenerator<config_type, state_type> config_generator_type;
-  typedef monte::IncrementalConditionsStateGenerator<Configuration>
-      incremental_state_generator_type;
-
+    std::shared_ptr<system_type> const &system,
+    monte::StateSamplingFunctionMap<config_type> const &sampling_functions) {
   /// Parse "initial_configuration"
-  auto config_generator_subparser = parser.subparse<config_generator_type>(
-      "initial_configuration", system, tag);
+  auto config_generator_subparser =
+      parser.subparse<config_generator_type>("initial_configuration", system);
 
   /// Parse "initial_conditions"
+  bool is_increment = false;
   auto initial_conditions_subparser = parser.subparse_with<monte::ValueMap>(
-      parse_conditions_f, "initial_conditions", system, tag);
+      parse_conditions, "initial_conditions", system, is_increment);
 
   /// Parse "conditions_increment"
+  is_increment = true;
   auto conditions_increment_subparser = parser.subparse_with<monte::ValueMap>(
-      parse_conditions_increment_f, "conditions_increment", system, tag);
+      parse_conditions, "conditions_increment", system, is_increment);
 
   /// Parse "dependent_conditions"
   std::vector<std::string> dependent_conditions_names;
@@ -195,7 +210,8 @@ void parse(
   parser.optional(dependent_runs, "dependent_runs");
 
   if (parser.valid()) {
-    parser.value = std::make_unique<incremental_state_generator_type>(
+    parser.value = std::make_unique<
+        monte::IncrementalConditionsStateGenerator<Configuration>>(
         std::move(config_generator_subparser->value),
         *initial_conditions_subparser->value,
         *conditions_increment_subparser->value, n_states, dependent_runs,
@@ -203,8 +219,5 @@ void parse(
   }
 }
 
-}  // namespace canonical
 }  // namespace clexmonte
 }  // namespace CASM
-
-#endif

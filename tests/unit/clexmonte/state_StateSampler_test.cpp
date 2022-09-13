@@ -3,7 +3,7 @@
 #include "casm/casm_io/container/stream_io.hh"
 #include "casm/clexmonte/canonical/CanonicalPotential.hh"
 #include "casm/clexmonte/canonical/conditions.hh"
-#include "casm/clexmonte/canonical/sampling_functions.hh"
+#include "casm/clexmonte/canonical/functions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
@@ -25,8 +25,7 @@ using namespace CASM::clexmonte;
 class state_StateSamplerTest : public test::ZrOTestSystem {
  public:
   state_StateSamplerTest() {
-    sampling_functions =
-        canonical::make_sampling_functions(system, canonical::canonical_tag());
+    sampling_functions = canonical::make_sampling_functions(system);
   }
 
   StateSamplingFunctionMap<Configuration> sampling_functions;

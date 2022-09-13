@@ -1,7 +1,7 @@
-#ifndef CASM_clexmonte_canonical_io_InputData
-#define CASM_clexmonte_canonical_io_InputData
+#ifndef CASM_clexmonte_run_io_RunParams
+#define CASM_clexmonte_run_io_RunParams
 
-#include "casm/clexmonte/canonical/definitions.hh"
+#include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/checks/CompletionCheck.hh"
@@ -14,32 +14,27 @@
 
 namespace CASM {
 namespace clexmonte {
-namespace canonical {
 
 /// \brief Data structure for holding data parsed from the canonical Monte
 ///     Carlo input file
-struct InputData {
+struct RunParams {
   /// \brief Constructor
-  InputData(
-      std::shared_ptr<system_type> _system,
-      std::unique_ptr<state_generator_type> _state_generator,
+  RunParams(
       monte::StateSamplingFunctionMap<config_type> const &_sampling_functions,
+      monte::ResultsAnalysisFunctionMap<config_type> const &_analysis_functions,
+      std::unique_ptr<state_generator_type> _state_generator,
       monte::SamplingParams const &_sampling_params,
       monte::CompletionCheckParams const &_completion_check_params,
-      monte::ResultsAnalysisFunctionMap<config_type> const &_analysis_functions,
       std::unique_ptr<results_io_type> _results_io);
-
-  /// System information:
-  /// - prim
-  /// - composition axes
-  /// - formation energy clex data
-  std::shared_ptr<system_type> system;
-
-  /// State generator implementation
-  std::unique_ptr<state_generator_type> state_generator;
 
   /// State sampling functions
   monte::StateSamplingFunctionMap<config_type> sampling_functions;
+
+  /// Results analysis functions
+  monte::ResultsAnalysisFunctionMap<config_type> analysis_functions;
+
+  /// State generator implementation
+  std::unique_ptr<state_generator_type> state_generator;
 
   /// Sampling parameters
   monte::SamplingParams sampling_params;
@@ -47,17 +42,10 @@ struct InputData {
   /// Completion check params
   monte::CompletionCheckParams completion_check_params;
 
-  /// Results analysis functions
-  monte::ResultsAnalysisFunctionMap<config_type> analysis_functions;
-
   /// Results I/O implementation
   std::unique_ptr<results_io_type> results_io;
 };
 
-/// \brief Run canonical Monte Carlo calculations
-void run(InputData &input_data);
-
-}  // namespace canonical
 }  // namespace clexmonte
 }  // namespace CASM
 

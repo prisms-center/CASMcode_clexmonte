@@ -1,6 +1,7 @@
 #ifndef CASM_clexmonte_system_System
 #define CASM_clexmonte_system_System
 
+#include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/misc/Matrix3lCompare.hh"
 #include "casm/clexmonte/system/system_data.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
@@ -295,6 +296,9 @@ std::map<std::string, OccEventTypeData> const &get_event_type_data(
 /// \brief KMC events
 OccEventTypeData const &get_event_type_data(System const &system,
                                             std::string const &key);
+
+/// \brief Random alloy correlation matching
+CorrCalculatorFunction get_random_alloy_corr_f(System const &system);
 
 // --- Supercell-specific
 

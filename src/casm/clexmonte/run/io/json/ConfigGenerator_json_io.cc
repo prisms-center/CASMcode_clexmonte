@@ -1,34 +1,50 @@
-#ifndef CASM_clexmonte_clex_ConfigGenerator_json_io
-#define CASM_clexmonte_clex_ConfigGenerator_json_io
+#include "casm/clexmonte/run/io/json/ConfigGenerator_json_io.hh"
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
+#include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/system/System.hh"
 #include "casm/clexulator/io/json/ConfigDoFValues_json_io.hh"
 #include "casm/monte/state/FixedConfigGenerator.hh"
 
 namespace CASM {
 namespace clexmonte {
 
-/// \brief Construct monte::FixedConfigGenerator from JSON
-template <typename SystemType>
-void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
-           std::shared_ptr<SystemType> const &system);
-
-// --- Inline implementations ---
+/// \brief Construct ConfigGenerator from JSON
+///
+/// A configuration generation method generates a configuration given a set of
+/// conditions and results from previous runs. It may be a way to customize a
+/// state generation method.
+///
+/// Expected:
+///   method: string (required)
+///     The name of the chosen config generation method. Currently, the only
+///     option is:
+///     - "fixed": monte::FixedConfigGenerator
+///
+///   kwargs: dict (optional, default={})
+///     Method-specific options. See documentation for particular methods:
+///     - "fixed": `parse(InputParser<monte::FixedConfigGenerator> &, ...)`
+void parse(InputParser<config_generator_type> &parser,
+           std::shared_ptr<system_type> const &system) {
+  PolymorphicParserFactory<config_generator_type> f;
+  parse_polymorphic_method(
+      parser,
+      {f.make<monte::FixedConfigGenerator<config_type>>("fixed", system)});
+}
 
 /// \brief Construct FixedConfigGenerator from JSON
 ///
 /// Requires:
 /// - `Configuration from_standard_values(
-///        SystemType const &system,
+///        system_type const &system,
 ///        Configuration const &configuration)`
 /// - `Configuration make_default_configuration(
-///        SystemType const &system,
+///        system_type const &system,
 ///        Eigen::Matrix3l const &transformation_matrix_to_super)`
-template <typename SystemType>
 void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
-           std::shared_ptr<SystemType> const &system) {
+           std::shared_ptr<system_type> const &system) {
   Eigen::Matrix3l T;
   parser.require(T, "transformation_matrix_to_super");
   if (!parser.valid()) {
@@ -56,5 +72,3 @@ void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
 
 }  // namespace clexmonte
 }  // namespace CASM
-
-#endif

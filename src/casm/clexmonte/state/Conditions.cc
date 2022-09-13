@@ -16,21 +16,16 @@ namespace clexmonte {
 /// - All optional parameters are set to std::nullopt
 Conditions::Conditions()
     : tolerance(CASM::TOL), include_formation_energy(true) {
-  std::cout << "~" << this << std::endl;
   this->set_temperature(0.0);
 }
 
 /// \brief Set temperature and beta consistently
 void Conditions::set_temperature(double _temperature) {
   this->temperature = _temperature;
-  std::cout << "~~" << this << std::endl;
-  std::cout << "set temperature: " << this->temperature << std::endl;
   if (almost_zero(this->temperature, this->tolerance)) {
     this->beta = std::numeric_limits<double>::infinity();
-    std::cout << "0-beta: " << this->beta << std::endl;
   } else {
     this->beta = 1.0 / (CASM::KB * this->temperature);
-    std::cout << "1-beta: " << this->beta << std::endl;
   }
 }
 

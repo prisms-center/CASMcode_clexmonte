@@ -4,14 +4,11 @@
 #include "casm/casm_io/Log.hh"
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/clexmonte/canonical/CanonicalPotential.hh"
-#include "casm/clexmonte/canonical/definitions.hh"
-#include "casm/clexmonte/canonical/sampling_functions.hh"
+#include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/misc/to_json.hh"
 #include "casm/clexmonte/state/enforce_composition.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
-#include "casm/clexmonte/state/sampling_functions.hh"
 #include "casm/clexmonte/system/System.hh"
-#include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/MethodLog.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
@@ -33,10 +30,11 @@ namespace canonical {
 template <typename EngineType>
 void run(
     std::shared_ptr<system_type> const &system,
-    state_generator_type &state_generator,
-    monte::StateSampler<config_type> &state_sampler,
-    monte::CompletionCheck &completion_check,
+    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
     monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
+    state_generator_type &state_generator,
+    monte::SamplingParams const &sampling_params,
+    monte::CompletionCheckParams &completion_check_params,
     monte::ResultsIO<config_type> &results_io,
     std::shared_ptr<EngineType> &random_number_engine =
         std::shared_ptr<EngineType>(),
@@ -69,10 +67,11 @@ void run(
 template <typename EngineType>
 void run(
     std::shared_ptr<system_type> const &system,
-    state_generator_type &state_generator,
-    monte::StateSampler<config_type> &state_sampler,
-    monte::CompletionCheck &completion_check,
+    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
     monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
+    state_generator_type &state_generator,
+    monte::SamplingParams const &sampling_params,
+    monte::CompletionCheckParams &completion_check_params,
     monte::ResultsIO<config_type> &results_io,
     std::shared_ptr<EngineType> &random_number_engine,
     monte::MethodLog method_log) {
@@ -81,6 +80,13 @@ void run(
 
   typedef monte::RandomNumberGenerator<EngineType> generator_type;
   generator_type random_number_generator(random_number_engine);
+
+  monte::StateSampler<config_type> state_sampler(sampling_params,
+                                                 sampling_functions);
+
+  // Create CompletionCheck method
+  // - This object checks for min/max cutoffs and automatic convergence
+  monte::CompletionCheck completion_check(completion_check_params);
 
   // Final states are made available to the state generator which can use them
   // to determine the next state

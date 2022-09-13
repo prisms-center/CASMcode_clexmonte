@@ -4,6 +4,7 @@
 #include <optional>
 #include <vector>
 
+#include "casm/clexmonte/definitions.hh"
 #include "casm/global/definitions.hh"
 #include "casm/global/eigen.hh"
 
@@ -75,17 +76,16 @@ double delta_corr_matching_potential(Eigen::VectorXd const &corr,
                                      Eigen::VectorXd const &delta_corr,
                                      CorrMatchingParams const &params);
 
-typedef std::function<Eigen::VectorXd(std::vector<Eigen::VectorXd> const &)>
-    CorrCalculatorFunction;
-
 struct RandomAlloyCorrMatchingParams : public CorrMatchingParams {
-  RandomAlloyCorrMatchingParams();
+  explicit RandomAlloyCorrMatchingParams(
+      CorrCalculatorFunction _random_alloy_corr_f);
 
   RandomAlloyCorrMatchingParams(
       std::vector<Eigen::VectorXd> const &_sublattice_prob,
       CorrCalculatorFunction _random_alloy_corr_f,
       double _exact_matching_weight, std::vector<Index> _target_indices,
-      double _tol);
+      std::optional<std::vector<double>> _target_weights = std::nullopt,
+      double _tol = CASM::TOL);
 
   void update_targets();
 

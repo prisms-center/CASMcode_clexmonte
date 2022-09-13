@@ -1,9 +1,9 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/canonical/conditions.hh"
-#include "casm/clexmonte/canonical/io/InputData.hh"
-#include "casm/clexmonte/canonical/io/json/InputData_json_io.hh"
+#include "casm/clexmonte/canonical/functions.hh"
 #include "casm/clexmonte/canonical/run.hh"
-#include "casm/clexmonte/canonical/sampling_functions.hh"
+#include "casm/clexmonte/run/io/RunParams.hh"
+#include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
@@ -292,32 +292,20 @@ TEST(canonical_fullrun_test, Test1) {
 
   // ~~~~ Run ~~~~
 
-  // Create state sampler
-  // - This object holds sampling functions, tracks the number of steps &
-  //   passes, determines when samples are due, takes samples and holds data
-  // - Use its member functions `increment_step` and `sample_data_if_due` to
-  //   collect samples according to `sampling_params`
-  monte::StateSampler<clexmonte::Configuration> state_sampler(
-      sampling_params, sampling_functions);
-
-  // Create CompletionCheck method
-  // - This object checks for min/max cutoffs and automatic convergence
-  monte::CompletionCheck completion_check(completion_check_params);
-
   // Create monte::MethodLog
   monte::MethodLog method_log;
   method_log.logfile_path = test_dir / output_dir_relpath / "status.json";
   method_log.log_frequency = 60;  // seconds
 
   clexmonte::canonical::run(
-      system,                // std::shared_ptr<System>
-      state_generator,       // clexmonte::canonical::state_generator_type &
-      state_sampler,         // monte::StateSampler<config_type> &
-      completion_check,      // monte::CompletionCheck &
-      analysis_functions,    // monte::ResultsAnalysisFunctionMap<config_type>
-                             // const &
-      results_io,            // clexmonte::canonical::results_io_type &
-      random_number_engine,  // monte::RandomNumberGenerator<EngineType>
+      system,              // std::shared_ptr<System>
+      sampling_functions,  // monte::StateSamplingFunctionMap<config_type>
+      analysis_functions,  // monte::ResultsAnalysisFunctionMap<config_type>
+      state_generator,     // clexmonte::canonical::state_generator_type
+      sampling_params,     // monte::SamplingParams
+      completion_check_params,  // monte::CompletionCheckParams
+      results_io,               // clexmonte::canonical::results_io_type
+      random_number_engine,     // monte::RandomNumberGenerator<EngineType>
       method_log);
 
   // check output files

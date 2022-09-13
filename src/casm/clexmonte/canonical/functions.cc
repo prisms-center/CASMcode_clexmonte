@@ -1,7 +1,8 @@
-#include "casm/clexmonte/canonical/sampling_functions.hh"
+#include "casm/clexmonte/canonical/functions.hh"
 
 #include "casm/clexmonte/state/sampling_functions.hh"
 #include "casm/clexmonte/system/System.hh"
+#include "casm/monte/results/ResultsAnalysisFunction.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -16,7 +17,7 @@ namespace canonical {
 /// \param tag The canonical_tag is used to help overload disambiguation
 ///
 monte::StateSamplingFunctionMap<Configuration> make_sampling_functions(
-    std::shared_ptr<system_type> const &system, canonical_tag tag) {
+    std::shared_ptr<system_type> const &system) {
   std::vector<monte::StateSamplingFunction<Configuration>> functions = {
       make_temperature_f(system),       make_mol_composition_f(system),
       make_param_composition_f(system), make_formation_energy_corr_f(system),
@@ -28,6 +29,14 @@ monte::StateSamplingFunctionMap<Configuration> make_sampling_functions(
   }
   return function_map;
 };
+
+/// \brief Construct functions that may be used to analyze Monte Carlo
+///     calculation results
+monte::ResultsAnalysisFunctionMap<Configuration> make_analysis_functions(
+    std::shared_ptr<system_type> const &system) {
+  // TODO: heat_capacity, susc, etc.
+  return monte::ResultsAnalysisFunctionMap<Configuration>();
+}
 
 }  // namespace canonical
 }  // namespace clexmonte

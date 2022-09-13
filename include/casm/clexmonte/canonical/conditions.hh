@@ -1,7 +1,7 @@
 #ifndef CASM_clexmonte_canonical_conditions
 #define CASM_clexmonte_canonical_conditions
 
-#include "casm/clexmonte/canonical/definitions.hh"
+#include "casm/clexmonte/definitions.hh"
 #include "casm/monte/state/ValueMap.hh"
 
 namespace CASM {

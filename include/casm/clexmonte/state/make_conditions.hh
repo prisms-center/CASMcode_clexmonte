@@ -4,8 +4,8 @@
 #include <map>
 #include <string>
 
+#include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/misc/eigen.hh"
-#include "casm/monte/definitions.hh"
 
 namespace CASM {
 
@@ -20,24 +20,24 @@ namespace clexmonte {
 /// \brief Helper for making a conditions ValueMap, mol_composition
 Eigen::VectorXd make_mol_composition(
     composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> comp);
+    std::map<std::string, double> comp, bool do_not_convert = false);
 
 /// \brief Helper for making a conditions ValueMap, mol_composition
 /// increment
 Eigen::VectorXd make_mol_composition_increment(
     composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> comp);
+    std::map<std::string, double> comp, bool do_not_convert = false);
 
 /// \brief Helper for making a conditions ValueMap, param_composition
 Eigen::VectorXd make_param_composition(
     composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> comp);
+    std::map<std::string, double> comp, bool do_not_convert = false);
 
 /// \brief Helper for making a conditions ValueMap, param_composition
 /// increment
 Eigen::VectorXd make_param_composition_increment(
     composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> comp);
+    std::map<std::string, double> comp, bool do_not_convert = false);
 
 // --- Chemical potential ---
 

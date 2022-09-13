@@ -1,7 +1,10 @@
 #include "casm/casm_io/Log.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/canonical/io/InputData.hh"
-#include "casm/clexmonte/canonical/io/json/InputData_json_io.hh"
+#include "casm/clexmonte/canonical/functions.hh"
+#include "casm/clexmonte/canonical/run.hh"
+#include "casm/clexmonte/run/io/RunParams.hh"
+#include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
+#include "casm/clexmonte/system/io/json/System_json_io.hh"
 
 using namespace CASM;
 
@@ -15,7 +18,8 @@ void print_help() {
   Log log(std::cout, verbosity, show_clock, indent_space);
   log.set_width(80);
 
-  log.paragraph("usage: ccasm-clexmonte-canonical [-h] [-V] inputfile");
+  log.paragraph(
+      "usage: ccasm-clexmonte-canonical [-h] [-V] systemfile runfile");
   log << std::endl;
 
   log.paragraph(
@@ -61,7 +65,7 @@ void print_help() {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc != 2) {
+  if (argc != 3) {
     print_help();
     return 1;
   }
@@ -75,15 +79,44 @@ int main(int argc, char *argv[]) {
     log() << "2.0.0-alpha" << std::endl;
     return 0;
   } else {
-    fs::path inputfile = param;
+    fs::path systemfile = argv[1];
+    fs::path runfile = argv[2];
 
-    jsonParser json(inputfile);
-    InputParser<clexmonte::canonical::InputData> parser(json);
-    std::runtime_error error_if_invalid{
-        "Error reading canonical Monte Carlo JSON input"};
-    report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
+    /// Parse and construct system
+    jsonParser system_json(systemfile);
+    InputParser<clexmonte::System> system_parser(system_json);
+    std::runtime_error system_error_if_invalid{
+        "Error reading canonical Monte Carlo system JSON input"};
+    report_and_throw_if_invalid(system_parser, CASM::log(),
+                                system_error_if_invalid);
 
-    clexmonte::canonical::run(*parser.value);
+    std::shared_ptr<clexmonte::System> system(system_parser.value.release());
+
+    /// Make sampling & analysis functions
+    auto sampling_functions =
+        clexmonte::canonical::make_sampling_functions(system);
+    auto analysis_functions =
+        clexmonte::canonical::make_analysis_functions(system);
+
+    /// Parse and construct run parameters
+    jsonParser run_json(runfile);
+    InputParser<clexmonte::RunParams> run_parser(
+        run_json, system, sampling_functions, analysis_functions);
+    std::runtime_error run_error_if_invalid{
+        "Error reading canonical Monte Carlo run JSON input"};
+    report_and_throw_if_invalid(run_parser, CASM::log(), run_error_if_invalid);
+
+    clexmonte::RunParams &run_params = *run_parser.value;
+
+    // ### Random number generator engine pointer (empty - will be seeded by
+    // random device)
+    std::shared_ptr<std::mt19937_64> random_number_engine;
+
+    clexmonte::canonical::run(
+        system, run_params.sampling_functions, run_params.analysis_functions,
+        *run_params.state_generator, run_params.sampling_params,
+        run_params.completion_check_params, *run_params.results_io,
+        random_number_engine);
 
     return 0;
   }

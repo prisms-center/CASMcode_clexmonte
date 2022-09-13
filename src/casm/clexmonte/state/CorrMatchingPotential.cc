@@ -92,19 +92,33 @@ double delta_corr_matching_potential(Eigen::VectorXd const &corr,
   return dEpot;
 }
 
-RandomAlloyCorrMatchingParams::RandomAlloyCorrMatchingParams() {}
+RandomAlloyCorrMatchingParams::RandomAlloyCorrMatchingParams(
+    CorrCalculatorFunction _random_alloy_corr_f)
+    : CorrMatchingParams(),
+      sublattice_prob(),
+      random_alloy_corr_f(_random_alloy_corr_f) {}
 
 RandomAlloyCorrMatchingParams::RandomAlloyCorrMatchingParams(
     std::vector<Eigen::VectorXd> const &_sublattice_prob,
     CorrCalculatorFunction _random_alloy_corr_f, double _exact_matching_weight,
-    std::vector<Index> _target_indices, double _tol)
+    std::vector<Index> _target_indices,
+    std::optional<std::vector<double>> _target_weights, double _tol)
     : CorrMatchingParams(),
       sublattice_prob(_sublattice_prob),
       random_alloy_corr_f(_random_alloy_corr_f) {
   this->exact_matching_weight = _exact_matching_weight;
   this->tol = _tol;
+  if (!_target_weights.has_value()) {
+    _target_weights = std::vector<double>();
+    for (Index i = 0; i < _target_indices.size(); ++i) {
+      _target_weights->push_back(1.0);
+    }
+  }
+
+  Index i = 0;
   for (auto index : _target_indices) {
-    this->targets.emplace_back(index, 0.0, 1.0);
+    this->targets.emplace_back(index, 0.0, _target_weights->at(i));
+    ++i;
   }
   this->update_targets();
 }
@@ -185,7 +199,7 @@ Eigen::VectorXd to_VectorXd_increment(CorrMatchingParams const &params) {
 /// - exact_matching_weight,
 /// - for each sublattice, b: sublattice_prob[b][0], sublattice_prob[b][1], ...,
 /// sublattice_prob[b][sublattice_prob[b].size()-1]
-/// - for each target, i: targets[i].index
+/// - for each target, i: targets[i].index, targets[i].weight
 ///
 /// Note:
 /// - `tol` is not saved to the vector
@@ -209,6 +223,8 @@ Eigen::VectorXd to_VectorXd(RandomAlloyCorrMatchingParams const &params) {
   for (auto const &target : params.targets) {
     v(i) = target.index;
     ++i;
+    v(i) = target.weight;
+    ++i;
   }
   return v;
 }
@@ -219,7 +235,7 @@ Eigen::VectorXd to_VectorXd(RandomAlloyCorrMatchingParams const &params) {
 /// - exact_matching_weight,
 /// - for each sublattice, b: sublattice_prob[b][0], sublattice_prob[b][1], ...,
 /// sublattice_prob[b][sublattice_prob[b].size()-1]
-/// - for each target, i: 0
+/// - for each target, i: 0, 0
 ///
 /// Note:
 /// - `tol` is not saved to the vector
@@ -243,6 +259,8 @@ Eigen::VectorXd to_VectorXd_increment(
   }
   for (Index t = 0; t < params.targets.size(); ++t) {
     v(i) = 0;
+    ++i;
+    v(i) = params.targets[t].weight;
     ++i;
   }
   return v;
@@ -321,14 +339,17 @@ ConditionsConstructor<RandomAlloyCorrMatchingParams>::from_VectorXd(
   }
 
   std::vector<Index> target_indices;
+  std::vector<double> target_weights;
   while (i < v.size()) {
     target_indices.push_back(v(i));
     ++i;
+    target_weights.push_back(v(i));
+    ++i;
   }
 
-  return RandomAlloyCorrMatchingParams{sublattice_prob, random_alloy_corr_f,
-                                       exact_matching_weight, target_indices,
-                                       tol};
+  return RandomAlloyCorrMatchingParams{
+      sublattice_prob, random_alloy_corr_f, exact_matching_weight,
+      target_indices,  target_weights,      tol};
 }
 
 void print_param(std::ostream &sout, std::string name,

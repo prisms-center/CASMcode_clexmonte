@@ -21,6 +21,7 @@ struct InputToVectors {
   composition::CompositionConverter const &composition_converter;
   bool is_increment;
   bool as_mol;
+  bool do_not_convert;
   std::string err_msg;
   std::string name_n;
   std::string name_x;
@@ -33,7 +34,7 @@ struct InputToVectors {
   InputToVectors(
       composition::CompositionConverter const &_composition_converter,
       std::map<std::string, double> input, bool _is_composition,
-      bool _is_increment, bool _as_mol);
+      bool _is_increment, bool _as_mol, bool _do_not_convert);
 
   /// \brief Return mol_composition / mol_composition_increment /
   ///     param_composition / param_composition_increment, based on choice of
@@ -48,10 +49,11 @@ struct InputToVectors {
 InputToVectors::InputToVectors(
     composition::CompositionConverter const &_composition_converter,
     std::map<std::string, double> input, bool _is_composition,
-    bool _is_increment, bool _as_mol)
+    bool _is_increment, bool _as_mol, bool _do_not_convert)
     : composition_converter(_composition_converter),
       is_increment(_is_increment),
-      as_mol(_as_mol) {
+      as_mol(_as_mol),
+      do_not_convert(_do_not_convert) {
   if (_is_composition) {
     name_n = "mol_composition";
     name_x = "param_composition";
@@ -110,6 +112,14 @@ InputToVectors::InputToVectors(
     std::stringstream msg;
     msg << err_msg << "Invalid occupant or axes names";
     throw std::runtime_error(msg.str());
+  }
+
+  if (do_not_convert) {
+    if ((as_mol && found_x) || (!as_mol && found_n)) {
+      std::stringstream msg;
+      msg << err_msg << "Invalid occupant or axes names";
+      throw std::runtime_error(msg.str());
+    }
   }
 
   if (found_x) {
@@ -203,6 +213,7 @@ Eigen::VectorXd InputToVectors::make_param_chem_pot() {
 ///     validate input and convert composition.
 /// \param input A map of component names (for mol per unit cell composition) or
 ///     axes names (for parametric composition) to value.
+/// \param do_not_convert If true, throw if parameteric composition is given.
 ///
 /// Example: Specifying mol_composition via number per unit cell
 /// \code
@@ -222,12 +233,13 @@ Eigen::VectorXd InputToVectors::make_param_chem_pot() {
 ///
 Eigen::VectorXd make_mol_composition(
     composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> input) {
+    std::map<std::string, double> input, bool do_not_convert) {
   bool is_composition = true;
   bool is_increment = false;
   bool as_mol = true;
   make_conditions_impl::InputToVectors f(composition_converter, input,
-                                         is_composition, is_increment, as_mol);
+                                         is_composition, is_increment, as_mol,
+                                         do_not_convert);
   return f.make_comp();
 }
 
@@ -238,14 +250,16 @@ Eigen::VectorXd make_mol_composition(
 ///     validate input and convert composition.
 /// \param input A map of component names (for mol per unit cell composition) or
 ///     axes names (for parametric composition) to value.
+/// \param do_not_convert If true, throw if parameteric composition is given.
 Eigen::VectorXd make_mol_composition_increment(
     composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> input) {
+    std::map<std::string, double> input, bool do_not_convert) {
   bool is_composition = true;
   bool is_increment = true;
   bool as_mol = true;
   make_conditions_impl::InputToVectors f(composition_converter, input,
-                                         is_composition, is_increment, as_mol);
+                                         is_composition, is_increment, as_mol,
+                                         do_not_convert);
   return f.make_comp();
 }
 
@@ -255,14 +269,16 @@ Eigen::VectorXd make_mol_composition_increment(
 ///     validate input and convert composition.
 /// \param input A map of component names (for mol per unit cell composition) or
 ///     axes names (for parametric composition) to value.
+/// \param do_not_convert If true, throw if mol composition is given.
 Eigen::VectorXd make_param_composition(
     composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> input) {
+    std::map<std::string, double> input, bool do_not_convert) {
   bool is_composition = true;
   bool is_increment = false;
   bool as_mol = false;
   make_conditions_impl::InputToVectors f(composition_converter, input,
-                                         is_composition, is_increment, as_mol);
+                                         is_composition, is_increment, as_mol,
+                                         do_not_convert);
   return f.make_comp();
 }
 
@@ -272,14 +288,16 @@ Eigen::VectorXd make_param_composition(
 ///     validate input and convert composition.
 /// \param input A map of component names (for mol per unit cell composition) or
 ///     axes names (for parametric composition) to value.
+/// \param do_not_convert If true, throw if mol composition is given.
 Eigen::VectorXd make_param_composition_increment(
     composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> input) {
+    std::map<std::string, double> input, bool do_not_convert) {
   bool is_composition = true;
   bool is_increment = true;
   bool as_mol = false;
   make_conditions_impl::InputToVectors f(composition_converter, input,
-                                         is_composition, is_increment, as_mol);
+                                         is_composition, is_increment, as_mol,
+                                         do_not_convert);
   return f.make_comp();
 }
 
@@ -298,8 +316,10 @@ Eigen::VectorXd make_param_chem_pot(
   bool is_composition = false;
   bool is_increment = false;
   bool as_mol = false;
+  bool do_not_convert = true;
   make_conditions_impl::InputToVectors f(composition_converter, input,
-                                         is_composition, is_increment, as_mol);
+                                         is_composition, is_increment, as_mol,
+                                         do_not_convert);
   return f.make_param_chem_pot();
 }
 
@@ -317,8 +337,10 @@ Eigen::VectorXd make_param_chem_pot_increment(
   bool is_composition = false;
   bool is_increment = true;
   bool as_mol = false;
+  bool do_not_convert = true;
   make_conditions_impl::InputToVectors f(composition_converter, input,
-                                         is_composition, is_increment, as_mol);
+                                         is_composition, is_increment, as_mol,
+                                         do_not_convert);
   return f.make_param_chem_pot();
 }
 

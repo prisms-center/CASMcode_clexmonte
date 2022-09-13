@@ -179,8 +179,132 @@ bool parse_event(
 
 /// \brief Parse System from JSON
 ///
-/// TODO: document format (see
-/// tests/unit/clexmonte/data/kmc/system_template.json)
+/// Expected format:
+/// \code
+///   "prim": <xtal::BasicStructure or file path>
+///       Specifies the primitive crystal structure and allowed DoF. Must
+///       be the prim used to generate the cluster expansion.
+///
+///   "composition_axes": <composition::CompositionConverter>
+///       Specifies composition axes
+///
+///   "basis_sets": object (optional)
+///       Input specifies one or more CASM cluster expansion basis sets. A JSON
+///       object containing one or more of:
+///
+///           "<name>": {
+///             "source": "<path>"
+///           }
+///
+///        where "<name>" is the basis set name, and "source" is the path to a
+///        CASM clexulator source file, i.e.
+///
+///            "/path/to/basis_sets/bset.energy/ZrO_Clexulator_energy.cc"
+///
+///   "local_basis_sets": object (optional)
+///       Input specifies one or more CASM local-cluster expansion basis sets.
+///.      A JSON object containing one or more of:
+///
+///           "<name>": {
+///             "source": "<path>",
+///             "equivalents_info": "<path">
+///           }
+///
+///        where "<name>" is the local-cluster basis set name, and "source" is
+///        the path to a CASM clexulator source file, i.e.
+///
+///            "/path/to/basis_sets/bset.local/ZrO_Clexulator_local.cc",
+///
+///        and "equivalents_info" is the path to a "equivalents_info.json" file,
+///        i.e.
+///
+///            "/path/to/basis_sets/bset.local/equivalents_info.json"
+///
+///   "clex": object (optional)
+///       Input specifies one or more cluster expansions. A JSON object
+///       containing one or more of:
+///
+///           "<name>": {
+///             "basis_set": "<basis set name>",
+///             "coefficients": "<path>"
+///           }
+///
+///        where "<name>" is the cluster expansion name, "<basis set name>" is
+///        the name of the basis set for the cluster expansion (matching a key
+///        in "basis_sets"), and "coefficients" is the path to a CASM
+///        cluster expansion coefficients file.
+///
+///   "multiclex": object (optional)
+///       Input specifies one or more cluster expansions which share basis sets.
+///       Similar to "clex", but "coefficients" is a JSON object containing
+///       one or more coefficients files:
+///
+///           "<name>": {
+///             "basis_set": "<basis set name>",
+///             "coefficients": {
+///               "<key>": "<path>"
+///               "<key>": "<path>",
+///               ...
+///           }
+///
+///   "local_clex": object (optional)
+///       Input specifies one or more local-cluster expansions. A JSON object
+///       containing one or more of:
+///
+///           "<name>": {
+///             "local_basis_set": "<local basis set name>",
+///             "coefficients": "<path>"
+///           }
+///
+///        where "<name>" is the cluster expansion name, "<local basis set
+///        name>" is the name of the local-cluster basis set for the
+///        local-cluster expansion (matching a key in "local_basis_sets"), and
+///        "coefficients" is the path to a CASM cluster expansion coefficients
+///        file.
+///
+///   "local_multiclex": object (optional)
+///       Input specifies one or more local-cluster expansions which share
+///       basis sets. Similar to "local_clex", but "coefficients" is a JSON
+///       object containing one or more coefficients files:
+///
+///           "<name>": {
+///             "local_basis_set": "<local basis set name>",
+///             "coefficients": {
+///               "<key>": "<path>"
+///               "<key>": "<path>",
+///               ...
+///           }
+///
+///   "events": object (optional)
+///       Input specifies KMC events. A JSON object specifiying one or
+///       more events:
+///
+///           "<event name>": {
+///             "event": "<event description file path>",
+///             "local_basis_set": "<local basis set name>",
+///             "coefficients": {
+///               "kra": "<kra path>",
+///               "freq": "<freq path>"
+///             }
+///           }
+///
+///       where "<event name>" is a name given to the event,
+///       "<event description file path>" is the path to a file defining a KMC
+///       event (CASM::occ_events::OccEvent in JSON format), "<local basis set
+///       name>" is the name of the local-cluster basis set for the
+///       local-cluster expansion (matching a key in "local_basis_sets"), "<kra
+///       path>" is the path to a cluster expansion coefficients file for the
+///       event KRA, and
+///       "<freq path>" is the path to a cluster expansion coefficients file
+///       for the event attempt frequency. A local multi-clex with name matching
+///       "<event name>" will be generated.
+///
+///   "event_system": string (optional)
+///       Input specifies the path to a file specifying how some KMC events are
+///       defined (a CASM::occ_events::OccSystem in JSON format).
+///
+/// \endcode
+///
 void parse(InputParser<System> &parser) {
   // Parse "prim"
   std::shared_ptr<xtal::BasicStructure const> shared_prim =
