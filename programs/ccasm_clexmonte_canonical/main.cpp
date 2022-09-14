@@ -1,10 +1,6 @@
 #include "casm/casm_io/Log.hh"
-#include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/canonical/functions.hh"
-#include "casm/clexmonte/canonical/run.hh"
-#include "casm/clexmonte/run/io/RunParams.hh"
-#include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
-#include "casm/clexmonte/system/io/json/System_json_io.hh"
+#include "casm/clexmonte/canonical.hh"
+#include "casm/clexmonte/run/io/json/parse_and_run_series.hh"
 
 using namespace CASM;
 
@@ -19,7 +15,7 @@ void print_help() {
   log.set_width(80);
 
   log.paragraph(
-      "usage: ccasm-clexmonte-canonical [-h] [-V] systemfile runfile");
+      "usage: ccasm-clexmonte-canonical [-h] [-V] system.json run_params.json");
   log << std::endl;
 
   log.paragraph(
@@ -33,12 +29,19 @@ void print_help() {
   log << "positional arguments:" << std::endl;
   log.increase_indent();
 
-  // ### inputfile
-  log.indent() << "inputfile" << std::endl;
+  // ### systemfile
+  log.indent() << "system.json" << std::endl;
   log.increase_indent();
   log.paragraph(
-      "JSON formatted file containing parameters controlling the Monte Carlo "
+      "JSON formatted file specifying the Monte Carlo system"
       "calculation.");
+  log.decrease_indent();
+  log << std::endl;
+
+  // ### run_params_json_file
+  log.indent() << "run_params.json" << std::endl;
+  log.increase_indent();
+  log.paragraph("JSON formatted file specifying Monte Carlo run parameters");
   log.decrease_indent();
   log << std::endl;
 
@@ -79,44 +82,14 @@ int main(int argc, char *argv[]) {
     log() << "2.0.0-alpha" << std::endl;
     return 0;
   } else {
-    fs::path systemfile = argv[1];
-    fs::path runfile = argv[2];
+    fs::path system_json_file = argv[1];
+    fs::path run_params_json_file = argv[2];
 
-    /// Parse and construct system
-    jsonParser system_json(systemfile);
-    InputParser<clexmonte::System> system_parser(system_json);
-    std::runtime_error system_error_if_invalid{
-        "Error reading canonical Monte Carlo system JSON input"};
-    report_and_throw_if_invalid(system_parser, CASM::log(),
-                                system_error_if_invalid);
-
-    std::shared_ptr<clexmonte::System> system(system_parser.value.release());
-
-    /// Make sampling & analysis functions
-    auto sampling_functions =
-        clexmonte::canonical::make_sampling_functions(system);
-    auto analysis_functions =
-        clexmonte::canonical::make_analysis_functions(system);
-
-    /// Parse and construct run parameters
-    jsonParser run_json(runfile);
-    InputParser<clexmonte::RunParams> run_parser(
-        run_json, system, sampling_functions, analysis_functions);
-    std::runtime_error run_error_if_invalid{
-        "Error reading canonical Monte Carlo run JSON input"};
-    report_and_throw_if_invalid(run_parser, CASM::log(), run_error_if_invalid);
-
-    clexmonte::RunParams &run_params = *run_parser.value;
-
-    // ### Random number generator engine pointer (empty - will be seeded by
-    // random device)
-    std::shared_ptr<std::mt19937_64> random_number_engine;
-
-    clexmonte::canonical::run(
-        system, run_params.sampling_functions, run_params.analysis_functions,
-        *run_params.state_generator, run_params.sampling_params,
-        run_params.completion_check_params, *run_params.results_io,
-        random_number_engine);
+    using namespace CASM::clexmonte;
+    using namespace CASM::clexmonte::canonical;
+    typedef Canonical<std::mt19937_64> calculation_type;
+    parse_and_run_series<calculation_type>(system_json_file,
+                                           run_params_json_file);
 
     return 0;
   }

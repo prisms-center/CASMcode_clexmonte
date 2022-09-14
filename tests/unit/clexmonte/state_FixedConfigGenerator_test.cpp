@@ -1,7 +1,7 @@
 // #include "casm/monte/state/FixedConfigGenerator.hh"
 #include "ZrOTestSystem.hh"
 #include "casm/casm_io/container/json_io.hh"
-#include "casm/clexmonte/canonical/conditions.hh"
+#include "casm/clexmonte/canonical.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/crystallography/BasicStructure.hh"

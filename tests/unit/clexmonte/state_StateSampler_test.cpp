@@ -1,9 +1,7 @@
 #include "ZrOTestSystem.hh"
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/container/stream_io.hh"
-#include "casm/clexmonte/canonical/CanonicalPotential.hh"
-#include "casm/clexmonte/canonical/conditions.hh"
-#include "casm/clexmonte/canonical/functions.hh"
+#include "casm/clexmonte/canonical.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
@@ -24,10 +22,13 @@ using namespace CASM::clexmonte;
 
 class state_StateSamplerTest : public test::ZrOTestSystem {
  public:
-  state_StateSamplerTest() {
-    sampling_functions = canonical::make_sampling_functions(system);
+  state_StateSamplerTest()
+      : calculator(
+            std::make_shared<canonical::Canonical<std::mt19937_64>>(system)) {
+    sampling_functions = canonical::standard_sampling_functions(calculator);
   }
 
+  std::shared_ptr<canonical::Canonical<std::mt19937_64>> calculator;
   StateSamplingFunctionMap<Configuration> sampling_functions;
 };
 
@@ -67,7 +68,6 @@ TEST_F(state_StateSamplerTest, Test1) {
     // (equal to formation energy calculator now)
     canonical::CanonicalPotential potential(
         get_clex(*system, state, "formation_energy"));
-    set(potential, state);
 
     // Make StateSampler
     std::vector<StateSamplingFunction<Configuration>> functions;

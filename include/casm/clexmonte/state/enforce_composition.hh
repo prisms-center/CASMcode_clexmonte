@@ -33,7 +33,6 @@ void enforce_composition(
     std::vector<monte::OccSwap> const &grand_canonical_swaps,
     monte::OccLocation &occ_location, GeneratorType &random_number_generator);
 
-
 // --- Implementation ---
 
 namespace enforce_composition_impl {
@@ -131,6 +130,10 @@ inline std::vector<Index> make_species_to_component_index_converter(
 
 /// \brief Apply grand canonical swaps to enforce target composition
 ///
+/// \param occupation Current occupation
+/// \param occ_location Current occupant location tracking. Must already be
+/// initialized.
+///
 /// Method:
 /// - Find which of the provided grand canonical swap types transforms
 ///   the composition most closely to the target composition
@@ -144,7 +147,6 @@ void enforce_composition(
     std::vector<monte::OccSwap> const &grand_canonical_swaps,
     monte::OccLocation &occ_location, GeneratorType &random_number_generator) {
   monte::Conversions const &convert = occ_location.convert();
-  occ_location.initialize(occupation);
 
   // no guarantee convert species_index corresponds to mol_composition index
   std::vector<Index> species_to_component_index_converter =

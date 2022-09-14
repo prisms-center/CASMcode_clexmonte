@@ -37,13 +37,8 @@ namespace clexmonte {
 ///
 void parse(
     InputParser<state_generator_type> &parser,
-    std::shared_ptr<system_type> const &system,
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions) {
-  PolymorphicParserFactory<state_generator_type> f;
-  parse_polymorphic_method(
-      parser,
-      {f.make<monte::IncrementalConditionsStateGenerator<Configuration>>(
-          "incremental", system, sampling_functions)});
+    MethodParserMap<state_generator_type> const &state_generator_methods) {
+  parse_polymorphic_method(parser, state_generator_methods);
 }
 
 /// \brief Construct IncrementalConditionsStateGenerator from JSON
@@ -169,10 +164,11 @@ void parse(
     InputParser<monte::IncrementalConditionsStateGenerator<Configuration>>
         &parser,
     std::shared_ptr<system_type> const &system,
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions) {
+    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
+    MethodParserMap<config_generator_type> config_generator_methods) {
   /// Parse "initial_configuration"
-  auto config_generator_subparser =
-      parser.subparse<config_generator_type>("initial_configuration", system);
+  auto config_generator_subparser = parser.subparse<config_generator_type>(
+      "initial_configuration", config_generator_methods);
 
   /// Parse "initial_conditions"
   bool is_increment = false;

@@ -6,12 +6,13 @@
 #include <string>
 
 #include "casm/casm_io/json/InputParser_impl.hh"
+#include "casm/clexmonte/definitions.hh"
 
 namespace CASM {
 
 /// \brief Holds parsing functions for polymorphic implementations of BaseType
 template <typename BaseType>
-using PolymorphicParserMap =
+using MethodParserMap =
     std::map<std::string, std::function<void(InputParser<BaseType> &)>>;
 
 /// \brief Construct implementation based on "method" and "kwargs"
@@ -46,7 +47,7 @@ using PolymorphicParserMap =
 ///   DataType1 const &data1,
 ///   DataType2 const &data2) {
 ///
-///   PolymorphicParserFactory<BaseType> f;
+///   MethodParserFactory<BaseType> f;
 ///   parse_polymorphic_method(parser, {
 ///       f.make<methodA_implemention_type>("methodA")});
 ///       f.make<methodB_implemention_type>("methodB", data1)});
@@ -71,9 +72,8 @@ using PolymorphicParserMap =
 ///     DataType2 const &data2);
 /// \endcode
 template <typename BaseType>
-void parse_polymorphic_method(
-    InputParser<BaseType> &parser,
-    PolymorphicParserMap<BaseType> const &subparser_map) {
+void parse_polymorphic_method(InputParser<BaseType> &parser,
+                              MethodParserMap<BaseType> const &subparser_map) {
   // check if "method" is present
   auto json_it = parser.self.find("method");
   if (json_it == parser.self.end()) {
@@ -114,12 +114,12 @@ void parse_polymorphic_method(
   subparser_it->second(parser);
 }
 
-/// \brief Generate PolymorphicParserMap elements
+/// \brief Generate MethodParserMap elements
 ///
 /// See `parse_polymorphic_method` for usage.
 template <typename BaseType>
-struct PolymorphicParserFactory {
-  typedef typename PolymorphicParserMap<BaseType>::value_type return_type;
+struct MethodParserFactory {
+  typedef typename MethodParserMap<BaseType>::value_type return_type;
 
   template <typename ImplementationType, typename... Args>
   return_type make(std::string name, Args &&...args) {

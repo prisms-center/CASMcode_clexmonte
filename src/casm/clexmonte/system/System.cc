@@ -2,9 +2,6 @@
 
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexulator/ConfigDoFValuesTools_impl.hh"
-// #include "casm/configuration/clusterography/impact_neighborhood.hh"
-// #include "casm/configuration/clusterography/orbits.hh"
-// #include "casm/configuration/occ_events/OccEventRep.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -300,6 +297,27 @@ std::shared_ptr<clexulator::Clexulator> get_basis_set(System const &system,
 std::shared_ptr<std::vector<clexulator::Clexulator>> get_local_basis_set(
     System const &system, std::string const &key) {
   return _verify(system.local_basis_sets, key, "local_basis_sets");
+}
+
+/// \brief Check for ClexData
+bool is_clex_data(System const &system, std::string const &key) {
+  return system.clex_data.find(key) != system.clex_data.end();
+}
+
+/// \brief Check for MultiClexData
+bool is_multiclex_data(System const &system, std::string const &key) {
+  return system.multiclex_data.find(key) != system.multiclex_data.end();
+}
+
+/// \brief Check for LocalClexData
+bool is_local_clex_data(System const &system, std::string const &key) {
+  return system.local_clex_data.find(key) != system.local_clex_data.end();
+}
+
+/// \brief Check for LocalMultiClexData
+bool is_local_multiclex_data(System const &system, std::string const &key) {
+  return system.local_multiclex_data.find(key) !=
+         system.local_multiclex_data.end();
 }
 
 /// \brief Helper to get ClexData

@@ -26,12 +26,10 @@ namespace clexmonte {
 ///   kwargs: dict (optional, default={})
 ///     Method-specific options. See documentation for particular methods:
 ///     - "fixed": `parse(InputParser<monte::FixedConfigGenerator> &, ...)`
-void parse(InputParser<config_generator_type> &parser,
-           std::shared_ptr<system_type> const &system) {
-  PolymorphicParserFactory<config_generator_type> f;
-  parse_polymorphic_method(
-      parser,
-      {f.make<monte::FixedConfigGenerator<config_type>>("fixed", system)});
+void parse(
+    InputParser<config_generator_type> &parser,
+    MethodParserMap<config_generator_type> const &config_generator_methods) {
+  parse_polymorphic_method(parser, config_generator_methods);
 }
 
 /// \brief Construct FixedConfigGenerator from JSON

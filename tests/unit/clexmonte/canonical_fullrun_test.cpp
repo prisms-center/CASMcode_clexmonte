@@ -1,7 +1,6 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/canonical/conditions.hh"
-#include "casm/clexmonte/canonical/functions.hh"
-#include "casm/clexmonte/canonical/run.hh"
+#include "casm/clexmonte/canonical.hh"
+#include "casm/clexmonte/run/functions.hh"
 #include "casm/clexmonte/run/io/RunParams.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
@@ -144,6 +143,25 @@ TEST(canonical_fullrun_test, Test1) {
   formation_energy_clex_data.coefficients = eci;
   system->clex_data.emplace("formation_energy", formation_energy_clex_data);
 
+  // ### Construct the canonical calculator
+  typedef clexmonte::canonical::Canonical<std::mt19937_64> calculation_type;
+  auto calculation = std::make_shared<calculation_type>(system);
+
+  // ### Construct sampling functions & analysis functions
+  monte::StateSamplingFunctionMap<clexmonte::Configuration> sampling_functions =
+      standard_sampling_functions(calculation);
+  monte::ResultsAnalysisFunctionMap<clexmonte::Configuration>
+      analysis_functions = standard_analysis_functions(calculation);
+  // - Add custom sampling functions if desired...
+  // monte::StateSamplingFunction<Configuration> f {
+  //     "potential_energy", // sampler name
+  //     "Potential energy of the state (normalized per primitive cell)", //
+  //     description 1,  // number of components in "potential_energy"
+  //     [system](monte::State<Configuration> const &state) {
+  //       return state.properties.at("potential_energy");
+  //     });
+  // sampling_functions.emplace(f.name, f);
+
   // ### Construct the state generator
 
   // - Specify the supercell transformation_matrix_to_super
@@ -199,20 +217,6 @@ TEST(canonical_fullrun_test, Test1) {
       state_generator(std::move(config_generator), initial_conditions,
                       conditions_increment, n_states, dependent_runs,
                       dependent_conditions);
-
-  // ### Construct sampling functions
-  monte::StateSamplingFunctionMap<clexmonte::Configuration> sampling_functions =
-      clexmonte::canonical::make_sampling_functions(system);
-
-  // - Add custom sampling functions if desired...
-  // monte::StateSamplingFunction<Configuration> f {
-  //     "potential_energy", // sampler name
-  //     "Potential energy of the state (normalized per primitive cell)", //
-  //     description 1,  // number of components in "potential_energy"
-  //     [system](monte::State<Configuration> const &state) {
-  //       return state.properties.at("potential_energy");
-  //     });
-  // sampling_functions.emplace(f.name, f);
 
   // ### Construct monte::SamplingParams
   monte::SamplingParams sampling_params;
@@ -271,10 +275,6 @@ TEST(canonical_fullrun_test, Test1) {
   // completion_check_params.check_begin = 10; // default=10
   completion_check_params.check_frequency = 10;  // default=1
 
-  // ### Construct analysis_functions (TODO)
-  monte::ResultsAnalysisFunctionMap<clexmonte::Configuration>
-      analysis_functions;
-
   // ### Construct monte::jsonResultsIO
   fs::path output_dir = test_dir / output_dir_relpath;
   bool write_trajectory = true;
@@ -287,9 +287,6 @@ TEST(canonical_fullrun_test, Test1) {
       write_observations  // bool
   );
 
-  // ### Random number generator engine pointer (empty)
-  std::shared_ptr<std::mt19937_64> random_number_engine;
-
   // ~~~~ Run ~~~~
 
   // Create monte::MethodLog
@@ -297,16 +294,9 @@ TEST(canonical_fullrun_test, Test1) {
   method_log.logfile_path = test_dir / output_dir_relpath / "status.json";
   method_log.log_frequency = 60;  // seconds
 
-  clexmonte::canonical::run(
-      system,              // std::shared_ptr<System>
-      sampling_functions,  // monte::StateSamplingFunctionMap<config_type>
-      analysis_functions,  // monte::ResultsAnalysisFunctionMap<config_type>
-      state_generator,     // clexmonte::canonical::state_generator_type
-      sampling_params,     // monte::SamplingParams
-      completion_check_params,  // monte::CompletionCheckParams
-      results_io,               // clexmonte::canonical::results_io_type
-      random_number_engine,     // monte::RandomNumberGenerator<EngineType>
-      method_log);
+  run_series(*calculation, sampling_functions, analysis_functions,
+             sampling_params, completion_check_params, state_generator,
+             results_io, method_log);
 
   // check output files
   EXPECT_TRUE(fs::exists(output_dir));

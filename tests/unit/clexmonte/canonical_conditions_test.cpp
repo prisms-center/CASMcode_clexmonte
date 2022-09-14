@@ -1,5 +1,5 @@
 #include "ZrOTestSystem.hh"
-#include "casm/clexmonte/canonical/conditions.hh"
+#include "casm/clexmonte/canonical.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"

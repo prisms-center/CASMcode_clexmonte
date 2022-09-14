@@ -261,6 +261,18 @@ std::shared_ptr<clexulator::Clexulator> get_basis_set(System const &system,
 std::shared_ptr<std::vector<clexulator::Clexulator>> get_local_basis_set(
     System const &system, std::string const &key);
 
+/// \brief Check for ClexData
+bool is_clex_data(System const &system, std::string const &key);
+
+/// \brief Check for MultiClexData
+bool is_multiclex_data(System const &system, std::string const &key);
+
+/// \brief Check for LocalClexData
+bool is_local_clex_data(System const &system, std::string const &key);
+
+/// \brief Check for LocalMultiClexData
+bool is_local_multiclex_data(System const &system, std::string const &key);
+
 /// \brief Helper to get ClexData
 ClexData const &get_clex_data(System const &system, std::string const &key);
 

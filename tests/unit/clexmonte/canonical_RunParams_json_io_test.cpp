@@ -1,5 +1,5 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/canonical/functions.hh"
+#include "casm/clexmonte/canonical.hh"
 #include "casm/clexmonte/run/io/RunParams.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
@@ -47,21 +47,32 @@ TEST(canonical_RunParams_json_io_test, Test1) {
 
   std::shared_ptr<clexmonte::System> system(system_subparser->value.release());
 
-  /// Make sampling & analysis functions
-  auto sampling_functions =
-      clexmonte::canonical::make_sampling_functions(system);
-  auto analysis_functions =
-      clexmonte::canonical::make_analysis_functions(system);
+  // Make calculation object:
+  typedef clexmonte::canonical::Canonical<std::mt19937_64> calculation_type;
+  auto calculation = std::make_shared<calculation_type>(system);
 
-  /// Parse and construct RunParams
-  auto run_subparser = parser.subparse<clexmonte::RunParams>(
-      "kwargs", system, sampling_functions, analysis_functions);
-  std::runtime_error run_error_if_invalid{
-      "Error reading canonical Monte Carlo JSON input"};
-  report_and_throw_if_invalid(*run_subparser, CASM::log(),
-                              run_error_if_invalid);
+  /// Make state sampling & analysis functions
+  auto sampling_functions = standard_sampling_functions(calculation);
+  auto analysis_functions = standard_analysis_functions(calculation);
 
-  EXPECT_TRUE(run_subparser->valid());
+  /// Make config generator / state generator / results_io JSON parsers
+  auto config_generator_methods =
+      clexmonte::standard_config_generator_methods(calculation->system);
+  auto state_generator_methods = clexmonte::standard_state_generator_methods(
+      calculation->system, sampling_functions, config_generator_methods);
+  auto results_io_methods = clexmonte::standard_results_io_methods(
+      sampling_functions, analysis_functions);
+
+  /// Parse and construct run parameters
+  auto run_params_subparser = parser.subparse<clexmonte::RunParams>(
+      fs::path("kwargs"), system, sampling_functions, analysis_functions,
+      state_generator_methods, results_io_methods);
+  std::runtime_error run_params_error_if_invalid{
+      "Error reading Monte Carlo run parameters JSON input"};
+  report_and_throw_if_invalid(*run_params_subparser, CASM::log(),
+                              run_params_error_if_invalid);
+
+  EXPECT_TRUE(run_params_subparser->valid());
 
   // -- remove "output" dir
   fs::remove(test_dir / "output");

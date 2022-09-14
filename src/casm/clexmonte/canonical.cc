@@ -1,11 +1,54 @@
-#include "casm/clexmonte/canonical/conditions.hh"
+#include "casm/clexmonte/canonical.hh"
 
 #include "casm/clexmonte/state/make_conditions.hh"
+#include "casm/clexmonte/state/sampling_functions.hh"
+#include "casm/clexmonte/system/System.hh"
+#include "casm/monte/results/ResultsAnalysisFunction.hh"
 #include "casm/monte/state/ValueMap.hh"
 
 namespace CASM {
 namespace clexmonte {
 namespace canonical {
+
+CanonicalPotential::CanonicalPotential(
+    std::shared_ptr<clexulator::ClusterExpansion> _formation_energy_clex)
+    : m_formation_energy_clex(_formation_energy_clex) {
+  if (m_formation_energy_clex == nullptr) {
+    throw std::runtime_error(
+        "Error constructing CanonicalPotential: formation_energy_clex is "
+        "empty");
+  }
+}
+
+/// \brief Reset pointer to state currently being calculated
+void CanonicalPotential::set(monte::State<Configuration> const *state) {
+  m_state = state;
+  m_formation_energy_clex->set(&get_dof_values(*m_state));
+}
+
+/// \brief Pointer to state currently being calculated
+monte::State<Configuration> const *CanonicalPotential::get() const {
+  return m_state;
+}
+
+/// \brief Calculate (extensive) cluster expansion value
+double CanonicalPotential::extensive_value() {
+  return m_formation_energy_clex->extensive_value();
+}
+
+/// \brief Calculate change in (extensive) cluster expansion value due to a
+///     series of occupation changes
+double CanonicalPotential::occ_delta_extensive_value(
+    std::vector<Index> const &linear_site_index,
+    std::vector<int> const &new_occ) {
+  return m_formation_energy_clex->occ_delta_value(linear_site_index, new_occ);
+}
+
+/// \brief Set potential calculator so it evaluates using `state`
+void set(CanonicalPotential &potential,
+         monte::State<Configuration> const &state) {
+  potential.set(&state);
+}
 
 /// \brief Helper for making a conditions ValueMap for canonical Monte
 ///     Carlo calculations

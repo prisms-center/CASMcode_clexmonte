@@ -27,14 +27,9 @@ namespace clexmonte {
 ///     Method-specific options. See documentation for particular methods:
 ///     - "json": `parse(monte::jsonResultsIO<config_type> &)`
 ///
-void parse(
-    InputParser<results_io_type> &parser,
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
-    monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions) {
-  PolymorphicParserFactory<results_io_type> f;
-  parse_polymorphic_method(
-      parser, {f.template make<monte::jsonResultsIO<config_type>>(
-                  "json", sampling_functions, analysis_functions)});
+void parse(InputParser<results_io_type> &parser,
+           MethodParserMap<results_io_type> const &results_io_methods) {
+  parse_polymorphic_method(parser, results_io_methods);
 }
 
 /// \brief Construct jsonResultsIO from JSON
