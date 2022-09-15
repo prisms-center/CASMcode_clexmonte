@@ -4,6 +4,7 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/misc/eigen.hh"
+#include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/CorrMatchingPotential.hh"
 #include "casm/clexmonte/state/io/json/CorrMatchingPotential_json_io.hh"
 #include "casm/clexmonte/state/make_conditions.hh"
@@ -131,6 +132,29 @@ void parse_conditions(InputParser<monte::ValueMap> &parser,
 
   parse_corr_matching_pot(parser, is_increment);
   parse_random_alloy_corr_matching_pot(parser, system, is_increment);
+
+  try {
+    // This is an awkward way to do things... but it allows input of
+    // mol_composition or param_composition and checks consistency if both exist
+    if (!is_increment) {
+      Conditions conditions = make_conditions_from_value_map(
+          *parser.value, *get_prim_basicstructure(*system),
+          get_composition_converter(*system), get_random_alloy_corr_f(*system),
+          CASM::TOL /*TODO*/);
+      *parser.value = make_value_map_from_conditions(conditions);
+    } else {
+      Conditions conditions_increment =
+          make_conditions_increment_from_value_map(
+              *parser.value, *get_prim_basicstructure(*system),
+              get_composition_converter(*system),
+              get_random_alloy_corr_f(*system), CASM::TOL /*TODO*/);
+      *parser.value =
+          make_value_map_from_conditions_increment(conditions_increment);
+    }
+  } catch (std::exception &e) {
+    parser.error.insert(e.what());
+    parser.value.reset();
+  }
 }
 
 /// \brief Parse temperature scalar value

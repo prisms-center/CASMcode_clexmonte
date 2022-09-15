@@ -44,7 +44,7 @@ class KMCCompleteEventCalculatorTestSystem
         clexmonte::make_conditions_from_value_map(
             state.conditions, *system->prim->basicstructure,
             system->composition_converter, clexmonte::CorrCalculatorFunction(),
-            CASM::TOL));
+            CASM::TOL /*TODO*/));
 
     prim_event_calculators = clexmonte::make_prim_event_calculators(
         *system, state, prim_event_list, conditions);

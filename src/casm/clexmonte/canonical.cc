@@ -31,13 +31,13 @@ monte::State<Configuration> const *CanonicalPotential::get() const {
   return m_state;
 }
 
-/// \brief Calculate (extensive) cluster expansion value
+/// \brief Calculate (extensive) canonical potential value
 double CanonicalPotential::extensive_value() {
   return m_formation_energy_clex->extensive_value();
 }
 
-/// \brief Calculate change in (extensive) cluster expansion value due to a
-///     series of occupation changes
+/// \brief Calculate change in (extensive) canonical potential value due
+///     to a series of occupation changes
 double CanonicalPotential::occ_delta_extensive_value(
     std::vector<Index> const &linear_site_index,
     std::vector<int> const &new_occ) {

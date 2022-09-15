@@ -193,10 +193,9 @@ monte::Results<config_type> Canonical<EngineType>::run(
 /// \brief Construct functions that may be used to sample various quantities of
 ///     the Monte Carlo calculation as it runs
 ///
-/// \param system Shared pointer to System data, which can be used by
-///     sampling functions to access data such as the prim, the cluster
-///     expansion, and the composition axes.
-/// \param tag The canonical_tag is used to help overload disambiguation
+/// \param calculation Shared pointer to Canonical calculation, which
+///     can be used by sampling functions to access system and calculation data
+///     such as the prim, the cluster expansion, and the composition axes.
 ///
 template <typename EngineType>
 monte::StateSamplingFunctionMap<Configuration> standard_sampling_functions(

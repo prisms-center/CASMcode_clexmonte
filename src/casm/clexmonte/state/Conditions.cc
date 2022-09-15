@@ -71,10 +71,10 @@ void Conditions::set_mol_composition(
   if (!is_increment) {
     this->mol_composition = _mol_composition;
     this->param_composition =
-        _composition_converter.mol_composition(*this->mol_composition);
+        _composition_converter.param_composition(*this->mol_composition);
   } else {
     this->mol_composition = _mol_composition;
-    this->mol_composition =
+    this->param_composition =
         _composition_converter.dparam_composition(*this->mol_composition);
   }
 }
