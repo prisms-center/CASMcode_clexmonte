@@ -63,7 +63,7 @@
         "initial_configuration": {
           "method": "fixed",
           "kwargs": {
-            "transformation_matrix_to_super": [
+            "transformation_matrix_to_supercell": [
               [6, 0, 0],
               [0, 6, 0],
               [0, 0, 6]],
@@ -103,7 +103,7 @@
         "mol_composition",
         "param_composition",
         "potential_energy"],
-      "sampled_trajectory": false
+      "sample_trajectory": false
     },
     "completion_check": {
       "cutoff": {

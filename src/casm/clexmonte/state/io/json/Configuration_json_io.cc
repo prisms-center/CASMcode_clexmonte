@@ -40,7 +40,7 @@ namespace CASM {
 /// #### Example 1) Configuration with occupation, displacement, and strain DoF
 /// ```
 /// {
-///   "transformation_matrix_to_super": [],
+///   "transformation_matrix_to_supercell": [],
 ///   "dof": {}
 /// }
 /// ```

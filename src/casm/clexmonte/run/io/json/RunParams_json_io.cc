@@ -78,6 +78,11 @@ MethodParserMap<results_io_type> standard_results_io_methods(
 ///         max number of passes, etc.
 ///     "results_io": <monte::ResultsIO>
 ///         Options controlling results output.
+///     "log": (optional)
+///       "file": str (default="status.json")
+///         Provide the path where a log file should be written.
+///       "frequency_in_s": number (default=600.0)
+///         How often the log file should be written, in seconds.
 /// }
 /// \endcode
 void parse(
@@ -108,13 +113,26 @@ void parse(
   auto results_io_subparser =
       parser.subparse<results_io_type>("results_io", results_io_methods);
 
+  // Method log
+  monte::MethodLog method_log;
+  if (parser.self.contains("log")) {
+    std::string log_file = "status.json";
+    parser.optional(log_file, fs::path("log") / "file");
+    double log_frequency = 600.0;
+    parser.optional(log_frequency, fs::path("log") / "frequency_in_s");
+
+    method_log.log_frequency = log_frequency;
+    method_log.logfile_path = fs::path(log_file);
+    method_log.reset();
+  }
+
   if (parser.valid()) {
-    parser.value =
-        std::make_unique<RunParams>(sampling_functions, analysis_functions,
-                                    std::move(state_generator_subparser->value),
-                                    *sampling_params_subparser->value,
-                                    *completion_check_params_subparser->value,
-                                    std::move(results_io_subparser->value));
+    parser.value = std::make_unique<RunParams>(
+        sampling_functions, analysis_functions,
+        std::move(state_generator_subparser->value),
+        *sampling_params_subparser->value,
+        *completion_check_params_subparser->value,
+        std::move(results_io_subparser->value), method_log);
   }
 }
 

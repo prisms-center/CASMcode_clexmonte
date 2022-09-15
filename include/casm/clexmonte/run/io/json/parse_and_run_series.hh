@@ -21,6 +21,13 @@ template <typename CalculationType>
 void parse_and_run_series(fs::path system_json_file,
                           fs::path run_params_json_file) {
   /// Parse and construct system
+  if (!fs::exists(system_json_file)) {
+    std::stringstream msg;
+    msg << "Error in CASM::clexmonte::parse_and_run_series: system_json_file "
+           "does not exist: "
+        << system_json_file;
+    throw std::runtime_error(msg.str());
+  }
   jsonParser system_json(system_json_file);
   InputParser<clexmonte::System> system_parser(system_json);
   std::runtime_error system_error_if_invalid{
@@ -46,6 +53,13 @@ void parse_and_run_series(fs::path system_json_file,
       sampling_functions, analysis_functions);
 
   /// Parse and construct run parameters
+  if (!fs::exists(run_params_json_file)) {
+    std::stringstream msg;
+    msg << "Error in CASM::clexmonte::parse_and_run_series: "
+           "run_params_json_file does not exist: "
+        << run_params_json_file;
+    throw std::runtime_error(msg.str());
+  }
   jsonParser run_params_json(run_params_json_file);
   InputParser<clexmonte::RunParams> run_params_parser(
       run_params_json, system, sampling_functions, analysis_functions,
@@ -60,7 +74,7 @@ void parse_and_run_series(fs::path system_json_file,
   run_series(*calculation, run_params.sampling_functions,
              run_params.analysis_functions, run_params.sampling_params,
              run_params.completion_check_params, *run_params.state_generator,
-             *run_params.results_io);
+             *run_params.results_io, run_params.method_log);
 }
 
 }  // namespace clexmonte

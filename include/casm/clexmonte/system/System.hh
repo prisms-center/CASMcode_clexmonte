@@ -176,8 +176,15 @@ struct SupercellSystemData {
 
   // --- Cluster expansion
 
+  /// CASM::monte correlation calculators - calculate all correlations
+  std::map<std::string, std::shared_ptr<clexulator::Correlations>> corr;
+
+  /// CASM::monte local correlation calculators - calculate all correlations
+  std::map<std::string, std::shared_ptr<clexulator::LocalCorrelations>>
+      local_corr;
+
   /// CASM::monte compatible cluster expansion calculators. Contains:
-  /// -  clexulator::Correlations
+  /// -  clexulator::Correlations - calculate non-zero eci correlations
   /// -  clexulator::SparseCoefficients
   std::map<std::string, std::shared_ptr<clexulator::ClusterExpansion>> clex;
 
@@ -313,6 +320,18 @@ OccEventTypeData const &get_event_type_data(System const &system,
 CorrCalculatorFunction get_random_alloy_corr_f(System const &system);
 
 // --- Supercell-specific
+
+/// \brief Helper to get the correct clexulator::Correlations for a
+///     particular state's supercell, constructing as necessary
+std::shared_ptr<clexulator::Correlations> get_corr(
+    System &system, monte::State<Configuration> const &state,
+    std::string const &key);
+
+/// \brief Helper to get the correct clexulator::LocalCorrelations for a
+///     particular state's supercell, constructing as necessary
+std::shared_ptr<clexulator::LocalCorrelations> get_local_corr(
+    System &system, monte::State<Configuration> const &state,
+    std::string const &key);
 
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
 ///     particular state's supercell, constructing as necessary

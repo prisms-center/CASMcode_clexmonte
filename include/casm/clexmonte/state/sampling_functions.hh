@@ -160,7 +160,7 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
       "Formation energy basis set correlations (normalized per primitive cell)",
       shape, [system](monte::State<Configuration> const &state) {
         clexulator::Correlations &correlations =
-            get_clex(*system, state, "formation_energy")->correlations();
+            *get_corr(*system, state, "formation_energy");
         auto const &extensive_corr = correlations.extensive();
         return correlations.intensive(extensive_corr);
       });

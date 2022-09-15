@@ -55,6 +55,34 @@ SupercellSystemData::SupercellSystemData(
         transformation_matrix_to_super, *system.prim_neighbor_list);
   }
 
+  // make corr
+  for (auto const &pair : system.basis_sets) {
+    if (supercell_neighbor_list == nullptr) {
+      throw std::runtime_error(
+          "Error constructing SupercellSystemData: Cannot construct corr with "
+          "empty neighbor list");
+    }
+    auto const &key = pair.first;
+    auto const &_clexulator = pair.second;
+    auto _corr = std::make_shared<clexulator::Correlations>(
+        supercell_neighbor_list, _clexulator);
+    corr.emplace(key, _corr);
+  }
+
+  // make local_corr
+  for (auto const &pair : system.local_basis_sets) {
+    if (supercell_neighbor_list == nullptr) {
+      throw std::runtime_error(
+          "Error constructing SupercellSystemData: Cannot construct local_corr "
+          "with empty neighbor list");
+    }
+    auto const &key = pair.first;
+    auto const &_clexulator = pair.second;
+    auto _corr = std::make_shared<clexulator::LocalCorrelations>(
+        supercell_neighbor_list, _clexulator);
+    local_corr.emplace(key, _corr);
+  }
+
   // make clex
   for (auto const &pair : system.clex_data) {
     if (supercell_neighbor_list == nullptr) {
@@ -410,6 +438,41 @@ CorrCalculatorFunction get_random_alloy_corr_f(System const &system) {
   };
 }
 
+// --- Supercell-specific
+
+/// \brief Helper to get the correct clexulator::Correlations for a
+///     particular state's supercell, constructing as necessary
+///
+/// Note:
+/// - The resulting clexulator::Correlations is set to evaluate
+///   all correlations for the specified state
+/// - To only evaluate non-zero eci correlations, instead use
+///   get_clex(...).correlations().
+std::shared_ptr<clexulator::Correlations> get_corr(
+    System &system, monte::State<Configuration> const &state,
+    std::string const &key) {
+  auto corr = _verify(get_supercell_data(system, state).corr, key, "corr");
+  corr->set(&get_dof_values(state));
+  return corr;
+}
+
+/// \brief Helper to get the correct clexulator::Correlations for a
+///     particular state's supercell, constructing as necessary
+///
+/// Note:
+/// - The resulting clexulator::LocalCorrelations is set to
+///   evaluate all correlations for the specified state
+/// - To only evaluate non-zero eci correlations, instead use
+///   get_local_clex(...).correlations().
+std::shared_ptr<clexulator::LocalCorrelations> get_local_corr(
+    System &system, monte::State<Configuration> const &state,
+    std::string const &key) {
+  auto local_corr =
+      _verify(get_supercell_data(system, state).local_corr, key, "local_corr");
+  local_corr->set(&get_dof_values(state));
+  return local_corr;
+}
+
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
 ///     particular state, constructing as necessary
 ///
@@ -425,6 +488,11 @@ std::shared_ptr<clexulator::ClusterExpansion> get_clex(
 
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
 ///     particular state, constructing as necessary
+///
+/// Notes:
+/// - The resulting object contains a clexulator::Correlations set
+///   to evaluate all correlations which have non-zero eci for at
+///   least one of the cluster expansions
 ///
 /// \relates System
 std::shared_ptr<clexulator::MultiClusterExpansion> get_multiclex(
@@ -449,6 +517,12 @@ std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
 
 /// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
+///
+/// Notes:
+/// - The resulting object contains a clexulator::LocalCorrelations
+///   set to evaluate all correlations which have non-zero eci for at
+///   least one of the local-cluster expansions
+///
 std::shared_ptr<clexulator::MultiLocalClusterExpansion> get_local_multiclex(
     System &system, monte::State<Configuration> const &state,
     std::string const &key) {

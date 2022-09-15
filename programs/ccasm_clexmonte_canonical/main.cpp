@@ -32,9 +32,7 @@ void print_help() {
   // ### systemfile
   log.indent() << "system.json" << std::endl;
   log.increase_indent();
-  log.paragraph(
-      "JSON formatted file specifying the Monte Carlo system"
-      "calculation.");
+  log.paragraph("JSON formatted file specifying the Monte Carlo system");
   log.decrease_indent();
   log << std::endl;
 
@@ -59,7 +57,7 @@ void print_help() {
   log.decrease_indent();
   log << std::endl;
 
-  // ### -h
+  // ### -V
   log.indent() << "-V, --version" << std::endl;
   log.increase_indent();
   log.paragraph("Print version number and exit");
@@ -68,7 +66,7 @@ void print_help() {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc != 3) {
+  if (argc < 2) {
     print_help();
     return 1;
   }
@@ -81,16 +79,29 @@ int main(int argc, char *argv[]) {
   } else if (param == "-V" || param == "--version") {
     log() << "2.0.0-alpha" << std::endl;
     return 0;
-  } else {
-    fs::path system_json_file = argv[1];
-    fs::path run_params_json_file = argv[2];
-
-    using namespace CASM::clexmonte;
-    using namespace CASM::clexmonte::canonical;
-    typedef Canonical<std::mt19937_64> calculation_type;
-    parse_and_run_series<calculation_type>(system_json_file,
-                                           run_params_json_file);
-
-    return 0;
+  } else if (argc != 3) {
+    print_help();
+    return 1;
   }
+
+  fs::path system_json_file = argv[1];
+  fs::path run_params_json_file = argv[2];
+
+  if (!fs::exists(system_json_file)) {
+    log() << "Error: file does not exist: " << system_json_file << std::endl;
+    return 1;
+  }
+  if (!fs::exists(run_params_json_file)) {
+    log() << "Error: file does not exist: " << run_params_json_file
+          << std::endl;
+    return 1;
+  }
+
+  using namespace CASM::clexmonte;
+  using namespace CASM::clexmonte::canonical;
+  typedef Canonical<std::mt19937_64> calculation_type;
+  parse_and_run_series<calculation_type>(system_json_file,
+                                         run_params_json_file);
+
+  return 0;
 }

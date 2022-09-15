@@ -56,8 +56,8 @@ void parse(
     InputParser<monte::jsonResultsIO<config_type>> &parser,
     monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
     monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions) {
-  std::string output_dir;
-  parser.require(output_dir, "output_dir");
+  std::string output_dir = "output";
+  parser.optional(output_dir, "output_dir");
 
   bool write_observations = false;
   parser.optional(write_observations, "write_observations");

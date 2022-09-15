@@ -44,7 +44,7 @@ void parse(
 void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
            std::shared_ptr<system_type> const &system) {
   Eigen::Matrix3l T;
-  parser.require(T, "transformation_matrix_to_super");
+  parser.require(T, "transformation_matrix_to_supercell");
   if (!parser.valid()) {
     return;
   }

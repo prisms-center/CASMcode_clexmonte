@@ -54,8 +54,12 @@ TEST_F(state_StateSamplerTest, Test1) {
   std::vector<OccSwap> canonical_swaps =
       make_canonical_swaps(convert, occ_candidate_list);
 
+  auto &log = CASM::log();
+
   // Loop over states
   for (Index i = 0; i < 8; ++i) {
+    log.restart_clock();
+
     // Create state
     State<Configuration> state(default_state.configuration, init_conditions);
     state.conditions.scalar_values.at("temperature") = 300.0 + i * 100.0;
@@ -92,7 +96,7 @@ TEST_F(state_StateSamplerTest, Test1) {
                                samples_per_period, log_sampling_shift,
                                do_sample_trajectory);
     state_sampler.reset(steps_per_pass);
-    state_sampler.sample_data_if_due(state);
+    state_sampler.sample_data_if_due(state, log.time_s());
 
     // Main loop
     OccEvent event;
@@ -119,7 +123,7 @@ TEST_F(state_StateSamplerTest, Test1) {
       }
 
       state_sampler.increment_step();
-      state_sampler.sample_data_if_due(state);
+      state_sampler.sample_data_if_due(state, log.time_s());
     }  // main loop
 
     std::stringstream ss;
