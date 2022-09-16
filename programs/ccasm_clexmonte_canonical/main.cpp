@@ -99,8 +99,12 @@ int main(int argc, char *argv[]) {
 
   using namespace CASM::clexmonte;
   using namespace CASM::clexmonte::canonical;
-  parse_and_run_series<Canonical_mt19937_64>(system_json_file,
-                                             run_params_json_file);
+  try {
+    parse_and_run_series<Canonical_mt19937_64>(system_json_file,
+                                               run_params_json_file);
+  } catch (std::exception &e) {
+    log() << e.what() << std::endl;
+  }
 
   return 0;
 }

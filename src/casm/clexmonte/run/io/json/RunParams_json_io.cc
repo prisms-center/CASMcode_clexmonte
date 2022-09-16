@@ -76,6 +76,21 @@ MethodParserMap<results_io_type> standard_results_io_methods(
 ///         Controls when a single Monte Carlo run is complete. Options include
 ///         convergence of sampled quantiies, min/max number of samples, min/
 ///         max number of passes, etc.
+///     "analysis":
+///       "functions": array of str (default=[])
+///         Names of analysis functions to use to evaluate results with.
+///         Standard options include the following (others may be included):
+///
+///           - "heat_capacity": Heat capacity
+///           - "mol_susc": Chemical susceptibility (mol_composition)
+///           - "param_susc": Chemical susceptibility (param_composition)
+///           - "mol_thermocalc_susc": Thermo-chemical susceptibility
+///           (mol_composition)
+///           - "param_thermocalc_susc": Thermo-Chemical susceptibility
+///           (param_composition)
+///
+///         Unless otherwise noted, assume intensive (per unit cell) properties.
+///
 ///     "results_io": <monte::ResultsIO>
 ///         Options controlling results output.
 ///     "log": (optional)
@@ -109,6 +124,23 @@ void parse(
       parser.subparse<monte::CompletionCheckParams>("completion_check",
                                                     sampling_functions);
 
+  // Read analysis functions
+  std::vector<std::string> function_names;
+  fs::path functions_path = fs::path("analysis") / "functions";
+  parser.optional(function_names, functions_path);
+
+  monte::ResultsAnalysisFunctionMap<config_type> selected_analysis_functions;
+  for (auto const &name : function_names) {
+    auto it = analysis_functions.find(name);
+    if (it != analysis_functions.end()) {
+      selected_analysis_functions.insert(*it);
+    } else {
+      std::stringstream msg;
+      msg << "Error: function '" << name << "' not recognized";
+      parser.insert_error(functions_path, msg.str());
+    }
+  }
+
   // Construct results I/O instance
   auto results_io_subparser =
       parser.subparse<results_io_type>("results_io", results_io_methods);
@@ -128,7 +160,7 @@ void parse(
 
   if (parser.valid()) {
     parser.value = std::make_unique<RunParams>(
-        sampling_functions, analysis_functions,
+        sampling_functions, selected_analysis_functions,
         std::move(state_generator_subparser->value),
         *sampling_params_subparser->value,
         *completion_check_params_subparser->value,
