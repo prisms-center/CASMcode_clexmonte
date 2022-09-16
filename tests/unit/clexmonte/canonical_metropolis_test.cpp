@@ -37,7 +37,7 @@ TEST_F(canonical_MetropolisTest, Test1) {
 
   // Prepare supercell-specific index conversions
   Conversions convert{*get_prim_basicstructure(*system),
-                      get_transformation_matrix_to_super(state)};
+                      get_transformation_matrix_to_supercell(state)};
   OccCandidateList occ_candidate_list(convert);
   std::vector<OccSwap> canonical_swaps =
       make_canonical_swaps(convert, occ_candidate_list);
@@ -45,10 +45,8 @@ TEST_F(canonical_MetropolisTest, Test1) {
   occ_location.initialize(get_occupation(state));
   CountType steps_per_pass = occ_location.mol_size();
 
-  // Make supercell-specific potential energy clex calculator
-  // (equal to formation energy calculator now)
-  canonical::CanonicalPotential potential(
-      get_clex(*system, state, "formation_energy"));
+  // Make potential energy calculator & set for particular supercell
+  canonical::CanonicalPotential potential(system);
   set(potential, state);
 
   // Main loop

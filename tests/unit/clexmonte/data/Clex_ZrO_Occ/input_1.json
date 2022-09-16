@@ -112,8 +112,10 @@
           "max": 100
         }
       },
-      "begin": 10,
-      "frequency": 1,
+      "begin": 0.0,
+      "period": 10.0,
+      "checks_per_period": 1.0,
+      "shift": 1.0,
       "confidence": 0.95,
       "convergence": [
         {

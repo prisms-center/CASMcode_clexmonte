@@ -23,12 +23,13 @@ using namespace CASM::clexmonte;
 class state_StateSamplerTest : public test::ZrOTestSystem {
  public:
   state_StateSamplerTest()
-      : calculator(
-            std::make_shared<canonical::Canonical<std::mt19937_64>>(system)) {
-    sampling_functions = canonical::standard_sampling_functions(calculator);
+      : calculator(std::make_shared<canonical::Canonical_mt19937_64>(system)) {
+    sampling_functions =
+        canonical::Canonical_mt19937_64::standard_sampling_functions(
+            calculator);
   }
 
-  std::shared_ptr<canonical::Canonical<std::mt19937_64>> calculator;
+  std::shared_ptr<canonical::Canonical_mt19937_64> calculator;
   StateSamplingFunctionMap<Configuration> sampling_functions;
 };
 
@@ -68,10 +69,9 @@ TEST_F(state_StateSamplerTest, Test1) {
     occ_location.initialize(get_occupation(state));
     CountType steps_per_pass = occ_location.mol_size();
 
-    // Make supercell-specific potential energy clex calculator
-    // (equal to formation energy calculator now)
-    canonical::CanonicalPotential potential(
-        get_clex(*system, state, "formation_energy"));
+    // Make potential energy calculator & set for particular supercell
+    canonical::CanonicalPotential potential(system);
+    set(potential, state);
 
     // Make StateSampler
     std::vector<StateSamplingFunction<Configuration>> functions;
@@ -96,7 +96,7 @@ TEST_F(state_StateSamplerTest, Test1) {
                                samples_per_period, log_sampling_shift,
                                do_sample_trajectory);
     state_sampler.reset(steps_per_pass);
-    state_sampler.sample_data_if_due(state, log.time_s());
+    state_sampler.sample_data_if_due(state, log);
 
     // Main loop
     OccEvent event;
@@ -123,7 +123,7 @@ TEST_F(state_StateSamplerTest, Test1) {
       }
 
       state_sampler.increment_step();
-      state_sampler.sample_data_if_due(state, log.time_s());
+      state_sampler.sample_data_if_due(state, log);
     }  // main loop
 
     std::stringstream ss;

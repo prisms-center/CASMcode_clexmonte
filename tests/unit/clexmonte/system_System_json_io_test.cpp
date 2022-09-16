@@ -8,7 +8,7 @@ using namespace CASM;
 ///   that the Clexulators do not need to be re-compiled.
 /// - To clear existing data, remove the directory:
 //    CASM_test_projects/FCCBinaryVacancySystemJsonIOTest directory
-class system_FCCBinaryVacancySystemJsonIOTest : public KMCTestSystem {
+class system_FCCBinaryVacancySystemJsonIOTest : public test::KMCTestSystem {
  protected:
   system_FCCBinaryVacancySystemJsonIOTest()
       : KMCTestSystem(

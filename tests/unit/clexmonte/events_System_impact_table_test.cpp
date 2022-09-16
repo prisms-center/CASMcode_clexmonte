@@ -18,7 +18,7 @@ using namespace CASM;
 ///   that the Clexulators do not need to be re-compiled.
 /// - To clear existing data, remove the directory:
 //    CASM_test_projects/FCCBinaryVacancy_default directory
-class events_impact_table_Test : public KMCTestSystem {
+class events_impact_table_Test : public test::KMCTestSystem {
   void print_impact_info(
       std::vector<clexmonte::EventImpactInfo> const &prim_impact_info_list) {
     jsonParser json;

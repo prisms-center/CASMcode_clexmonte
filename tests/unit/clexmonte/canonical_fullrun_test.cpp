@@ -1,20 +1,24 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/canonical.hh"
-#include "casm/clexmonte/run/functions.hh"
-#include "casm/clexmonte/run/io/RunParams.hh"
-#include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
+// #include "casm/clexmonte/run/functions.hh"
+// #include "casm/clexmonte/run/io/RunParams.hh"
+// #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexulator/Clexulator.hh"
-#include "casm/clexulator/NeighborList.hh"
+// #include "casm/clexulator/NeighborList.hh"
 #include "casm/clexulator/io/json/SparseCoefficients_json_io.hh"
-#include "casm/composition/CompositionConverter.hh"
+// #include "casm/composition/CompositionConverter.hh"
 #include "casm/crystallography/io/BasicStructureIO.hh"
-#include "casm/monte/MethodLog.hh"
-#include "casm/monte/results/ResultsAnalysisFunction.hh"
+// #include "casm/monte/MethodLog.hh"
+#include "casm/monte/checks/CompletionCheck.hh"
+// #include "casm/monte/results/ResultsAnalysisFunction.hh"
 #include "casm/monte/results/io/json/jsonResultsIO_impl.hh"
+#include "casm/monte/sampling/SamplingParams.hh"
 #include "casm/monte/state/FixedConfigGenerator.hh"
+#include "casm/monte/state/IncrementalConditionsStateGenerator.hh"
 #include "casm/monte/state/StateSampler.hh"
 #include "casm/system/RuntimeLibrary.hh"
 #include "gtest/gtest.h"
@@ -144,14 +148,15 @@ TEST(canonical_fullrun_test, Test1) {
   system->clex_data.emplace("formation_energy", formation_energy_clex_data);
 
   // ### Construct the canonical calculator
-  typedef clexmonte::canonical::Canonical<std::mt19937_64> calculation_type;
+  typedef clexmonte::canonical::Canonical_mt19937_64 calculation_type;
   auto calculation = std::make_shared<calculation_type>(system);
 
   // ### Construct sampling functions & analysis functions
   monte::StateSamplingFunctionMap<clexmonte::Configuration> sampling_functions =
-      standard_sampling_functions(calculation);
+      calculation_type::standard_sampling_functions(calculation);
   monte::ResultsAnalysisFunctionMap<clexmonte::Configuration>
-      analysis_functions = standard_analysis_functions(calculation);
+      analysis_functions =
+          calculation_type::standard_analysis_functions(calculation);
   // - Add custom sampling functions if desired...
   // monte::StateSamplingFunction<Configuration> f {
   //     "potential_energy", // sampler name
@@ -272,8 +277,11 @@ TEST(canonical_fullrun_test, Test1) {
 
   // - Set other completion check parameters or use defaults
   // completion_check_params.confidence = 0.95; // default=0.95
-  // completion_check_params.check_begin = 10; // default=10
-  completion_check_params.check_frequency = 10;  // default=1
+  // completion_check_params.log_spacing = true;  // default=true
+  // completion_check_params.check_begin = 0.0; // default=0
+  // completion_check_params.check_period = 10.0;  // default=10
+  // completion_check_params.check_per_period = 1.0;  // default=1
+  // completion_check_params.check_shift = 1.0;  // default=1
 
   // ### Construct monte::jsonResultsIO
   fs::path output_dir = test_dir / output_dir_relpath;
@@ -294,9 +302,9 @@ TEST(canonical_fullrun_test, Test1) {
   method_log.logfile_path = test_dir / output_dir_relpath / "status.json";
   method_log.log_frequency = 60;  // seconds
 
-  run_series(*calculation, sampling_functions, analysis_functions,
-             sampling_params, completion_check_params, state_generator,
-             results_io, method_log);
+  calculation->run_series(sampling_functions, analysis_functions,
+                          sampling_params, completion_check_params,
+                          state_generator, results_io, method_log);
 
   // check output files
   EXPECT_TRUE(fs::exists(output_dir));

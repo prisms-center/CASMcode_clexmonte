@@ -12,7 +12,7 @@ using namespace CASM;
 /// - To clear existing data, remove the directory:
 //    CASM_test_projects/FCCBinaryVacancy_default directory
 class events_CompleteEventCalculator_Test
-    : public KMCCompleteEventListTestSystem {};
+    : public test::KMCCompleteEventListTestSystem {};
 
 /// \brief Test constructing event lists and calculating initial event states
 ///

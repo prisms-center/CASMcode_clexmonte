@@ -12,8 +12,8 @@ using namespace CASM;
 ///   that the Clexulators do not need to be re-compiled.
 /// - To clear existing data, remove the directory:
 //    CASM_test_projects/FCCBinaryVacancy_default directory
-class events_RejectionFree_Test : public KMCCompleteEventCalculatorTestSystem {
-};
+class events_RejectionFree_Test
+    : public test::KMCCompleteEventCalculatorTestSystem {};
 
 /// \brief Test constructing event lists and calculating initial event states
 ///

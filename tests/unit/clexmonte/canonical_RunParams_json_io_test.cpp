@@ -48,12 +48,14 @@ TEST(canonical_RunParams_json_io_test, Test1) {
   std::shared_ptr<clexmonte::System> system(system_subparser->value.release());
 
   // Make calculation object:
-  typedef clexmonte::canonical::Canonical<std::mt19937_64> calculation_type;
+  typedef clexmonte::canonical::Canonical_mt19937_64 calculation_type;
   auto calculation = std::make_shared<calculation_type>(system);
 
   /// Make state sampling & analysis functions
-  auto sampling_functions = standard_sampling_functions(calculation);
-  auto analysis_functions = standard_analysis_functions(calculation);
+  auto sampling_functions =
+      calculation_type::standard_sampling_functions(calculation);
+  auto analysis_functions =
+      calculation_type::standard_analysis_functions(calculation);
 
   /// Make config generator / state generator / results_io JSON parsers
   auto config_generator_methods =

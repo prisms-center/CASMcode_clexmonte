@@ -1,6 +1,5 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/canonical.hh"
-#include "casm/clexmonte/run/functions.hh"
 #include "casm/clexmonte/run/io/RunParams.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
@@ -50,12 +49,14 @@ TEST(canonical_run_test, Test1) {
   std::shared_ptr<clexmonte::System> system(system_subparser->value.release());
 
   // Make calculation object:
-  typedef clexmonte::canonical::Canonical<std::mt19937_64> calculation_type;
+  typedef clexmonte::canonical::Canonical_mt19937_64 calculation_type;
   auto calculation = std::make_shared<calculation_type>(system);
 
   /// Make state sampling & analysis functions
-  auto sampling_functions = standard_sampling_functions(calculation);
-  auto analysis_functions = standard_analysis_functions(calculation);
+  auto sampling_functions =
+      calculation_type::standard_sampling_functions(calculation);
+  auto analysis_functions =
+      calculation_type::standard_analysis_functions(calculation);
 
   /// Make config generator / state generator / results_io JSON parsers
   auto config_generator_methods =
@@ -76,10 +77,10 @@ TEST(canonical_run_test, Test1) {
 
   clexmonte::RunParams &run_params = *run_params_subparser->value;
 
-  run_series(*calculation, run_params.sampling_functions,
-             run_params.analysis_functions, run_params.sampling_params,
-             run_params.completion_check_params, *run_params.state_generator,
-             *run_params.results_io);
+  calculation->run_series(
+      run_params.sampling_functions, run_params.analysis_functions,
+      run_params.sampling_params, run_params.completion_check_params,
+      *run_params.state_generator, *run_params.results_io);
 
   EXPECT_TRUE(fs::exists(test_dir / "output"));
   EXPECT_TRUE(fs::exists(test_dir / "output" / "summary.json"));
