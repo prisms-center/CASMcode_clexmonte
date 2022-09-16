@@ -4,7 +4,12 @@
 #include "casm/casm_io/Log.hh"
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/misc/to_json.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
+#include "casm/monte/MethodLog.hh"
+#include "casm/monte/events/OccLocation.hh"
+#include "casm/monte/results/Results.hh"
+#include "casm/monte/results/ResultsAnalysisFunction.hh"
 #include "casm/monte/results/io/ResultsIO.hh"
 #include "casm/monte/state/StateGenerator.hh"
 #include "casm/monte/state/io/json/ValueMap_json_io.hh"
@@ -37,7 +42,7 @@ void run_series(
     state_generator_type &state_generator,
     monte::ResultsIO<config_type> &results_io, monte::MethodLog method_log) {
   auto &log = CASM::log();
-  log.begin("Cluster expansion canonical Monte Carlo");
+  log.begin("Monte Carlo calculation series");
 
   // Final states are made available to the state generator which can use them
   // to determine the next state

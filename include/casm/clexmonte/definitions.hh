@@ -26,6 +26,8 @@ typedef Configuration config_type;
 
 typedef monte::State<config_type> state_type;
 
+struct Conditions;
+
 // generic ConfigGenerator, and supported implementations
 typedef monte::ConfigGenerator<config_type, state_type> config_generator_type;
 

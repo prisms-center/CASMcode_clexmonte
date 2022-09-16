@@ -37,12 +37,15 @@ void parse_and_run_series(fs::path system_json_file,
 
   std::shared_ptr<clexmonte::System> system(system_parser.value.release());
 
+  // TODO: parse calculation parameters
   // Make calculation object:
   auto calculation = std::make_shared<CalculationType>(system);
 
   /// Make state sampling & analysis functions
-  auto sampling_functions = standard_sampling_functions(calculation);
-  auto analysis_functions = standard_analysis_functions(calculation);
+  auto sampling_functions =
+      CalculationType::standard_sampling_functions(calculation);
+  auto analysis_functions =
+      CalculationType::standard_analysis_functions(calculation);
 
   /// Make config generator / state generator / results_io JSON parsers
   auto config_generator_methods =
@@ -71,10 +74,11 @@ void parse_and_run_series(fs::path system_json_file,
 
   clexmonte::RunParams &run_params = *run_params_parser.value;
 
-  run_series(*calculation, run_params.sampling_functions,
-             run_params.analysis_functions, run_params.sampling_params,
-             run_params.completion_check_params, *run_params.state_generator,
-             *run_params.results_io, run_params.method_log);
+  calculation->run_series(
+      run_params.sampling_functions, run_params.analysis_functions,
+      run_params.sampling_params, run_params.completion_check_params,
+      *run_params.state_generator, *run_params.results_io,
+      run_params.method_log);
 }
 
 }  // namespace clexmonte

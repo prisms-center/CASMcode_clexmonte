@@ -1,28 +1,32 @@
-#include "casm/clexmonte/canonical.hh"
-
+#include "casm/clexmonte/canonical_impl.hh"
 #include "casm/clexmonte/state/make_conditions.hh"
-#include "casm/clexmonte/state/sampling_functions.hh"
-#include "casm/clexmonte/system/System.hh"
-#include "casm/monte/results/ResultsAnalysisFunction.hh"
-#include "casm/monte/state/ValueMap.hh"
 
 namespace CASM {
 namespace clexmonte {
 namespace canonical {
 
-CanonicalPotential::CanonicalPotential(
-    std::shared_ptr<clexulator::ClusterExpansion> _formation_energy_clex)
-    : m_formation_energy_clex(_formation_energy_clex) {
-  if (m_formation_energy_clex == nullptr) {
+CanonicalPotential::CanonicalPotential(std::shared_ptr<system_type> _system)
+    : m_system(_system) {
+  if (m_system == nullptr) {
     throw std::runtime_error(
-        "Error constructing CanonicalPotential: formation_energy_clex is "
-        "empty");
+        "Error constructing CanonicalPotential: system is empty");
   }
 }
 
 /// \brief Reset pointer to state currently being calculated
+///
+/// Notes:
+/// - If state supercell is modified this must be called again
+/// - State DoF values can be modified without calling this again
+/// - State conditions can be modified without calling this again
 void CanonicalPotential::set(monte::State<Configuration> const *state) {
+  // supercell-specific
   m_state = state;
+  if (m_state == nullptr) {
+    throw std::runtime_error(
+        "Error setting CanonicalPotential state: state is empty");
+  }
+  m_formation_energy_clex = get_clex(*m_system, *m_state, "formation_energy");
   m_formation_energy_clex->set(&get_dof_values(*m_state));
 }
 
@@ -135,6 +139,8 @@ monte::ValueMap make_conditions_increment(
       make_mol_composition_increment(composition_converter, comp);
   return conditions;
 }
+
+template struct Canonical<std::mt19937_64>;
 
 }  // namespace canonical
 }  // namespace clexmonte

@@ -184,7 +184,7 @@ SupercellSystemData &get_supercell_data(
 ///     constructing as necessary
 SupercellSystemData &get_supercell_data(
     System &system, monte::State<Configuration> const &state) {
-  auto const &T = get_transformation_matrix_to_super(state);
+  auto const &T = get_transformation_matrix_to_supercell(state);
   return get_supercell_data(system, T);
 }
 

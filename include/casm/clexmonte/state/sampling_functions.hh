@@ -45,6 +45,12 @@ template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_param_composition_f(
     std::shared_ptr<SystemType> const &system);
 
+/// \brief Make parametric chemical potential sampling function
+/// ("param_chem_pot")
+template <typename SystemType>
+monte::StateSamplingFunction<Configuration> make_param_chem_pot_f(
+    std::shared_ptr<SystemType> const &system);
+
 /// \brief Make formation energy correlations sampling function
 ///     ("formation_energy_corr")
 template <typename SystemType>
@@ -112,19 +118,20 @@ monte::StateSamplingFunction<Configuration> make_mol_composition_f(
 template <typename SystemType>
 monte::StateSamplingFunction<Configuration> make_param_composition_f(
     std::shared_ptr<SystemType> const &system) {
-  // name comp_x components "a", "b", ... for each independent composition axis
+  // name param_composition components "a", "b", ... for each independent
+  // composition axis
   composition::CompositionConverter const &composition_converter =
       get_composition_converter(*system);
-  std::vector<std::string> comp_x_components;
+  std::vector<std::string> component_names;
   for (Index i = 0; i < composition_converter.independent_compositions(); ++i) {
-    comp_x_components.push_back(composition_converter.comp_var(i));
+    component_names.push_back(composition_converter.comp_var(i));
   }
   std::vector<Index> shape;
-  shape.push_back(comp_x_components.size());
+  shape.push_back(component_names.size());
 
   return monte::StateSamplingFunction<Configuration>(
       "param_composition", "Parametric composition",
-      comp_x_components,  // component names
+      component_names,  // component names
       shape, [system](monte::State<Configuration> const &state) {
         composition::CompositionCalculator const &composition_calculator =
             get_composition_calculator(*system);
@@ -135,6 +142,31 @@ monte::StateSamplingFunction<Configuration> make_param_composition_f(
         Eigen::VectorXd mol_composition =
             composition_calculator.mean_num_each_component(occupation);
         return composition_converter.param_composition(mol_composition);
+      });
+}
+
+/// \brief Make parametric chemical potential sampling function
+/// ("param_chem_pot")
+template <typename SystemType>
+monte::StateSamplingFunction<Configuration> make_param_chem_pot_f(
+    std::shared_ptr<SystemType> const &system) {
+  // name param_chem_pot components "a", "b", ... for each independent
+  // composition axis
+  composition::CompositionConverter const &composition_converter =
+      get_composition_converter(*system);
+  std::vector<std::string> component_names;
+  for (Index i = 0; i < composition_converter.independent_compositions(); ++i) {
+    component_names.push_back(composition_converter.comp_var(i));
+  }
+  std::vector<Index> shape;
+  shape.push_back(component_names.size());
+
+  return monte::StateSamplingFunction<Configuration>(
+      "param_chem_pot",
+      "Chemical potential conjugate to parametric composition axes",
+      component_names,  // component names
+      shape, [system](monte::State<Configuration> const &state) {
+        return state.conditions.vector_values.at("param_chem_pot");
       });
 }
 

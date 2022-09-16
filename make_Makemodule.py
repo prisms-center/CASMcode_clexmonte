@@ -813,12 +813,28 @@ def main():
     chunk = make_add_to_PROGRAMS(
         "ccasm-clexmonte-canonical",
         "bin",
-        SOURCES=["programs/ccasm_clexmonte_canonical/main.cpp"],
+        SOURCES=[
+            "programs/ccasm_clexmonte_canonical/main.cpp"
+        ],
         LDADD=[
             "libcasm_clexmonte.la"
         ],
     )
     target = os.path.join("programs", "ccasm_clexmonte_canonical", "Makemodule.am")
+    string_to_file(chunk, target)
+
+    print("Create Makefile for ccasm-clexmonte-semi-grand-canonical program")
+    chunk = make_add_to_PROGRAMS(
+        "ccasm-clexmonte-semi-grand-canonical",
+        "bin",
+        SOURCES=[
+            "programs/ccasm_clexmonte_semi_grand_canonical/main.cpp"
+        ],
+        LDADD=[
+            "libcasm_clexmonte.la"
+        ],
+    )
+    target = os.path.join("programs", "ccasm_clexmonte_semi_grand_canonical", "Makemodule.am")
     string_to_file(chunk, target)
 
     chunk = make_aggregated_unit_test([

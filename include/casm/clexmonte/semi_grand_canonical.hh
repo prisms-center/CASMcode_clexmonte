@@ -1,5 +1,5 @@
-#ifndef CASM_clexmonte_canonical
-#define CASM_clexmonte_canonical
+#ifndef CASM_clexmonte_semi_grand_canonical
+#define CASM_clexmonte_semi_grand_canonical
 
 #include <random>
 
@@ -10,18 +10,18 @@
 
 namespace CASM {
 namespace clexmonte {
-namespace canonical {
+namespace semi_grand_canonical {
 
-/// \brief Implements potential for canonical Monte Carlo
-class CanonicalPotential {
+/// \brief Implements potential for semi-grand canonical Monte Carlo
+class SemiGrandCanonicalPotential {
  public:
-  CanonicalPotential(std::shared_ptr<system_type> _system);
+  SemiGrandCanonicalPotential(std::shared_ptr<system_type> _system);
 
   /// \brief Reset pointer to state currently being calculated
-  void set(monte::State<Configuration> const *state);
+  void set(state_type const *state);
 
   /// \brief Pointer to state currently being calculated
-  monte::State<Configuration> const *get() const;
+  state_type const *get() const;
 
   /// \brief Calculate (extensive) cluster expansion value
   double extensive_value();
@@ -36,38 +36,47 @@ class CanonicalPotential {
   std::shared_ptr<system_type> m_system;
 
   /// State to use
-  monte::State<Configuration> const *m_state;
+  state_type const *m_state;
 
-  /// Formation energy cluster expansion calculator;
+  /// Formation energy cluster expansion calculator, depends on current state
   std::shared_ptr<clexulator::ClusterExpansion> m_formation_energy_clex;
+
+  /// Number of unit cells, depends on current state
+  double m_n_unitcells;
+
+  /// Conditions, depends on current state
+  std::shared_ptr<Conditions> m_conditions;
+
+  /// Index conversions, depends on current state
+  monte::Conversions const *m_convert;
 };
 
 /// \brief Set potential calculator so it evaluates using `state`
-void set(CanonicalPotential &potential,
-         monte::State<Configuration> const &state);
+void set(SemiGrandCanonicalPotential &potential, state_type const &state);
 
-typedef CanonicalPotential potential_type;
+typedef SemiGrandCanonicalPotential potential_type;
 
-/// \brief Helper for making a conditions ValueMap for canonical Monte
-///     Carlo calculations
+/// \brief Helper for making a conditions ValueMap for semi-grand
+///     canonical Monte Carlo calculations
 monte::ValueMap make_conditions(
     double temperature,
     composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> comp);
+    std::map<std::string, double> param_chem_pot);
 
-/// \brief Helper for making a conditions ValueMap for canonical Monte
-///     Carlo calculations
+/// \brief Helper for making a conditions increment ValueMap for
+///     semi-grand canonical Monte Carlo calculations
 monte::ValueMap make_conditions_increment(
     double temperature,
     composition::CompositionConverter const &composition_converter,
-    std::map<std::string, double> comp);
+    std::map<std::string, double> param_chem_pot);
 
-/// \brief Implements canonical Monte Carlo calculations
+/// \brief Implements semi-grand canonical Monte Carlo calculations
 template <typename EngineType>
-struct Canonical {
-  explicit Canonical(std::shared_ptr<system_type> _system,
-                     std::shared_ptr<EngineType> _random_number_engine =
-                         std::shared_ptr<EngineType>());
+struct SemiGrandCanonical {
+  explicit SemiGrandCanonical(
+      std::shared_ptr<system_type> _system,
+      std::shared_ptr<EngineType> _random_number_engine =
+          std::shared_ptr<EngineType>());
 
   /// System data
   std::shared_ptr<system_type> system;
@@ -75,8 +84,8 @@ struct Canonical {
   /// Random number generator
   monte::RandomNumberGenerator<EngineType> random_number_generator;
 
-  /// \brief Make the Canonical potential calculator, for use with templated
-  /// methods
+  /// \brief Make the SemiGrandCanonical potential calculator, for use
+  ///     with templated methods
   potential_type make_potential(state_type const &state) const;
 
   /// \brief Perform a single run, evolving current state
@@ -105,19 +114,19 @@ struct Canonical {
   ///     the Monte Carlo calculation as it runs
   static monte::StateSamplingFunctionMap<Configuration>
   standard_sampling_functions(
-      std::shared_ptr<Canonical<EngineType>> const &calculation);
+      std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation);
 
   /// \brief Construct functions that may be used to analyze Monte Carlo
   ///     calculation results
   static monte::ResultsAnalysisFunctionMap<Configuration>
   standard_analysis_functions(
-      std::shared_ptr<Canonical<EngineType>> const &calculation);
+      std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation);
 };
 
-/// \brief Explicitly instantiated Canonical calculator
-typedef Canonical<std::mt19937_64> Canonical_mt19937_64;
+/// \brief Explicitly instantiated SemiGrandCanonical calculator
+typedef SemiGrandCanonical<std::mt19937_64> SemiGrandCanonical_mt19937_64;
 
-}  // namespace canonical
+}  // namespace semi_grand_canonical
 }  // namespace clexmonte
 }  // namespace CASM
 
