@@ -55,7 +55,7 @@ TEST_F(events_CompleteEventCalculator_Test, Test1) {
           CASM::TOL /*TODO*/));
 
   std::vector<EventStateCalculator> prim_event_calculators =
-      clexmonte::make_prim_event_calculators(*system, state, prim_event_list,
+      clexmonte::make_prim_event_calculators(system, state, prim_event_list,
                                              conditions);
   EXPECT_EQ(prim_event_calculators.size(), 24);
 

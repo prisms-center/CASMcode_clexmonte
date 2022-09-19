@@ -99,6 +99,7 @@ monte::Results<config_type> Canonical<EngineType>::run(
   return result;
 }
 
+/// \brief Perform a series of runs, according to a state generator
 template <typename EngineType>
 void Canonical<EngineType>::run_series(
     monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
@@ -134,7 +135,7 @@ Canonical<EngineType>::standard_sampling_functions(
     function_map.emplace(f.name, f);
   }
   return function_map;
-};
+}
 
 /// \brief Construct functions that may be used to analyze Monte Carlo
 ///     calculation results

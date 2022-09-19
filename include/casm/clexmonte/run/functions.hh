@@ -32,6 +32,27 @@ void run_series(
 // --- Implementation ---
 
 /// \brief Perform a series of runs, according to a state_generator
+///
+/// \param calculation A calculation instance, such as canonical::Canonical,
+///     semi_grand_canonical::SemiGrandCanonical, or kinetic::Kinetic.
+/// \param sampling_functions Functions of `state_type`, for sampling
+/// \param analysis_functions Functions of `results_type`, for post-run
+///     results analysis, such as `heat_capacity`
+/// \param completion_check_params Specify when a single run should be
+///     considered complete
+/// \param state_generator A monte::StateGenerator, which produces a
+///     a series of initial states
+/// \param results_io A monte::ResultsIO, which outputs results
+/// \param method_log A monte::MethodLog, where run status can be
+///     output. Default does not write.
+///
+/// Requires:
+/// - std::shared_ptr<system_type> CalculationType::system: Shared ptr
+///   with system info
+/// - CalculationType::run(...): Method to run a single calculation, see
+///   canonical::Canonical<EngineType>::run for an example
+/// - bool CalculationType::update_species: For occupant tracking,
+///   should be true for KMC, false otherwise
 template <typename CalculationType>
 void run_series(
     CalculationType &calculation,
@@ -66,7 +87,8 @@ void run_series(
         get_index_conversions(*calculation.system, initial_state);
     monte::OccCandidateList const &occ_candidate_list =
         get_occ_candidate_list(*calculation.system, initial_state);
-    monte::OccLocation occ_location(convert, occ_candidate_list);
+    monte::OccLocation occ_location(convert, occ_candidate_list,
+                                    calculation.update_species);
     occ_location.initialize(get_occupation(initial_state));
 
     // Run Monte Carlo at a single condition

@@ -1,4 +1,5 @@
 #include "casm/clexmonte/canonical_impl.hh"
+#include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/make_conditions.hh"
 
 namespace CASM {
@@ -27,7 +28,13 @@ void CanonicalPotential::set(monte::State<Configuration> const *state) {
         "Error setting CanonicalPotential state: state is empty");
   }
   m_formation_energy_clex = get_clex(*m_system, *m_state, "formation_energy");
-  m_formation_energy_clex->set(&get_dof_values(*m_state));
+  // m_formation_energy_clex->set(&get_dof_values(*m_state));
+
+  // conditions-specific
+  m_conditions = std::make_shared<Conditions>(make_conditions_from_value_map(
+      m_state->conditions, *get_prim_basicstructure(*m_system),
+      get_composition_converter(*m_system), get_random_alloy_corr_f(*m_system),
+      CASM::TOL /*TODO*/));
 }
 
 /// \brief Pointer to state currently being calculated

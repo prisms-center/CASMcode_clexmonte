@@ -34,7 +34,7 @@ void SemiGrandCanonicalPotential::set(state_type const *state) {
         "Error setting SemiGrandCanonicalPotential state: state is empty");
   }
   m_formation_energy_clex = get_clex(*m_system, *m_state, "formation_energy");
-  m_formation_energy_clex->set(&get_dof_values(*m_state));
+  // m_formation_energy_clex->set(&get_dof_values(*m_state));
   m_convert = &get_index_conversions(*m_system, *m_state);
   m_n_unitcells =
       get_transformation_matrix_to_supercell(*m_state).determinant();

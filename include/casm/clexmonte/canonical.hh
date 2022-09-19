@@ -38,6 +38,9 @@ class CanonicalPotential {
   /// State to use
   monte::State<Configuration> const *m_state;
 
+  /// Conditions, depends on current state
+  std::shared_ptr<Conditions> m_conditions;
+
   /// Formation energy cluster expansion calculator;
   std::shared_ptr<clexulator::ClusterExpansion> m_formation_energy_clex;
 };
@@ -75,15 +78,14 @@ struct Canonical {
   /// Random number generator
   monte::RandomNumberGenerator<EngineType> random_number_generator;
 
+  /// Update species in monte::OccLocation tracker?
+  bool update_species = false;
+
   /// \brief Make the Canonical potential calculator, for use with templated
   /// methods
   potential_type make_potential(state_type const &state) const;
 
   /// \brief Perform a single run, evolving current state
-  ///
-  /// Notes:
-  /// - this->state and this->occ_location are evolved and end in modified
-  /// states
   monte::Results<config_type> run(
       state_type &state, monte::OccLocation &occ_location,
       monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
@@ -92,6 +94,7 @@ struct Canonical {
       monte::CompletionCheckParams const &completion_check_params,
       monte::MethodLog method_log = monte::MethodLog());
 
+  /// \brief Perform a series of runs, according to a state generator
   void run_series(
       monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
       monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,

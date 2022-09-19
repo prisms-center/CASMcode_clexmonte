@@ -38,7 +38,7 @@ void KMCCompleteEventCalculatorTestSystem::make_complete_event_calculator(
           CASM::TOL /*TODO*/));
 
   prim_event_calculators = clexmonte::make_prim_event_calculators(
-      *system, state, prim_event_list, conditions);
+      system, state, prim_event_list, conditions);
 
   // Construct CompleteEventCalculator
   event_calculator = std::make_shared<clexmonte::CompleteEventCalculator>(

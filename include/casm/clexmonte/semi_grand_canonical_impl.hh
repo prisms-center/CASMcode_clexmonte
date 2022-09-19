@@ -89,6 +89,7 @@ monte::Results<config_type> SemiGrandCanonical<EngineType>::run(
   return result;
 }
 
+/// \brief Perform a series of runs, according to a state generator
 template <typename EngineType>
 void SemiGrandCanonical<EngineType>::run_series(
     monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
