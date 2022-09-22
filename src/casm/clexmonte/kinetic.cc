@@ -1,58 +1,9 @@
-#include "casm/clexmonte/canonical_impl.hh"
+#include "casm/clexmonte/kinetic_impl.hh"
 #include "casm/clexmonte/state/make_conditions.hh"
 
 namespace CASM {
 namespace clexmonte {
-namespace canonical {
-
-CanonicalPotential::CanonicalPotential(std::shared_ptr<system_type> _system)
-    : m_system(_system) {
-  if (m_system == nullptr) {
-    throw std::runtime_error(
-        "Error constructing CanonicalPotential: system is empty");
-  }
-}
-
-/// \brief Reset pointer to state currently being calculated
-///
-/// Notes:
-/// - If state supercell is modified this must be called again
-/// - State DoF values can be modified without calling this again
-/// - State conditions can be modified without calling this again
-void CanonicalPotential::set(monte::State<Configuration> const *state,
-                             std::shared_ptr<Conditions> conditions) {
-  // supercell-specific
-  m_state = state;
-  if (m_state == nullptr) {
-    throw std::runtime_error(
-        "Error setting CanonicalPotential state: state is empty");
-  }
-  m_formation_energy_clex = get_clex(*m_system, *m_state, "formation_energy");
-
-  // conditions-specific
-  m_conditions = conditions;
-}
-
-/// \brief Pointer to current state
-state_type const *CanonicalPotential::state() const { return m_state; }
-
-/// \brief Pointer to current conditions
-std::shared_ptr<Conditions> const &CanonicalPotential::conditions() const {
-  return m_conditions;
-}
-
-/// \brief Calculate (extensive) canonical potential value
-double CanonicalPotential::extensive_value() {
-  return m_formation_energy_clex->extensive_value();
-}
-
-/// \brief Calculate change in (extensive) canonical potential value due
-///     to a series of occupation changes
-double CanonicalPotential::occ_delta_extensive_value(
-    std::vector<Index> const &linear_site_index,
-    std::vector<int> const &new_occ) {
-  return m_formation_energy_clex->occ_delta_value(linear_site_index, new_occ);
-}
+namespace kinetic {
 
 /// \brief Helper for making a conditions ValueMap for canonical Monte
 ///     Carlo calculations
@@ -140,8 +91,8 @@ monte::ValueMap make_conditions_increment(
   return conditions;
 }
 
-template struct Canonical<std::mt19937_64>;
+template struct Kinetic<std::mt19937_64>;
 
-}  // namespace canonical
+}  // namespace kinetic
 }  // namespace clexmonte
 }  // namespace CASM

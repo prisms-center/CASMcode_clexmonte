@@ -65,13 +65,15 @@ TEST_F(state_StateSamplerTest, Test1) {
     State<Configuration> state(default_state.configuration, init_conditions);
     state.conditions.scalar_values.at("temperature") = 300.0 + i * 100.0;
 
+    std::shared_ptr<Conditions> conditions = make_conditions(*system, state);
+
     OccLocation occ_location(convert, occ_candidate_list);
     occ_location.initialize(get_occupation(state));
     CountType steps_per_pass = occ_location.mol_size();
 
     // Make potential energy calculator & set for particular supercell
     canonical::CanonicalPotential potential(system);
-    set(potential, state);
+    potential.set(&state, conditions);
 
     // Make StateSampler
     std::vector<StateSamplingFunction<Configuration>> functions;
@@ -90,13 +92,14 @@ TEST_F(state_StateSamplerTest, Test1) {
     double samples_per_period = 1.0;
     double log_sampling_shift = 0.0;
     bool do_sample_trajectory = false;
+    bool do_sample_time = false;
 
     StateSampler state_sampler(SAMPLE_MODE::BY_PASS, functions, sample_method,
                                sample_begin, sampling_period,
                                samples_per_period, log_sampling_shift,
-                               do_sample_trajectory);
+                               do_sample_trajectory, do_sample_time);
     state_sampler.reset(steps_per_pass);
-    state_sampler.sample_data_if_due(state, log);
+    state_sampler.sample_data_by_count_if_due(state, log);
 
     // Main loop
     OccEvent event;
@@ -123,7 +126,7 @@ TEST_F(state_StateSamplerTest, Test1) {
       }
 
       state_sampler.increment_step();
-      state_sampler.sample_data_if_due(state, log);
+      state_sampler.sample_data_by_count_if_due(state, log);
     }  // main loop
 
     std::stringstream ss;

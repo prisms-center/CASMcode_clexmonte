@@ -48,11 +48,7 @@ TEST_F(events_CompleteEventCalculator_Test, Test1) {
   make_complete_event_list(state);
 
   /// Make std::shared_ptr<clexmonte::Conditions> object from state.conditions
-  auto conditions = std::make_shared<clexmonte::Conditions>(
-      clexmonte::make_conditions_from_value_map(
-          state.conditions, *system->prim->basicstructure,
-          system->composition_converter, clexmonte::CorrCalculatorFunction(),
-          CASM::TOL /*TODO*/));
+  auto conditions = make_conditions(*system, state);
 
   std::vector<EventStateCalculator> prim_event_calculators =
       clexmonte::make_prim_event_calculators(system, state, prim_event_list,

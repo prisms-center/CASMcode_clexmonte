@@ -1,5 +1,4 @@
 #include "casm/clexmonte/semi_grand_canonical_impl.hh"
-#include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/make_conditions.hh"
 #include "casm/clexmonte/state/sampling_functions.hh"
 #include "casm/clexmonte/system/System.hh"
@@ -26,7 +25,8 @@ SemiGrandCanonicalPotential::SemiGrandCanonicalPotential(
 /// - If state supercell is modified this must be called again
 /// - State DoF values can be modified without calling this again
 /// - If state conditions are modified this must be called again
-void SemiGrandCanonicalPotential::set(state_type const *state) {
+void SemiGrandCanonicalPotential::set(state_type const *state,
+                                      std::shared_ptr<Conditions> conditions) {
   // supercell-specific
   m_state = state;
   if (m_state == nullptr) {
@@ -34,16 +34,12 @@ void SemiGrandCanonicalPotential::set(state_type const *state) {
         "Error setting SemiGrandCanonicalPotential state: state is empty");
   }
   m_formation_energy_clex = get_clex(*m_system, *m_state, "formation_energy");
-  // m_formation_energy_clex->set(&get_dof_values(*m_state));
   m_convert = &get_index_conversions(*m_system, *m_state);
   m_n_unitcells =
       get_transformation_matrix_to_supercell(*m_state).determinant();
 
   // conditions-specific
-  m_conditions = std::make_shared<Conditions>(make_conditions_from_value_map(
-      m_state->conditions, *get_prim_basicstructure(*m_system),
-      get_composition_converter(*m_system), get_random_alloy_corr_f(*m_system),
-      CASM::TOL /*TODO*/));
+  m_conditions = conditions;
   if (!m_conditions->param_chem_pot.has_value()) {
     throw std::runtime_error(
         "Error setting SemiGrandCanonicalPotential state: no param_chem_pot");
@@ -55,8 +51,14 @@ void SemiGrandCanonicalPotential::set(state_type const *state) {
   }
 }
 
-/// \brief Pointer to state currently being calculated
-state_type const *SemiGrandCanonicalPotential::get() const { return m_state; }
+/// \brief Pointer to current state
+state_type const *SemiGrandCanonicalPotential::state() const { return m_state; }
+
+/// \brief Pointer to current conditions
+std::shared_ptr<Conditions> const &SemiGrandCanonicalPotential::conditions()
+    const {
+  return m_conditions;
+}
 
 /// \brief Calculate (extensive) semi-grand potential value
 double SemiGrandCanonicalPotential::extensive_value() {
@@ -96,11 +98,6 @@ double SemiGrandCanonicalPotential::occ_delta_extensive_value(
   }
 
   return delta_potential_energy;
-}
-
-/// \brief Set potential calculator so it evaluates using `state`
-void set(SemiGrandCanonicalPotential &potential, state_type const &state) {
-  potential.set(&state);
 }
 
 /// \brief Helper for making a conditions ValueMap for semi-grand

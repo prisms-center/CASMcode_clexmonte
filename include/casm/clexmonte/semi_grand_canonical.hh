@@ -18,10 +18,13 @@ class SemiGrandCanonicalPotential {
   SemiGrandCanonicalPotential(std::shared_ptr<system_type> _system);
 
   /// \brief Reset pointer to state currently being calculated
-  void set(state_type const *state);
+  void set(state_type const *state, std::shared_ptr<Conditions> conditions);
 
-  /// \brief Pointer to state currently being calculated
-  state_type const *get() const;
+  /// \brief Pointer to current state
+  state_type const *state() const;
+
+  /// \brief Pointer to current conditions
+  std::shared_ptr<Conditions> const &conditions() const;
 
   /// \brief Calculate (extensive) cluster expansion value
   double extensive_value();
@@ -50,9 +53,6 @@ class SemiGrandCanonicalPotential {
   /// Index conversions, depends on current state
   monte::Conversions const *m_convert;
 };
-
-/// \brief Set potential calculator so it evaluates using `state`
-void set(SemiGrandCanonicalPotential &potential, state_type const &state);
 
 typedef SemiGrandCanonicalPotential potential_type;
 
@@ -87,27 +87,26 @@ struct SemiGrandCanonical {
   /// Update species in monte::OccLocation tracker?
   bool update_species = false;
 
-  /// \brief Make the SemiGrandCanonical potential calculator, for use
-  ///     with templated methods
-  potential_type make_potential(state_type const &state) const;
+  /// Current state
+  monte::State<Configuration> const *state;
+
+  /// Current supercell
+  Eigen::Matrix3l transformation_matrix_to_supercell;
+
+  /// Occupant tracker
+  monte::OccLocation const *occ_location;
+
+  /// The current state's conditions in efficient-to-use form
+  std::shared_ptr<clexmonte::Conditions> conditions;
 
   /// \brief Perform a single run, evolving current state
-  monte::Results<config_type> run(
-      state_type &state, monte::OccLocation &occ_location,
-      monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
-      monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
-      monte::SamplingParams const &sampling_params,
-      monte::CompletionCheckParams const &completion_check_params,
-      monte::MethodLog method_log = monte::MethodLog());
+  void run(state_type &state, monte::OccLocation &occ_location,
+           monte::RunManager<config_type> &run_manager);
 
   /// \brief Perform a series of runs, according to a state generator
-  void run_series(
-      monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
-      monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
-      monte::SamplingParams const &sampling_params,
-      monte::CompletionCheckParams &completion_check_params,
-      state_generator_type &state_generator, results_io_type &results_io,
-      monte::MethodLog method_log = monte::MethodLog());
+  void run_series(state_generator_type &state_generator,
+                  std::vector<monte::SamplingFixtureParams<config_type>> const
+                      &sampling_fixture_params);
 
   /// \brief Construct functions that may be used to sample various quantities
   /// of

@@ -1,20 +1,18 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/canonical.hh"
-// #include "casm/clexmonte/run/functions.hh"
-// #include "casm/clexmonte/run/io/RunParams.hh"
-// #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexulator/Clexulator.hh"
-// #include "casm/clexulator/NeighborList.hh"
+#include "casm/clexulator/NeighborList.hh"
 #include "casm/clexulator/io/json/SparseCoefficients_json_io.hh"
-// #include "casm/composition/CompositionConverter.hh"
+#include "casm/composition/CompositionConverter.hh"
 #include "casm/crystallography/io/BasicStructureIO.hh"
-// #include "casm/monte/MethodLog.hh"
+#include "casm/monte/MethodLog.hh"
+#include "casm/monte/SamplingFixture.hh"
 #include "casm/monte/checks/CompletionCheck.hh"
-// #include "casm/monte/results/ResultsAnalysisFunction.hh"
+#include "casm/monte/results/ResultsAnalysisFunction.hh"
 #include "casm/monte/results/io/json/jsonResultsIO_impl.hh"
 #include "casm/monte/sampling/SamplingParams.hh"
 #include "casm/monte/state/FixedConfigGenerator.hh"
@@ -87,7 +85,6 @@ TEST(canonical_fullrun_test, Test1) {
 
   // Create an output directory
   fs::path output_dir_relpath = "output";
-  fs::create_directories(test_dir / output_dir_relpath);
 
   // Error message
   std::runtime_error error_if_invalid{
@@ -287,7 +284,8 @@ TEST(canonical_fullrun_test, Test1) {
   fs::path output_dir = test_dir / output_dir_relpath;
   bool write_trajectory = true;
   bool write_observations = true;
-  monte::jsonResultsIO<clexmonte::Configuration> results_io(
+  auto results_io = std::make_unique<
+      monte::jsonResultsIO<clexmonte::Configuration>>(
       output_dir,          // fs::path,
       sampling_functions,  // monte::StateSamplingFunctionMap<clexmonte::Configuration>
       analysis_functions,  // monte::ResultsAnalysisFunctionMap<clexmonte::Configuration>
@@ -302,9 +300,14 @@ TEST(canonical_fullrun_test, Test1) {
   method_log.logfile_path = test_dir / output_dir_relpath / "status.json";
   method_log.log_frequency = 60;  // seconds
 
-  calculation->run_series(sampling_functions, analysis_functions,
-                          sampling_params, completion_check_params,
-                          state_generator, results_io, method_log);
+  std::vector<monte::SamplingFixtureParams<clexmonte::Configuration>>
+      sampling_fixture_params;
+  std::string label = "thermo";
+  sampling_fixture_params.emplace_back(
+      "thermo", sampling_functions, analysis_functions, sampling_params,
+      completion_check_params, std::move(results_io), method_log);
+
+  calculation->run_series(state_generator, sampling_fixture_params);
 
   // check output files
   EXPECT_TRUE(fs::exists(output_dir));

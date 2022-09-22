@@ -1,5 +1,6 @@
 #include "casm/clexmonte/system/System.hh"
 
+#include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexulator/ConfigDoFValuesTools_impl.hh"
 
@@ -266,6 +267,15 @@ monte::State<Configuration> make_default_state(
     Eigen::Matrix3l const &transformation_matrix_to_super) {
   return monte::State<Configuration>(
       make_default_configuration(system, transformation_matrix_to_super));
+}
+
+/// \brief Helper to make the Conditions object
+std::shared_ptr<Conditions> make_conditions(
+    System const &system, monte::State<Configuration> const &state) {
+  return std::make_shared<Conditions>(make_conditions_from_value_map(
+      state.conditions, *get_prim_basicstructure(system),
+      get_composition_converter(system), get_random_alloy_corr_f(system),
+      CASM::TOL /*TODO*/));
 }
 
 /// \brief Convert configuration from standard basis to prim basis

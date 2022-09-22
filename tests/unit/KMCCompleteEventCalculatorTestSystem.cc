@@ -31,11 +31,7 @@ void KMCCompleteEventCalculatorTestSystem::make_complete_event_calculator(
   this->make_complete_event_list(state);
 
   /// Make std::shared_ptr<clexmonte::Conditions> object from state.conditions
-  conditions = std::make_shared<clexmonte::Conditions>(
-      clexmonte::make_conditions_from_value_map(
-          state.conditions, *system->prim->basicstructure,
-          system->composition_converter, clexmonte::CorrCalculatorFunction(),
-          CASM::TOL /*TODO*/));
+  conditions = make_conditions(*system, state);
 
   prim_event_calculators = clexmonte::make_prim_event_calculators(
       system, state, prim_event_list, conditions);

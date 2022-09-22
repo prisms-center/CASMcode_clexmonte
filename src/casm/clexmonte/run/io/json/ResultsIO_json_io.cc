@@ -6,7 +6,6 @@
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
-#include "casm/monte/results/io/ResultsIO.hh"
 #include "casm/monte/results/io/json/jsonResultsIO_impl.hh"
 #include "casm/monte/state/StateSampler.hh"
 

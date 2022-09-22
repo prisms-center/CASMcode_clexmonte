@@ -65,7 +65,7 @@ void parse_and_run_series(fs::path system_json_file,
   }
   jsonParser run_params_json(run_params_json_file);
   InputParser<clexmonte::RunParams> run_params_parser(
-      run_params_json, system, sampling_functions, analysis_functions,
+      run_params_json, sampling_functions, analysis_functions,
       state_generator_methods, results_io_methods);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
@@ -74,11 +74,8 @@ void parse_and_run_series(fs::path system_json_file,
 
   clexmonte::RunParams &run_params = *run_params_parser.value;
 
-  calculation->run_series(
-      run_params.sampling_functions, run_params.analysis_functions,
-      run_params.sampling_params, run_params.completion_check_params,
-      *run_params.state_generator, *run_params.results_io,
-      run_params.method_log);
+  calculation->run_series(*run_params.state_generator,
+                          run_params.sampling_fixture_params);
 }
 
 }  // namespace clexmonte

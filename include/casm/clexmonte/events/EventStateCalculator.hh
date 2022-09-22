@@ -6,6 +6,7 @@
 #include "casm/clexmonte/events/event_data.hh"
 #include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/system/System.hh"
 #include "casm/clexmonte/system/system_data.hh"
 #include "casm/global/definitions.hh"
 
@@ -33,11 +34,13 @@ class EventStateCalculator {
                        std::string _event_type_name);
 
   /// \brief Reset pointer to state currently being calculated
-  void set(monte::State<Configuration> const *state,
-           std::shared_ptr<Conditions> conditions);
+  void set(state_type const *state, std::shared_ptr<Conditions> conditions);
 
-  /// \brief Pointer to state currently being calculated
-  monte::State<Configuration> const *get() const;
+  /// \brief Pointer to current state
+  state_type const *state() const;
+
+  /// \brief Pointer to current conditions
+  std::shared_ptr<Conditions> const &conditions() const;
 
   /// \brief Calculate the state of an event
   void calculate_event_state(EventState &state, EventData const &event_data,
@@ -51,7 +54,7 @@ class EventStateCalculator {
   std::string m_event_type_name;
 
   /// State to use
-  monte::State<Configuration> const *m_state;
+  state_type const *m_state;
 
   /// Conditions
   std::shared_ptr<Conditions> m_conditions;
@@ -65,15 +68,9 @@ class EventStateCalculator {
 /// \brief Construct a vector EventStateCalculator, one per event in a
 ///     vector of PrimEventData
 std::vector<EventStateCalculator> make_prim_event_calculators(
-    std::shared_ptr<system_type> system,
-    monte::State<clexmonte::Configuration> const &state,
+    std::shared_ptr<system_type> system, state_type const &state,
     std::vector<PrimEventData> const &prim_event_list,
     std::shared_ptr<Conditions> conditions);
-
-/// \brief Set potential calculator so it evaluates using `state`
-void set(EventStateCalculator &potential,
-         monte::State<Configuration> const &state,
-         std::shared_ptr<Conditions> conditions);
 
 // --- Implementation ---
 
@@ -122,7 +119,7 @@ inline EventStateCalculator::EventStateCalculator(
     : m_system(_system), m_event_type_name(_event_type_name) {}
 
 /// \brief Reset pointer to state currently being calculated
-inline void EventStateCalculator::set(monte::State<Configuration> const *state,
+inline void EventStateCalculator::set(state_type const *state,
                                       std::shared_ptr<Conditions> conditions) {
   // supercell-specific
   m_state = state;
@@ -131,7 +128,6 @@ inline void EventStateCalculator::set(monte::State<Configuration> const *state,
         "Error setting EventStateCalculator state: state is empty");
   }
   m_formation_energy_clex = get_clex(*m_system, *m_state, "formation_energy");
-  // m_formation_energy_clex->set(&get_dof_values(*m_state));
 
   // set and validate event clex
   LocalMultiClexData event_local_multiclex_data =
@@ -162,9 +158,13 @@ inline void EventStateCalculator::set(monte::State<Configuration> const *state,
   m_conditions = conditions;
 }
 
-/// \brief Pointer to state currently being calculated
-inline monte::State<Configuration> const *EventStateCalculator::get() const {
-  return m_state;
+/// \brief Pointer to current state
+inline state_type const *EventStateCalculator::state() const { return m_state; }
+
+/// \brief Pointer to current conditions
+inline std::shared_ptr<Conditions> const &EventStateCalculator::conditions()
+    const {
+  return m_conditions;
 }
 
 /// \brief Calculate the state of an event
@@ -218,24 +218,16 @@ inline void EventStateCalculator::calculate_event_state(
 /// \brief Construct a vector EventStateCalculator, one per event in a
 ///     vector of PrimEventData
 inline std::vector<EventStateCalculator> make_prim_event_calculators(
-    std::shared_ptr<system_type> system,
-    monte::State<clexmonte::Configuration> const &state,
+    std::shared_ptr<system_type> system, state_type const &state,
     std::vector<PrimEventData> const &prim_event_list,
     std::shared_ptr<Conditions> conditions) {
   std::vector<EventStateCalculator> prim_event_calculators;
   for (auto const &prim_event_data : prim_event_list) {
     prim_event_calculators.emplace_back(system,
                                         prim_event_data.event_type_name);
-    set(prim_event_calculators.back(), state, conditions);
+    prim_event_calculators.back().set(&state, conditions);
   }
   return prim_event_calculators;
-}
-
-/// \brief Set potential calculator so it evaluates using `state`
-inline void set(EventStateCalculator &prim_event_calculator,
-                monte::State<Configuration> const &state,
-                std::shared_ptr<Conditions> conditions) {
-  prim_event_calculator.set(&state, conditions);
 }
 
 }  // namespace clexmonte

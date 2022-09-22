@@ -252,6 +252,10 @@ monte::State<Configuration> make_default_state(
     System const &system,
     Eigen::Matrix3l const &transformation_matrix_to_super);
 
+/// \brief Helper to make the Conditions object
+std::shared_ptr<Conditions> make_conditions(
+    System const &system, monte::State<Configuration> const &state);
+
 /// \brief Convert configuration from standard basis to prim basis
 Configuration from_standard_values(
     System const &system, Configuration const &configuration_in_standard_basis);

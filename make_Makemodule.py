@@ -837,6 +837,20 @@ def main():
     target = os.path.join("programs", "ccasm_clexmonte_semi_grand_canonical", "Makemodule.am")
     string_to_file(chunk, target)
 
+    print("Create Makefile for ccasm-clexmonte-kmc program")
+    chunk = make_add_to_PROGRAMS(
+        "ccasm-clexmonte-kmc",
+        "bin",
+        SOURCES=[
+            "programs/ccasm_clexmonte_kmc/main.cpp"
+        ],
+        LDADD=[
+            "libcasm_clexmonte.la"
+        ],
+    )
+    target = os.path.join("programs", "ccasm_clexmonte_kmc", "Makemodule.am")
+    string_to_file(chunk, target)
+
     chunk = make_aggregated_unit_test([
         {
             "directory": "tests/unit/clexmonte",

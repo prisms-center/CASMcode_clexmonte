@@ -26,7 +26,7 @@ MethodParserMap<results_io_type> standard_results_io_methods(
     monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions);
 
 void parse(
-    InputParser<RunParams> &parser, std::shared_ptr<system_type> const &system,
+    InputParser<RunParams> &parser,
     monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
     monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
     MethodParserMap<state_generator_type> const &state_generator_methods,

@@ -1,4 +1,3 @@
-// #include "casm/monte/state/FixedConfigGenerator.hh"
 #include "ZrOTestSystem.hh"
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/clexmonte/canonical.hh"

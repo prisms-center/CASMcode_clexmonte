@@ -4,6 +4,7 @@
 #include "casm/clexmonte/canonical.hh"
 #include "casm/clexmonte/run/analysis_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
+#include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/enforce_composition.hh"
 #include "casm/clexmonte/state/sampling_functions.hh"
@@ -31,28 +32,14 @@ Canonical<EngineType>::Canonical(
   }
 }
 
-/// \brief Make the Canonical potential calculator, for use with templated
-/// methods
-template <typename EngineType>
-potential_type Canonical<EngineType>::make_potential(
-    state_type const &state) const {
-  CanonicalPotential potential(system);
-  set(potential, state);
-  return potential;
-}
-
 /// \brief Perform a single run, evolving current state
 ///
 /// Notes:
 /// - state and occ_location are evolved and end in modified states
 template <typename EngineType>
-monte::Results<config_type> Canonical<EngineType>::run(
-    state_type &state, monte::OccLocation &occ_location,
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
-    monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
-    monte::SamplingParams const &sampling_params,
-    monte::CompletionCheckParams const &completion_check_params,
-    monte::MethodLog method_log) {
+void Canonical<EngineType>::run(state_type &state,
+                                monte::OccLocation &occ_location,
+                                monte::RunManager<config_type> &run_manager) {
   if (!state.conditions.scalar_values.count("temperature")) {
     throw std::runtime_error(
         "Error in Canonical::run: state `temperature` not set.");
@@ -62,7 +49,14 @@ monte::Results<config_type> Canonical<EngineType>::run(
         "Error in Canonical::run: state `mol_composition` conditions not set.");
   }
 
-  CanonicalPotential potential = this->make_potential(state);
+  this->state = &state;
+  this->transformation_matrix_to_supercell =
+      get_transformation_matrix_to_supercell(state);
+  this->occ_location = &occ_location;
+  this->conditions = make_conditions(*this->system, state);
+
+  CanonicalPotential potential(this->system);
+  potential.set(this->state, this->conditions);
 
   /// \brief Construct swaps
   monte::Conversions const &convert = get_index_conversions(*system, state);
@@ -75,13 +69,6 @@ monte::Results<config_type> Canonical<EngineType>::run(
   std::vector<monte::OccSwap> grand_canonical_swaps =
       make_grand_canonical_swaps(convert, occ_candidate_list);
 
-  monte::StateSampler<config_type> state_sampler(sampling_params,
-                                                 sampling_functions);
-
-  // Create CompletionCheck method
-  // - This object checks for min/max cutoffs and automatic convergence
-  monte::CompletionCheck completion_check(completion_check_params);
-
   // Enforce composition
   clexmonte::enforce_composition(
       get_occupation(state),
@@ -91,26 +78,18 @@ monte::Results<config_type> Canonical<EngineType>::run(
 
   // Run Monte Carlo at a single condition
   typedef monte::RandomNumberGenerator<EngineType> generator_type;
-  results_type result = monte::occupation_metropolis(
-      state, occ_location, potential, canonical_swaps,
-      monte::propose_canonical_event<generator_type>, random_number_generator,
-      state_sampler, completion_check, analysis_functions, method_log);
-
-  return result;
+  monte::occupation_metropolis(state, occ_location, potential, canonical_swaps,
+                               monte::propose_canonical_event<generator_type>,
+                               random_number_generator, run_manager);
 }
 
 /// \brief Perform a series of runs, according to a state generator
 template <typename EngineType>
 void Canonical<EngineType>::run_series(
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
-    monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
-    monte::SamplingParams const &sampling_params,
-    monte::CompletionCheckParams &completion_check_params,
-    state_generator_type &state_generator, results_io_type &results_io,
-    monte::MethodLog method_log) {
-  clexmonte::run_series(*this, sampling_functions, analysis_functions,
-                        sampling_params, completion_check_params,
-                        state_generator, results_io, method_log);
+    state_generator_type &state_generator,
+    std::vector<monte::SamplingFixtureParams<config_type>> const
+        &sampling_fixture_params) {
+  clexmonte::run_series(*this, state_generator, sampling_fixture_params);
 }
 
 /// \brief Construct functions that may be used to sample various quantities of

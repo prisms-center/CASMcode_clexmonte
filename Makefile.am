@@ -47,6 +47,7 @@ DISTCLEANFILES=
 #Always have included modules use paths relative to this
 #parent Makefile.am. Avoid variable expansion in *_SOURCES
 include $(srcdir)/programs/ccasm_clexmonte_canonical/Makemodule.am
+include $(srcdir)/programs/ccasm_clexmonte_kmc/Makemodule.am
 include $(srcdir)/programs/ccasm_clexmonte_semi_grand_canonical/Makemodule.am
 include $(srcdir)/include/casm/Makemodule.am
 include $(srcdir)/src/casm/Makemodule.am

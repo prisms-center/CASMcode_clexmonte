@@ -29,7 +29,7 @@ TEST_F(canonical_MetropolisTest, Test1) {
       make_default_configuration(*system, T),
       canonical::make_conditions(600.0, system->composition_converter,
                                  {{"Zr", 2.0}, {"O", 1.0}, {"Va", 1.0}}));
-
+  std::shared_ptr<Conditions> conditions = make_conditions(*system, state);
   // Set initial occupation
   for (Index i = 0; i < volume; ++i) {
     get_occupation(state)(2 * volume + i) = 1;
@@ -47,7 +47,7 @@ TEST_F(canonical_MetropolisTest, Test1) {
 
   // Make potential energy calculator & set for particular supercell
   canonical::CanonicalPotential potential(system);
-  set(potential, state);
+  potential.set(&state, conditions);
 
   // Main loop
   OccEvent event;

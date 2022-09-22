@@ -5,18 +5,13 @@
 #include "casm/clexmonte/run/io/RunParams.hh"
 #include "casm/clexmonte/run/io/json/ConfigGenerator_json_io.hh"
 #include "casm/clexmonte/run/io/json/ResultsIO_json_io.hh"
+#include "casm/clexmonte/run/io/json/SamplingFixtureParams_json_io.hh"
 #include "casm/clexmonte/run/io/json/StateGenerator_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
-#include "casm/clexmonte/system/System.hh"
-#include "casm/clexmonte/system/io/json/System_json_io.hh"
-#include "casm/composition/io/json/CompositionConverter_json_io.hh"
-#include "casm/crystallography/io/BasicStructureIO.hh"
-#include "casm/monte/checks/io/json/CompletionCheck_json_io.hh"
 #include "casm/monte/results/io/ResultsIO.hh"
 #include "casm/monte/results/io/json/jsonResultsIO_impl.hh"
-#include "casm/monte/sampling/io/json/SamplingParams_json_io.hh"
 #include "casm/monte/state/FixedConfigGenerator.hh"
 #include "casm/monte/state/StateGenerator.hh"
 #include "casm/monte/state/StateSampler.hh"
@@ -60,8 +55,6 @@ MethodParserMap<results_io_type> standard_results_io_methods(
 /// Input file summary:
 /// \code
 /// {
-///     "system": <clexmonte::System>
-///         Species the path to a "system" input file.
 ///     "state_generation": <monte::StateGenerator>
 ///         Specifies a "path" of input states at which to run Monte Carlo
 ///         calculations. Each state is an initial configuration and set of
@@ -69,39 +62,14 @@ MethodParserMap<results_io_type> standard_results_io_methods(
 ///         composition, etc.).
 ///     "random_number_generator": <monte::RandomNumberGenerator>
 ///         (Future) Options controlling the random number generator.
-///     "sampling": <monte::SamplingParams>
-///         Options controlling which quantities are sampled and how often
-///         sampling is performed.
-///     "completion_check": <monte::CompletionCheck>
-///         Controls when a single Monte Carlo run is complete. Options include
-///         convergence of sampled quantiies, min/max number of samples, min/
-///         max number of passes, etc.
-///     "analysis":
-///       "functions": array of str (default=[])
-///         Names of analysis functions to use to evaluate results with.
-///         Standard options include the following (others may be included):
-///
-///           - "heat_capacity": Heat capacity
-///           - "mol_susc": Chemical susceptibility (mol_composition)
-///           - "param_susc": Chemical susceptibility (param_composition)
-///           - "mol_thermocalc_susc": Thermo-chemical susceptibility
-///           (mol_composition)
-///           - "param_thermocalc_susc": Thermo-Chemical susceptibility
-///           (param_composition)
-///
-///         Unless otherwise noted, assume intensive (per unit cell) properties.
-///
-///     "results_io": <monte::ResultsIO>
-///         Options controlling results output.
-///     "log": (optional)
-///       "file": str (default="status.json")
-///         Provide the path where a log file should be written.
-///       "frequency_in_s": number (default=600.0)
-///         How often the log file should be written, in seconds.
+///     "sampling_fixtures": JSON object
+///         A JSON object, whose keys are labels and values are paths to
+///         input files for sampling fixtures. A Monte Carlo run continues
+///         until all sampling fixtures are completed.
 /// }
 /// \endcode
 void parse(
-    InputParser<RunParams> &parser, std::shared_ptr<system_type> const &system,
+    InputParser<RunParams> &parser,
     monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
     monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
     MethodParserMap<state_generator_type> const &state_generator_methods,
@@ -110,61 +78,42 @@ void parse(
   auto state_generator_subparser = parser.subparse<state_generator_type>(
       "state_generation", state_generator_methods);
 
-  // Read sampling params
-  std::set<std::string> sampling_function_names;
-  for (auto const &element : sampling_functions) {
-    sampling_function_names.insert(element.first);
-  }
-  bool time_sampling_allowed = false;
-  auto sampling_params_subparser = parser.subparse<monte::SamplingParams>(
-      "sampling", sampling_function_names, time_sampling_allowed);
-
-  // Read completion check params
-  auto completion_check_params_subparser =
-      parser.subparse<monte::CompletionCheckParams>("completion_check",
-                                                    sampling_functions);
-
-  // Read analysis functions
-  std::vector<std::string> function_names;
-  fs::path functions_path = fs::path("analysis") / "functions";
-  parser.optional(function_names, functions_path);
-
-  monte::ResultsAnalysisFunctionMap<config_type> selected_analysis_functions;
-  for (auto const &name : function_names) {
-    auto it = analysis_functions.find(name);
-    if (it != analysis_functions.end()) {
-      selected_analysis_functions.insert(*it);
-    } else {
-      std::stringstream msg;
-      msg << "Error: function '" << name << "' not recognized";
-      parser.insert_error(functions_path, msg.str());
+  // Construct sampling fixture parameters
+  std::vector<monte::SamplingFixtureParams<config_type>>
+      sampling_fixture_params;
+  if (parser.self.contains("sampling_fixtures")) {
+    auto it = parser.self["sampling_fixtures"].begin();
+    auto end = parser.self["sampling_fixtures"].end();
+    for (; it != end; ++it) {
+      std::string label = it.name();
+      std::shared_ptr<InputParser<monte::SamplingFixtureParams<config_type>>>
+          subparser;
+      if (it->is_obj()) {
+        subparser = parser.subparse<monte::SamplingFixtureParams<config_type>>(
+            fs::path("sampling_fixtures") / label, label, sampling_functions,
+            analysis_functions, results_io_methods);
+      } else if (it->is_string()) {
+        subparser =
+            parser
+                .subparse_from_file<monte::SamplingFixtureParams<config_type>>(
+                    fs::path("sampling_fixtures") / label, label,
+                    sampling_functions, analysis_functions, results_io_methods);
+      } else {
+        parser.insert_error(fs::path("sampling_params") / label,
+                            "Error: must be a file name or JSON object");
+        continue;
+      }
+      if (subparser->valid()) {
+        sampling_fixture_params.push_back(*subparser->value);
+      }
     }
-  }
-
-  // Construct results I/O instance
-  auto results_io_subparser =
-      parser.subparse<results_io_type>("results_io", results_io_methods);
-
-  // Method log
-  monte::MethodLog method_log;
-  if (parser.self.contains("log")) {
-    std::string log_file = "status.json";
-    parser.optional(log_file, fs::path("log") / "file");
-    double log_frequency = 600.0;
-    parser.optional(log_frequency, fs::path("log") / "frequency_in_s");
-
-    method_log.log_frequency = log_frequency;
-    method_log.logfile_path = fs::path(log_file);
-    method_log.reset();
+  } else {
+    parser.insert_error("sampling_fixtures", "Error: no 'sampling_fixtures'");
   }
 
   if (parser.valid()) {
     parser.value = std::make_unique<RunParams>(
-        sampling_functions, selected_analysis_functions,
-        std::move(state_generator_subparser->value),
-        *sampling_params_subparser->value,
-        *completion_check_params_subparser->value,
-        std::move(results_io_subparser->value), method_log);
+        std::move(state_generator_subparser->value), sampling_fixture_params);
   }
 }
 
