@@ -29,6 +29,7 @@ struct CompleteEventCalculator {
   /// \brief Write to warn about non-normal events
   Log &event_log;
 
+  // Note: to keep all event state calculations, comment out this:
   /// \brief Holds last calculated event state
   EventState event_state;
 
@@ -51,6 +52,8 @@ struct CompleteEventCalculator {
     EventData const &event_data = event_list.at(id);
     PrimEventData const &prim_event_data =
         prim_event_list.at(id.prim_event_index);
+    // Note: to keep all event state calculations, uncomment this:
+    // EventState &event_state = event_data.event_state;
     prim_event_calculators.at(id.prim_event_index)
         .calculate_event_state(event_state, event_data, prim_event_data);
 

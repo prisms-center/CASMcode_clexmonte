@@ -30,7 +30,7 @@
       },
       "n_states": 11,
       "dependent_runs": false,
-      "dependent_conditions": []
+      "modifiers": []
     }
   },
   "sampling_fixtures": {

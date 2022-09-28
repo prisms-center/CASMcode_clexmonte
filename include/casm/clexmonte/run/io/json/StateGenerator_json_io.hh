@@ -21,7 +21,7 @@ void parse(
     InputParser<monte::IncrementalConditionsStateGenerator<Configuration>>
         &parser,
     std::shared_ptr<system_type> const &system,
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
+    monte::StateModifyingFunctionMap<config_type> const &modifying_functions,
     MethodParserMap<config_generator_type> config_generator_methods);
 
 }  // namespace clexmonte

@@ -62,7 +62,7 @@ TEST_F(events_impact_table_Test, Test1) {
   EXPECT_EQ(event_list.impact_table.size(), 1000 * 24);
 
   for (auto const &impacted : event_list.impact_table) {
-    EXPECT_EQ(impacted.second.size(), 707);
+    EXPECT_EQ(impacted.second.size(), 708);
   }
   EXPECT_EQ(event_list.events.size(), 1000 * 24);
 }
@@ -119,7 +119,7 @@ TEST_F(events_impact_table_Test, Test2) {
   EXPECT_EQ(event_list.impact_table.size(), 1000 * 12);
 
   for (auto const &impacted : event_list.impact_table) {
-    EXPECT_EQ(impacted.second.size(), 45);
+    EXPECT_EQ(impacted.second.size(), 46);
   }
   EXPECT_EQ(event_list.events.size(), 1000 * 12);
 }

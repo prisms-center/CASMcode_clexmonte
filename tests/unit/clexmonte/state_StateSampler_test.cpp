@@ -75,6 +75,10 @@ TEST_F(state_StateSamplerTest, Test1) {
     canonical::CanonicalPotential potential(system);
     potential.set(&state, conditions);
 
+    // Set calculator pointers
+    calculator->state = &state;
+    calculator->conditions = conditions;
+
     // Make StateSampler
     std::vector<StateSamplingFunction<Configuration>> functions;
     // for (auto f : sampling_functions) {

@@ -22,13 +22,7 @@ jsonParser &to_json(EventState const &event_state, jsonParser &json) {
 
 jsonParser &to_json(EventState const &event_state, jsonParser &json,
                     PrimEventData const &prim_event_data) {
-  json["prim_event_index"] = prim_event_data.prim_event_index;
-  json["event_type_name"] = prim_event_data.event_type_name;
-  json["equivalent_index"] = prim_event_data.equivalent_index;
-  json["is_forward"] = prim_event_data.is_forward;
-  json["occ_init"] = prim_event_data.occ_init;
-  json["occ_final"] = prim_event_data.occ_final;
-
+  to_json(prim_event_data, json);
   to_json(event_state, json);
   return json;
 }
@@ -39,6 +33,24 @@ jsonParser &to_json(EventState const &event_state, jsonParser &json,
   json["unitcell_index"] = event_data.unitcell_index;
   json["linear_site_index"] = event_data.event.linear_site_index;
   to_json(event_state, json, prim_event_data);
+  return json;
+}
+
+jsonParser &to_json(EventData const &event_data, jsonParser &json,
+                    PrimEventData const &prim_event_data) {
+  json["unitcell_index"] = event_data.unitcell_index;
+  json["linear_site_index"] = event_data.event.linear_site_index;
+  to_json(prim_event_data, json);
+  return json;
+}
+
+jsonParser &to_json(PrimEventData const &prim_event_data, jsonParser &json) {
+  json["prim_event_index"] = prim_event_data.prim_event_index;
+  json["event_type_name"] = prim_event_data.event_type_name;
+  json["equivalent_index"] = prim_event_data.equivalent_index;
+  json["is_forward"] = prim_event_data.is_forward;
+  json["occ_init"] = prim_event_data.occ_init;
+  json["occ_final"] = prim_event_data.occ_final;
   return json;
 }
 

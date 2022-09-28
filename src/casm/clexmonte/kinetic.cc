@@ -5,6 +5,42 @@ namespace CASM {
 namespace clexmonte {
 namespace kinetic {
 
+/// \brief Construct a list of atom names corresponding to OccLocation atoms
+///
+/// Notes:
+/// - If atoms are conserved, then the order of this list will remain unchanged
+///   during the course of a calculation
+/// - Values are set to -1 if atom is no longer in supercell
+std::vector<Index> make_atom_name_index_list(
+    monte::OccLocation const &occ_location,
+    occ_events::OccSystem const &occ_system) {
+  // sanity check:
+  monte::Conversions const &convert = occ_location.convert();
+  if (convert.species_size() != occ_system.orientation_name_list.size()) {
+    throw std::runtime_error(
+        "Error in CASM::clexmonte::kinetic::make_snapshot_for_conserved_atoms: "
+        "mismatch between monte::Conversions and occ_events::OccSystem.");
+  }
+
+  // collect atom name indices
+  std::vector<Index> atom_name_index_list(occ_location.atom_size(), -1);
+  for (Index i = 0; i < occ_location.mol_size(); ++i) {
+    monte::Mol const &mol = occ_location.mol(i);
+    Index b = convert.l_to_b(mol.l);
+    Index occupant_index =
+        occ_system.orientation_to_occupant_index[b][mol.species_index];
+    Index atom_position_index = 0;
+    for (Index atom_id : mol.component) {
+      Index atom_name_index =
+          occ_system.atom_position_to_name_index[b][occupant_index]
+                                                [atom_position_index];
+      atom_name_index_list.at(atom_id) = atom_name_index;
+      ++atom_position_index;
+    }
+  }
+  return atom_name_index_list;
+}
+
 /// \brief Helper for making a conditions ValueMap for canonical Monte
 ///     Carlo calculations
 ///

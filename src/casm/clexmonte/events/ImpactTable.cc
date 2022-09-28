@@ -93,7 +93,6 @@ std::vector<std::vector<RelativeEventID>> make_relative_impact_table(
           prim_event_list[j].phenomenal_sites);
 
       for (xtal::UnitCell const &trans : translations) {
-        if (i == j && trans == zero_translation) continue;
         // -> event (j, zero) impacts event (i, -trans)
         relative_event_id.prim_event_index = i;
         relative_event_id.translation = -trans;

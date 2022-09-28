@@ -27,31 +27,33 @@ namespace clexmonte {
 // ---
 
 /// \brief Make heat capacity analysis function ("heat_capacity")
-monte::ResultsAnalysisFunction<Configuration> make_heat_capacity_f();
+template <typename CalculationType>
+monte::ResultsAnalysisFunction<Configuration> make_heat_capacity_f(
+    std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make mol_composition susceptibility analysis function
 /// ("mol_susc(A,B)")
-template <typename SystemType>
+template <typename CalculationType>
 monte::ResultsAnalysisFunction<Configuration> make_mol_susc_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make param_composition susceptibility analysis function
 /// ("param_susc(a,b)")
-template <typename SystemType>
+template <typename CalculationType>
 monte::ResultsAnalysisFunction<Configuration> make_param_susc_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make mol_composition thermo-chemical susceptibility
 ///     analysis function ("mol_thermochem_susc(S,A)")
-template <typename SystemType>
+template <typename CalculationType>
 monte::ResultsAnalysisFunction<Configuration> make_mol_thermochem_susc_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make param_composition thermo-chemical susceptibility
 ///     analysis function ("param_thermochem_susc(S,a)")
-template <typename SystemType>
+template <typename CalculationType>
 monte::ResultsAnalysisFunction<Configuration> make_param_thermochem_susc_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 // --- Inline definitions ---
 
@@ -88,7 +90,9 @@ inline double heat_capacity_normalization_constant_f(
 /// - Requires sampling "potential_energy" (as per unit cell energy)
 /// - Requires scalar condition "temperature"
 /// - Requires result "initial_state"
-inline monte::ResultsAnalysisFunction<Configuration> make_heat_capacity_f() {
+template <typename CalculationType>
+monte::ResultsAnalysisFunction<Configuration> make_heat_capacity_f(
+    std::shared_ptr<CalculationType> const &calculation) {
   return make_variance_f(
       "heat_capacity",
       "Heat capacity (per unit cell) = "
@@ -134,10 +138,11 @@ make_susc_normalization_constant_f(std::string name) {
 /// - Requires sampling "mol_composition"
 /// - Requires scalar condition "temperature"
 /// - Requires result "initial_state"
-template <typename SystemType>
+template <typename CalculationType>
 monte::ResultsAnalysisFunction<Configuration> make_mol_susc_f(
-    std::shared_ptr<SystemType> const &system) {
-  auto const &component_names = get_composition_converter(*system).components();
+    std::shared_ptr<CalculationType> const &calculation) {
+  auto const &system = *calculation->system;
+  auto const &component_names = get_composition_converter(system).components();
   return make_covariance_f(
       "mol_susc",
       "Chemical susceptibility (per unit cell) = "
@@ -153,13 +158,14 @@ monte::ResultsAnalysisFunction<Configuration> make_mol_susc_f(
 /// - Requires sampling "param_composition"
 /// - Requires scalar condition "temperature"
 /// - Requires result "initial_state"
-template <typename SystemType>
+template <typename CalculationType>
 monte::ResultsAnalysisFunction<Configuration> make_param_susc_f(
-    std::shared_ptr<SystemType> const &system) {
+    std::shared_ptr<CalculationType> const &calculation) {
+  auto const &system = *calculation->system;
   // name param_composition components "a", "b", ... for each independent
   // composition axis
   composition::CompositionConverter const &composition_converter =
-      get_composition_converter(*system);
+      get_composition_converter(system);
   std::vector<std::string> component_names;
   for (Index i = 0; i < composition_converter.independent_compositions(); ++i) {
     component_names.push_back(composition_converter.comp_var(i));
@@ -180,13 +186,14 @@ monte::ResultsAnalysisFunction<Configuration> make_param_susc_f(
 /// - Requires sampling "mol_composition"
 /// - Requires scalar condition "temperature"
 /// - Requires result "initial_state"
-template <typename SystemType>
+template <typename CalculationType>
 monte::ResultsAnalysisFunction<Configuration> make_mol_thermochem_susc_f(
-    std::shared_ptr<SystemType> const &system) {
+    std::shared_ptr<CalculationType> const &calculation) {
+  auto const &system = *calculation->system;
   std::vector<std::string> first_component_names = {"S"};
 
   auto const &second_component_names =
-      get_composition_converter(*system).components();
+      get_composition_converter(system).components();
 
   return make_covariance_f(
       "mol_thermochem_susc",
@@ -205,15 +212,16 @@ monte::ResultsAnalysisFunction<Configuration> make_mol_thermochem_susc_f(
 /// - Requires sampling "param_composition"
 /// - Requires scalar condition "temperature"
 /// - Requires result "initial_state"
-template <typename SystemType>
+template <typename CalculationType>
 monte::ResultsAnalysisFunction<Configuration> make_param_thermochem_susc_f(
-    std::shared_ptr<SystemType> const &system) {
+    std::shared_ptr<CalculationType> const &calculation) {
+  auto const &system = *calculation->system;
   std::vector<std::string> first_component_names = {"S"};
 
   // name param_composition components "a", "b", ... for each independent
   // composition axis
   composition::CompositionConverter const &composition_converter =
-      get_composition_converter(*system);
+      get_composition_converter(system);
   std::vector<std::string> second_component_names;
   for (Index i = 0; i < composition_converter.independent_compositions(); ++i) {
     second_component_names.push_back(composition_converter.comp_var(i));

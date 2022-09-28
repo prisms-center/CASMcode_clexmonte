@@ -31,41 +31,41 @@ namespace clexmonte {
 // ---
 
 /// \brief Make temperature sampling function ("temperature")
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_temperature_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make mol composition sampling function ("mol_composition")
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_mol_composition_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make parametric composition sampling function ("param_composition")
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_param_composition_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make parametric chemical potential sampling function
 /// ("param_chem_pot")
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_param_chem_pot_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make formation energy correlations sampling function
 ///     ("formation_energy_corr")
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make formation energy sampling function ("formation_energy")
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_formation_energy_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make potential energy sampling function ("potential_energy")
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_potential_energy_f(
-    std::shared_ptr<SystemType> const &system);
+    std::shared_ptr<CalculationType> const &calculation);
 
 // --- Inline definitions ---
 
@@ -73,14 +73,13 @@ monte::StateSamplingFunction<Configuration> make_potential_energy_f(
 ///
 /// Requires:
 /// - "temperature" is a scalar state condition
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_temperature_f(
-    std::shared_ptr<SystemType> const &system) {
+    std::shared_ptr<CalculationType> const &calculation) {
   return monte::StateSamplingFunction<Configuration>(
       "temperature", "Temperature (K)", {},  // scalar,
-      [](monte::State<Configuration> const &state) {
-        return monte::reshaped(
-            state.conditions.scalar_values.at("temperature"));
+      [calculation]() {
+        return monte::reshaped(calculation->conditions->temperature);
       });
 }
 
@@ -91,19 +90,22 @@ monte::StateSamplingFunction<Configuration> make_temperature_f(
 ///   get_composition_converter(SystemType &)`
 /// - `composition::CompositionCalculator const &
 ///   get_composition_calculator(SystemType &)`
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_mol_composition_f(
-    std::shared_ptr<SystemType> const &system) {
-  auto const &components = get_composition_converter(*system).components();
+    std::shared_ptr<CalculationType> const &calculation) {
+  auto const &system = *calculation->system;
+  auto const &components = get_composition_converter(system).components();
   std::vector<Index> shape;
   shape.push_back(components.size());
   return monte::StateSamplingFunction<Configuration>(
       "mol_composition",
       "Number of each component (normalized per primitive cell)",
       components,  // component names
-      shape, [system](monte::State<Configuration> const &state) {
+      shape, [calculation]() {
+        auto const &system = *calculation->system;
+        auto const &state = *calculation->state;
         Eigen::VectorXi const &occupation = get_occupation(state);
-        return get_composition_calculator(*system).mean_num_each_component(
+        return get_composition_calculator(system).mean_num_each_component(
             occupation);
       });
 }
@@ -115,13 +117,14 @@ monte::StateSamplingFunction<Configuration> make_mol_composition_f(
 ///   get_composition_converter(SystemType &)`
 /// - `composition::CompositionCalculator
 ///   get_composition_calculator(SystemType &)`
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_param_composition_f(
-    std::shared_ptr<SystemType> const &system) {
+    std::shared_ptr<CalculationType> const &calculation) {
+  auto const &system = *calculation->system;
   // name param_composition components "a", "b", ... for each independent
   // composition axis
   composition::CompositionConverter const &composition_converter =
-      get_composition_converter(*system);
+      get_composition_converter(system);
   std::vector<std::string> component_names;
   for (Index i = 0; i < composition_converter.independent_compositions(); ++i) {
     component_names.push_back(composition_converter.comp_var(i));
@@ -132,11 +135,13 @@ monte::StateSamplingFunction<Configuration> make_param_composition_f(
   return monte::StateSamplingFunction<Configuration>(
       "param_composition", "Parametric composition",
       component_names,  // component names
-      shape, [system](monte::State<Configuration> const &state) {
+      shape, [calculation]() {
+        auto const &system = *calculation->system;
+        auto const &state = *calculation->state;
         composition::CompositionCalculator const &composition_calculator =
-            get_composition_calculator(*system);
+            get_composition_calculator(system);
         composition::CompositionConverter const &composition_converter =
-            get_composition_converter(*system);
+            get_composition_converter(system);
 
         Eigen::VectorXi const &occupation = get_occupation(state);
         Eigen::VectorXd mol_composition =
@@ -147,13 +152,14 @@ monte::StateSamplingFunction<Configuration> make_param_composition_f(
 
 /// \brief Make parametric chemical potential sampling function
 /// ("param_chem_pot")
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_param_chem_pot_f(
-    std::shared_ptr<SystemType> const &system) {
+    std::shared_ptr<CalculationType> const &calculation) {
+  auto const &system = *calculation->system;
   // name param_chem_pot components "a", "b", ... for each independent
   // composition axis
   composition::CompositionConverter const &composition_converter =
-      get_composition_converter(*system);
+      get_composition_converter(system);
   std::vector<std::string> component_names;
   for (Index i = 0; i < composition_converter.independent_compositions(); ++i) {
     component_names.push_back(composition_converter.comp_var(i));
@@ -165,8 +171,8 @@ monte::StateSamplingFunction<Configuration> make_param_chem_pot_f(
       "param_chem_pot",
       "Chemical potential conjugate to parametric composition axes",
       component_names,  // component names
-      shape, [system](monte::State<Configuration> const &state) {
-        return state.conditions.vector_values.at("param_chem_pot");
+      shape, [calculation]() {
+        return calculation->conditions->param_chem_pot.value();
       });
 }
 
@@ -177,12 +183,13 @@ monte::StateSamplingFunction<Configuration> make_param_chem_pot_f(
 /// - `ClexData &get_basis_set(SystemType &, std::string const &key)`
 /// - `clexulator::ClusterExpansion &get_clex(SystemType &,
 ///   StateType const &, std::string const &key)`
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
-    std::shared_ptr<SystemType> const &system) {
+    std::shared_ptr<CalculationType> const &calculation) {
+  auto const &system = *calculation->system;
   // correlations size
   clexulator::Clexulator const &clexulator =
-      *get_basis_set(*system, "formation_energy");
+      *get_basis_set(system, "formation_energy");
   Index corr_size = clexulator.corr_size();
   std::vector<Index> shape;
   shape.push_back(corr_size);
@@ -190,9 +197,11 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
   return monte::StateSamplingFunction<Configuration>(
       "formation_energy_corr",
       "Formation energy basis set correlations (normalized per primitive cell)",
-      shape, [system](monte::State<Configuration> const &state) {
+      shape, [calculation]() {
+        auto &system = *calculation->system;
+        auto const &state = *calculation->state;
         clexulator::Correlations &correlations =
-            *get_corr(*system, state, "formation_energy");
+            *get_corr(system, state, "formation_energy");
         auto const &extensive_corr = correlations.extensive();
         return correlations.intensive(extensive_corr);
       });
@@ -203,17 +212,19 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
 /// Requires:
 /// - `clexulator::ClusterExpansion &get_clex(SystemType &,
 ///    StateType const &, std::string const &)`
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_formation_energy_f(
-    std::shared_ptr<SystemType> const &system) {
+    std::shared_ptr<CalculationType> const &calculation) {
   return monte::StateSamplingFunction<Configuration>(
       "formation_energy",
       "Formation energy of the configuration (normalized per primitive cell)",
       {},  // scalar
-      [system](monte::State<Configuration> const &state) {
+      [calculation]() {
+        auto &system = *calculation->system;
+        auto const &state = *calculation->state;
         Eigen::VectorXd value(1);
         value(0) =
-            get_clex(*system, state, "formation_energy")->intensive_value();
+            get_clex(system, state, "formation_energy")->intensive_value();
         return value;
       });
 }
@@ -228,14 +239,15 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_f(
 ///
 /// Requires:
 /// - "potential_energy" is a scalar state property
-template <typename SystemType>
+template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_potential_energy_f(
-    std::shared_ptr<SystemType> const &system) {
+    std::shared_ptr<CalculationType> const &calculation) {
   return monte::StateSamplingFunction<Configuration>(
       "potential_energy",
       "Potential energy of the state (normalized per primitive cell)",
       {},  // scalar
-      [system](monte::State<Configuration> const &state) {
+      [calculation]() {
+        auto const &state = *calculation->state;
         return monte::reshaped(
             state.properties.scalar_values.at("potential_energy"));
       });

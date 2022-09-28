@@ -96,6 +96,9 @@ struct SemiGrandCanonical {
   /// Occupant tracker
   monte::OccLocation const *occ_location;
 
+  /// Pointer to current state sampler
+  monte::StateSampler<Configuration> const *state_sampler;
+
   /// The current state's conditions in efficient-to-use form
   std::shared_ptr<clexmonte::Conditions> conditions;
 
@@ -119,6 +122,11 @@ struct SemiGrandCanonical {
   ///     calculation results
   static monte::ResultsAnalysisFunctionMap<Configuration>
   standard_analysis_functions(
+      std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation);
+
+  /// \brief Construct functions that may be used to modify states
+  static monte::StateModifyingFunctionMap<config_type>
+  standard_modifying_functions(
       std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation);
 };
 

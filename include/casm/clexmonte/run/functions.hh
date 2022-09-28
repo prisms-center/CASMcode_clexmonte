@@ -73,7 +73,7 @@ void run_series(CalculationType &calculation,
     log.indent() << "Generating next initial state..." << std::endl;
     state_type initial_state =
         state_generator.next_state(run_manager.final_states);
-    log.indent() << to_json(initial_state.conditions) << std::endl;
+    log.indent() << qto_json(initial_state.conditions) << std::endl;
     log.indent() << "Done" << std::endl;
 
     // Construct and initialize occupant tracking
@@ -94,7 +94,7 @@ void run_series(CalculationType &calculation,
 
     log.indent() << std::endl;
   }
-  log.indent() << "Canonical Monte Carlo Done" << std::endl;
+  log.indent() << "Monte Carlo calculation series complete" << std::endl;
 }
 
 }  // namespace clexmonte

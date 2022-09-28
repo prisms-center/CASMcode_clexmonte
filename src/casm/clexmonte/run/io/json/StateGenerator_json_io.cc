@@ -98,7 +98,7 @@ void parse(
 ///     Conditions for the initial state. For canonical Monte Carlo
 ///     calculations, "temperature" is required and composition (using
 ///     "mol_composition" or "param_composition") must be specified for
-///     "initial_conditions" or listed in "dependent_conditions". May include:
+///     "initial_conditions" or set via "modifiers". May include:
 ///
 ///       "temperature": number (required)
 ///         Temperature in K.
@@ -119,13 +119,26 @@ void parse(
 ///         Parametric composition, in terms of the chosen composition axes. May
 ///         be:
 ///
-///         - An array of number, corresponding to
-///           `[comp_x(a), comp_x(b), ...]`. The size must match the number of
-///           composition axes.
+///         - An array of number, specifying the parameteric composition along
+///           each axis (i.e. `[a, b, ...]`). The size must match the number
+///           of composition axes.
 ///
 ///         - A dict, where the keys are the axes names ("a", "b", etc.), and
 ///           values are the corresponding parametric composition value.
 ///           All composition axes must be included.
+///
+///       "param_chem_pot": array of number or dict (optional)
+///         Parametric chemical potential, i.e. the chemical potential conjugate
+///         to the chosen composition axes. May be:
+///
+///         - An array of number, specifying the parameteric chemical potential
+///           for each axis (i.e. `[a, b, ...]`). The size must match the number
+///           of composition axes.
+///
+///         - A dict, where the keys are the axes names ("a", "b", etc.), and
+///           values are the corresponding parameteric chemical potential
+///           values. All composition axes must be included.
+///
 ///
 ///   conditions_increment: object (required)
 ///     Amount to increment the independent conditions for each subsequent
@@ -148,15 +161,16 @@ void parse(
 ///     configuration. Choosing `false` tends to result in noisier calculation
 ///     results from condition to condition and less hysteresis.
 ///
-///   dependent_conditions: Array of string (optional, default=[])
-///     Names of sampling functions specifying conditions that should be
-///     fixed at the value the results from evaluating the state generated
-///     by the choice of initial configuration and increment conditions.
+///   modifiers: Array of string (optional, default=[])
+///     Names of functions that should be used to modify the state generated
+///     by the choice of initial configuration and conditions increment. The
+///     modifiers may in general modify either the configuration or conditions
+///     of the state.
 ///
 ///     For canonical Monte Carlo calculations, a common use case is to specify
 ///     the temperature range independently via `initial_conditions` and
 ///     `conditions_increment` while fixing the composition of the initial
-///     configuration by using `"dependent_conditions": ["mol_composition"]`.
+///     configuration by using `"modifiers": ["set_mol_composition"]`.
 ///     This relieves the user of having to calculate the composition of the
 ///     initial configuration and set it in `initial_conditions` manually.
 ///
@@ -164,7 +178,7 @@ void parse(
     InputParser<monte::IncrementalConditionsStateGenerator<Configuration>>
         &parser,
     std::shared_ptr<system_type> const &system,
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
+    monte::StateModifyingFunctionMap<config_type> const &modifying_functions,
     MethodParserMap<config_generator_type> config_generator_methods) {
   /// Parse "initial_configuration"
   auto config_generator_subparser = parser.subparse<config_generator_type>(
@@ -180,21 +194,21 @@ void parse(
   auto conditions_increment_subparser = parser.subparse_with<monte::ValueMap>(
       parse_conditions, "conditions_increment", system, is_increment);
 
-  /// Parse "dependent_conditions"
-  std::vector<std::string> dependent_conditions_names;
-  parser.optional(dependent_conditions_names, "dependent_conditions");
-  monte::StateSamplingFunctionMap<config_type> dependent_conditions;
-  for (auto const &name : dependent_conditions_names) {
-    auto it = sampling_functions.find(name);
-    if (it == sampling_functions.end()) {
+  /// Parse "modifiers"
+  std::vector<std::string> modifier_names;
+  parser.optional(modifier_names, "modifiers");
+  std::vector<monte::StateModifyingFunction<config_type>> selected_modifiers;
+  for (auto const &name : modifier_names) {
+    auto it = modifying_functions.find(name);
+    if (it == modifying_functions.end()) {
       std::stringstream msg;
-      msg << "Error in \"dependent_conditions\": Not a valid sampling function "
+      msg << "Error in \"modifiers\": Not a valid function "
              "name: \""
           << name << "\"";
-      parser.insert_error("dependent_conditions", msg.str());
+      parser.insert_error("modifiers", msg.str());
       continue;
     }
-    dependent_conditions.emplace(*it);
+    selected_modifiers.push_back(it->second);
   }
 
   /// Parse "n_states"
@@ -211,7 +225,7 @@ void parse(
         std::move(config_generator_subparser->value),
         *initial_conditions_subparser->value,
         *conditions_increment_subparser->value, n_states, dependent_runs,
-        dependent_conditions);
+        selected_modifiers);
   }
 }
 

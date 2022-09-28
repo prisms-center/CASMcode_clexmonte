@@ -31,6 +31,10 @@ struct EventData {
 
   /// \brief Used to apply event and track occupants in monte::OccLocation
   monte::OccEvent event;
+
+  // Note: To keep all event state values, uncomment this:
+  // /// \brief Holds the calculated event state
+  // mutable EventState event_state;
 };
 
 /// \brief Data common to all translationally equivalent events

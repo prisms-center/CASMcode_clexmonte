@@ -9,6 +9,7 @@
 #include "casm/monte/state/FixedConfigGenerator.hh"
 #include "casm/monte/state/IncrementalConditionsStateGenerator.hh"
 #include "casm/monte/state/State.hh"
+#include "casm/monte/state/StateModifyingFunction.hh"
 #include "casm/monte/state/StateSampler.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
@@ -51,13 +52,13 @@ TEST_F(state_IncrementalConditionsStateGeneratorTest, Test1) {
   std::unique_ptr<config_generator_type> config_generator =
       notstd::make_unique<fixed_config_generator_type>(init_config);
 
-  // dependent_conditions
-  StateSamplingFunctionMap<config_type> dependent_conditions;
+  // modifiers
+  std::vector<StateModifyingFunction<config_type>> modifiers;
 
   std::vector<state_type> final_states;
   incremental_state_generator_type state_generator(
       std::move(config_generator), init_conditions, conditions_increment,
-      n_states, dependent_runs, dependent_conditions);
+      n_states, dependent_runs, modifiers);
 
   while (!state_generator.is_complete(final_states)) {
     state_type state = state_generator.next_state(final_states);
@@ -102,13 +103,13 @@ TEST_F(state_IncrementalConditionsStateGeneratorTest, Test2) {
   std::unique_ptr<config_generator_type> config_generator =
       notstd::make_unique<fixed_config_generator_type>(init_config);
 
-  // dependent_conditions
-  StateSamplingFunctionMap<config_type> dependent_conditions;
+  // modifiers
+  std::vector<StateModifyingFunction<config_type>> modifiers;
 
   std::vector<state_type> final_states;
   incremental_state_generator_type state_generator(
       std::move(config_generator), init_conditions, conditions_increment,
-      n_states, dependent_runs, dependent_conditions);
+      n_states, dependent_runs, modifiers);
 
   while (!state_generator.is_complete(final_states)) {
     state_type state = state_generator.next_state(final_states);

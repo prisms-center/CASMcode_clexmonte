@@ -6,6 +6,7 @@
 #include "casm/clexmonte/semi_grand_canonical.hh"
 #include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/state/modifying_functions.hh"
 #include "casm/clexmonte/state/sampling_functions.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/monte/Conversions.hh"
@@ -24,7 +25,12 @@ template <typename EngineType>
 SemiGrandCanonical<EngineType>::SemiGrandCanonical(
     std::shared_ptr<system_type> _system,
     std::shared_ptr<EngineType> _random_number_engine)
-    : system(_system), random_number_generator(_random_number_engine) {
+    : system(_system),
+      random_number_generator(_random_number_engine),
+      state(nullptr),
+      transformation_matrix_to_supercell(Eigen::Matrix3l::Zero(3, 3)),
+      occ_location(nullptr),
+      state_sampler(nullptr) {
   if (!is_clex_data(*system, "formation_energy")) {
     throw std::runtime_error(
         "Error constructing SemiGrandCanonical: no 'formation_energy' clex.");
@@ -94,12 +100,14 @@ template <typename EngineType>
 monte::StateSamplingFunctionMap<Configuration>
 SemiGrandCanonical<EngineType>::standard_sampling_functions(
     std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation) {
-  auto const &system = calculation->system;
   std::vector<monte::StateSamplingFunction<Configuration>> functions = {
-      make_temperature_f(system),           make_mol_composition_f(system),
-      make_param_composition_f(system),     make_param_chem_pot_f(system),
-      make_formation_energy_corr_f(system), make_formation_energy_f(system),
-      make_potential_energy_f(system)};
+      make_temperature_f(calculation),
+      make_mol_composition_f(calculation),
+      make_param_composition_f(calculation),
+      make_param_chem_pot_f(calculation),
+      make_formation_energy_corr_f(calculation),
+      make_formation_energy_f(calculation),
+      make_potential_energy_f(calculation)};
 
   monte::StateSamplingFunctionMap<Configuration> function_map;
   for (auto const &f : functions) {
@@ -114,17 +122,24 @@ template <typename EngineType>
 monte::ResultsAnalysisFunctionMap<Configuration>
 SemiGrandCanonical<EngineType>::standard_analysis_functions(
     std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation) {
-  auto const &system = calculation->system;
   std::vector<monte::ResultsAnalysisFunction<Configuration>> functions = {
-      make_heat_capacity_f(), make_mol_susc_f(system),
-      make_param_susc_f(system), make_mol_thermochem_susc_f(system),
-      make_param_thermochem_susc_f(system)};
+      make_heat_capacity_f(calculation), make_mol_susc_f(calculation),
+      make_param_susc_f(calculation), make_mol_thermochem_susc_f(calculation),
+      make_param_thermochem_susc_f(calculation)};
 
   monte::ResultsAnalysisFunctionMap<Configuration> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }
   return function_map;
+}
+
+/// \brief Construct functions that may be used to modify states
+template <typename EngineType>
+monte::StateModifyingFunctionMap<config_type>
+SemiGrandCanonical<EngineType>::standard_modifying_functions(
+    std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation) {
+  return monte::StateModifyingFunctionMap<config_type>();
 }
 
 }  // namespace semi_grand_canonical

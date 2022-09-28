@@ -6,7 +6,7 @@
 namespace CASM {
 
 template <typename T>
-jsonParser to_json(T const &t) {
+jsonParser qto_json(T const &t) {
   jsonParser json;
   to_json(t, json);
   return json;

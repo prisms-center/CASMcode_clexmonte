@@ -46,12 +46,14 @@ void parse_and_run_series(fs::path system_json_file,
       CalculationType::standard_sampling_functions(calculation);
   auto analysis_functions =
       CalculationType::standard_analysis_functions(calculation);
+  auto modifying_functions =
+      CalculationType::standard_modifying_functions(calculation);
 
   /// Make config generator / state generator / results_io JSON parsers
   auto config_generator_methods =
       clexmonte::standard_config_generator_methods(calculation->system);
   auto state_generator_methods = clexmonte::standard_state_generator_methods(
-      calculation->system, sampling_functions, config_generator_methods);
+      calculation->system, modifying_functions, config_generator_methods);
   auto results_io_methods = clexmonte::standard_results_io_methods(
       sampling_functions, analysis_functions);
 

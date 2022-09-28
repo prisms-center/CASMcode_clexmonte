@@ -13,6 +13,7 @@
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/enforce_composition.hh"
 #include "casm/clexmonte/state/kinetic_sampling_functions.hh"
+#include "casm/clexmonte/state/modifying_functions.hh"
 #include "casm/clexmonte/state/sampling_functions.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/monte/MethodLog.hh"
@@ -22,6 +23,10 @@
 #include "casm/monte/results/Results.hh"
 #include "casm/monte/state/State.hh"
 #include "casm/monte/state/StateSampler.hh"
+
+// debug
+#include "casm/casm_io/json/jsonParser.hh"
+#include "casm/clexmonte/events/io/json/EventState_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -35,11 +40,15 @@ Kinetic<EngineType>::Kinetic(std::shared_ptr<system_type> _system,
       random_number_generator(_random_number_engine),
       state(nullptr),
       transformation_matrix_to_supercell(Eigen::Matrix3l::Zero(3, 3)),
-      occ_location(nullptr) {
+      occ_location(nullptr),
+      sampling_fixture_label(),
+      state_sampler(nullptr) {
   if (!is_clex_data(*this->system, "formation_energy")) {
     throw std::runtime_error(
         "Error constructing Kinetic: no 'formation_energy' clex.");
   }
+
+  this->event_system = get_event_system(*this->system);
 
   this->prim_event_list = clexmonte::make_prim_event_list(*this->system);
 
@@ -113,8 +122,15 @@ void Kinetic<EngineType>::run(state_type &state,
                                              this->prim_event_list),
       this->event_list.impact_table);
 
-  monte::kinetic_monte_carlo<EventID>(state, occ_location, event_selector,
-                                      get_event_f, run_manager);
+  // Update atom_name_index_list -- These do not change --
+  // TODO: KMC with atoms that move to/from resevoir will need to update this
+  atom_name_index_list =
+      make_atom_name_index_list(occ_location, *this->event_system);
+
+  monte::kinetic_monte_carlo<EventID>(
+      state, occ_location, sampling_fixture_label, state_sampler, time,
+      atom_positions_cart, prev_time, prev_atom_positions_cart, event_selector,
+      get_event_f, run_manager);
 }
 
 /// \brief Perform a series of runs, according to a state generator
@@ -132,16 +148,24 @@ template <typename EngineType>
 monte::StateSamplingFunctionMap<Configuration>
 Kinetic<EngineType>::standard_sampling_functions(
     std::shared_ptr<Kinetic<EngineType>> const &calculation) {
-  auto const &system = calculation->system;
   std::vector<monte::StateSamplingFunction<Configuration>> functions = {
-      make_temperature_f(system),
-      make_mol_composition_f(system),
-      make_param_composition_f(system),
-      make_formation_energy_corr_f(system),
-      make_formation_energy_f(system),
+      make_temperature_f(calculation),
+      make_mol_composition_f(calculation),
+      make_param_composition_f(calculation),
+      make_formation_energy_corr_f(calculation),
+      make_formation_energy_f(calculation),
       make_kmc_potential_energy_f(calculation),
-      make_R_squared_center_f(calculation),
-      make_R_squared_tracer_f(calculation)};
+      make_mean_R_squared_collective_isotropic_f(calculation),
+      make_mean_R_squared_collective_anisotropic_f(calculation),
+      make_mean_R_squared_individual_isotropic_f(calculation),
+      make_mean_R_squared_individual_anisotropic_f(calculation),
+      make_L_isotropic_f(calculation),
+      make_L_anisotropic_f(calculation),
+      make_D_tracer_isotropic_f(calculation),
+      make_D_tracer_anisotropic_f(calculation),
+      make_jumps_per_atom_by_type_f(calculation),
+      make_jumps_per_event_by_type_f(calculation),
+      make_jumps_per_atom_per_event_by_type_f(calculation)};
 
   monte::StateSamplingFunctionMap<Configuration> function_map;
   for (auto const &f : functions) {
@@ -156,13 +180,27 @@ template <typename EngineType>
 monte::ResultsAnalysisFunctionMap<Configuration>
 Kinetic<EngineType>::standard_analysis_functions(
     std::shared_ptr<Kinetic<EngineType>> const &calculation) {
-  auto const &system = calculation->system;
   std::vector<monte::ResultsAnalysisFunction<Configuration>> functions = {
-      make_heat_capacity_f(), make_mol_susc_f(system),
-      make_param_susc_f(system), make_mol_thermochem_susc_f(system),
-      make_param_thermochem_susc_f(system)};
+      make_heat_capacity_f(calculation), make_mol_susc_f(calculation),
+      make_param_susc_f(calculation), make_mol_thermochem_susc_f(calculation),
+      make_param_thermochem_susc_f(calculation)};
 
   monte::ResultsAnalysisFunctionMap<Configuration> function_map;
+  for (auto const &f : functions) {
+    function_map.emplace(f.name, f);
+  }
+  return function_map;
+}
+
+/// \brief Construct functions that may be used to modify states
+template <typename EngineType>
+monte::StateModifyingFunctionMap<config_type>
+Kinetic<EngineType>::standard_modifying_functions(
+    std::shared_ptr<Kinetic<EngineType>> const &calculation) {
+  std::vector<monte::StateModifyingFunction<config_type>> functions = {
+      make_set_mol_composition_f(calculation)};
+
+  monte::StateModifyingFunctionMap<config_type> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }

@@ -10,6 +10,7 @@
 
 using namespace CASM;
 
+/// Simple test of canonical Monte Carlo
 TEST(canonical_run_test, Test1) {
   fs::path test_data_dir = test::data_dir("clexmonte") / "Clex_ZrO_Occ";
   fs::path clexulator_src_relpath = fs::path("basis_sets") /
@@ -52,12 +53,14 @@ TEST(canonical_run_test, Test1) {
       calculation_type::standard_sampling_functions(calculation);
   auto analysis_functions =
       calculation_type::standard_analysis_functions(calculation);
+  auto modifying_functions =
+      calculation_type::standard_modifying_functions(calculation);
 
   /// Make config generator / state generator / results_io JSON parsers
   auto config_generator_methods =
       clexmonte::standard_config_generator_methods(calculation->system);
   auto state_generator_methods = clexmonte::standard_state_generator_methods(
-      calculation->system, sampling_functions, config_generator_methods);
+      calculation->system, modifying_functions, config_generator_methods);
   auto results_io_methods = clexmonte::standard_results_io_methods(
       sampling_functions, analysis_functions);
 
@@ -89,6 +92,12 @@ TEST(canonical_run_test, Test1) {
   fs::remove(test_dir / "output");
 }
 
+/// Test canonical Monte Carlo with 2 sampling fixtures, specified using
+/// seperate files.
+/// - First sampling fixture, labeled "thermo_period1":  sampling every
+///   1 pass and specified using file "thermo_sampling.period1.json"
+/// - Second sampling fixture, labeled "thermo_period10": sampling every
+///   10 passes and specified using file "thermo_sampling.period10.json"
 TEST(canonical_run_test, Test2) {
   fs::path test_data_dir = test::data_dir("clexmonte") / "Clex_ZrO_Occ";
   fs::path clexulator_src_relpath = fs::path("basis_sets") /
@@ -112,19 +121,23 @@ TEST(canonical_run_test, Test2) {
   jsonParser p1_json(test_data_dir / "thermo_sampling.period1.json");
   p1_json["results_io"]["kwargs"]["output_dir"] =
       (test_dir / output_dir_relpath / "thermo_period1").string();
-  p1_json["log"]["file"] =
-      (test_dir / output_dir_relpath / "thermo_period1" / "status.json")
-          .string();
   p1_json.write(test_dir / "thermo_sampling.period1.json");
+
+  // for debugging:
+  // p1_json["log"]["file"] =
+  //     (test_dir / output_dir_relpath / "thermo_period1" / "status.json")
+  //         .string();
 
   /// Construct "thermo_sampling.period10.json
   jsonParser p10_json(test_data_dir / "thermo_sampling.period10.json");
   p10_json["results_io"]["kwargs"]["output_dir"] =
       (test_dir / output_dir_relpath / "thermo_period10").string();
-  p10_json["log"]["file"] =
-      (test_dir / output_dir_relpath / "thermo_period10" / "status.json")
-          .string();
   p10_json.write(test_dir / "thermo_sampling.period10.json");
+
+  // for debugging:
+  // p10_json["log"]["file"] =
+  //     (test_dir / output_dir_relpath / "thermo_period10" / "status.json")
+  //         .string();
 
   /// Parse and construct system
   jsonParser system_json(test_data_dir / "system.json");
@@ -149,12 +162,14 @@ TEST(canonical_run_test, Test2) {
       calculation_type::standard_sampling_functions(calculation);
   auto analysis_functions =
       calculation_type::standard_analysis_functions(calculation);
+  auto modifying_functions =
+      calculation_type::standard_modifying_functions(calculation);
 
   /// Make config generator / state generator / results_io JSON parsers
   auto config_generator_methods =
       clexmonte::standard_config_generator_methods(calculation->system);
   auto state_generator_methods = clexmonte::standard_state_generator_methods(
-      calculation->system, sampling_functions, config_generator_methods);
+      calculation->system, modifying_functions, config_generator_methods);
   auto results_io_methods = clexmonte::standard_results_io_methods(
       sampling_functions, analysis_functions);
 

@@ -17,6 +17,7 @@
 #include "casm/monte/sampling/SamplingParams.hh"
 #include "casm/monte/state/FixedConfigGenerator.hh"
 #include "casm/monte/state/IncrementalConditionsStateGenerator.hh"
+#include "casm/monte/state/StateModifyingFunction.hh"
 #include "casm/monte/state/StateSampler.hh"
 #include "casm/system/RuntimeLibrary.hh"
 #include "gtest/gtest.h"
@@ -211,14 +212,14 @@ TEST(canonical_fullrun_test, Test1) {
   //   - For example, instead of setting composition as a independent
   //     condition, "mol_composition" could be a calculated from
   //     the generated configuration.
-  monte::StateSamplingFunctionMap<clexmonte::Configuration>
-      dependent_conditions;
+  std::vector<monte::StateModifyingFunction<clexmonte::Configuration>>
+      modifiers;
 
   // - Construct the state generator
   monte::IncrementalConditionsStateGenerator<clexmonte::Configuration>
       state_generator(std::move(config_generator), initial_conditions,
                       conditions_increment, n_states, dependent_runs,
-                      dependent_conditions);
+                      modifiers);
 
   // ### Construct monte::SamplingParams
   monte::SamplingParams sampling_params;

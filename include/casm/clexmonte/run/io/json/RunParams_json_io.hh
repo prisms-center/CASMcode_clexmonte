@@ -18,7 +18,7 @@ MethodParserMap<config_generator_type> standard_config_generator_methods(
 
 MethodParserMap<state_generator_type> standard_state_generator_methods(
     std::shared_ptr<system_type> const &system,
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
+    monte::StateModifyingFunctionMap<config_type> const &modifying_functions,
     MethodParserMap<config_generator_type> const &config_generator_methods);
 
 MethodParserMap<results_io_type> standard_results_io_methods(

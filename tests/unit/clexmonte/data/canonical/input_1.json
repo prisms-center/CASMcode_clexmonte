@@ -59,7 +59,7 @@
             "dof": null
           }
         },
-        "dependent_conditions": ["mol_composition"],
+        "modifiers": ["mol_composition"],
         "initial_conditions" : {
           "_comp_n" : {
             "Zr": 2.0,

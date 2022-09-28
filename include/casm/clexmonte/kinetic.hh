@@ -32,23 +32,14 @@ struct Kinetic {
   /// Update species in monte::OccLocation tracker
   bool update_species = true;
 
-  /// Current state
-  monte::State<Configuration> const *state;
-
-  /// Current supercell
-  Eigen::Matrix3l transformation_matrix_to_supercell;
-
-  /// Occupant tracker
-  monte::OccLocation const *occ_location;
-
-  /// The current state's conditions in efficient-to-use form
-  std::shared_ptr<clexmonte::Conditions> conditions;
-
   // TODO:
   // /// If true: rejection-free KMC, if false: rejection-KMC
   // bool rejection_free = true;
 
   // --- System specific ---
+
+  /// Specifies OccEvent index meaning / atom name indices
+  std::shared_ptr<occ_events::OccSystem> event_system;
 
   /// The `prim events`, one translationally distinct instance
   /// of each event, associated with origin primitive cell
@@ -56,6 +47,56 @@ struct Kinetic {
 
   /// Information about what sites may impact each prim event
   std::vector<clexmonte::EventImpactInfo> prim_impact_info_list;
+
+  // --- Standard state specific ---
+
+  /// Pointer to current state
+  state_type const *state;
+
+  /// Current supercell
+  Eigen::Matrix3l transformation_matrix_to_supercell;
+
+  /// Pointer to current occupant tracker
+  monte::OccLocation const *occ_location;
+
+  /// The current state's conditions in efficient-to-use form
+  ///
+  /// Note: This is shared with the calculators in `prim_event_calculators`
+  std::shared_ptr<clexmonte::Conditions> conditions;
+
+  /// When sampling, this will hold the atom name index for each column of the
+  /// atom position matrices. Currently atom names only; does not distinguish
+  /// atoms with different properties.
+  std::vector<Index> atom_name_index_list;
+
+  // TODO: need a better system for passing info to sampling functions
+
+  /// When sampling, this will specify the current sampling fixture
+  std::string sampling_fixture_label;
+
+  /// When sampling, this will point to the current state sampler
+  monte::StateSampler<clexmonte::config_type> const *state_sampler;
+
+  /// When sampling, this will hold the current simulation time
+  double time;
+
+  /// When sampling, this will hold current atom positions
+  Eigen::MatrixXd atom_positions_cart;
+
+  /// When sampling, this will hold the last sampling time
+  ///
+  /// Notes:
+  /// - Key = sampling fixture label
+  /// - For the first sample, this will contain 0.0
+  std::map<std::string, double> prev_time;
+
+  /// When sampling, this will hold atom positions from the last sampling time
+  ///
+  /// Notes:
+  /// - Key = sampling fixture label
+  /// - For the first sample, this will contain the atom positions at the
+  ///   start of the run.
+  std::map<std::string, Eigen::MatrixXd> prev_atom_positions_cart;
 
   // --- Supercell & state specific ---
 
@@ -82,16 +123,26 @@ struct Kinetic {
 
   /// \brief Construct functions that may be used to sample various quantities
   ///     of the Monte Carlo calculation as it runs
-  static monte::StateSamplingFunctionMap<Configuration>
+  static monte::StateSamplingFunctionMap<config_type>
   standard_sampling_functions(
       std::shared_ptr<Kinetic<EngineType>> const &calculation);
 
   /// \brief Construct functions that may be used to analyze Monte Carlo
   ///     calculation results
-  static monte::ResultsAnalysisFunctionMap<Configuration>
+  static monte::ResultsAnalysisFunctionMap<config_type>
   standard_analysis_functions(
       std::shared_ptr<Kinetic<EngineType>> const &calculation);
+
+  /// \brief Construct functions that may be used to modify states
+  static monte::StateModifyingFunctionMap<config_type>
+  standard_modifying_functions(
+      std::shared_ptr<Kinetic<EngineType>> const &calculation);
 };
+
+/// \brief Construct a list of atom names corresponding to OccLocation atoms
+std::vector<Index> make_atom_name_index_list(
+    monte::OccLocation const &occ_location,
+    occ_events::OccSystem const &occ_system);
 
 /// \brief Helper for making a conditions ValueMap for kinetic Monte
 ///     Carlo calculations
