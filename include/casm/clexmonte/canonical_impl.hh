@@ -29,7 +29,7 @@ Canonical<EngineType>::Canonical(
     : system(_system),
       random_number_generator(_random_number_engine),
       state(nullptr),
-      transformation_matrix_to_supercell(Eigen::Matrix3l::Zero(3, 3)),
+      transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)),
       occ_location(nullptr),
       state_sampler(nullptr) {
   if (!is_clex_data(*system, "formation_energy")) {
@@ -56,8 +56,8 @@ void Canonical<EngineType>::run(state_type &state,
   }
 
   this->state = &state;
-  this->transformation_matrix_to_supercell =
-      get_transformation_matrix_to_supercell(state);
+  this->transformation_matrix_to_super =
+      get_transformation_matrix_to_super(state);
   this->occ_location = &occ_location;
   this->conditions = make_conditions(*this->system, state);
 

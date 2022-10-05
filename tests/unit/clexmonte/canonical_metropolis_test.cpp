@@ -37,7 +37,7 @@ TEST_F(canonical_MetropolisTest, Test1) {
 
   // Prepare supercell-specific index conversions
   Conversions convert{*get_prim_basicstructure(*system),
-                      get_transformation_matrix_to_supercell(state)};
+                      get_transformation_matrix_to_super(state)};
   OccCandidateList occ_candidate_list(convert);
   std::vector<OccSwap> canonical_swaps =
       make_canonical_swaps(convert, occ_candidate_list);

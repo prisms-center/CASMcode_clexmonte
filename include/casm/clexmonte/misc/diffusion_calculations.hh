@@ -211,7 +211,7 @@ Eigen::VectorXd L_isotropic_sample(std::vector<std::string> atom_name_list,
                                    double delta_time, double volume,
                                    double temperature) {
   // double n_unitcells =
-  // get_transformation_matrix_to_supercell(state).determinant(); double volume
+  // get_transformation_matrix_to_super(state).determinant(); double volume
   // = n_unitcells * get_prim_basicstructure(system)->lattice().volume();
   double n_atoms = atom_name_index_list.size();
   Eigen::VectorXd RiRj = mean_R_squared_collective_isotropic(
@@ -264,7 +264,7 @@ Eigen::VectorXd L_anisotropic_sample(std::vector<std::string> atom_name_list,
                                      double delta_time, double volume,
                                      double temperature) {
   // double n_unitcells =
-  // get_transformation_matrix_to_supercell(state).determinant(); double volume
+  // get_transformation_matrix_to_super(state).determinant(); double volume
   // = n_unitcells * get_prim_basicstructure(system)->lattice().volume();
   double n_atoms = atom_name_index_list.size();
   Eigen::VectorXd RiaRjb = mean_R_squared_collective_anisotropic(

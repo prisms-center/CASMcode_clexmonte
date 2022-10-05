@@ -39,7 +39,7 @@ Kinetic<EngineType>::Kinetic(std::shared_ptr<system_type> _system,
     : system(_system),
       random_number_generator(_random_number_engine),
       state(nullptr),
-      transformation_matrix_to_supercell(Eigen::Matrix3l::Zero(3, 3)),
+      transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)),
       occ_location(nullptr),
       sampling_fixture_label(),
       state_sampler(nullptr) {
@@ -63,8 +63,8 @@ void Kinetic<EngineType>::run(state_type &state,
                               monte::RunManager<config_type> &run_manager) {
   // if same supercell
   // -> just re-set state & conditions & avoid re-constructing event list
-  if (this->transformation_matrix_to_supercell ==
-          get_transformation_matrix_to_supercell(state) &&
+  if (this->transformation_matrix_to_super ==
+          get_transformation_matrix_to_super(state) &&
       this->conditions != nullptr) {
     this->state = &state;
     this->occ_location = &occ_location;
@@ -75,8 +75,8 @@ void Kinetic<EngineType>::run(state_type &state,
     }
   } else {
     this->state = &state;
-    this->transformation_matrix_to_supercell =
-        get_transformation_matrix_to_supercell(state);
+    this->transformation_matrix_to_super =
+        get_transformation_matrix_to_super(state);
     this->occ_location = &occ_location;
     this->conditions = make_conditions(*this->system, state);
 
@@ -115,7 +115,7 @@ void Kinetic<EngineType>::run(state_type &state,
   };
 
   // Make selector
-  Eigen::Matrix3l T = get_transformation_matrix_to_supercell(state);
+  Eigen::Matrix3l T = get_transformation_matrix_to_super(state);
   lotto::RejectionFreeEventSelector event_selector(
       this->event_calculator,
       clexmonte::make_complete_event_id_list(T.determinant(),

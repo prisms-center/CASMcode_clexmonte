@@ -85,7 +85,7 @@ struct Canonical {
   monte::State<Configuration> const *state;
 
   /// Current supercell
-  Eigen::Matrix3l transformation_matrix_to_supercell;
+  Eigen::Matrix3l transformation_matrix_to_super;
 
   /// Occupant tracker
   monte::OccLocation const *occ_location;

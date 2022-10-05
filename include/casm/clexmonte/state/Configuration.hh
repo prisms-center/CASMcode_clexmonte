@@ -21,7 +21,7 @@ struct Configuration {
 
 // --- The following are used to interface with CASM::monte methods ---
 
-inline Eigen::Matrix3l const &get_transformation_matrix_to_supercell(
+inline Eigen::Matrix3l const &get_transformation_matrix_to_super(
     monte::State<Configuration> const &state) {
   return state.configuration.transformation_matrix_to_super;
 }

@@ -79,8 +79,7 @@ inline double heat_capacity_normalization_constant_f(
   double temperature = state.conditions.scalar_values.at("temperature");
 
   // calculate
-  double n_unitcells =
-      get_transformation_matrix_to_supercell(state).determinant();
+  double n_unitcells = get_transformation_matrix_to_super(state).determinant();
   return (CASM::KB * temperature * temperature) / n_unitcells;
 }
 
@@ -126,7 +125,7 @@ make_susc_normalization_constant_f(std::string name) {
 
     // calculate
     double n_unitcells =
-        get_transformation_matrix_to_supercell(state).determinant();
+        get_transformation_matrix_to_super(state).determinant();
     return (CASM::KB * temperature) / n_unitcells;
   };
 }

@@ -124,7 +124,7 @@ monte::StateSamplingFunction<Configuration> make_kmc_potential_energy_f(
         canonical::CanonicalPotential potential(calculation->system);
         potential.set(calculation->state, calculation->conditions);
         double n_unitcells =
-            get_transformation_matrix_to_supercell(*calculation->state)
+            get_transformation_matrix_to_super(*calculation->state)
                 .determinant();
         return monte::reshaped(potential.extensive_value() / n_unitcells);
       });

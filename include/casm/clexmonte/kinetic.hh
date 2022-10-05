@@ -54,7 +54,7 @@ struct Kinetic {
   state_type const *state;
 
   /// Current supercell
-  Eigen::Matrix3l transformation_matrix_to_supercell;
+  Eigen::Matrix3l transformation_matrix_to_super;
 
   /// Pointer to current occupant tracker
   monte::OccLocation const *occ_location;
