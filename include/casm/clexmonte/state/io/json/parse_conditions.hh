@@ -1,6 +1,8 @@
 #ifndef CASM_clexmonte_state_parse_conditions
 #define CASM_clexmonte_state_parse_conditions
 
+#include <memory>
+
 #include "casm/clexmonte/definitions.hh"
 
 namespace CASM {
