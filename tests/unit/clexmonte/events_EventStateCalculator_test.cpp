@@ -1,6 +1,8 @@
 #include "KMCCompleteEventListTestSystem.hh"
-#include "casm/clexmonte/events/EventStateCalculator.hh"
-#include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
+#include "casm/clexmonte/kinetic/io/stream/EventState_stream_io.hh"
+#include "casm/clexmonte/kinetic/kinetic_events.hh"
+#include "casm/clexmonte/state/Conditions.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "gtest/gtest.h"
 #include "teststructures.hh"
 
@@ -26,8 +28,7 @@ TEST_F(events_EventStateCalculator_Test, Test1) {
 
   // Create default state
   Eigen::Matrix3l T = test::fcc_conventional_transf_mat() * 10;
-  monte::State<clexmonte::Configuration> state(
-      make_default_configuration(*system, T));
+  monte::State<Configuration> state(make_default_configuration(*system, T));
   // Set configuration - A, with single Va
   Eigen::VectorXi &occupation = get_occupation(state);
   occupation(0) = 2;
@@ -51,9 +52,9 @@ TEST_F(events_EventStateCalculator_Test, Test1) {
   /// Make std::shared_ptr<clexmonte::Conditions> object from state.conditions
   auto conditions = make_conditions(*system, state);
 
-  std::vector<EventStateCalculator> prim_event_calculators =
-      clexmonte::make_prim_event_calculators(system, state, prim_event_list,
-                                             conditions);
+  std::vector<kinetic::EventStateCalculator> prim_event_calculators =
+      kinetic::make_prim_event_calculators(system, state, prim_event_list,
+                                           conditions);
   EXPECT_EQ(prim_event_calculators.size(), 24);
   // std::cout << "#prim event calculators: " << prim_event_calculators.size()
   //           << std::endl;
@@ -64,7 +65,7 @@ TEST_F(events_EventStateCalculator_Test, Test1) {
 
   Index i = 0;
   Index n_allowed = 0;
-  EventState event_state;
+  kinetic::EventState event_state;
   for (auto const &event : event_list.events) {
     auto const &event_id = event.first;
     auto const &event_data = event.second;

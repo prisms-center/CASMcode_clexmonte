@@ -1,15 +1,18 @@
-#include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
+#include "casm/clexmonte/kinetic/io/stream/EventState_stream_io.hh"
 
 #include "casm/casm_io/container/stream_io.hh"
 #include "casm/clexmonte/events/event_data.hh"
+#include "casm/clexmonte/kinetic/kinetic_events.hh"
 
 namespace CASM {
 namespace clexmonte {
-struct EventState;
 struct EventData;
 struct PrimEventData;
 
-void print(std::ostream &out, EventState const &event_state) {
+namespace kinetic {
+struct EventState;
+
+void print(std::ostream &out, kinetic::EventState const &event_state) {
   out << "is_allowed: " << std::boolalpha << event_state.is_allowed
       << std::endl;
   if (event_state.is_allowed) {
@@ -23,7 +26,7 @@ void print(std::ostream &out, EventState const &event_state) {
   }
 }
 
-void print(std::ostream &out, EventState const &event_state,
+void print(std::ostream &out, kinetic::EventState const &event_state,
            PrimEventData const &prim_event_data) {
   out << "prim_event_index: " << prim_event_data.prim_event_index << std::endl;
   out << "event_type_name: " << prim_event_data.event_type_name << std::endl;
@@ -35,7 +38,7 @@ void print(std::ostream &out, EventState const &event_state,
   print(out, event_state);
 }
 
-void print(std::ostream &out, EventState const &event_state,
+void print(std::ostream &out, kinetic::EventState const &event_state,
            EventData const &event_data, PrimEventData const &prim_event_data) {
   out << "prim_event_index: " << prim_event_data.prim_event_index << std::endl;
   out << "unitcell_index: " << event_data.unitcell_index << std::endl;
@@ -50,5 +53,6 @@ void print(std::ostream &out, EventState const &event_state,
   print(out, event_state);
 }
 
+}  // namespace kinetic
 }  // namespace clexmonte
 }  // namespace CASM

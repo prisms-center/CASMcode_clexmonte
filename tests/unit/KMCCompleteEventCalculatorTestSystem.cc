@@ -20,6 +20,8 @@ void KMCCompleteEventCalculatorTestSystem::make_complete_event_calculator(
     monte::State<clexmonte::Configuration> const &state,
     std::vector<std::string> const &clex_names,
     std::vector<std::string> const &multiclex_names) {
+  using namespace clexmonte;
+
   this->make_prim_event_list(clex_names, multiclex_names);
 
   // Note: For correct atom tracking and stochastic canonical / grand
@@ -33,11 +35,11 @@ void KMCCompleteEventCalculatorTestSystem::make_complete_event_calculator(
   /// Make std::shared_ptr<clexmonte::Conditions> object from state.conditions
   conditions = make_conditions(*system, state);
 
-  prim_event_calculators = clexmonte::make_prim_event_calculators(
+  prim_event_calculators = kinetic::make_prim_event_calculators(
       system, state, prim_event_list, conditions);
 
   // Construct CompleteEventCalculator
-  event_calculator = std::make_shared<clexmonte::CompleteEventCalculator>(
+  event_calculator = std::make_shared<kinetic::CompleteEventCalculator>(
       prim_event_list, prim_event_calculators, event_list.events);
 }
 

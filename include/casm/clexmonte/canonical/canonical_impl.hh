@@ -1,7 +1,7 @@
 #ifndef CASM_clexmonte_canonical_impl
 #define CASM_clexmonte_canonical_impl
 
-#include "casm/clexmonte/canonical.hh"
+#include "casm/clexmonte/canonical/canonical.hh"
 #include "casm/clexmonte/run/analysis_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
 #include "casm/clexmonte/state/Conditions.hh"

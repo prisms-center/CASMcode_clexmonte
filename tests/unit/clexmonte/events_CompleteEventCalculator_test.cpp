@@ -1,6 +1,8 @@
 #include "KMCCompleteEventListTestSystem.hh"
-#include "casm/clexmonte/events/CompleteEventCalculator.hh"
-#include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
+#include "casm/clexmonte/kinetic/io/stream/EventState_stream_io.hh"
+#include "casm/clexmonte/kinetic/kinetic_events.hh"
+#include "casm/clexmonte/state/Conditions.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "gtest/gtest.h"
 #include "teststructures.hh"
 
@@ -50,14 +52,15 @@ TEST_F(events_CompleteEventCalculator_Test, Test1) {
   /// Make std::shared_ptr<clexmonte::Conditions> object from state.conditions
   auto conditions = make_conditions(*system, state);
 
-  std::vector<EventStateCalculator> prim_event_calculators =
-      clexmonte::make_prim_event_calculators(system, state, prim_event_list,
-                                             conditions);
+  std::vector<kinetic::EventStateCalculator> prim_event_calculators =
+      clexmonte::kinetic::make_prim_event_calculators(
+          system, state, prim_event_list, conditions);
   EXPECT_EQ(prim_event_calculators.size(), 24);
 
   // Construct CompleteEventListEventCalculator
-  auto event_calculator = std::make_shared<clexmonte::CompleteEventCalculator>(
-      prim_event_list, prim_event_calculators, event_list.events);
+  auto event_calculator =
+      std::make_shared<clexmonte::kinetic::CompleteEventCalculator>(
+          prim_event_list, prim_event_calculators, event_list.events);
 
   double expected_Ekra = 1.0;
   double expected_freq = 1e12;

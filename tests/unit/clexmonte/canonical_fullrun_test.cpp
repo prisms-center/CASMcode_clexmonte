@@ -1,5 +1,5 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/canonical.hh"
+#include "casm/clexmonte/canonical/canonical.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"

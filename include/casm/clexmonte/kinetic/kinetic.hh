@@ -4,12 +4,7 @@
 #include <random>
 
 #include "casm/clexmonte/definitions.hh"
-#include "casm/clexmonte/events/CompleteEventCalculator.hh"
-#include "casm/clexmonte/events/CompleteEventList.hh"
-#include "casm/clexmonte/events/EventStateCalculator.hh"
-#include "casm/clexmonte/events/event_data.hh"
-#include "casm/clexulator/ClusterExpansion.hh"
-#include "casm/monte/MethodLog.hh"
+#include "casm/clexmonte/kinetic/kinetic_events.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 
 namespace CASM {
@@ -36,17 +31,8 @@ struct Kinetic {
   // /// If true: rejection-free KMC, if false: rejection-KMC
   // bool rejection_free = true;
 
-  // --- System specific ---
-
-  /// Specifies OccEvent index meaning / atom name indices
-  std::shared_ptr<occ_events::OccSystem> event_system;
-
-  /// The `prim events`, one translationally distinct instance
-  /// of each event, associated with origin primitive cell
-  std::vector<clexmonte::PrimEventData> prim_event_list;
-
-  /// Information about what sites may impact each prim event
-  std::vector<clexmonte::EventImpactInfo> prim_impact_info_list;
+  /// \brief KMC event data and calculators
+  std::shared_ptr<KineticEventData> event_data;
 
   // --- Standard state specific ---
 
@@ -64,12 +50,14 @@ struct Kinetic {
   /// Note: This is shared with the calculators in `prim_event_calculators`
   std::shared_ptr<clexmonte::Conditions> conditions;
 
+  // --- Data used by kinetic sampling functions ---
+
+  // TODO: need a better system for passing info to sampling functions
+
   /// When sampling, this will hold the atom name index for each column of the
   /// atom position matrices. Currently atom names only; does not distinguish
   /// atoms with different properties.
   std::vector<Index> atom_name_index_list;
-
-  // TODO: need a better system for passing info to sampling functions
 
   /// When sampling, this will specify the current sampling fixture
   std::string sampling_fixture_label;
@@ -97,20 +85,6 @@ struct Kinetic {
   /// - For the first sample, this will contain the atom positions at the
   ///   start of the run.
   std::map<std::string, Eigen::MatrixXd> prev_atom_positions_cart;
-
-  // --- Supercell & state specific ---
-
-  /// All supercell events, and which events must be updated
-  /// when one occurs
-  clexmonte::CompleteEventList event_list;
-
-  /// Functions for calculating event states, one for each prim event.
-  /// This is supercell-specific, even though it is one per prim event,
-  /// because it depends on supercell-specific clexulators
-  std::vector<clexmonte::EventStateCalculator> prim_event_calculators;
-
-  /// Calculator for KMC event selection
-  std::shared_ptr<clexmonte::CompleteEventCalculator> event_calculator;
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,

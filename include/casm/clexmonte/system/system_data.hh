@@ -140,7 +140,8 @@ struct OccEventTypeData {
   /// `occevent_symgroup_rep` is a representation of the prim factor group.
   std::vector<occ_events::OccEvent> events;
 
-  /// \brief The name of the local_multiclex used for event properties
+  /// \brief The name of the local_multiclex used for event properties, if
+  /// applicable
   std::string local_multiclex_name;
 };
 

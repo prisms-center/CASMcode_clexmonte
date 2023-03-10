@@ -2,7 +2,7 @@
 #define CASM_unittest_KMCCompleteEventCalculatorTestSystem
 
 #include "KMCCompleteEventListTestSystem.hh"
-#include "casm/clexmonte/events/CompleteEventCalculator.hh"
+#include "casm/clexmonte/kinetic/kinetic_events.hh"
 
 namespace test {
 
@@ -12,8 +12,8 @@ class KMCCompleteEventCalculatorTestSystem
     : public KMCCompleteEventListTestSystem {
  public:
   std::shared_ptr<clexmonte::Conditions> conditions;
-  std::vector<clexmonte::EventStateCalculator> prim_event_calculators;
-  std::shared_ptr<clexmonte::CompleteEventCalculator> event_calculator;
+  std::vector<clexmonte::kinetic::EventStateCalculator> prim_event_calculators;
+  std::shared_ptr<clexmonte::kinetic::CompleteEventCalculator> event_calculator;
 
   KMCCompleteEventCalculatorTestSystem();
 

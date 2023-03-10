@@ -426,6 +426,12 @@ std::shared_ptr<occ_events::OccSystem> get_event_system(System const &system) {
   return system.event_system;
 }
 
+/// \brief KMC event symgroup representation
+std::vector<occ_events::OccEventRep> const &get_occevent_symgroup_rep(
+    System const &system) {
+  return system.occevent_symgroup_rep;
+}
+
 /// \brief KMC events
 std::map<std::string, OccEventTypeData> const &get_event_type_data(
     System const &system) {

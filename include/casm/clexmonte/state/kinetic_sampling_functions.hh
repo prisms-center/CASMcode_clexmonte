@@ -1,8 +1,10 @@
 #ifndef CASM_clexmonte_state_kinetic_sampling_functions
 #define CASM_clexmonte_state_kinetic_sampling_functions
 
+#include "casm/clexmonte/canonical/canonical.hh"
 #include "casm/clexmonte/misc/diffusion_calculations.hh"
 #include "casm/clexmonte/misc/eigen.hh"
+#include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexulator/Clexulator.hh"
 #include "casm/clexulator/ClusterExpansion.hh"

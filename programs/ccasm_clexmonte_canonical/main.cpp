@@ -1,5 +1,5 @@
 #include "casm/casm_io/Log.hh"
-#include "casm/clexmonte/canonical.hh"
+#include "casm/clexmonte/canonical/canonical.hh"
 #include "casm/clexmonte/run/io/json/parse_and_run_series.hh"
 
 using namespace CASM;

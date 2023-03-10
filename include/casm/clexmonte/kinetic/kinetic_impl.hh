@@ -1,13 +1,11 @@
 #ifndef CASM_clexmonte_kinetic_impl
 #define CASM_clexmonte_kinetic_impl
 
-#include <random>
-
-#include "casm/clexmonte/canonical.hh"
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/events/event_methods.hh"
 #include "casm/clexmonte/events/lotto.hh"
-#include "casm/clexmonte/kinetic.hh"
+#include "casm/clexmonte/kinetic/kinetic.hh"
+#include "casm/clexmonte/kinetic/kinetic_events.hh"
 #include "casm/clexmonte/run/analysis_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
@@ -38,6 +36,7 @@ Kinetic<EngineType>::Kinetic(std::shared_ptr<system_type> _system,
                              std::shared_ptr<EngineType> _random_number_engine)
     : system(_system),
       random_number_generator(_random_number_engine),
+      event_data(std::make_shared<KineticEventData>(system)),
       state(nullptr),
       transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)),
       occ_location(nullptr),
@@ -47,13 +46,6 @@ Kinetic<EngineType>::Kinetic(std::shared_ptr<system_type> _system,
     throw std::runtime_error(
         "Error constructing Kinetic: no 'formation_energy' clex.");
   }
-
-  this->event_system = get_event_system(*this->system);
-
-  this->prim_event_list = clexmonte::make_prim_event_list(*this->system);
-
-  this->prim_impact_info_list = clexmonte::make_prim_impact_info_list(
-      *this->system, this->prim_event_list, {"formation_energy"});
 }
 
 /// \brief Perform a single run, evolving current state
@@ -61,39 +53,23 @@ template <typename EngineType>
 void Kinetic<EngineType>::run(state_type &state,
                               monte::OccLocation &occ_location,
                               monte::RunManager<config_type> &run_manager) {
+  this->state = &state;
+  this->occ_location = &occ_location;
+  this->conditions = make_conditions(*this->system, state);
+
   // if same supercell
   // -> just re-set state & conditions & avoid re-constructing event list
   if (this->transformation_matrix_to_super ==
           get_transformation_matrix_to_super(state) &&
       this->conditions != nullptr) {
-    this->state = &state;
-    this->occ_location = &occ_location;
-    *this->conditions = *make_conditions(*this->system, state);
-
-    for (auto &event_state_calculator : this->prim_event_calculators) {
+    for (auto &event_state_calculator :
+         this->event_data->prim_event_calculators) {
       event_state_calculator.set(this->state, this->conditions);
     }
   } else {
-    this->state = &state;
     this->transformation_matrix_to_super =
         get_transformation_matrix_to_super(state);
-    this->occ_location = &occ_location;
-    this->conditions = make_conditions(*this->system, state);
-
-    // These are constructed/re-constructed so cluster expansions point
-    // at the current state
-    this->prim_event_calculators = clexmonte::make_prim_event_calculators(
-        this->system, state, this->prim_event_list, this->conditions);
-
-    // TODO: rejection-kmc option does not require impact table
-    this->event_list = clexmonte::make_complete_event_list(
-        this->prim_event_list, this->prim_impact_info_list, occ_location);
-
-    // Construct CompleteEventCalculator
-    this->event_calculator =
-        std::make_shared<clexmonte::CompleteEventCalculator>(
-            this->prim_event_list, this->prim_event_calculators,
-            this->event_list.events);
+    this->event_data->update(state, this->conditions, occ_location);
   }
 
   // Enforce composition -- occ_location is maintained up-to-date
@@ -111,21 +87,21 @@ void Kinetic<EngineType>::run(state_type &state,
   // Used to apply selected events: EventID -> monte::OccEvent
   auto get_event_f = [&](EventID const &selected_event_id) {
     // returns a monte::OccEvent
-    return this->event_list.events.at(selected_event_id).event;
+    return this->event_data->event_list.events.at(selected_event_id).event;
   };
 
   // Make selector
   Eigen::Matrix3l T = get_transformation_matrix_to_super(state);
   lotto::RejectionFreeEventSelector event_selector(
-      this->event_calculator,
+      this->event_data->event_calculator,
       clexmonte::make_complete_event_id_list(T.determinant(),
-                                             this->prim_event_list),
-      this->event_list.impact_table);
+                                             this->event_data->prim_event_list),
+      this->event_data->event_list.impact_table);
 
   // Update atom_name_index_list -- These do not change --
   // TODO: KMC with atoms that move to/from resevoir will need to update this
-  atom_name_index_list =
-      make_atom_name_index_list(occ_location, *this->event_system);
+  auto event_system = get_event_system(*this->system);
+  atom_name_index_list = make_atom_name_index_list(occ_location, *event_system);
 
   monte::kinetic_monte_carlo<EventID>(
       state, occ_location, sampling_fixture_label, state_sampler, time,

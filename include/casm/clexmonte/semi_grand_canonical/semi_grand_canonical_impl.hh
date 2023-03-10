@@ -1,9 +1,10 @@
 #ifndef CASM_clexmonte_semi_grand_canonical_impl
 #define CASM_clexmonte_semi_grand_canonical_impl
 
+#include "casm/clexmonte/events/lotto.hh"
 #include "casm/clexmonte/run/analysis_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
-#include "casm/clexmonte/semi_grand_canonical.hh"
+#include "casm/clexmonte/semi_grand_canonical/semi_grand_canonical.hh"
 #include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/modifying_functions.hh"
@@ -12,6 +13,7 @@
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/events/OccLocation.hh"
+#include "casm/monte/methods/nfold.hh"
 #include "casm/monte/methods/occupation_metropolis.hh"
 #include "casm/monte/results/Results.hh"
 #include "casm/monte/state/State.hh"
@@ -60,8 +62,8 @@ void SemiGrandCanonical<EngineType>::run(
   this->occ_location = &occ_location;
   this->conditions = make_conditions(*this->system, state);
 
-  SemiGrandCanonicalPotential potential(this->system);
-  potential.set(this->state, this->conditions);
+  auto potential = std::make_shared<SemiGrandCanonicalPotential>(this->system);
+  potential->set(this->state, this->conditions);
 
   /// \brief Construct swaps
   monte::Conversions const &convert = get_index_conversions(*system, state);
@@ -71,12 +73,34 @@ void SemiGrandCanonical<EngineType>::run(
   std::vector<monte::OccSwap> grand_canonical_swaps =
       make_grand_canonical_swaps(convert, occ_candidate_list);
 
-  // Run Monte Carlo at a single condition
-  typedef monte::RandomNumberGenerator<EngineType> generator_type;
-  monte::occupation_metropolis(
-      state, occ_location, potential, grand_canonical_swaps,
-      monte::propose_grand_canonical_event<generator_type>,
-      random_number_generator, run_manager);
+  bool nfold_way = true;
+  if (nfold_way) {
+    this->event_data = std::make_shared<SemiGrandCanonicalEventData>(
+        this->system, state, occ_location, grand_canonical_swaps, potential);
+
+    // Make selector
+    Eigen::Matrix3l T = get_transformation_matrix_to_super(state);
+    lotto::RejectionFreeEventSelector event_selector(
+        this->event_data->event_calculator,
+        clexmonte::make_complete_event_id_list(
+            T.determinant(), this->event_data->prim_event_list),
+        this->event_data->event_list.impact_table);
+
+    // Used to apply selected events: EventID -> monte::OccEvent
+    auto get_event_f = [&](EventID const &selected_event_id) {
+      // returns a monte::OccEvent
+      return this->event_data->event_list.events.at(selected_event_id).event;
+    };
+
+    nfold(state, occ_location, event_selector, get_event_f, run_manager);
+  } else {
+    // Run Monte Carlo at a single condition
+    typedef monte::RandomNumberGenerator<EngineType> generator_type;
+    monte::occupation_metropolis(
+        state, occ_location, *potential, grand_canonical_swaps,
+        monte::propose_grand_canonical_event<generator_type>,
+        random_number_generator, run_manager);
+  }
 }
 
 /// \brief Perform a series of runs, according to a state generator

@@ -1,5 +1,5 @@
 #include "ZrOTestSystem.hh"
-#include "casm/clexmonte/canonical.hh"
+#include "casm/clexmonte/canonical/canonical.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"

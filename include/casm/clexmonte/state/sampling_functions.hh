@@ -67,6 +67,11 @@ template <typename CalculationType>
 monte::StateSamplingFunction<Configuration> make_potential_energy_f(
     std::shared_ptr<CalculationType> const &calculation);
 
+/// \brief Make acceptance rate sampling function ("acceptance_rate")
+template <typename CalculationType>
+monte::StateSamplingFunction<Configuration> make_acceptance_rate_f(
+    std::shared_ptr<CalculationType> const &calculation);
+
 // --- Inline definitions ---
 
 /// \brief Make temperature sampling function ("temperature")

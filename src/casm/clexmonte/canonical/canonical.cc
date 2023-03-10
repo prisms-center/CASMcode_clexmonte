@@ -1,44 +1,57 @@
-#include "casm/clexmonte/kinetic_impl.hh"
+#include "casm/clexmonte/canonical/canonical_impl.hh"
 #include "casm/clexmonte/state/make_conditions.hh"
 
 namespace CASM {
 namespace clexmonte {
-namespace kinetic {
+namespace canonical {
 
-/// \brief Construct a list of atom names corresponding to OccLocation atoms
+CanonicalPotential::CanonicalPotential(std::shared_ptr<system_type> _system)
+    : m_system(_system) {
+  if (m_system == nullptr) {
+    throw std::runtime_error(
+        "Error constructing CanonicalPotential: system is empty");
+  }
+}
+
+/// \brief Reset pointer to state currently being calculated
 ///
 /// Notes:
-/// - If atoms are conserved, then the order of this list will remain unchanged
-///   during the course of a calculation
-/// - Values are set to -1 if atom is no longer in supercell
-std::vector<Index> make_atom_name_index_list(
-    monte::OccLocation const &occ_location,
-    occ_events::OccSystem const &occ_system) {
-  // sanity check:
-  monte::Conversions const &convert = occ_location.convert();
-  if (convert.species_size() != occ_system.orientation_name_list.size()) {
+/// - If state supercell is modified this must be called again
+/// - State DoF values can be modified without calling this again
+/// - State conditions can be modified without calling this again
+void CanonicalPotential::set(monte::State<Configuration> const *state,
+                             std::shared_ptr<Conditions> conditions) {
+  // supercell-specific
+  m_state = state;
+  if (m_state == nullptr) {
     throw std::runtime_error(
-        "Error in CASM::clexmonte::kinetic::make_snapshot_for_conserved_atoms: "
-        "mismatch between monte::Conversions and occ_events::OccSystem.");
+        "Error setting CanonicalPotential state: state is empty");
   }
+  m_formation_energy_clex = get_clex(*m_system, *m_state, "formation_energy");
 
-  // collect atom name indices
-  std::vector<Index> atom_name_index_list(occ_location.atom_size(), -1);
-  for (Index i = 0; i < occ_location.mol_size(); ++i) {
-    monte::Mol const &mol = occ_location.mol(i);
-    Index b = convert.l_to_b(mol.l);
-    Index occupant_index =
-        occ_system.orientation_to_occupant_index[b][mol.species_index];
-    Index atom_position_index = 0;
-    for (Index atom_id : mol.component) {
-      Index atom_name_index =
-          occ_system.atom_position_to_name_index[b][occupant_index]
-                                                [atom_position_index];
-      atom_name_index_list.at(atom_id) = atom_name_index;
-      ++atom_position_index;
-    }
-  }
-  return atom_name_index_list;
+  // conditions-specific
+  m_conditions = conditions;
+}
+
+/// \brief Pointer to current state
+state_type const *CanonicalPotential::state() const { return m_state; }
+
+/// \brief Pointer to current conditions
+std::shared_ptr<Conditions> const &CanonicalPotential::conditions() const {
+  return m_conditions;
+}
+
+/// \brief Calculate (extensive) canonical potential value
+double CanonicalPotential::extensive_value() {
+  return m_formation_energy_clex->extensive_value();
+}
+
+/// \brief Calculate change in (extensive) canonical potential value due
+///     to a series of occupation changes
+double CanonicalPotential::occ_delta_extensive_value(
+    std::vector<Index> const &linear_site_index,
+    std::vector<int> const &new_occ) {
+  return m_formation_energy_clex->occ_delta_value(linear_site_index, new_occ);
 }
 
 /// \brief Helper for making a conditions ValueMap for canonical Monte
@@ -127,8 +140,8 @@ monte::ValueMap make_conditions_increment(
   return conditions;
 }
 
-template struct Kinetic<std::mt19937_64>;
+template struct Canonical<std::mt19937_64>;
 
-}  // namespace kinetic
+}  // namespace canonical
 }  // namespace clexmonte
 }  // namespace CASM

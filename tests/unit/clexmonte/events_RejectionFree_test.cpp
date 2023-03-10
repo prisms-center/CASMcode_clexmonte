@@ -1,7 +1,8 @@
 #include "KMCCompleteEventCalculatorTestSystem.hh"
-#include "casm/clexmonte/events/CompleteEventCalculator.hh"
-#include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
 #include "casm/clexmonte/events/lotto.hh"
+#include "casm/clexmonte/kinetic/io/stream/EventState_stream_io.hh"
+#include "casm/clexmonte/kinetic/kinetic_events.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "gtest/gtest.h"
 #include "teststructures.hh"
 
