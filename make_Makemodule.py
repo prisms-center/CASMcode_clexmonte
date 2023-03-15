@@ -837,6 +837,34 @@ def main():
     target = os.path.join("programs", "ccasm_clexmonte_semi_grand_canonical", "Makemodule.am")
     string_to_file(chunk, target)
 
+    print("Create Makefile for ccasm-clexmonte-nfold program")
+    chunk = make_add_to_PROGRAMS(
+        "ccasm-clexmonte-nfold",
+        "bin",
+        SOURCES=[
+            "programs/ccasm_clexmonte_nfold/main.cpp"
+        ],
+        LDADD=[
+            "libcasm_clexmonte.la"
+        ],
+    )
+    target = os.path.join("programs", "ccasm_clexmonte_nfold", "Makemodule.am")
+    string_to_file(chunk, target)
+
+    print("Create Makefile for ccasm-clexmonte-conditional-nfold program")
+    chunk = make_add_to_PROGRAMS(
+        "ccasm-clexmonte-conditional-nfold",
+        "bin",
+        SOURCES=[
+            "programs/ccasm_clexmonte_conditional_nfold/main.cpp"
+        ],
+        LDADD=[
+            "libcasm_clexmonte.la"
+        ],
+    )
+    target = os.path.join("programs", "ccasm_clexmonte_conditional_nfold", "Makemodule.am")
+    string_to_file(chunk, target)
+
     print("Create Makefile for ccasm-clexmonte-kmc program")
     chunk = make_add_to_PROGRAMS(
         "ccasm-clexmonte-kmc",

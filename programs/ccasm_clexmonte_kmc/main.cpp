@@ -1,5 +1,6 @@
 #include "casm/casm_io/Log.hh"
 #include "casm/clexmonte/kinetic/kinetic.hh"
+#include "casm/clexmonte/kinetic/kinetic_json_io.hh"
 #include "casm/clexmonte/run/io/json/parse_and_run_series.hh"
 
 using namespace CASM;

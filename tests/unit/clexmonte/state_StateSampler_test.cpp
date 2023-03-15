@@ -30,7 +30,7 @@ class state_StateSamplerTest : public test::ZrOTestSystem {
   }
 
   std::shared_ptr<canonical::Canonical_mt19937_64> calculator;
-  StateSamplingFunctionMap<Configuration> sampling_functions;
+  std::map<std::string, state_sampling_function_type> sampling_functions;
 };
 
 /// Test state sampling, using canonical Monte Carlo
@@ -43,8 +43,7 @@ TEST_F(state_StateSamplerTest, Test1) {
   // Create config
   Eigen::Matrix3l T = Eigen::Matrix3l::Identity() * 10;
   Index volume = T.determinant();
-  monte::State<Configuration> default_state(
-      make_default_configuration(*system, T));
+  state_type default_state(make_default_configuration(*system, T));
   for (Index i = 0; i < volume; ++i) {
     get_occupation(default_state)(2 * volume + i) = 1;
   }
@@ -62,7 +61,7 @@ TEST_F(state_StateSamplerTest, Test1) {
     log.restart_clock();
 
     // Create state
-    State<Configuration> state(default_state.configuration, init_conditions);
+    state_type state(default_state.configuration, init_conditions);
     state.conditions.scalar_values.at("temperature") = 300.0 + i * 100.0;
 
     std::shared_ptr<Conditions> conditions = make_conditions(*system, state);
@@ -80,7 +79,7 @@ TEST_F(state_StateSamplerTest, Test1) {
     calculator->conditions = conditions;
 
     // Make StateSampler
-    std::vector<StateSamplingFunction<Configuration>> functions;
+    std::vector<state_sampling_function_type> functions;
     // for (auto f : sampling_functions) {
     //   std::cout << f.first << std::endl;
     // }

@@ -32,44 +32,44 @@ namespace clexmonte {
 
 /// \brief Make temperature sampling function ("temperature")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_temperature_f(
+state_sampling_function_type make_temperature_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make mol composition sampling function ("mol_composition")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_mol_composition_f(
+state_sampling_function_type make_mol_composition_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make parametric composition sampling function ("param_composition")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_param_composition_f(
+state_sampling_function_type make_param_composition_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make parametric chemical potential sampling function
 /// ("param_chem_pot")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_param_chem_pot_f(
+state_sampling_function_type make_param_chem_pot_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make formation energy correlations sampling function
 ///     ("formation_energy_corr")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
+state_sampling_function_type make_formation_energy_corr_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make formation energy sampling function ("formation_energy")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_formation_energy_f(
+state_sampling_function_type make_formation_energy_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make potential energy sampling function ("potential_energy")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_potential_energy_f(
+state_sampling_function_type make_potential_energy_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make acceptance rate sampling function ("acceptance_rate")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_acceptance_rate_f(
+state_sampling_function_type make_acceptance_rate_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 // --- Inline definitions ---
@@ -79,9 +79,9 @@ monte::StateSamplingFunction<Configuration> make_acceptance_rate_f(
 /// Requires:
 /// - "temperature" is a scalar state condition
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_temperature_f(
+state_sampling_function_type make_temperature_f(
     std::shared_ptr<CalculationType> const &calculation) {
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "temperature", "Temperature (K)", {},  // scalar,
       [calculation]() {
         return monte::reshaped(calculation->conditions->temperature);
@@ -96,13 +96,13 @@ monte::StateSamplingFunction<Configuration> make_temperature_f(
 /// - `composition::CompositionCalculator const &
 ///   get_composition_calculator(SystemType &)`
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_mol_composition_f(
+state_sampling_function_type make_mol_composition_f(
     std::shared_ptr<CalculationType> const &calculation) {
   auto const &system = *calculation->system;
   auto const &components = get_composition_converter(system).components();
   std::vector<Index> shape;
   shape.push_back(components.size());
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "mol_composition",
       "Number of each component (normalized per primitive cell)",
       components,  // component names
@@ -123,7 +123,7 @@ monte::StateSamplingFunction<Configuration> make_mol_composition_f(
 /// - `composition::CompositionCalculator
 ///   get_composition_calculator(SystemType &)`
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_param_composition_f(
+state_sampling_function_type make_param_composition_f(
     std::shared_ptr<CalculationType> const &calculation) {
   auto const &system = *calculation->system;
   // name param_composition components "a", "b", ... for each independent
@@ -137,7 +137,7 @@ monte::StateSamplingFunction<Configuration> make_param_composition_f(
   std::vector<Index> shape;
   shape.push_back(component_names.size());
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "param_composition", "Parametric composition",
       component_names,  // component names
       shape, [calculation]() {
@@ -158,7 +158,7 @@ monte::StateSamplingFunction<Configuration> make_param_composition_f(
 /// \brief Make parametric chemical potential sampling function
 /// ("param_chem_pot")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_param_chem_pot_f(
+state_sampling_function_type make_param_chem_pot_f(
     std::shared_ptr<CalculationType> const &calculation) {
   auto const &system = *calculation->system;
   // name param_chem_pot components "a", "b", ... for each independent
@@ -172,7 +172,7 @@ monte::StateSamplingFunction<Configuration> make_param_chem_pot_f(
   std::vector<Index> shape;
   shape.push_back(component_names.size());
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "param_chem_pot",
       "Chemical potential conjugate to parametric composition axes",
       component_names,  // component names
@@ -189,7 +189,7 @@ monte::StateSamplingFunction<Configuration> make_param_chem_pot_f(
 /// - `clexulator::ClusterExpansion &get_clex(SystemType &,
 ///   StateType const &, std::string const &key)`
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
+state_sampling_function_type make_formation_energy_corr_f(
     std::shared_ptr<CalculationType> const &calculation) {
   auto const &system = *calculation->system;
   // correlations size
@@ -199,7 +199,7 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
   std::vector<Index> shape;
   shape.push_back(corr_size);
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "formation_energy_corr",
       "Formation energy basis set correlations (normalized per primitive cell)",
       shape, [calculation]() {
@@ -218,9 +218,9 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_corr_f(
 /// - `clexulator::ClusterExpansion &get_clex(SystemType &,
 ///    StateType const &, std::string const &)`
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_formation_energy_f(
+state_sampling_function_type make_formation_energy_f(
     std::shared_ptr<CalculationType> const &calculation) {
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "formation_energy",
       "Formation energy of the configuration (normalized per primitive cell)",
       {},  // scalar
@@ -245,9 +245,9 @@ monte::StateSamplingFunction<Configuration> make_formation_energy_f(
 /// Requires:
 /// - "potential_energy" is a scalar state property
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_potential_energy_f(
+state_sampling_function_type make_potential_energy_f(
     std::shared_ptr<CalculationType> const &calculation) {
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "potential_energy",
       "Potential energy of the state (normalized per primitive cell)",
       {},  // scalar
@@ -257,6 +257,11 @@ monte::StateSamplingFunction<Configuration> make_potential_energy_f(
             state.properties.scalar_values.at("potential_energy"));
       });
 }
+
+/// \brief Make acceptance rate sampling function ("acceptance_rate")
+template <typename CalculationType>
+state_sampling_function_type make_acceptance_rate_f(
+    std::shared_ptr<CalculationType> const &calculation);
 
 }  // namespace clexmonte
 }  // namespace CASM

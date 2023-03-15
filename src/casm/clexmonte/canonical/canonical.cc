@@ -19,7 +19,7 @@ CanonicalPotential::CanonicalPotential(std::shared_ptr<system_type> _system)
 /// - If state supercell is modified this must be called again
 /// - State DoF values can be modified without calling this again
 /// - State conditions can be modified without calling this again
-void CanonicalPotential::set(monte::State<Configuration> const *state,
+void CanonicalPotential::set(state_type const *state,
                              std::shared_ptr<Conditions> conditions) {
   // supercell-specific
   m_state = state;

@@ -23,9 +23,6 @@ TEST_F(state_IncrementalConditionsStateGeneratorTest, Test1) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;
-  typedef Configuration config_type;
-  typedef State<config_type> state_type;
-  typedef ConfigGenerator<config_type, state_type> config_generator_type;
   typedef FixedConfigGenerator<config_type> fixed_config_generator_type;
   typedef IncrementalConditionsStateGenerator<config_type>
       incremental_state_generator_type;
@@ -53,7 +50,7 @@ TEST_F(state_IncrementalConditionsStateGeneratorTest, Test1) {
       notstd::make_unique<fixed_config_generator_type>(init_config);
 
   // modifiers
-  std::vector<StateModifyingFunction<config_type>> modifiers;
+  std::vector<state_modifying_function_type> modifiers;
 
   std::vector<state_type> final_states;
   incremental_state_generator_type state_generator(
@@ -74,9 +71,6 @@ TEST_F(state_IncrementalConditionsStateGeneratorTest, Test2) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;
-  typedef Configuration config_type;
-  typedef State<config_type> state_type;
-  typedef ConfigGenerator<config_type, state_type> config_generator_type;
   typedef FixedConfigGenerator<config_type> fixed_config_generator_type;
   typedef IncrementalConditionsStateGenerator<config_type>
       incremental_state_generator_type;
@@ -104,7 +98,7 @@ TEST_F(state_IncrementalConditionsStateGeneratorTest, Test2) {
       notstd::make_unique<fixed_config_generator_type>(init_config);
 
   // modifiers
-  std::vector<StateModifyingFunction<config_type>> modifiers;
+  std::vector<state_modifying_function_type> modifiers;
 
   std::vector<state_type> final_states;
   incremental_state_generator_type state_generator(

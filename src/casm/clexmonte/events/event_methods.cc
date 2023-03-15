@@ -58,10 +58,11 @@ monte::OccEvent &set_event(monte::OccEvent &event,
                            monte::OccLocation const &occ_location) {
   for (auto const &traj : prim_event_data.event) {
     for (auto const &pos : traj.position) {
-      if (pos.is_in_resevoir) {
-        throw std::runtime_error(
-            "Error: KMC events exchanging with the resevoir is not allowed.");
-      }
+      // if (pos.is_in_resevoir) {
+      //   throw std::runtime_error(
+      //       "Error: KMC events exchanging with the resevoir is not
+      //       allowed.");
+      // }
       if (!pos.is_atom) {
         throw std::runtime_error(
             "Error: KMC event trajectories must describe individual atoms.");

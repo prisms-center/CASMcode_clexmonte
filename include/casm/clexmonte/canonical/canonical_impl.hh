@@ -30,8 +30,7 @@ Canonical<EngineType>::Canonical(
       random_number_generator(_random_number_engine),
       state(nullptr),
       transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)),
-      occ_location(nullptr),
-      state_sampler(nullptr) {
+      occ_location(nullptr) {
   if (!is_clex_data(*system, "formation_energy")) {
     throw std::runtime_error(
         "Error constructing Canonical: no 'formation_energy' clex.");
@@ -45,7 +44,7 @@ Canonical<EngineType>::Canonical(
 template <typename EngineType>
 void Canonical<EngineType>::run(state_type &state,
                                 monte::OccLocation &occ_location,
-                                monte::RunManager<config_type> &run_manager) {
+                                run_manager_type &run_manager) {
   if (!state.conditions.scalar_values.count("temperature")) {
     throw std::runtime_error(
         "Error in Canonical::run: state `temperature` not set.");
@@ -89,15 +88,6 @@ void Canonical<EngineType>::run(state_type &state,
                                random_number_generator, run_manager);
 }
 
-/// \brief Perform a series of runs, according to a state generator
-template <typename EngineType>
-void Canonical<EngineType>::run_series(
-    state_generator_type &state_generator,
-    std::vector<monte::SamplingFixtureParams<config_type>> const
-        &sampling_fixture_params) {
-  clexmonte::run_series(*this, state_generator, sampling_fixture_params);
-}
-
 /// \brief Construct functions that may be used to sample various quantities of
 ///     the Monte Carlo calculation as it runs
 ///
@@ -106,10 +96,10 @@ void Canonical<EngineType>::run_series(
 ///     such as the prim, the cluster expansion, and the composition axes.
 ///
 template <typename EngineType>
-monte::StateSamplingFunctionMap<Configuration>
+std::map<std::string, state_sampling_function_type>
 Canonical<EngineType>::standard_sampling_functions(
     std::shared_ptr<Canonical<EngineType>> const &calculation) {
-  std::vector<monte::StateSamplingFunction<Configuration>> functions = {
+  std::vector<state_sampling_function_type> functions = {
       make_temperature_f(calculation),
       make_mol_composition_f(calculation),
       make_param_composition_f(calculation),
@@ -117,7 +107,7 @@ Canonical<EngineType>::standard_sampling_functions(
       make_formation_energy_f(calculation),
       make_potential_energy_f(calculation)};
 
-  monte::StateSamplingFunctionMap<Configuration> function_map;
+  std::map<std::string, state_sampling_function_type> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }
@@ -127,15 +117,13 @@ Canonical<EngineType>::standard_sampling_functions(
 /// \brief Construct functions that may be used to analyze Monte Carlo
 ///     calculation results
 template <typename EngineType>
-monte::ResultsAnalysisFunctionMap<Configuration>
+std::map<std::string, results_analysis_function_type>
 Canonical<EngineType>::standard_analysis_functions(
     std::shared_ptr<Canonical<EngineType>> const &calculation) {
-  std::vector<monte::ResultsAnalysisFunction<Configuration>> functions = {
-      make_heat_capacity_f(calculation), make_mol_susc_f(calculation),
-      make_param_susc_f(calculation), make_mol_thermochem_susc_f(calculation),
-      make_param_thermochem_susc_f(calculation)};
+  std::vector<results_analysis_function_type> functions = {
+      make_heat_capacity_f(calculation)};
 
-  monte::ResultsAnalysisFunctionMap<Configuration> function_map;
+  std::map<std::string, results_analysis_function_type> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }
@@ -144,13 +132,13 @@ Canonical<EngineType>::standard_analysis_functions(
 
 /// \brief Construct functions that may be used to modify states
 template <typename EngineType>
-monte::StateModifyingFunctionMap<config_type>
+std::map<std::string, state_modifying_function_type>
 Canonical<EngineType>::standard_modifying_functions(
     std::shared_ptr<Canonical<EngineType>> const &calculation) {
-  std::vector<monte::StateModifyingFunction<config_type>> functions = {
+  std::vector<state_modifying_function_type> functions = {
       make_set_mol_composition_f(calculation)};
 
-  monte::StateModifyingFunctionMap<config_type> function_map;
+  std::map<std::string, state_modifying_function_type> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }

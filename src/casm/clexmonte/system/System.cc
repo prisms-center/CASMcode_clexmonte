@@ -183,8 +183,8 @@ SupercellSystemData &get_supercell_data(
 
 /// \brief Helper to get SupercellSystemData,
 ///     constructing as necessary
-SupercellSystemData &get_supercell_data(
-    System &system, monte::State<Configuration> const &state) {
+SupercellSystemData &get_supercell_data(System &system,
+                                        state_type const &state) {
   auto const &T = get_transformation_matrix_to_super(state);
   return get_supercell_data(system, T);
 }
@@ -262,16 +262,16 @@ Configuration to_standard_values(
 }
 
 /// \brief Helper to make the default configuration in prim basis
-monte::State<Configuration> make_default_state(
+state_type make_default_state(
     System const &system,
     Eigen::Matrix3l const &transformation_matrix_to_super) {
-  return monte::State<Configuration>(
+  return state_type(
       make_default_configuration(system, transformation_matrix_to_super));
 }
 
 /// \brief Helper to make the Conditions object
-std::shared_ptr<Conditions> make_conditions(
-    System const &system, monte::State<Configuration> const &state) {
+std::shared_ptr<Conditions> make_conditions(System const &system,
+                                            state_type const &state) {
   return std::make_shared<Conditions>(make_conditions_from_value_map(
       state.conditions, *get_prim_basicstructure(system),
       get_composition_converter(system), get_random_alloy_corr_f(system),
@@ -279,20 +279,18 @@ std::shared_ptr<Conditions> make_conditions(
 }
 
 /// \brief Convert configuration from standard basis to prim basis
-monte::State<Configuration> from_standard_values(
-    System const &system,
-    monte::State<Configuration> const &state_in_standard_basis) {
-  monte::State<Configuration> state_in_prim_basis{state_in_standard_basis};
+state_type from_standard_values(System const &system,
+                                state_type const &state_in_standard_basis) {
+  state_type state_in_prim_basis{state_in_standard_basis};
   state_in_prim_basis.configuration =
       from_standard_values(system, state_in_standard_basis.configuration);
   return state_in_prim_basis;
 }
 
 /// \brief Convert configuration from prim basis to standard basis
-monte::State<Configuration> to_standard_values(
-    System const &system,
-    monte::State<Configuration> const &state_in_prim_basis) {
-  monte::State<Configuration> state_in_standard_basis{state_in_prim_basis};
+state_type to_standard_values(System const &system,
+                              state_type const &state_in_prim_basis) {
+  state_type state_in_standard_basis{state_in_prim_basis};
   state_in_standard_basis.configuration =
       to_standard_values(system, state_in_prim_basis.configuration);
   return state_in_standard_basis;
@@ -423,6 +421,11 @@ std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
 
 /// \brief KMC events index definitions
 std::shared_ptr<occ_events::OccSystem> get_event_system(System const &system) {
+  if (system.event_system == nullptr) {
+    std::stringstream msg;
+    msg << "System error: event_system not provided" << std::endl;
+    throw std::runtime_error(msg.str());
+  }
   return system.event_system;
 }
 
@@ -464,9 +467,9 @@ CorrCalculatorFunction get_random_alloy_corr_f(System const &system) {
 ///   all correlations for the specified state
 /// - To only evaluate non-zero eci correlations, instead use
 ///   get_clex(...).correlations().
-std::shared_ptr<clexulator::Correlations> get_corr(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key) {
+std::shared_ptr<clexulator::Correlations> get_corr(System &system,
+                                                   state_type const &state,
+                                                   std::string const &key) {
   auto corr = _verify(get_supercell_data(system, state).corr, key, "corr");
   corr->set(&get_dof_values(state));
   return corr;
@@ -481,8 +484,7 @@ std::shared_ptr<clexulator::Correlations> get_corr(
 /// - To only evaluate non-zero eci correlations, instead use
 ///   get_local_clex(...).correlations().
 std::shared_ptr<clexulator::LocalCorrelations> get_local_corr(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key) {
+    System &system, state_type const &state, std::string const &key) {
   auto local_corr =
       _verify(get_supercell_data(system, state).local_corr, key, "local_corr");
   local_corr->set(&get_dof_values(state));
@@ -493,9 +495,9 @@ std::shared_ptr<clexulator::LocalCorrelations> get_local_corr(
 ///     particular state, constructing as necessary
 ///
 /// \relates System
-std::shared_ptr<clexulator::ClusterExpansion> get_clex(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key) {
+std::shared_ptr<clexulator::ClusterExpansion> get_clex(System &system,
+                                                       state_type const &state,
+                                                       std::string const &key) {
   auto clex = _verify(get_supercell_data(system, state).clex, key, "clex");
 
   set(*clex, state);
@@ -512,8 +514,7 @@ std::shared_ptr<clexulator::ClusterExpansion> get_clex(
 ///
 /// \relates System
 std::shared_ptr<clexulator::MultiClusterExpansion> get_multiclex(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key) {
+    System &system, state_type const &state, std::string const &key) {
   auto clex =
       _verify(get_supercell_data(system, state).multiclex, key, "multiclex");
   set(*clex, state);
@@ -523,8 +524,7 @@ std::shared_ptr<clexulator::MultiClusterExpansion> get_multiclex(
 /// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key) {
+    System &system, state_type const &state, std::string const &key) {
   auto clex =
       _verify(get_supercell_data(system, state).local_clex, key, "local_clex");
   set(*clex, state);
@@ -540,8 +540,7 @@ std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
 ///   least one of the local-cluster expansions
 ///
 std::shared_ptr<clexulator::MultiLocalClusterExpansion> get_local_multiclex(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key) {
+    System &system, state_type const &state, std::string const &key) {
   auto clex = _verify(get_supercell_data(system, state).local_multiclex, key,
                       "local_multiclex");
   set(*clex, state);
@@ -553,8 +552,7 @@ std::shared_ptr<clexulator::MultiLocalClusterExpansion> get_local_multiclex(
 ///
 /// \relates System
 std::shared_ptr<clexulator::OrderParameter> get_order_parameter(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key) {
+    System &system, state_type const &state, std::string const &key) {
   auto order_parameter =
       _verify(get_supercell_data(system, state).order_parameters, key,
               "order_parameters");
@@ -563,14 +561,14 @@ std::shared_ptr<clexulator::OrderParameter> get_order_parameter(
 }
 
 /// \brief Helper to get supercell index conversions
-monte::Conversions const &get_index_conversions(
-    System &system, monte::State<Configuration> const &state) {
+monte::Conversions const &get_index_conversions(System &system,
+                                                state_type const &state) {
   return get_supercell_data(system, state).convert;
 }
 
 /// \brief Helper to get unique pairs of (asymmetric unit index, species index)
-monte::OccCandidateList const &get_occ_candidate_list(
-    System &system, monte::State<Configuration> const &state) {
+monte::OccCandidateList const &get_occ_candidate_list(System &system,
+                                                      state_type const &state) {
   return get_supercell_data(system, state).occ_candidate_list;
 }
 

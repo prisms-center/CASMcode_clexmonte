@@ -6,6 +6,7 @@
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/kinetic/kinetic_events.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
+#include "casm/monte/methods/kinetic_monte_carlo.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -52,63 +53,27 @@ struct Kinetic {
 
   // --- Data used by kinetic sampling functions ---
 
-  // TODO: need a better system for passing info to sampling functions
-
-  /// When sampling, this will hold the atom name index for each column of the
-  /// atom position matrices. Currently atom names only; does not distinguish
-  /// atoms with different properties.
-  std::vector<Index> atom_name_index_list;
-
-  /// When sampling, this will specify the current sampling fixture
-  std::string sampling_fixture_label;
-
-  /// When sampling, this will point to the current state sampler
-  monte::StateSampler<clexmonte::config_type> const *state_sampler;
-
-  /// When sampling, this will hold the current simulation time
-  double time;
-
-  /// When sampling, this will hold current atom positions
-  Eigen::MatrixXd atom_positions_cart;
-
-  /// When sampling, this will hold the last sampling time
-  ///
-  /// Notes:
-  /// - Key = sampling fixture label
-  /// - For the first sample, this will contain 0.0
-  std::map<std::string, double> prev_time;
-
-  /// When sampling, this will hold atom positions from the last sampling time
-  ///
-  /// Notes:
-  /// - Key = sampling fixture label
-  /// - For the first sample, this will contain the atom positions at the
-  ///   start of the run.
-  std::map<std::string, Eigen::MatrixXd> prev_atom_positions_cart;
+  /// Data for sampling functions
+  monte::KMCData<config_type> kmc_data;
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
-           monte::RunManager<config_type> &run_manager);
-
-  /// \brief Perform a series of runs, according to a state generator
-  void run_series(state_generator_type &state_generator,
-                  std::vector<monte::SamplingFixtureParams<config_type>> const
-                      &sampling_fixture_params);
+           run_manager_type &run_manager);
 
   /// \brief Construct functions that may be used to sample various quantities
   ///     of the Monte Carlo calculation as it runs
-  static monte::StateSamplingFunctionMap<config_type>
+  static std::map<std::string, state_sampling_function_type>
   standard_sampling_functions(
       std::shared_ptr<Kinetic<EngineType>> const &calculation);
 
   /// \brief Construct functions that may be used to analyze Monte Carlo
   ///     calculation results
-  static monte::ResultsAnalysisFunctionMap<config_type>
+  static std::map<std::string, results_analysis_function_type>
   standard_analysis_functions(
       std::shared_ptr<Kinetic<EngineType>> const &calculation);
 
   /// \brief Construct functions that may be used to modify states
-  static monte::StateModifyingFunctionMap<config_type>
+  static std::map<std::string, state_modifying_function_type>
   standard_modifying_functions(
       std::shared_ptr<Kinetic<EngineType>> const &calculation);
 };

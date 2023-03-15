@@ -25,7 +25,7 @@ TEST_F(canonical_MetropolisTest, Test1) {
   // Create state
   Eigen::Matrix3l T = Eigen::Matrix3l::Identity() * 10;
   Index volume = T.determinant();
-  monte::State<Configuration> state(
+  state_type state(
       make_default_configuration(*system, T),
       canonical::make_conditions(600.0, system->composition_converter,
                                  {{"Zr", 2.0}, {"O", 1.0}, {"Va", 1.0}}));

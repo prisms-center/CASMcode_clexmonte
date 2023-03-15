@@ -13,7 +13,6 @@
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/events/OccLocation.hh"
-#include "casm/monte/methods/nfold.hh"
 #include "casm/monte/methods/occupation_metropolis.hh"
 #include "casm/monte/results/Results.hh"
 #include "casm/monte/state/State.hh"
@@ -31,8 +30,7 @@ SemiGrandCanonical<EngineType>::SemiGrandCanonical(
       random_number_generator(_random_number_engine),
       state(nullptr),
       transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)),
-      occ_location(nullptr),
-      state_sampler(nullptr) {
+      occ_location(nullptr) {
   if (!is_clex_data(*system, "formation_energy")) {
     throw std::runtime_error(
         "Error constructing SemiGrandCanonical: no 'formation_energy' clex.");
@@ -44,9 +42,9 @@ SemiGrandCanonical<EngineType>::SemiGrandCanonical(
 /// Notes:
 /// - state and occ_location are evolved and end in modified states
 template <typename EngineType>
-void SemiGrandCanonical<EngineType>::run(
-    state_type &state, monte::OccLocation &occ_location,
-    monte::RunManager<config_type> &run_manager) {
+void SemiGrandCanonical<EngineType>::run(state_type &state,
+                                         monte::OccLocation &occ_location,
+                                         run_manager_type &run_manager) {
   if (!state.conditions.scalar_values.count("temperature")) {
     throw std::runtime_error(
         "Error in Canonical::run: state `temperature` not set.");
@@ -66,50 +64,20 @@ void SemiGrandCanonical<EngineType>::run(
   potential->set(this->state, this->conditions);
 
   /// \brief Construct swaps
-  monte::Conversions const &convert = get_index_conversions(*system, state);
+  monte::Conversions const &convert =
+      get_index_conversions(*this->system, state);
   monte::OccCandidateList const &occ_candidate_list =
-      get_occ_candidate_list(*system, state);
+      get_occ_candidate_list(*this->system, state);
 
   std::vector<monte::OccSwap> grand_canonical_swaps =
       make_grand_canonical_swaps(convert, occ_candidate_list);
 
-  bool nfold_way = true;
-  if (nfold_way) {
-    this->event_data = std::make_shared<SemiGrandCanonicalEventData>(
-        this->system, state, occ_location, grand_canonical_swaps, potential);
-
-    // Make selector
-    Eigen::Matrix3l T = get_transformation_matrix_to_super(state);
-    lotto::RejectionFreeEventSelector event_selector(
-        this->event_data->event_calculator,
-        clexmonte::make_complete_event_id_list(
-            T.determinant(), this->event_data->prim_event_list),
-        this->event_data->event_list.impact_table);
-
-    // Used to apply selected events: EventID -> monte::OccEvent
-    auto get_event_f = [&](EventID const &selected_event_id) {
-      // returns a monte::OccEvent
-      return this->event_data->event_list.events.at(selected_event_id).event;
-    };
-
-    nfold(state, occ_location, event_selector, get_event_f, run_manager);
-  } else {
-    // Run Monte Carlo at a single condition
-    typedef monte::RandomNumberGenerator<EngineType> generator_type;
-    monte::occupation_metropolis(
-        state, occ_location, *potential, grand_canonical_swaps,
-        monte::propose_grand_canonical_event<generator_type>,
-        random_number_generator, run_manager);
-  }
-}
-
-/// \brief Perform a series of runs, according to a state generator
-template <typename EngineType>
-void SemiGrandCanonical<EngineType>::run_series(
-    state_generator_type &state_generator,
-    std::vector<monte::SamplingFixtureParams<config_type>> const
-        &sampling_fixture_params) {
-  clexmonte::run_series(*this, state_generator, sampling_fixture_params);
+  // Run Monte Carlo at a single condition
+  typedef monte::RandomNumberGenerator<EngineType> generator_type;
+  monte::occupation_metropolis(
+      state, occ_location, *potential, grand_canonical_swaps,
+      monte::propose_grand_canonical_event<generator_type>,
+      random_number_generator, run_manager);
 }
 
 /// \brief Construct functions that may be used to sample various quantities of
@@ -121,10 +89,10 @@ void SemiGrandCanonical<EngineType>::run_series(
 ///     data, such as the potential.
 ///
 template <typename EngineType>
-monte::StateSamplingFunctionMap<Configuration>
+std::map<std::string, state_sampling_function_type>
 SemiGrandCanonical<EngineType>::standard_sampling_functions(
     std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation) {
-  std::vector<monte::StateSamplingFunction<Configuration>> functions = {
+  std::vector<state_sampling_function_type> functions = {
       make_temperature_f(calculation),
       make_mol_composition_f(calculation),
       make_param_composition_f(calculation),
@@ -133,7 +101,7 @@ SemiGrandCanonical<EngineType>::standard_sampling_functions(
       make_formation_energy_f(calculation),
       make_potential_energy_f(calculation)};
 
-  monte::StateSamplingFunctionMap<Configuration> function_map;
+  std::map<std::string, state_sampling_function_type> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }
@@ -143,15 +111,15 @@ SemiGrandCanonical<EngineType>::standard_sampling_functions(
 /// \brief Construct functions that may be used to analyze Monte Carlo
 ///     calculation results
 template <typename EngineType>
-monte::ResultsAnalysisFunctionMap<Configuration>
+std::map<std::string, results_analysis_function_type>
 SemiGrandCanonical<EngineType>::standard_analysis_functions(
     std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation) {
-  std::vector<monte::ResultsAnalysisFunction<Configuration>> functions = {
+  std::vector<results_analysis_function_type> functions = {
       make_heat_capacity_f(calculation), make_mol_susc_f(calculation),
       make_param_susc_f(calculation), make_mol_thermochem_susc_f(calculation),
       make_param_thermochem_susc_f(calculation)};
 
-  monte::ResultsAnalysisFunctionMap<Configuration> function_map;
+  std::map<std::string, results_analysis_function_type> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }
@@ -160,10 +128,10 @@ SemiGrandCanonical<EngineType>::standard_analysis_functions(
 
 /// \brief Construct functions that may be used to modify states
 template <typename EngineType>
-monte::StateModifyingFunctionMap<config_type>
+std::map<std::string, state_modifying_function_type>
 SemiGrandCanonical<EngineType>::standard_modifying_functions(
     std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation) {
-  return monte::StateModifyingFunctionMap<config_type>();
+  return std::map<std::string, state_modifying_function_type>();
 }
 
 }  // namespace semi_grand_canonical

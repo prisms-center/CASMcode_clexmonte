@@ -13,7 +13,7 @@
 namespace CASM {
 namespace clexmonte {
 
-/// \brief Construct monte::SamplingFixtureParams from JSON
+/// \brief Construct sampling_figure_params_type from JSON
 ///
 ///
 /// \code
@@ -50,12 +50,12 @@ namespace clexmonte {
 ///             How often the log file should be written, in seconds.
 /// }
 /// \endcode
-void parse(
-    InputParser<monte::SamplingFixtureParams<config_type>> &parser,
-    std::string label,
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
-    monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
-    MethodParserMap<results_io_type> const &results_io_methods) {
+void parse(InputParser<sampling_figure_params_type> &parser, std::string label,
+           std::map<std::string, state_sampling_function_type> const
+               &sampling_functions,
+           std::map<std::string, results_analysis_function_type> const
+               &analysis_functions,
+           MethodParserMap<results_io_type> const &results_io_methods) {
   // Read sampling params
   std::set<std::string> sampling_function_names;
   for (auto const &element : sampling_functions) {
@@ -69,7 +69,8 @@ void parse(
   }
   monte::SamplingParams const &sampling_params =
       *sampling_params_subparser->value;
-  monte::StateSamplingFunctionMap<config_type> selected_sampling_functions;
+  std::map<std::string, state_sampling_function_type>
+      selected_sampling_functions;
   for (auto const &name : sampling_params.sampler_names) {
     selected_sampling_functions.emplace(name, sampling_functions.at(name));
   }
@@ -84,7 +85,8 @@ void parse(
   fs::path functions_path = fs::path("analysis") / "functions";
   parser.optional(function_names, functions_path);
 
-  monte::ResultsAnalysisFunctionMap<config_type> selected_analysis_functions;
+  std::map<std::string, results_analysis_function_type>
+      selected_analysis_functions;
   for (auto const &name : function_names) {
     auto it = analysis_functions.find(name);
     if (it != analysis_functions.end()) {
@@ -114,7 +116,7 @@ void parse(
   }
 
   if (parser.valid()) {
-    parser.value = std::make_unique<monte::SamplingFixtureParams<config_type>>(
+    parser.value = std::make_unique<sampling_figure_params_type>(
         label, selected_sampling_functions, selected_analysis_functions,
         sampling_params, *completion_check_params_subparser->value,
         std::move(results_io_subparser->value), method_log);

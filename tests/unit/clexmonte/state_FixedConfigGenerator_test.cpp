@@ -23,7 +23,7 @@ TEST_F(state_FixedConfigGeneratorTest, Test1) {
   monte::ValueMap conditions =
       canonical::make_conditions(300.0, system->composition_converter,
                                  {{"Zr", 2.0}, {"O", 1.0}, {"Va", 1.0}});
-  std::vector<State<Configuration>> finished_states;
+  std::vector<state_type> finished_states;
 
   Eigen::Matrix3l T = Eigen::Matrix3l::Identity() * 2;
   Index volume = T.determinant();

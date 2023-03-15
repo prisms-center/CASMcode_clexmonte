@@ -497,18 +497,25 @@ void parse(InputParser<System> &parser) {
     }
   }
 
-  // Parse "event_system" and "events"
-  if (parser.self.contains("events")) {
+  // Parse "event_system"
+  if (parser.self.contains("event_system")) {
     auto const &basicstructure = system.prim->basicstructure;
-    // parse "event_system"
     auto event_system_subparser =
         parser.subparse_from_file<occ_events::OccSystem>("event_system",
                                                          basicstructure);
     if (event_system_subparser->valid()) {
       system.event_system = std::make_shared<occ_events::OccSystem>(
           std::move(*event_system_subparser->value));
+    }
+  }
 
+  // Parse "event_system" and "events"
+  if (parser.self.contains("events")) {
+    if (system.event_system == nullptr) {
+      parser.insert_error("events", "event_system is required to parse events");
+    } else {
       // parse "events"/<name>
+      auto const &basicstructure = system.prim->basicstructure;
       auto begin = parser.self["events"].begin();
       auto end = parser.self["events"].end();
       for (auto it = begin; it != end; ++it) {

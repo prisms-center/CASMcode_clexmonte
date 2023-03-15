@@ -33,7 +33,7 @@ namespace clexmonte {
 /// - `composition::CompositionCalculator const &
 ///   get_composition_calculator(SystemType &)`
 template <typename CalculationType>
-monte::StateModifyingFunction<Configuration> make_set_mol_composition_f(
+state_modifying_function_type make_set_mol_composition_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 // --- Inline definitions ---
@@ -56,13 +56,13 @@ monte::StateModifyingFunction<Configuration> make_set_mol_composition_f(
 /// - `composition::CompositionCalculator const &
 ///   get_composition_calculator(SystemType &)`
 template <typename CalculationType>
-monte::StateModifyingFunction<Configuration> make_set_mol_composition_f(
+state_modifying_function_type make_set_mol_composition_f(
     std::shared_ptr<CalculationType> const &calculation) {
-  return monte::StateModifyingFunction<Configuration>(
+  return state_modifying_function_type(
       "set_mol_composition",
       "Set `mol_composition` conditions equal to the mol composition of the "
       "state",
-      [calculation](monte::State<Configuration> &state) {
+      [calculation](state_type &state) {
         Eigen::VectorXi const &occupation = get_occupation(state);
         state.conditions.vector_values["mol_composition"] =
             get_composition_calculator(*calculation->system)

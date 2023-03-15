@@ -39,9 +39,7 @@ Kinetic<EngineType>::Kinetic(std::shared_ptr<system_type> _system,
       event_data(std::make_shared<KineticEventData>(system)),
       state(nullptr),
       transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)),
-      occ_location(nullptr),
-      sampling_fixture_label(),
-      state_sampler(nullptr) {
+      occ_location(nullptr) {
   if (!is_clex_data(*this->system, "formation_energy")) {
     throw std::runtime_error(
         "Error constructing Kinetic: no 'formation_energy' clex.");
@@ -52,10 +50,11 @@ Kinetic<EngineType>::Kinetic(std::shared_ptr<system_type> _system,
 template <typename EngineType>
 void Kinetic<EngineType>::run(state_type &state,
                               monte::OccLocation &occ_location,
-                              monte::RunManager<config_type> &run_manager) {
+                              run_manager_type &run_manager) {
   this->state = &state;
   this->occ_location = &occ_location;
   this->conditions = make_conditions(*this->system, state);
+  Index n_unitcells = this->transformation_matrix_to_super.determinant();
 
   // if same supercell
   // -> just re-set state & conditions & avoid re-constructing event list
@@ -69,6 +68,7 @@ void Kinetic<EngineType>::run(state_type &state,
   } else {
     this->transformation_matrix_to_super =
         get_transformation_matrix_to_super(state);
+    n_unitcells = this->transformation_matrix_to_super.determinant();
     this->event_data->update(state, this->conditions, occ_location);
   }
 
@@ -91,40 +91,29 @@ void Kinetic<EngineType>::run(state_type &state,
   };
 
   // Make selector
-  Eigen::Matrix3l T = get_transformation_matrix_to_super(state);
   lotto::RejectionFreeEventSelector event_selector(
       this->event_data->event_calculator,
-      clexmonte::make_complete_event_id_list(T.determinant(),
+      clexmonte::make_complete_event_id_list(n_unitcells,
                                              this->event_data->prim_event_list),
       this->event_data->event_list.impact_table);
 
   // Update atom_name_index_list -- These do not change --
   // TODO: KMC with atoms that move to/from resevoir will need to update this
   auto event_system = get_event_system(*this->system);
-  atom_name_index_list = make_atom_name_index_list(occ_location, *event_system);
+  this->kmc_data.atom_name_index_list =
+      make_atom_name_index_list(occ_location, *event_system);
 
-  monte::kinetic_monte_carlo<EventID>(
-      state, occ_location, sampling_fixture_label, state_sampler, time,
-      atom_positions_cart, prev_time, prev_atom_positions_cart, event_selector,
-      get_event_f, run_manager);
-}
-
-/// \brief Perform a series of runs, according to a state generator
-template <typename EngineType>
-void Kinetic<EngineType>::run_series(
-    state_generator_type &state_generator,
-    std::vector<monte::SamplingFixtureParams<config_type>> const
-        &sampling_fixture_params) {
-  clexmonte::run_series(*this, state_generator, sampling_fixture_params);
+  monte::kinetic_monte_carlo<EventID>(state, occ_location, this->kmc_data,
+                                      event_selector, get_event_f, run_manager);
 }
 
 /// \brief Construct functions that may be used to sample various quantities
 ///     of the Monte Carlo calculation as it runs
 template <typename EngineType>
-monte::StateSamplingFunctionMap<Configuration>
+std::map<std::string, state_sampling_function_type>
 Kinetic<EngineType>::standard_sampling_functions(
     std::shared_ptr<Kinetic<EngineType>> const &calculation) {
-  std::vector<monte::StateSamplingFunction<Configuration>> functions = {
+  std::vector<state_sampling_function_type> functions = {
       make_temperature_f(calculation),
       make_mol_composition_f(calculation),
       make_param_composition_f(calculation),
@@ -143,7 +132,7 @@ Kinetic<EngineType>::standard_sampling_functions(
       make_jumps_per_event_by_type_f(calculation),
       make_jumps_per_atom_per_event_by_type_f(calculation)};
 
-  monte::StateSamplingFunctionMap<Configuration> function_map;
+  std::map<std::string, state_sampling_function_type> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }
@@ -153,15 +142,15 @@ Kinetic<EngineType>::standard_sampling_functions(
 /// \brief Construct functions that may be used to analyze Monte Carlo
 ///     calculation results
 template <typename EngineType>
-monte::ResultsAnalysisFunctionMap<Configuration>
+std::map<std::string, results_analysis_function_type>
 Kinetic<EngineType>::standard_analysis_functions(
     std::shared_ptr<Kinetic<EngineType>> const &calculation) {
-  std::vector<monte::ResultsAnalysisFunction<Configuration>> functions = {
+  std::vector<results_analysis_function_type> functions = {
       make_heat_capacity_f(calculation), make_mol_susc_f(calculation),
       make_param_susc_f(calculation), make_mol_thermochem_susc_f(calculation),
       make_param_thermochem_susc_f(calculation)};
 
-  monte::ResultsAnalysisFunctionMap<Configuration> function_map;
+  std::map<std::string, results_analysis_function_type> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }
@@ -170,13 +159,13 @@ Kinetic<EngineType>::standard_analysis_functions(
 
 /// \brief Construct functions that may be used to modify states
 template <typename EngineType>
-monte::StateModifyingFunctionMap<config_type>
+std::map<std::string, state_modifying_function_type>
 Kinetic<EngineType>::standard_modifying_functions(
     std::shared_ptr<Kinetic<EngineType>> const &calculation) {
-  std::vector<monte::StateModifyingFunction<config_type>> functions = {
+  std::vector<state_modifying_function_type> functions = {
       make_set_mol_composition_f(calculation)};
 
-  monte::StateModifyingFunctionMap<config_type> function_map;
+  std::map<std::string, state_modifying_function_type> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }

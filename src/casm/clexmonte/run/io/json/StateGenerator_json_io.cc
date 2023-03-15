@@ -178,7 +178,8 @@ void parse(
     InputParser<monte::IncrementalConditionsStateGenerator<Configuration>>
         &parser,
     std::shared_ptr<system_type> const &system,
-    monte::StateModifyingFunctionMap<config_type> const &modifying_functions,
+    std::map<std::string, state_modifying_function_type> const
+        &modifying_functions,
     MethodParserMap<config_generator_type> config_generator_methods) {
   /// Parse "initial_configuration"
   auto config_generator_subparser = parser.subparse<config_generator_type>(
@@ -197,7 +198,7 @@ void parse(
   /// Parse "modifiers"
   std::vector<std::string> modifier_names;
   parser.optional(modifier_names, "modifiers");
-  std::vector<monte::StateModifyingFunction<config_type>> selected_modifiers;
+  std::vector<state_modifying_function_type> selected_modifiers;
   for (auto const &name : modifier_names) {
     auto it = modifying_functions.find(name);
     if (it == modifying_functions.end()) {

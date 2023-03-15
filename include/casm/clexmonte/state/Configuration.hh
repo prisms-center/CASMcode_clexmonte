@@ -22,50 +22,48 @@ struct Configuration {
 // --- The following are used to interface with CASM::monte methods ---
 
 inline Eigen::Matrix3l const &get_transformation_matrix_to_super(
-    monte::State<Configuration> const &state) {
+    state_type const &state) {
   return state.configuration.transformation_matrix_to_super;
 }
 
-inline Eigen::VectorXi &get_occupation(monte::State<Configuration> &state) {
+inline Eigen::VectorXi &get_occupation(state_type &state) {
   return state.configuration.dof_values.occupation;
 }
 
-inline Eigen::VectorXi const &get_occupation(
-    monte::State<Configuration> const &state) {
+inline Eigen::VectorXi const &get_occupation(state_type const &state) {
   return state.configuration.dof_values.occupation;
 }
 
 inline clexulator::ConfigDoFValues const &get_dof_values(
-    monte::State<Configuration> const &state) {
+    state_type const &state) {
   return state.configuration.dof_values;
 }
 
-inline clexulator::ConfigDoFValues &get_dof_values(
-    monte::State<Configuration> &state) {
+inline clexulator::ConfigDoFValues &get_dof_values(state_type &state) {
   return state.configuration.dof_values;
 }
 
 /// \brief Set calculator so it evaluates using `state`
 inline void set(clexulator::ClusterExpansion &calculator,
-                monte::State<Configuration> const &state) {
+                state_type const &state) {
   calculator.set(&get_dof_values(state));
 }
 
 /// \brief Set calculator so it evaluates using `state`
 inline void set(clexulator::MultiClusterExpansion &calculator,
-                monte::State<Configuration> const &state) {
+                state_type const &state) {
   calculator.set(&get_dof_values(state));
 }
 
 /// \brief Set calculator so it evaluates using `state`
 inline void set(clexulator::LocalClusterExpansion &calculator,
-                monte::State<Configuration> const &state) {
+                state_type const &state) {
   calculator.set(&get_dof_values(state));
 }
 
 /// \brief Set calculator so it evaluates using `state`
 inline void set(clexulator::MultiLocalClusterExpansion &calculator,
-                monte::State<Configuration> const &state) {
+                state_type const &state) {
   calculator.set(&get_dof_values(state));
 }
 

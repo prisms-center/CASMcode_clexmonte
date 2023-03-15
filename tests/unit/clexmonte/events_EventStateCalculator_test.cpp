@@ -28,7 +28,7 @@ TEST_F(events_EventStateCalculator_Test, Test1) {
 
   // Create default state
   Eigen::Matrix3l T = test::fcc_conventional_transf_mat() * 10;
-  monte::State<Configuration> state(make_default_configuration(*system, T));
+  state_type state(make_default_configuration(*system, T));
   // Set configuration - A, with single Va
   Eigen::VectorXi &occupation = get_occupation(state);
   occupation(0) = 2;

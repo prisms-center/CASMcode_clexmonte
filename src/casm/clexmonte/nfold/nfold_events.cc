@@ -1,21 +1,23 @@
 
-#include "casm/clexmonte/semi_grand_canonical/semi_grand_canonical_events.hh"
+#include "casm/clexmonte/nfold/nfold_events.hh"
 
 #include "casm/clexmonte/events/event_methods.hh"
 #include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexulator/ConfigDoFValues.hh"
 #include "casm/configuration/occ_events/OccSystem.hh"
+#include "casm/configuration/occ_events/io/json/OccEvent_json_io.hh"
 #include "casm/configuration/occ_events/orbits.hh"
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/events/OccCandidate.hh"
 
 namespace CASM {
 namespace clexmonte {
-namespace semi_grand_canonical {
+namespace nfold {
 
 CompleteEventCalculator::CompleteEventCalculator(
-    std::shared_ptr<SemiGrandCanonicalPotential> _potential,
+    std::shared_ptr<semi_grand_canonical::SemiGrandCanonicalPotential>
+        _potential,
     std::vector<PrimEventData> const &_prim_event_list,
     std::map<EventID, EventData> const &_event_list)
     : prim_event_list(_prim_event_list),
@@ -62,14 +64,43 @@ double CompleteEventCalculator::calculate_rate(EventID const &id) {
 
 namespace {
 
+occ_events::OccPosition _make_atom_position(
+    occ_events::OccSystem const &event_system,
+    xtal::UnitCellCoord const &integral_site_coordinate, Index occupant_index) {
+  Index b = integral_site_coordinate.sublattice();
+  if (b < 0 || b >= event_system.prim->basis().size()) {
+    throw std::runtime_error(
+        "Error in OccSystem::make_molecule_position: Invalid "
+        "integral_site_coordinate");
+  }
+  std::vector<xtal::Molecule> const &occupant_dof =
+      event_system.prim->basis()[b].occupant_dof();
+  if (occupant_index < 0 || occupant_index >= occupant_dof.size()) {
+    throw std::runtime_error(
+        "Error in OccSystem::make_molecule_position: Invalid occupant_index");
+  }
+
+  return occ_events::OccPosition{false, true, integral_site_coordinate,
+                                 occupant_index, 0};
+}
+
 /// \brief Convert monte::OccCanditate to occ_events::OccPosition
-occ_events::OccPosition _make_occ_position(
+occ_events::OccPosition _make_atom_position(
     occ_events::OccSystem const &event_system,
     monte::Conversions const &convert, monte::OccCandidate const &cand) {
   Index b = *convert.asym_to_b(cand.asym).begin();
-  return event_system.make_molecule_position(
-      xtal::UnitCellCoord(b, 0, 0, 0),
-      convert.occ_index(cand.asym, cand.species_index));
+  return _make_atom_position(event_system, xtal::UnitCellCoord(b, 0, 0, 0),
+                             convert.occ_index(cand.asym, cand.species_index));
+}
+
+/// \brief Make atom-in-resevoir position for same chemical type as given
+/// OccPosition
+occ_events::OccPosition _make_atom_in_resevoir_position(
+    occ_events::OccSystem const &event_system,
+    occ_events::OccPosition const &pos) {
+  Index chemical_index = event_system.get_chemical_index(pos);
+  return occ_events::OccPosition{true, true, xtal::UnitCellCoord{0, 0, 0, 0},
+                                 chemical_index, 0};
 }
 
 /// \brief Convert monte::OccSwap to occ_events::OccEvent
@@ -77,15 +108,14 @@ occ_events::OccEvent _make_grand_canonical_swap_event(
     monte::OccSwap const &swap, occ_events::OccSystem const &event_system,
     monte::Conversions const &convert) {
   occ_events::OccPosition pos_a =
-      _make_occ_position(event_system, convert, swap.cand_a);
+      _make_atom_position(event_system, convert, swap.cand_a);
   occ_events::OccPosition resevoir_a =
-      event_system.make_molecule_in_resevoir_position(
-          event_system.get_chemical_index(pos_a));
+      _make_atom_in_resevoir_position(event_system, pos_a);
+
   occ_events::OccPosition pos_b =
-      _make_occ_position(event_system, convert, swap.cand_b);
+      _make_atom_position(event_system, convert, swap.cand_b);
   occ_events::OccPosition resevoir_b =
-      event_system.make_molecule_in_resevoir_position(
-          event_system.get_chemical_index(pos_b));
+      _make_atom_in_resevoir_position(event_system, pos_b);
 
   occ_events::OccTrajectory traj_a({pos_a, resevoir_a});
   occ_events::OccTrajectory traj_b({resevoir_b, pos_b});
@@ -114,7 +144,8 @@ std::map<std::string, OccEventTypeData> _make_event_type_data(
         occ_events::make_prim_periodic_orbit(event, occevent_symgroup_rep);
 
     std::string event_type_name =
-        "swap-" + std::to_string(swap.cand_a.species_index) + "-" +
+        "swap-" + std::to_string(swap.cand_a.asym) + "-" +
+        std::to_string(swap.cand_a.species_index) + "-" +
         std::to_string(swap.cand_b.species_index);
     event_type_data[event_type_name].events =
         std::vector<occ_events::OccEvent>(orbit.begin(), orbit.end());
@@ -124,18 +155,19 @@ std::map<std::string, OccEventTypeData> _make_event_type_data(
 
 }  // namespace
 
-/// \brief Construct SemiGrandCanonicalEventData
-SemiGrandCanonicalEventData::SemiGrandCanonicalEventData(
+/// \brief Construct NfoldEventData
+NfoldEventData::NfoldEventData(
     std::shared_ptr<system_type> system, state_type const &state,
     monte::OccLocation const &occ_location,
     std::vector<monte::OccSwap> const &grand_canonical_swaps,
-    std::shared_ptr<SemiGrandCanonicalPotential> potential) {
+    std::shared_ptr<semi_grand_canonical::SemiGrandCanonicalPotential>
+        potential) {
   // Make OccEvents from SemiGrandCanonical swaps
   // key: event_type_name, value: symmetrically equivalent events
-  std::map<std::string, OccEventTypeData> event_type_data =
+  system->event_type_data =
       _make_event_type_data(system, state, grand_canonical_swaps);
 
-  prim_event_list = clexmonte::make_prim_event_list(event_type_data);
+  prim_event_list = clexmonte::make_prim_event_list(*system);
 
   prim_impact_info_list = clexmonte::make_prim_impact_info_list(
       *system, prim_event_list, {"formation_energy"});
@@ -149,6 +181,6 @@ SemiGrandCanonicalEventData::SemiGrandCanonicalEventData(
       potential, prim_event_list, event_list.events);
 }
 
-}  // namespace semi_grand_canonical
+}  // namespace nfold
 }  // namespace clexmonte
 }  // namespace CASM

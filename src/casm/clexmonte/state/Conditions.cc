@@ -213,15 +213,63 @@ void _make_conditions_from_value_map(
       param = map.vector_values.at(name);
     }
   };
+  auto _check_components_sized_vector = [&](std::string name) {
+    if (map.vector_values.count(name)) {
+      auto const &v = map.vector_values.at(name);
+      Index n_comp = composition_converter.components().size();
+      if (v.size() != n_comp) {
+        std::stringstream ss;
+        ss << "Error: conditions \"" << name
+           << "\" size does not match the number of system components";
+        throw std::runtime_error(ss.str());
+      }
+    }
+  };
+  auto _check_comp_axes_sized_vector = [&](std::string name) {
+    if (map.vector_values.count(name)) {
+      auto const &v = map.vector_values.at(name);
+      Index n_axes = composition_converter.independent_compositions();
+      if (v.size() != n_axes) {
+        std::stringstream ss;
+        ss << "Error: conditions \"" << name
+           << "\" size does not match the number of independent composition "
+              "axes";
+        throw std::runtime_error(ss.str());
+      }
+    }
+  };
+  auto _get_comp_axes_sized_vector = [&](std::optional<Eigen::VectorXd> &param,
+                                         std::string name) {
+    _check_comp_axes_sized_vector(name);
+    _get_vector(param, name);
+  };
   auto _get_matrix = [&](std::optional<Eigen::MatrixXd> &param,
                          std::string name) {
     if (map.matrix_values.count(name)) {
       param = map.matrix_values.at(name);
     }
   };
+  auto _check_comp_axes_sized_matrix = [&](std::string name) {
+    if (map.matrix_values.count(name)) {
+      auto const &M = map.matrix_values.at(name);
+
+      Index n_axes = composition_converter.independent_compositions();
+      if (M.rows() != n_axes || M.cols() != n_axes) {
+        std::stringstream ss;
+        ss << "Error: conditions \"" << name
+           << "\" size does not match the number of independent composition "
+              "axes";
+        throw std::runtime_error(ss.str());
+      }
+    }
+  };
+  auto _get_comp_axes_sized_matrix = [&](std::optional<Eigen::MatrixXd> &param,
+                                         std::string name) {
+    _check_comp_axes_sized_matrix(name);
+    _get_matrix(param, name);
+  };
 
   Conditions &c = conditions;
-
   if (map.scalar_values.count("temperature")) {
     c.set_temperature(map.scalar_values.at("temperature"));
   }
@@ -230,15 +278,21 @@ void _make_conditions_from_value_map(
         map.boolean_values.at("include_formation_energy");
   }
 
-  _get_vector(c.param_chem_pot, "param_chem_pot");
+  _check_comp_axes_sized_vector("param_composition");
+  _check_components_sized_vector("mol_composition");
+
+  _get_comp_axes_sized_vector(c.param_chem_pot, "param_chem_pot");
   if (c.param_chem_pot.has_value()) {
     c.exchange_chem_pot = make_exchange_chemical_potential(
         *c.param_chem_pot, composition_converter);
   }
 
-  _get_vector(c.param_comp_quad_pot_target, "param_comp_quad_pot_target");
-  _get_vector(c.param_comp_quad_pot_vector, "param_comp_quad_pot_vector");
-  _get_matrix(c.param_comp_quad_pot_matrix, "param_comp_quad_pot_matrix");
+  _get_comp_axes_sized_vector(c.param_comp_quad_pot_target,
+                              "param_comp_quad_pot_target");
+  _get_comp_axes_sized_vector(c.param_comp_quad_pot_vector,
+                              "param_comp_quad_pot_vector");
+  _get_comp_axes_sized_matrix(c.param_comp_quad_pot_matrix,
+                              "param_comp_quad_pot_matrix");
 
   _get_vector(c.order_parameter_pot, "order_parameter_pot");
   _get_vector(c.order_parameter_quad_pot_target,

@@ -4,7 +4,7 @@
 #include <random>
 
 #include "casm/clexmonte/definitions.hh"
-#include "casm/clexmonte/semi_grand_canonical/semi_grand_canonical_events.hh"
+#include "casm/clexmonte/semi_grand_canonical/semi_grand_canonical_potential.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 
 namespace CASM {
@@ -43,7 +43,7 @@ struct SemiGrandCanonical {
   bool update_species = false;
 
   /// Current state
-  monte::State<Configuration> const *state;
+  state_type const *state;
 
   /// Current supercell
   Eigen::Matrix3l transformation_matrix_to_super;
@@ -51,39 +51,28 @@ struct SemiGrandCanonical {
   /// Occupant tracker
   monte::OccLocation const *occ_location;
 
-  /// Pointer to current state sampler
-  monte::StateSampler<Configuration> const *state_sampler;
-
   /// The current state's conditions in efficient-to-use form
   std::shared_ptr<clexmonte::Conditions> conditions;
 
-  /// Data for N-fold way implementation
-  std::shared_ptr<SemiGrandCanonicalEventData> event_data;
-
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
-           monte::RunManager<config_type> &run_manager);
-
-  /// \brief Perform a series of runs, according to a state generator
-  void run_series(state_generator_type &state_generator,
-                  std::vector<monte::SamplingFixtureParams<config_type>> const
-                      &sampling_fixture_params);
+           run_manager_type &run_manager);
 
   /// \brief Construct functions that may be used to sample various quantities
   /// of
   ///     the Monte Carlo calculation as it runs
-  static monte::StateSamplingFunctionMap<Configuration>
+  static std::map<std::string, state_sampling_function_type>
   standard_sampling_functions(
       std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation);
 
   /// \brief Construct functions that may be used to analyze Monte Carlo
   ///     calculation results
-  static monte::ResultsAnalysisFunctionMap<Configuration>
+  static std::map<std::string, results_analysis_function_type>
   standard_analysis_functions(
       std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation);
 
   /// \brief Construct functions that may be used to modify states
-  static monte::StateModifyingFunctionMap<config_type>
+  static std::map<std::string, state_modifying_function_type>
   standard_modifying_functions(
       std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation);
 };

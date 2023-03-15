@@ -1,8 +1,7 @@
-#include "casm/clexmonte/run/covariance_functions.hh"
-
 #include <limits>
 
 #include "casm/clexmonte/misc/eigen.hh"
+#include "casm/clexmonte/run/covariance_functions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/monte/results/ResultsAnalysisFunction.hh"
 #include "casm/monte/state/StateSampler.hh"
@@ -28,14 +27,14 @@ namespace clexmonte {
 ///     the normalization constant. The analysis function will give
 ///    `result = var(sampler_name)/normalization_constant`.
 ///
-monte::ResultsAnalysisFunction<Configuration> make_variance_f(
+results_analysis_function_type make_variance_f(
     std::string name, std::string description, std::string sampler_name,
     std::vector<std::string> component_names, std::vector<Index> shape,
-    std::function<double(monte::Results<Configuration> const &)>
+    std::function<double(run_data_type const &, results_type const &)>
         make_normalization_constant_f) {
-  return monte::ResultsAnalysisFunction<Configuration>(
+  return results_analysis_function_type(
       name, description, component_names, shape,
-      [=](monte::Results<Configuration> const &results) {
+      [=](run_data_type const &run_data, results_type const &results) {
         // validation of sampled data:
         auto it = results.samplers.find(sampler_name);
         if (it == results.samplers.end()) {
@@ -46,13 +45,10 @@ monte::ResultsAnalysisFunction<Configuration> make_variance_f(
         }
         auto const &sampler = *it->second;
 
-        double normalization_constant = make_normalization_constant_f(results);
+        double normalization_constant =
+            make_normalization_constant_f(run_data, results);
 
-        monte::CompletionCheckResults const &completion_r =
-            results.completion_check_results;
-        monte::ConvergenceCheckResults const &convergence_r =
-            completion_r.convergence_check_results;
-        Index N_samples_for_statistics = convergence_r.N_samples_for_statistics;
+        Index N_samples_for_statistics = N_samples_for_statistics(results);
 
         Index n = sampler.n_components();
         Eigen::VectorXd var = Eigen::VectorXd::Zero(n);
@@ -87,12 +83,12 @@ monte::ResultsAnalysisFunction<Configuration> make_variance_f(
 ///     the normalization constant. The analysis function will give
 ///    `result = cov(first, second)/normalization_constant`.
 ///
-monte::ResultsAnalysisFunction<Configuration> make_covariance_f(
+results_analysis_function_type make_covariance_f(
     std::string name, std::string description, std::string first_sampler_name,
     std::string second_sampler_name,
     std::vector<std::string> first_component_names,
     std::vector<std::string> second_component_names,
-    std::function<double(monte::Results<Configuration> const &)>
+    std::function<double(run_data_type const &, results_type const &)>
         make_normalization_constant_f) {
   std::vector<std::string> cov_matrix_component_names;
   for (std::string col_name : second_component_names) {
@@ -105,9 +101,10 @@ monte::ResultsAnalysisFunction<Configuration> make_covariance_f(
   shape.push_back(first_component_names.size());
   shape.push_back(second_component_names.size());
 
-  return monte::ResultsAnalysisFunction<Configuration>(
+  return results_analysis_function_type(
       name, description, cov_matrix_component_names, shape,
-      [=](monte::Results<Configuration> const &results) -> Eigen::VectorXd {
+      [=](run_data_type const &run_data,
+          results_type const &results) -> Eigen::VectorXd {
         // validation of sampled data:
         auto first_it = results.samplers.find(first_sampler_name);
         if (first_it == results.samplers.end()) {
@@ -128,13 +125,10 @@ monte::ResultsAnalysisFunction<Configuration> make_covariance_f(
         }
         auto const &second_sampler = *second_it->second;
 
-        double normalization_constant = make_normalization_constant_f(results);
+        double normalization_constant =
+            make_normalization_constant_f(run_data, results);
 
-        monte::CompletionCheckResults const &completion_r =
-            results.completion_check_results;
-        monte::ConvergenceCheckResults const &convergence_r =
-            completion_r.convergence_check_results;
-        Index N_samples_for_statistics = convergence_r.N_samples_for_statistics;
+        Index N_samples_for_statistics = N_samples_for_statistics(results);
 
         Index m = first_sampler.n_components();
         Index n = second_sampler.n_components();
@@ -156,41 +150,6 @@ monte::ResultsAnalysisFunction<Configuration> make_covariance_f(
         return monte::reshaped(cov);
       });
 }
-
-// /// \brief Make covariance of two components of sampled quantities
-// template <typename ConfigType>
-// ResultsAnalysisFunction<ConfigType> make_component_covariance_f(
-//     SamplerComponent first, SamplerComponent second,
-//     double normalization_constant, std::optional<std::string> name,
-//     std::optional<std::string> description) {
-//   if (!name.has_value()) {
-//     std::stringstream ss;
-//     ss << "cov(" << first.sampler_name << "(" << first.component_name << "),"
-//        << second.sampler_name << "(" << second.component_name << "))";
-//     name = ss.str();
-//   }
-//   if (!description.has_value()) {
-//     std::stringstream ss;
-//     ss << "Covariance of " << first.sampler_name << "(" <<
-//     first.component_name
-//        << ") and " << second.sampler_name << "(" << second.component_name
-//        << ")";
-//     description = ss.str();
-//   }
-//   return ResultsAnalysisFunction(
-//       *name, *description, {},  // shape: empty vector for scalar
-//       [=](Results<ConfigType> const &results) {
-//         auto it_first = find_or_throw(results.samplers, first);
-//         Eigen::VectorXd x =
-//         it_first->second->component(first.component_index);
-//
-//         auto it_second = find_or_throw(results.samplers, second);
-//         Eigen::VectorXd y =
-//             it_second->second->component(second.component_index);
-//
-//         return covariance(x, y) / normalization_constant;
-//       });
-// }
 
 }  // namespace clexmonte
 }  // namespace CASM

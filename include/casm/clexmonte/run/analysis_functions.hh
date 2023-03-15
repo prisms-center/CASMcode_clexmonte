@@ -28,59 +28,51 @@ namespace clexmonte {
 
 /// \brief Make heat capacity analysis function ("heat_capacity")
 template <typename CalculationType>
-monte::ResultsAnalysisFunction<Configuration> make_heat_capacity_f(
+results_analysis_function_type make_heat_capacity_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make mol_composition susceptibility analysis function
 /// ("mol_susc(A,B)")
 template <typename CalculationType>
-monte::ResultsAnalysisFunction<Configuration> make_mol_susc_f(
+results_analysis_function_type make_mol_susc_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make param_composition susceptibility analysis function
 /// ("param_susc(a,b)")
 template <typename CalculationType>
-monte::ResultsAnalysisFunction<Configuration> make_param_susc_f(
+results_analysis_function_type make_param_susc_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make mol_composition thermo-chemical susceptibility
 ///     analysis function ("mol_thermochem_susc(S,A)")
 template <typename CalculationType>
-monte::ResultsAnalysisFunction<Configuration> make_mol_thermochem_susc_f(
+results_analysis_function_type make_mol_thermochem_susc_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make param_composition thermo-chemical susceptibility
 ///     analysis function ("param_thermochem_susc(S,a)")
 template <typename CalculationType>
-monte::ResultsAnalysisFunction<Configuration> make_param_thermochem_susc_f(
+results_analysis_function_type make_param_thermochem_susc_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 // --- Inline definitions ---
 
 /// \brief Calculates `(kB * temperature * temperature) / n_unitcells`
-inline double heat_capacity_normalization_constant_f(
-    monte::Results<Configuration> const &results) {
-  // validate initial state
-  if (!results.initial_state.has_value()) {
-    std::stringstream msg;
-    msg << "Results analysis error: heat_capacity requires saving initial "
-           "state";
-    throw std::runtime_error(msg.str());
-  }
-  auto const &state = *results.initial_state;
-
+template <typename CalculationType>
+double heat_capacity_normalization_constant_f(run_data_type const &run_data,
+                                              results_type const &results) {
   // validate temperature
-  if (!state.conditions.scalar_values.count("temperature")) {
+  auto const &conditions = run_data.conditions;
+  if (!conditions.scalar_values.count("temperature")) {
     std::stringstream msg;
     msg << "Results analysis error: heat_capacity requires temperature "
            "condition";
     throw std::runtime_error(msg.str());
   }
-  double temperature = state.conditions.scalar_values.at("temperature");
+  double temperature = conditions.scalar_values.at("temperature");
 
   // calculate
-  double n_unitcells = get_transformation_matrix_to_super(state).determinant();
-  return (CASM::KB * temperature * temperature) / n_unitcells;
+  return (CASM::KB * temperature * temperature) / run_data.n_unitcells;
 }
 
 /// \brief Make heat capacity analysis function ("heat_capacity")
@@ -90,43 +82,34 @@ inline double heat_capacity_normalization_constant_f(
 /// - Requires scalar condition "temperature"
 /// - Requires result "initial_state"
 template <typename CalculationType>
-monte::ResultsAnalysisFunction<Configuration> make_heat_capacity_f(
+results_analysis_function_type make_heat_capacity_f(
     std::shared_ptr<CalculationType> const &calculation) {
   return make_variance_f(
       "heat_capacity",
       "Heat capacity (per unit cell) = "
       "var(potential_energy_per_unitcell)*n_unitcells/(kB*T*T)",
-      "potential_energy", {"0"}, {}, heat_capacity_normalization_constant_f);
+      "potential_energy", {"0"}, {},
+      heat_capacity_normalization_constant_f<CalculationType>);
 }
 
 /// \brief Calculates `(kB * temperature) / n_unitcells`
-inline std::function<double(monte::Results<Configuration> const &results)>
+inline std::function<double(run_data_type const &, results_type const &results)>
 make_susc_normalization_constant_f(std::string name) {
-  return [=](monte::Results<Configuration> const &results) -> double {
-    // validate initial state
-    if (!results.initial_state.has_value()) {
-      std::stringstream msg;
-      msg << "Results analysis error: " << name
-          << " requires saving initial "
-             "state";
-      throw std::runtime_error(msg.str());
-    }
-    auto const &state = *results.initial_state;
-
+  return [=](run_data_type const &run_data,
+             results_type const &results) -> double {
     // validate temperature
-    if (!state.conditions.scalar_values.count("temperature")) {
+    auto const &conditions = run_data.conditions;
+    if (!conditions.scalar_values.count("temperature")) {
       std::stringstream msg;
       msg << "Results analysis error: " << name
           << " requires temperature "
              "condition";
       throw std::runtime_error(msg.str());
     }
-    double temperature = state.conditions.scalar_values.at("temperature");
+    double temperature = conditions.scalar_values.at("temperature");
 
     // calculate
-    double n_unitcells =
-        get_transformation_matrix_to_super(state).determinant();
-    return (CASM::KB * temperature) / n_unitcells;
+    return (CASM::KB * temperature) / run_data.n_unitcells;
   };
 }
 
@@ -138,7 +121,7 @@ make_susc_normalization_constant_f(std::string name) {
 /// - Requires scalar condition "temperature"
 /// - Requires result "initial_state"
 template <typename CalculationType>
-monte::ResultsAnalysisFunction<Configuration> make_mol_susc_f(
+results_analysis_function_type make_mol_susc_f(
     std::shared_ptr<CalculationType> const &calculation) {
   auto const &system = *calculation->system;
   auto const &component_names = get_composition_converter(system).components();
@@ -158,7 +141,7 @@ monte::ResultsAnalysisFunction<Configuration> make_mol_susc_f(
 /// - Requires scalar condition "temperature"
 /// - Requires result "initial_state"
 template <typename CalculationType>
-monte::ResultsAnalysisFunction<Configuration> make_param_susc_f(
+results_analysis_function_type make_param_susc_f(
     std::shared_ptr<CalculationType> const &calculation) {
   auto const &system = *calculation->system;
   // name param_composition components "a", "b", ... for each independent
@@ -186,7 +169,7 @@ monte::ResultsAnalysisFunction<Configuration> make_param_susc_f(
 /// - Requires scalar condition "temperature"
 /// - Requires result "initial_state"
 template <typename CalculationType>
-monte::ResultsAnalysisFunction<Configuration> make_mol_thermochem_susc_f(
+results_analysis_function_type make_mol_thermochem_susc_f(
     std::shared_ptr<CalculationType> const &calculation) {
   auto const &system = *calculation->system;
   std::vector<std::string> first_component_names = {"S"};
@@ -212,7 +195,7 @@ monte::ResultsAnalysisFunction<Configuration> make_mol_thermochem_susc_f(
 /// - Requires scalar condition "temperature"
 /// - Requires result "initial_state"
 template <typename CalculationType>
-monte::ResultsAnalysisFunction<Configuration> make_param_thermochem_susc_f(
+results_analysis_function_type make_param_thermochem_susc_f(
     std::shared_ptr<CalculationType> const &calculation) {
   auto const &system = *calculation->system;
   std::vector<std::string> first_component_names = {"S"};

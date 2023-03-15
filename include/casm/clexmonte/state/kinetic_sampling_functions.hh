@@ -35,77 +35,72 @@ namespace clexmonte {
 
 /// \brief Make KMC potential energy sampling function ("potential_energy")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_kmc_potential_energy_f(
+state_sampling_function_type make_kmc_potential_energy_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make center of mass isotropic squared displacement sampling function
 ///     ("mean_R_squared_collective_isotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration>
-make_mean_R_squared_collective_isotropic_f(
+state_sampling_function_type make_mean_R_squared_collective_isotropic_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make center of mass anisotropic squared displacement sampling
 /// function
 /// ("mean_R_squared_collective_anisotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration>
-make_mean_R_squared_collective_anisotropic_f(
+state_sampling_function_type make_mean_R_squared_collective_anisotropic_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make tracer isotropic squared displacement sampling function
 ///     ("mean_R_squared_individual_isotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration>
-make_mean_R_squared_individual_isotropic_f(
+state_sampling_function_type make_mean_R_squared_individual_isotropic_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make tracer anisotropic squared displacement sampling function
 ///     ("mean_R_squared_individual_anisotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration>
-make_mean_R_squared_individual_anisotropic_f(
+state_sampling_function_type make_mean_R_squared_individual_anisotropic_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make isotropic Onsager kinetic coefficient sampling function
 ///     ("L_isotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_L_isotropic_f(
+state_sampling_function_type make_L_isotropic_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make anisotropic Onsager kinetic coefficient sampling function
 ///     ("L_anisotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_L_anisotropic_f(
+state_sampling_function_type make_L_anisotropic_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make isotropic tracer diffusion coefficient sampling function
 ///     ("D_tracer_isotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_D_tracer_isotropic_f(
+state_sampling_function_type make_D_tracer_isotropic_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make anisotropic tracer diffusion coefficient sampling function
 ///     ("D_tracer_anisotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_D_tracer_anisotropic_f(
+state_sampling_function_type make_D_tracer_anisotropic_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make delta_n_jumps(i) / n_atoms(i) ("jumps_per_atom_by_type")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_jumps_per_atom_by_type_f(
+state_sampling_function_type make_jumps_per_atom_by_type_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make delta_n_jumps(i) / delta_n_events ("jumps_per_event_by_type")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_jumps_per_event_by_type_f(
+state_sampling_function_type make_jumps_per_event_by_type_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 /// \brief Make delta_n_jumps(i) / n_atoms(i) / delta_n_events
 /// ("jumps_per_atom_per_event_by_type")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration>
-make_jumps_per_atom_per_event_by_type_f(
+state_sampling_function_type make_jumps_per_atom_per_event_by_type_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 // --- Inline definitions ---
@@ -116,9 +111,9 @@ make_jumps_per_atom_per_event_by_type_f(
 /// but entirely calculated at the sampling time, instead of taken from
 /// state.properties.
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_kmc_potential_energy_f(
+state_sampling_function_type make_kmc_potential_energy_f(
     std::shared_ptr<CalculationType> const &calculation) {
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "potential_energy",
       "Potential energy of the state (normalized per primitive cell)",
       {},  // scalar
@@ -135,8 +130,7 @@ monte::StateSamplingFunction<Configuration> make_kmc_potential_energy_f(
 /// \brief Make center of mass isotropic squared displacement sampling function
 ///     ("mean_R_squared_collective_isotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration>
-make_mean_R_squared_collective_isotropic_f(
+state_sampling_function_type make_mean_R_squared_collective_isotropic_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -148,7 +142,7 @@ make_mean_R_squared_collective_isotropic_f(
   std::vector<Index> shape;
   shape.push_back(component_names.size());
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "mean_R_squared_collective_isotropic",
       R"(Samples \frac{1}{N} \left(\sum_\zeta \Delta R^\zeta_{i} \right) \dot \left(\sum_\zeta \Delta R^\zeta_{j} \right))",
       component_names,  // component names
@@ -157,10 +151,11 @@ make_mean_R_squared_collective_isotropic_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
-        auto const &R_curr = calculation->atom_positions_cart;
-        auto const &R_prev = calculation->prev_atom_positions_cart.at(
-            calculation->sampling_fixture_label);
+        auto const &kmc_data = calculation->kmc_data;
+        auto const &name_index_list = kmc_data.atom_name_index_list;
+        auto const &R_curr = kmc_data.atom_positions_cart;
+        auto const &R_prev = kmc_data.prev_atom_positions_cart.at(
+            kmc_data.sampling_fixture_label);
         Eigen::MatrixXd delta_R = R_curr - R_prev;
 
         Eigen::VectorXd result = mean_R_squared_collective_isotropic(
@@ -173,8 +168,7 @@ make_mean_R_squared_collective_isotropic_f(
 /// function
 /// ("mean_R_squared_collective_anisotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration>
-make_mean_R_squared_collective_anisotropic_f(
+state_sampling_function_type make_mean_R_squared_collective_anisotropic_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -186,7 +180,7 @@ make_mean_R_squared_collective_anisotropic_f(
   std::vector<Index> shape;
   shape.push_back(component_names.size());
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "mean_R_squared_collective_anisotropic",
       R"(Samples \frac{1}{N} \left(\sum_\zeta \Delta R^\zeta_{i,\alpha} \right) \left(\sum_\zeta \Delta R^\zeta_{j,\beta} \right))",
       component_names,  // component names
@@ -195,10 +189,11 @@ make_mean_R_squared_collective_anisotropic_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
-        auto const &R_curr = calculation->atom_positions_cart;
-        auto const &R_prev = calculation->prev_atom_positions_cart.at(
-            calculation->sampling_fixture_label);
+        auto const &kmc_data = calculation->kmc_data;
+        auto const &name_index_list = kmc_data.atom_name_index_list;
+        auto const &R_curr = kmc_data.atom_positions_cart;
+        auto const &R_prev = kmc_data.prev_atom_positions_cart.at(
+            kmc_data.sampling_fixture_label);
         Eigen::MatrixXd delta_R = R_curr - R_prev;
 
         return mean_R_squared_collective_anisotropic(name_list, name_index_list,
@@ -209,8 +204,7 @@ make_mean_R_squared_collective_anisotropic_f(
 /// \brief Make tracer isotropic squared displacement sampling function
 ///     ("mean_R_squared_individual_isotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration>
-make_mean_R_squared_individual_isotropic_f(
+state_sampling_function_type make_mean_R_squared_individual_isotropic_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -222,7 +216,7 @@ make_mean_R_squared_individual_isotropic_f(
   std::vector<Index> shape;
   shape.push_back(component_names.size());
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "mean_R_squared_individual_isotropic",
       R"(Samples \frac{1}{N_i} \sum_\zeta \left(\Delta R^\zeta_{i} \dot \Delta R^\zeta_{i}\right))",
       component_names,  // component names
@@ -231,10 +225,11 @@ make_mean_R_squared_individual_isotropic_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
-        auto const &R_curr = calculation->atom_positions_cart;
-        auto const &R_prev = calculation->prev_atom_positions_cart.at(
-            calculation->sampling_fixture_label);
+        auto const &kmc_data = calculation->kmc_data;
+        auto const &name_index_list = kmc_data.atom_name_index_list;
+        auto const &R_curr = kmc_data.atom_positions_cart;
+        auto const &R_prev = kmc_data.prev_atom_positions_cart.at(
+            kmc_data.sampling_fixture_label);
         Eigen::MatrixXd delta_R = R_curr - R_prev;
 
         return mean_R_squared_individual_isotropic(name_list, name_index_list,
@@ -245,8 +240,7 @@ make_mean_R_squared_individual_isotropic_f(
 /// \brief Make tracer anisotropic squared displacement sampling function
 ///     ("mean_R_squared_individual_anisotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration>
-make_mean_R_squared_individual_anisotropic_f(
+state_sampling_function_type make_mean_R_squared_individual_anisotropic_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -258,7 +252,7 @@ make_mean_R_squared_individual_anisotropic_f(
   std::vector<Index> shape;
   shape.push_back(component_names.size());
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "mean_R_squared_individual_anisotropic",  // individual
       R"(Samples \frac{1}{N_i} \sum_\zeta \left(\Delta R^\zeta_{i,\alpha} \Delta R^\zeta_{i,\beta}\right))",
       component_names,  // component names
@@ -267,10 +261,11 @@ make_mean_R_squared_individual_anisotropic_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
-        auto const &R_curr = calculation->atom_positions_cart;
-        auto const &R_prev = calculation->prev_atom_positions_cart.at(
-            calculation->sampling_fixture_label);
+        auto const &kmc_data = calculation->kmc_data;
+        auto const &name_index_list = kmc_data.atom_name_index_list;
+        auto const &R_curr = kmc_data.atom_positions_cart;
+        auto const &R_prev = kmc_data.prev_atom_positions_cart.at(
+            kmc_data.sampling_fixture_label);
         Eigen::MatrixXd delta_R = R_curr - R_prev;
 
         return mean_R_squared_individual_anisotropic(name_list, name_index_list,
@@ -281,7 +276,7 @@ make_mean_R_squared_individual_anisotropic_f(
 /// \brief Make isotropic Onsager kinetic coefficient sampling function
 ///     ("L_isotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_L_isotropic_f(
+state_sampling_function_type make_L_isotropic_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -293,7 +288,7 @@ monte::StateSamplingFunction<Configuration> make_L_isotropic_f(
   std::vector<Index> shape;
   shape.push_back(component_names.size());
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "L_isotropic",
       R"(Samples \frac{1}{N} \left(\sum_\zeta \Delta R^\zeta_{i} \right) \dot \left(\sum_\zeta \Delta R^\zeta_{j} \right) / (2 d \Delta t))",
       component_names,  // component names
@@ -302,15 +297,16 @@ monte::StateSamplingFunction<Configuration> make_L_isotropic_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
-        auto const &R_curr = calculation->atom_positions_cart;
-        auto const &R_prev = calculation->prev_atom_positions_cart.at(
-            calculation->sampling_fixture_label);
+        auto const &kmc_data = calculation->kmc_data;
+        auto const &name_index_list = kmc_data.atom_name_index_list;
+        auto const &R_curr = kmc_data.atom_positions_cart;
+        auto const &R_prev = kmc_data.prev_atom_positions_cart.at(
+            kmc_data.sampling_fixture_label);
         Eigen::MatrixXd delta_R = R_curr - R_prev;
 
-        auto const &time_curr = calculation->time;
+        auto const &time_curr = kmc_data.time;
         auto const &time_prev =
-            calculation->prev_time.at(calculation->sampling_fixture_label);
+            kmc_data.prev_time.at(kmc_data.sampling_fixture_label);
         double delta_time = time_curr - time_prev;
 
         double dim = 3.0;
@@ -326,7 +322,7 @@ monte::StateSamplingFunction<Configuration> make_L_isotropic_f(
 /// \brief Make anisotropic Onsager kinetic coefficient sampling function
 ///     ("L_anisotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_L_anisotropic_f(
+state_sampling_function_type make_L_anisotropic_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -338,7 +334,7 @@ monte::StateSamplingFunction<Configuration> make_L_anisotropic_f(
   std::vector<Index> shape;
   shape.push_back(component_names.size());
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "L_anisotropic",
       R"(Samples \frac{1}{N} \left(\sum_\zeta \Delta R^\zeta_{i} \right) \dot \left(\sum_\zeta \Delta R^\zeta_{j} \right) / (2 \Delta t))",
       component_names,  // component names
@@ -347,15 +343,16 @@ monte::StateSamplingFunction<Configuration> make_L_anisotropic_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
-        auto const &R_curr = calculation->atom_positions_cart;
-        auto const &R_prev = calculation->prev_atom_positions_cart.at(
-            calculation->sampling_fixture_label);
+        auto const &kmc_data = calculation->kmc_data;
+        auto const &name_index_list = kmc_data.atom_name_index_list;
+        auto const &R_curr = kmc_data.atom_positions_cart;
+        auto const &R_prev = kmc_data.prev_atom_positions_cart.at(
+            kmc_data.sampling_fixture_label);
         Eigen::MatrixXd delta_R = R_curr - R_prev;
 
-        auto const &time_curr = calculation->time;
+        auto const &time_curr = kmc_data.time;
         auto const &time_prev =
-            calculation->prev_time.at(calculation->sampling_fixture_label);
+            kmc_data.prev_time.at(kmc_data.sampling_fixture_label);
         double delta_time = time_curr - time_prev;
 
         double normalization = (2.0 * delta_time);
@@ -370,7 +367,7 @@ monte::StateSamplingFunction<Configuration> make_L_anisotropic_f(
 /// \brief Make isotropic tracer diffusion coefficient sampling function
 ///     ("D_tracer_isotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_D_tracer_isotropic_f(
+state_sampling_function_type make_D_tracer_isotropic_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -382,7 +379,7 @@ monte::StateSamplingFunction<Configuration> make_D_tracer_isotropic_f(
   std::vector<Index> shape;
   shape.push_back(component_names.size());
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "D_tracer_isotropic",
       R"(Samples \frac{1}{N_i} \sum_\zeta \left(\Delta R^\zeta_{i} \dot \Delta R^\zeta_{i}\right) / (2 d \Delta t))",
       component_names,  // component names
@@ -391,15 +388,16 @@ monte::StateSamplingFunction<Configuration> make_D_tracer_isotropic_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
-        auto const &R_curr = calculation->atom_positions_cart;
-        auto const &R_prev = calculation->prev_atom_positions_cart.at(
-            calculation->sampling_fixture_label);
+        auto const &kmc_data = calculation->kmc_data;
+        auto const &name_index_list = kmc_data.atom_name_index_list;
+        auto const &R_curr = kmc_data.atom_positions_cart;
+        auto const &R_prev = kmc_data.prev_atom_positions_cart.at(
+            kmc_data.sampling_fixture_label);
         Eigen::MatrixXd delta_R = R_curr - R_prev;
 
-        auto const &time_curr = calculation->time;
+        auto const &time_curr = kmc_data.time;
         auto const &time_prev =
-            calculation->prev_time.at(calculation->sampling_fixture_label);
+            kmc_data.prev_time.at(kmc_data.sampling_fixture_label);
         double delta_time = time_curr - time_prev;
 
         double dim = 3.0;
@@ -415,7 +413,7 @@ monte::StateSamplingFunction<Configuration> make_D_tracer_isotropic_f(
 /// \brief Make anisotropic tracer diffusion coefficient sampling function
 ///     ("D_tracer_anisotropic")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_D_tracer_anisotropic_f(
+state_sampling_function_type make_D_tracer_anisotropic_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -427,7 +425,7 @@ monte::StateSamplingFunction<Configuration> make_D_tracer_anisotropic_f(
   std::vector<Index> shape;
   shape.push_back(component_names.size());
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "D_tracer_anisotropic",
       R"(Samples \frac{1}{N_i} \sum_\zeta \left(\Delta R^\zeta_{i} \dot \Delta R^\zeta_{i}\right) / (2 \Delta t))",
       component_names,  // component names
@@ -436,15 +434,16 @@ monte::StateSamplingFunction<Configuration> make_D_tracer_anisotropic_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
-        auto const &R_curr = calculation->atom_positions_cart;
-        auto const &R_prev = calculation->prev_atom_positions_cart.at(
-            calculation->sampling_fixture_label);
+        auto const &kmc_data = calculation->kmc_data;
+        auto const &name_index_list = kmc_data.atom_name_index_list;
+        auto const &R_curr = kmc_data.atom_positions_cart;
+        auto const &R_prev = kmc_data.prev_atom_positions_cart.at(
+            kmc_data.sampling_fixture_label);
         Eigen::MatrixXd delta_R = R_curr - R_prev;
 
-        auto const &time_curr = calculation->time;
+        auto const &time_curr = kmc_data.time;
         auto const &time_prev =
-            calculation->prev_time.at(calculation->sampling_fixture_label);
+            kmc_data.prev_time.at(kmc_data.sampling_fixture_label);
         double delta_time = time_curr - time_prev;
 
         double normalization = (2.0 * delta_time);
@@ -458,7 +457,7 @@ monte::StateSamplingFunction<Configuration> make_D_tracer_anisotropic_f(
 
 /// \brief Make delta_n_jumps(i) / n_atoms(i) ("jumps_per_atom_by_type")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_jumps_per_atom_by_type_f(
+state_sampling_function_type make_jumps_per_atom_by_type_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -473,7 +472,7 @@ monte::StateSamplingFunction<Configuration> make_jumps_per_atom_by_type_f(
       std::make_shared<Eigen::VectorXd>(
           Eigen::VectorXd::Zero(component_names.size()));
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "jumps_per_atom_by_type",  // individual
       R"(Mean number of jumps per atom for each atom type over the last sampling period)",
       component_names,  // component names
@@ -482,10 +481,11 @@ monte::StateSamplingFunction<Configuration> make_jumps_per_atom_by_type_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
+        auto const &name_index_list =
+            calculation->kmc_data.atom_name_index_list;
         auto const &n_jumps = calculation->occ_location->current_atom_n_jumps();
 
-        auto const &state_sampler = *calculation->state_sampler;
+        auto const &state_sampler = *calculation->kmc_data.state_sampler;
         double steps_per_pass = state_sampler.steps_per_pass;
         double step = state_sampler.step;
         double pass = state_sampler.pass;
@@ -521,7 +521,7 @@ monte::StateSamplingFunction<Configuration> make_jumps_per_atom_by_type_f(
 
 /// \brief Make delta_n_jumps(i) / delta_n_events ("jumps_per_event_by_type")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration> make_jumps_per_event_by_type_f(
+state_sampling_function_type make_jumps_per_event_by_type_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -536,7 +536,7 @@ monte::StateSamplingFunction<Configuration> make_jumps_per_event_by_type_f(
       std::make_shared<Eigen::VectorXd>(
           Eigen::VectorXd::Zero(component_names.size()));
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "jumps_per_event_by_type",  // individual
       R"(Mean number of jumps per event for each atom type over the last sampling period)",
       component_names,  // component names
@@ -545,10 +545,11 @@ monte::StateSamplingFunction<Configuration> make_jumps_per_event_by_type_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
+        auto const &name_index_list =
+            calculation->kmc_data.atom_name_index_list;
         auto const &n_jumps = calculation->occ_location->current_atom_n_jumps();
 
-        auto const &state_sampler = *calculation->state_sampler;
+        auto const &state_sampler = *calculation->kmc_data.state_sampler;
         double steps_per_pass = state_sampler.steps_per_pass;
         double step = state_sampler.step;
         double pass = state_sampler.pass;
@@ -583,8 +584,7 @@ monte::StateSamplingFunction<Configuration> make_jumps_per_event_by_type_f(
 /// \brief Make delta_n_jumps(i) / n_atoms(i) / delta_n_events
 /// ("jumps_per_atom_per_event_by_type")
 template <typename CalculationType>
-monte::StateSamplingFunction<Configuration>
-make_jumps_per_atom_per_event_by_type_f(
+state_sampling_function_type make_jumps_per_atom_per_event_by_type_f(
     std::shared_ptr<CalculationType> const &calculation) {
   // Construct component_names && shape
   auto const &system = *calculation->system;
@@ -599,7 +599,7 @@ make_jumps_per_atom_per_event_by_type_f(
       std::make_shared<Eigen::VectorXd>(
           Eigen::VectorXd::Zero(component_names.size()));
 
-  return monte::StateSamplingFunction<Configuration>(
+  return state_sampling_function_type(
       "jumps_per_atom_per_event_by_type",  // individual
       R"(Mean number of jumps per event for each atom type over the last sampling period)",
       component_names,  // component names
@@ -608,10 +608,11 @@ make_jumps_per_atom_per_event_by_type_f(
         auto event_system = get_event_system(system);
 
         auto const &name_list = event_system->atom_name_list;
-        auto const &name_index_list = calculation->atom_name_index_list;
+        auto const &name_index_list =
+            calculation->kmc_data.atom_name_index_list;
         auto const &n_jumps = calculation->occ_location->current_atom_n_jumps();
 
-        auto const &state_sampler = *calculation->state_sampler;
+        auto const &state_sampler = *calculation->kmc_data.state_sampler;
         double steps_per_pass = state_sampler.steps_per_pass;
         double step = state_sampler.step;
         double pass = state_sampler.pass;

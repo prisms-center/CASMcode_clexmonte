@@ -133,6 +133,10 @@ void parse_conditions(InputParser<monte::ValueMap> &parser,
   parse_corr_matching_pot(parser, is_increment);
   parse_random_alloy_corr_matching_pot(parser, system, is_increment);
 
+  if (!parser.valid()) {
+    return;
+  }
+
   try {
     // This is an awkward way to do things... but it allows input of
     // mol_composition or param_composition and checks consistency if both exist
@@ -259,7 +263,7 @@ void parse_mol_composition(InputParser<monte::ValueMap> &parser,
 ///
 /// Expected:
 ///
-///   "param_composition": dict (optional)
+///   "param_composition": Union[list,dict,None]
 ///     Parametric composition, in terms of the chosen composition axes. The
 ///     keys are the axes names ("a", "b", etc.), and values are the
 ///     corresponding parametric composition value. If an array, must match
@@ -326,11 +330,12 @@ void parse_param_composition(InputParser<monte::ValueMap> &parser,
 ///
 /// Expected:
 ///
-///   "param_chem_pot": dict (optional)
+///   "param_chem_pot": Union[list,dict,None]
 ///     Potential conjugate to parametric composition, in terms of the
 ///     chosen composition axes. The keys are the axes names ("a", "b",
-///     etc.), and values are the corresponding potential value. All
-///     composition axes must be included.
+///     etc.), and values are the corresponding potential value. If an
+///     array, must match composition axes size. All composition axes
+///     must be included.
 ///
 /// Requires:
 /// - get_composition_converter(system_type const &system);
@@ -345,16 +350,31 @@ void parse_param_chem_pot(InputParser<monte::ValueMap> &parser,
     return;
   }
 
-  std::map<std::string, double> input;
-  parser.optional(input, "param_chem_pot");
-  try {
-    parser.value->vector_values["param_chem_pot"] =
-        make_param_chem_pot(get_composition_converter(*system), input);
-  } catch (std::exception &e) {
+  auto const &composition_converter = get_composition_converter(*system);
+  if (parser.self["param_chem_pot"].is_array()) {
+    Eigen::VectorXd &value = parser.value->vector_values["param_chem_pot"];
+    parser.optional(value, "param_chem_pot");
+    if (value.size() != composition_converter.independent_compositions()) {
+      std::stringstream msg;
+      msg << "Error: 'param_chem_pot' size mismatch.";
+      parser.insert_error("param_chem_pot", msg.str());
+    }
+  } else if (parser.self["param_chem_pot"].is_object()) {
+    std::map<std::string, double> input;
+    parser.optional(input, "param_chem_pot");
+    try {
+      parser.value->vector_values["param_chem_pot"] =
+          make_param_chem_pot(composition_converter, input);
+    } catch (std::exception &e) {
+      std::stringstream msg;
+      msg << "Error: could not construct composition from option "
+             "'param_chem_pot'.";
+      parser.insert_error("param_chem_pot", e.what());
+    }
+  } else {
     std::stringstream msg;
-    msg << "Error: could not construct composition from option "
-           "'param_chem_pot'.";
-    parser.insert_error("param_chem_pot", e.what());
+    msg << "Error: 'param_chem_pot' must be an array or object";
+    parser.insert_error("param_chem_pot", msg.str());
   }
 }
 

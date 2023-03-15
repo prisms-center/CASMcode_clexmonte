@@ -150,17 +150,16 @@ TEST(canonical_fullrun_test, Test1) {
   auto calculation = std::make_shared<calculation_type>(system);
 
   // ### Construct sampling functions & analysis functions
-  monte::StateSamplingFunctionMap<clexmonte::Configuration> sampling_functions =
+  std::map<std::string, state_sampling_function_type> sampling_functions =
       calculation_type::standard_sampling_functions(calculation);
-  monte::ResultsAnalysisFunctionMap<clexmonte::Configuration>
-      analysis_functions =
-          calculation_type::standard_analysis_functions(calculation);
+  std::map<std::string, results_analysis_function_type> analysis_functions =
+      calculation_type::standard_analysis_functions(calculation);
   // - Add custom sampling functions if desired...
-  // monte::StateSamplingFunction<Configuration> f {
+  // state_sampling_function_type f {
   //     "potential_energy", // sampler name
   //     "Potential energy of the state (normalized per primitive cell)", //
   //     description 1,  // number of components in "potential_energy"
-  //     [system](monte::State<Configuration> const &state) {
+  //     [system](state_type const &state) {
   //       return state.properties.at("potential_energy");
   //     });
   // sampling_functions.emplace(f.name, f);
@@ -212,8 +211,7 @@ TEST(canonical_fullrun_test, Test1) {
   //   - For example, instead of setting composition as a independent
   //     condition, "mol_composition" could be a calculated from
   //     the generated configuration.
-  std::vector<monte::StateModifyingFunction<clexmonte::Configuration>>
-      modifiers;
+  std::vector<state_modifying_function_type> modifiers;
 
   // - Construct the state generator
   monte::IncrementalConditionsStateGenerator<clexmonte::Configuration>
@@ -285,14 +283,16 @@ TEST(canonical_fullrun_test, Test1) {
   fs::path output_dir = test_dir / output_dir_relpath;
   bool write_trajectory = true;
   bool write_observations = true;
-  auto results_io = std::make_unique<
-      monte::jsonResultsIO<clexmonte::Configuration>>(
-      output_dir,          // fs::path,
-      sampling_functions,  // monte::StateSamplingFunctionMap<clexmonte::Configuration>
-      analysis_functions,  // monte::ResultsAnalysisFunctionMap<clexmonte::Configuration>
-      write_trajectory,   // bool
-      write_observations  // bool
-  );
+  auto results_io =
+      std::make_unique<monte::jsonResultsIO<clexmonte::Configuration>>(
+          output_dir,          // fs::path,
+          sampling_functions,  // std::map<std::string,
+                               // state_sampling_function_type>
+          analysis_functions,  // std::map<std::string,
+                               // results_analysis_function_type>
+          write_trajectory,    // bool
+          write_observations   // bool
+      );
 
   // ~~~~ Run ~~~~
 
@@ -301,14 +301,16 @@ TEST(canonical_fullrun_test, Test1) {
   method_log.logfile_path = test_dir / output_dir_relpath / "status.json";
   method_log.log_frequency = 60;  // seconds
 
-  std::vector<monte::SamplingFixtureParams<clexmonte::Configuration>>
-      sampling_fixture_params;
+  monte::RunManagerParams run_manager_params;
+
+  std::vector<sampling_figure_params_type> sampling_fixture_params;
   std::string label = "thermo";
   sampling_fixture_params.emplace_back(
       "thermo", sampling_functions, analysis_functions, sampling_params,
       completion_check_params, std::move(results_io), method_log);
 
-  calculation->run_series(state_generator, sampling_fixture_params);
+  clexmote::run_series(*calculation, state_generator, run_manager_params,
+                       sampling_fixture_params);
 
   // check output files
   EXPECT_TRUE(fs::exists(output_dir));

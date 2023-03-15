@@ -189,8 +189,9 @@ TEST(canonical_run_test, Test2) {
 
   clexmonte::RunParams &run_params = *run_params_parser.value;
 
-  calculation->run_series(*run_params.state_generator,
-                          run_params.sampling_fixture_params);
+  clexmonte::run_series(*calculation, *run_params.state_generator,
+                        run_params.run_manager_params,
+                        run_params.sampling_fixture_params);
 
   EXPECT_TRUE(fs::exists(test_dir / "output"));
 

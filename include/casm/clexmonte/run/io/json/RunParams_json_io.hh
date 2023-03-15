@@ -18,19 +18,23 @@ MethodParserMap<config_generator_type> standard_config_generator_methods(
 
 MethodParserMap<state_generator_type> standard_state_generator_methods(
     std::shared_ptr<system_type> const &system,
-    monte::StateModifyingFunctionMap<config_type> const &modifying_functions,
+    std::map<std::string, state_modifying_function_type> const
+        &modifying_functions,
     MethodParserMap<config_generator_type> const &config_generator_methods);
 
 MethodParserMap<results_io_type> standard_results_io_methods(
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
-    monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions);
+    std::map<std::string, state_sampling_function_type> const
+        &sampling_functions,
+    std::map<std::string, results_analysis_function_type> const
+        &analysis_functions);
 
-void parse(
-    InputParser<RunParams> &parser,
-    monte::StateSamplingFunctionMap<config_type> const &sampling_functions,
-    monte::ResultsAnalysisFunctionMap<config_type> const &analysis_functions,
-    MethodParserMap<state_generator_type> const &state_generator_methods,
-    MethodParserMap<results_io_type> const &results_io_methods);
+void parse(InputParser<RunParams> &parser,
+           std::map<std::string, state_sampling_function_type> const
+               &sampling_functions,
+           std::map<std::string, results_analysis_function_type> const
+               &analysis_functions,
+           MethodParserMap<state_generator_type> const &state_generator_methods,
+           MethodParserMap<results_io_type> const &results_io_methods);
 
 }  // namespace clexmonte
 }  // namespace CASM

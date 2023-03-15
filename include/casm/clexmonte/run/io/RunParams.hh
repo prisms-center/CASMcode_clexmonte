@@ -5,6 +5,7 @@
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/MethodLog.hh"
+#include "casm/monte/RunManager.hh"
 #include "casm/monte/SamplingFixture.hh"
 #include "casm/monte/checks/CompletionCheck.hh"
 #include "casm/monte/results/ResultsAnalysisFunction.hh"
@@ -22,15 +23,17 @@ namespace clexmonte {
 struct RunParams {
   /// \brief Constructor
   RunParams(std::unique_ptr<state_generator_type> _state_generator,
-            std::vector<monte::SamplingFixtureParams<config_type>>
-                _sampling_fixture_params);
+            monte::RunManagerParams _run_manager_params,
+            std::vector<sampling_figure_params_type> _sampling_fixture_params);
 
   /// State generator implementation
   std::unique_ptr<state_generator_type> state_generator;
 
+  /// Run manager parameters
+  monte::RunManagerParams run_manager_params;
+
   /// Parameters for 0 or more sampling fixtures
-  std::vector<monte::SamplingFixtureParams<config_type>>
-      sampling_fixture_params;
+  std::vector<sampling_figure_params_type> sampling_fixture_params;
 };
 
 }  // namespace clexmonte

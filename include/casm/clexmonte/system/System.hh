@@ -248,13 +248,13 @@ Configuration to_standard_values(
     System const &system, Configuration const &configuration_in_prim_basis);
 
 /// \brief Helper to make the default configuration in prim basis
-monte::State<Configuration> make_default_state(
+state_type make_default_state(
     System const &system,
     Eigen::Matrix3l const &transformation_matrix_to_super);
 
 /// \brief Helper to make the Conditions object
-std::shared_ptr<Conditions> make_conditions(
-    System const &system, monte::State<Configuration> const &state);
+std::shared_ptr<Conditions> make_conditions(System const &system,
+                                            state_type const &state);
 
 /// \brief Convert configuration from standard basis to prim basis
 Configuration from_standard_values(
@@ -331,54 +331,49 @@ CorrCalculatorFunction get_random_alloy_corr_f(System const &system);
 
 /// \brief Helper to get the correct clexulator::Correlations for a
 ///     particular state's supercell, constructing as necessary
-std::shared_ptr<clexulator::Correlations> get_corr(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key);
+std::shared_ptr<clexulator::Correlations> get_corr(System &system,
+                                                   state_type const &state,
+                                                   std::string const &key);
 
 /// \brief Helper to get the correct clexulator::LocalCorrelations for a
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::LocalCorrelations> get_local_corr(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key);
+    System &system, state_type const &state, std::string const &key);
 
 /// \brief Helper to get the correct clexulator::ClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
-std::shared_ptr<clexulator::ClusterExpansion> get_clex(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key);
+std::shared_ptr<clexulator::ClusterExpansion> get_clex(System &system,
+                                                       state_type const &state,
+                                                       std::string const &key);
 
 /// \brief Helper to get the correct clexulator::MultiClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::MultiClusterExpansion> get_multiclex(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key);
+    System &system, state_type const &state, std::string const &key);
 
 /// \brief Helper to get the correct clexulator::LocalClusterExpansion for a
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key);
+    System &system, state_type const &state, std::string const &key);
 
 /// \brief Helper to get the correct clexulator::MultiLocalClusterExpansion for
 /// a
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::MultiLocalClusterExpansion> get_local_multiclex(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key);
+    System &system, state_type const &state, std::string const &key);
 
 /// \brief Helper to get the correct order parameter calculators for a
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::OrderParameter> get_order_parameter(
-    System &system, monte::State<Configuration> const &state,
-    std::string const &key);
+    System &system, state_type const &state, std::string const &key);
 
 /// \brief Helper to get supercell index conversions
-monte::Conversions const &get_index_conversions(
-    System &system, monte::State<Configuration> const &state);
+monte::Conversions const &get_index_conversions(System &system,
+                                                state_type const &state);
 
 /// \brief Helper to get unique pairs of (asymmetric unit index, species index)
-monte::OccCandidateList const &get_occ_candidate_list(
-    System &system, monte::State<Configuration> const &state);
+monte::OccCandidateList const &get_occ_candidate_list(System &system,
+                                                      state_type const &state);
 
 }  // namespace clexmonte
 }  // namespace CASM
