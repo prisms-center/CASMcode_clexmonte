@@ -51,7 +51,7 @@ void parse(InputParser<results_io_type> &parser,
 ///   write_trajectory: bool (default=false)
 ///     If true, write an `"trajectory.json"` file for each individual run.
 ///
-void parse(InputParser<monte::jsonResultsIO<config_type>> &parser,
+void parse(InputParser<monte::jsonResultsIO<results_type>> &parser,
            std::map<std::string, state_sampling_function_type> const
                &sampling_functions,
            std::map<std::string, results_analysis_function_type> const
@@ -66,7 +66,7 @@ void parse(InputParser<monte::jsonResultsIO<config_type>> &parser,
   parser.optional(write_trajectory, "write_trajectory");
 
   if (parser.valid()) {
-    parser.value = std::make_unique<monte::jsonResultsIO<config_type>>(
+    parser.value = std::make_unique<monte::jsonResultsIO<results_type>>(
         output_dir, sampling_functions, analysis_functions, write_trajectory,
         write_observations);
   }

@@ -67,6 +67,8 @@ monte::ValueMap make_conditions_increment(
 /// \brief Implements canonical Monte Carlo calculations
 template <typename EngineType>
 struct Canonical {
+  typedef EngineType engine_type;
+
   explicit Canonical(std::shared_ptr<system_type> _system,
                      std::shared_ptr<EngineType> _random_number_engine =
                          std::shared_ptr<EngineType>());
@@ -94,7 +96,7 @@ struct Canonical {
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
-           run_manager_type &run_manager);
+           run_manager_type<EngineType> &run_manager);
 
   /// \brief Construct functions that may be used to sample various quantities
   /// of

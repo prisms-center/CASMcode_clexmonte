@@ -13,7 +13,7 @@
 namespace CASM {
 namespace clexmonte {
 
-/// \brief Construct sampling_figure_params_type from JSON
+/// \brief Construct sampling_fixture_params_type from JSON
 ///
 ///
 /// \code
@@ -41,7 +41,7 @@ namespace clexmonte {
 ///             Unless otherwise noted, assume intensive (per unit cell)
 ///             properties.
 ///
-///     "results_io": <monte::ResultsIO>
+///     "results_io": <monte::ResultsIO> = null
 ///         Options controlling sampling fixture results output.
 ///     "log": (optional)
 ///         "file": str (default="status.json")
@@ -50,7 +50,7 @@ namespace clexmonte {
 ///             How often the log file should be written, in seconds.
 /// }
 /// \endcode
-void parse(InputParser<sampling_figure_params_type> &parser, std::string label,
+void parse(InputParser<sampling_fixture_params_type> &parser, std::string label,
            std::map<std::string, state_sampling_function_type> const
                &sampling_functions,
            std::map<std::string, results_analysis_function_type> const
@@ -77,8 +77,8 @@ void parse(InputParser<sampling_figure_params_type> &parser, std::string label,
 
   // Read completion check params
   auto completion_check_params_subparser =
-      parser.subparse<monte::CompletionCheckParams>("completion_check",
-                                                    sampling_functions);
+      parser.subparse<monte::CompletionCheckParams<statistics_type>>(
+          "completion_check", sampling_functions);
 
   // Read analysis functions
   std::vector<std::string> function_names;
@@ -100,7 +100,7 @@ void parse(InputParser<sampling_figure_params_type> &parser, std::string label,
 
   // Construct results I/O instance
   auto results_io_subparser =
-      parser.subparse<results_io_type>("results_io", results_io_methods);
+      parser.subparse_if<results_io_type>("results_io", results_io_methods);
 
   // Method log
   monte::MethodLog method_log;
@@ -116,7 +116,7 @@ void parse(InputParser<sampling_figure_params_type> &parser, std::string label,
   }
 
   if (parser.valid()) {
-    parser.value = std::make_unique<sampling_figure_params_type>(
+    parser.value = std::make_unique<sampling_fixture_params_type>(
         label, selected_sampling_functions, selected_analysis_functions,
         sampling_params, *completion_check_params_subparser->value,
         std::move(results_io_subparser->value), method_log);

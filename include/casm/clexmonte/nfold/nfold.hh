@@ -15,6 +15,8 @@ using semi_grand_canonical::make_conditions_increment;
 /// \brief Implements semi-grand canonical Monte Carlo calculations
 template <typename EngineType>
 struct Nfold : public semi_grand_canonical::SemiGrandCanonical<EngineType> {
+  typedef EngineType engine_type;
+
   explicit Nfold(std::shared_ptr<system_type> _system,
                  std::shared_ptr<EngineType> _random_number_engine =
                      std::shared_ptr<EngineType>());
@@ -23,11 +25,11 @@ struct Nfold : public semi_grand_canonical::SemiGrandCanonical<EngineType> {
   std::shared_ptr<NfoldEventData> event_data;
 
   /// Data for sampling functions
-  monte::NfoldData<config_type> nfold_data;
+  monte::NfoldData<config_type, engine_type> nfold_data;
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
-           run_manager_type &run_manager);
+           run_manager_type<EngineType> &run_manager);
 
   typedef semi_grand_canonical::SemiGrandCanonical<EngineType> Base;
   using Base::standard_analysis_functions;

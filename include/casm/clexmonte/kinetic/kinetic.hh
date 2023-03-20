@@ -15,6 +15,8 @@ namespace kinetic {
 /// \brief Implements kinetic Monte Carlo calculations
 template <typename EngineType>
 struct Kinetic {
+  typedef EngineType engine_type;
+
   explicit Kinetic(std::shared_ptr<system_type> _system,
                    std::shared_ptr<EngineType> _random_number_engine =
                        std::shared_ptr<EngineType>());
@@ -54,11 +56,11 @@ struct Kinetic {
   // --- Data used by kinetic sampling functions ---
 
   /// Data for sampling functions
-  monte::KMCData<config_type> kmc_data;
+  monte::KMCData<config_type, engine_type> kmc_data;
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
-           run_manager_type &run_manager);
+           run_manager_type<EngineType> &run_manager);
 
   /// \brief Construct functions that may be used to sample various quantities
   ///     of the Monte Carlo calculation as it runs

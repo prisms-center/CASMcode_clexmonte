@@ -1,5 +1,6 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/canonical/canonical.hh"
+#include "casm/clexmonte/run/functions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
@@ -10,6 +11,7 @@
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/crystallography/io/BasicStructureIO.hh"
 #include "casm/monte/MethodLog.hh"
+#include "casm/monte/RunManager.hh"
 #include "casm/monte/SamplingFixture.hh"
 #include "casm/monte/checks/CompletionCheck.hh"
 #include "casm/monte/results/ResultsAnalysisFunction.hh"
@@ -150,10 +152,12 @@ TEST(canonical_fullrun_test, Test1) {
   auto calculation = std::make_shared<calculation_type>(system);
 
   // ### Construct sampling functions & analysis functions
-  std::map<std::string, state_sampling_function_type> sampling_functions =
-      calculation_type::standard_sampling_functions(calculation);
-  std::map<std::string, results_analysis_function_type> analysis_functions =
-      calculation_type::standard_analysis_functions(calculation);
+  std::map<std::string, clexmonte::state_sampling_function_type>
+      sampling_functions =
+          calculation_type::standard_sampling_functions(calculation);
+  std::map<std::string, clexmonte::results_analysis_function_type>
+      analysis_functions =
+          calculation_type::standard_analysis_functions(calculation);
   // - Add custom sampling functions if desired...
   // state_sampling_function_type f {
   //     "potential_energy", // sampler name
@@ -211,7 +215,7 @@ TEST(canonical_fullrun_test, Test1) {
   //   - For example, instead of setting composition as a independent
   //     condition, "mol_composition" could be a calculated from
   //     the generated configuration.
-  std::vector<state_modifying_function_type> modifiers;
+  std::vector<clexmonte::state_modifying_function_type> modifiers;
 
   // - Construct the state generator
   monte::IncrementalConditionsStateGenerator<clexmonte::Configuration>
@@ -255,7 +259,8 @@ TEST(canonical_fullrun_test, Test1) {
   sampling_params.do_sample_trajectory = false;
 
   // ### Construct monte::CompletionCheckParams
-  monte::CompletionCheckParams completion_check_params;
+  monte::CompletionCheckParams<clexmonte::statistics_type>
+      completion_check_params;
 
   // - Set monte::CutoffCheckParams
   completion_check_params.cutoff_params.min_count = std::nullopt;
@@ -284,7 +289,7 @@ TEST(canonical_fullrun_test, Test1) {
   bool write_trajectory = true;
   bool write_observations = true;
   auto results_io =
-      std::make_unique<monte::jsonResultsIO<clexmonte::Configuration>>(
+      std::make_unique<monte::jsonResultsIO<clexmonte::results_type>>(
           output_dir,          // fs::path,
           sampling_functions,  // std::map<std::string,
                                // state_sampling_function_type>
@@ -303,14 +308,14 @@ TEST(canonical_fullrun_test, Test1) {
 
   monte::RunManagerParams run_manager_params;
 
-  std::vector<sampling_figure_params_type> sampling_fixture_params;
+  std::vector<clexmonte::sampling_fixture_params_type> sampling_fixture_params;
   std::string label = "thermo";
   sampling_fixture_params.emplace_back(
       "thermo", sampling_functions, analysis_functions, sampling_params,
       completion_check_params, std::move(results_io), method_log);
 
-  clexmote::run_series(*calculation, state_generator, run_manager_params,
-                       sampling_fixture_params);
+  clexmonte::run_series(*calculation, state_generator, run_manager_params,
+                        sampling_fixture_params);
 
   // check output files
   EXPECT_TRUE(fs::exists(output_dir));

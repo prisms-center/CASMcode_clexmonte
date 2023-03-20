@@ -34,9 +34,12 @@ typedef monte::ResultsAnalysisFunction<config_type, statistics_type>
     results_analysis_function_type;
 typedef monte::StateModifyingFunction<config_type>
     state_modifying_function_type;
-typedef monte::RunManager<config_type, statistics_type> run_manager_type;
 typedef monte::SamplingFixtureParams<config_type, statistics_type>
-    sampling_figure_params_type;
+    sampling_fixture_params_type;
+
+template <typename EngineType>
+using run_manager_type =
+    monte::RunManager<config_type, statistics_type, EngineType>;
 
 struct Conditions;
 

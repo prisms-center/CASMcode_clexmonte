@@ -25,7 +25,7 @@ struct ConditionalNfold : public nfold::Nfold<EngineType> {
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
-           run_manager_type &run_manager);
+           run_manager_type<EngineType> &run_manager);
 
   typedef nfold::Nfold<EngineType> Base;
   using Base::standard_analysis_functions;

@@ -23,7 +23,7 @@ TEST_F(state_FixedConfigGeneratorTest, Test1) {
   monte::ValueMap conditions =
       canonical::make_conditions(300.0, system->composition_converter,
                                  {{"Zr", 2.0}, {"O", 1.0}, {"Va", 1.0}});
-  std::vector<state_type> finished_states;
+  std::vector<run_data_type> completed_runs;
 
   Eigen::Matrix3l T = Eigen::Matrix3l::Identity() * 2;
   Index volume = T.determinant();
@@ -34,7 +34,7 @@ TEST_F(state_FixedConfigGeneratorTest, Test1) {
 
   FixedConfigGenerator<Configuration> config_generator(init_config);
   for (Index j = 0; j < 10; ++j) {
-    Configuration config = config_generator(conditions, finished_states);
+    Configuration config = config_generator(conditions, completed_runs);
     EXPECT_EQ(config.dof_values.occupation, init_config.dof_values.occupation);
   }
 }

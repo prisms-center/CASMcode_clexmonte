@@ -5,7 +5,7 @@
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/run/functions.hh"
 #include "casm/clexmonte/run/io/RunParams.hh"
-#include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
+#include "casm/clexmonte/run/io/json/RunParams_json_io_impl.hh"
 #include "casm/clexmonte/system/io/json/System_json_io.hh"
 
 namespace CASM {
@@ -20,6 +20,8 @@ void parse_and_run_series(fs::path system_json_file,
 template <typename CalculationType>
 void parse_and_run_series(fs::path system_json_file,
                           fs::path run_params_json_file) {
+  typedef typename CalculationType::engine_type engine_type;
+
   /// Parse and construct system
   if (!fs::exists(system_json_file)) {
     std::stringstream msg;
@@ -37,6 +39,12 @@ void parse_and_run_series(fs::path system_json_file,
 
   std::shared_ptr<clexmonte::System> system(system_parser.value.release());
 
+  // default seed random number generator engine
+  // TODO: seed from user input via RunParams
+  std::shared_ptr<engine_type> engine = std::make_shared<engine_type>();
+  std::random_device device;
+  engine->seed(device());
+
   // read run_params file
   jsonParser run_params_json(run_params_json_file);
 
@@ -46,7 +54,7 @@ void parse_and_run_series(fs::path system_json_file,
     calculation_options_json = run_params_json["calculation_options"];
   }
   InputParser<CalculationType> calculation_parser(calculation_options_json,
-                                                  system);
+                                                  system, engine);
   std::shared_ptr<CalculationType> calculation(
       calculation_parser.value.release());
 
@@ -74,19 +82,20 @@ void parse_and_run_series(fs::path system_json_file,
         << run_params_json_file;
     throw std::runtime_error(msg.str());
   }
-  InputParser<clexmonte::RunParams> run_params_parser(
-      run_params_json, sampling_functions, analysis_functions,
+  InputParser<clexmonte::RunParams<engine_type>> run_params_parser(
+      run_params_json, engine, sampling_functions, analysis_functions,
       state_generator_methods, results_io_methods);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
   report_and_throw_if_invalid(run_params_parser, CASM::log(),
                               run_params_error_if_invalid);
 
-  clexmonte::RunParams &run_params = *run_params_parser.value;
+  clexmonte::RunParams<engine_type> &run_params = *run_params_parser.value;
 
-  clexmonte::run_series(*calculation, *run_params.state_generator,
-                        run_params.run_manager_params,
-                        run_params.sampling_fixture_params);
+  clexmonte::run_series(
+      *calculation, *run_params.state_generator, run_params.run_manager_params,
+      run_params.sampling_fixture_params, run_params.before_first_run,
+      run_params.before_each_run);
 }
 
 }  // namespace clexmonte

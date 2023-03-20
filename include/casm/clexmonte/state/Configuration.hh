@@ -1,6 +1,7 @@
 #ifndef CASM_clexmonte_state_Configuration
 #define CASM_clexmonte_state_Configuration
 
+#include "casm/clexmonte/definitions.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/ConfigDoFValues.hh"
 #include "casm/clexulator/LocalClusterExpansion.hh"

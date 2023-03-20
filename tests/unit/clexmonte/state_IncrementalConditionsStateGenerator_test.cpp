@@ -52,18 +52,24 @@ TEST_F(state_IncrementalConditionsStateGeneratorTest, Test1) {
   // modifiers
   std::vector<state_modifying_function_type> modifiers;
 
-  std::vector<state_type> final_states;
+  std::vector<run_data_type> completed_runs;
   incremental_state_generator_type state_generator(
       std::move(config_generator), init_conditions, conditions_increment,
       n_states, dependent_runs, modifiers);
 
-  while (!state_generator.is_complete(final_states)) {
-    state_type state = state_generator.next_state(final_states);
+  while (!state_generator.is_complete(completed_runs)) {
+    state_type state = state_generator.next_state(completed_runs);
     EXPECT_EQ(get_occupation(state), init_config.dof_values.occupation);
     EXPECT_TRUE(
         CASM::almost_equal(state.conditions.scalar_values.at("temperature"),
-                           300.0 + 10.0 * final_states.size()));
-    final_states.push_back(state);
+                           300.0 + 10.0 * completed_runs.size()));
+    run_data_type run_data;
+    run_data.initial_state = state;
+    run_data.final_state = state;
+    run_data.conditions = state.conditions;
+    run_data.transformation_matrix_to_super = T;
+    run_data.n_unitcells = T.determinant();
+    completed_runs.push_back(run_data);
   }
 }
 
@@ -100,19 +106,25 @@ TEST_F(state_IncrementalConditionsStateGeneratorTest, Test2) {
   // modifiers
   std::vector<state_modifying_function_type> modifiers;
 
-  std::vector<state_type> final_states;
+  std::vector<run_data_type> completed_runs;
   incremental_state_generator_type state_generator(
       std::move(config_generator), init_conditions, conditions_increment,
       n_states, dependent_runs, modifiers);
 
-  while (!state_generator.is_complete(final_states)) {
-    state_type state = state_generator.next_state(final_states);
+  while (!state_generator.is_complete(completed_runs)) {
+    state_type state = state_generator.next_state(completed_runs);
     EXPECT_EQ(get_occupation(state), init_config.dof_values.occupation);
     EXPECT_TRUE(almost_equal(
         state.conditions.vector_values.at("mol_composition"),
         init_conditions.vector_values.at("mol_composition") +
             conditions_increment.vector_values.at("mol_composition") *
-                final_states.size()));
-    final_states.push_back(state);
+                completed_runs.size()));
+    run_data_type run_data;
+    run_data.initial_state = state;
+    run_data.final_state = state;
+    run_data.conditions = state.conditions;
+    run_data.transformation_matrix_to_super = T;
+    run_data.n_unitcells = T.determinant();
+    completed_runs.push_back(run_data);
   }
 }

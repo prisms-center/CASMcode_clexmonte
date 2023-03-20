@@ -11,6 +11,7 @@ class InputParser;
 
 namespace clexmonte {
 
+template <typename EngineType>
 struct RunParams;
 
 MethodParserMap<config_generator_type> standard_config_generator_methods(
@@ -28,7 +29,9 @@ MethodParserMap<results_io_type> standard_results_io_methods(
     std::map<std::string, results_analysis_function_type> const
         &analysis_functions);
 
-void parse(InputParser<RunParams> &parser,
+template <typename EngineType>
+void parse(InputParser<RunParams<EngineType>> &parser,
+           std::shared_ptr<EngineType> engine,
            std::map<std::string, state_sampling_function_type> const
                &sampling_functions,
            std::map<std::string, results_analysis_function_type> const

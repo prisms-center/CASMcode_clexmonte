@@ -97,7 +97,8 @@ TEST_F(state_StateSamplerTest, Test1) {
     bool do_sample_trajectory = false;
     bool do_sample_time = false;
 
-    StateSampler state_sampler(SAMPLE_MODE::BY_PASS, functions, sample_method,
+    StateSampler state_sampler(calculator->random_number_generator.engine,
+                               SAMPLE_MODE::BY_PASS, functions, sample_method,
                                sample_begin, sampling_period,
                                samples_per_period, log_sampling_shift,
                                do_sample_trajectory, do_sample_time);

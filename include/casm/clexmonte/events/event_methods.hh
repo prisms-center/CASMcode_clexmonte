@@ -54,19 +54,15 @@ EventImpactInfo make_event_impact_info(
     SystemType const &system, PrimEventData const &prim_event_data,
     std::vector<std::string> const &clex_names,
     std::vector<std::string> const &multiclex_names) {
-  std::cout << "make_event_impact_info: begin" << std::endl;
   OccEventTypeData const &event_type_data =
       get_event_type_data(system, prim_event_data.event_type_name);
-  std::cout << "make_event_impact_info: 1" << std::endl;
   clust::IntegralCluster phenom = make_cluster(prim_event_data.event);
 
   EventImpactInfo impact;
   impact.phenomenal_sites = phenom.elements();
 
   // add local basis set dependence
-  std::cout << "make_event_impact_info: 2" << std::endl;
   if (!event_type_data.local_multiclex_name.empty()) {
-    std::cout << "make_event_impact_info: 3" << std::endl;
     LocalMultiClexData const &local_multiclex_data =
         get_local_multiclex_data(system, event_type_data.local_multiclex_name);
     impact.required_update_neighborhood = get_required_update_neighborhood(
@@ -74,7 +70,6 @@ EventImpactInfo make_event_impact_info(
   }
 
   // include impact neighborhood to include clex
-  std::cout << "make_event_impact_info: 4" << std::endl;
   for (auto const &name : clex_names) {
     ClexData const &clex_data = get_clex_data(system, name);
     expand(phenom, impact.required_update_neighborhood, clex_data.cluster_info,
@@ -82,7 +77,6 @@ EventImpactInfo make_event_impact_info(
   }
 
   // include impact neighborhood to include multiclex
-  std::cout << "make_event_impact_info: 5" << std::endl;
   for (auto const &name : multiclex_names) {
     MultiClexData const &multiclex_data = get_multiclex_data(system, name);
     for (auto const &coeffs : multiclex_data.coefficients) {
@@ -91,7 +85,6 @@ EventImpactInfo make_event_impact_info(
     }
   }
 
-  std::cout << "make_event_impact_info: end" << std::endl;
   return impact;
 }
 

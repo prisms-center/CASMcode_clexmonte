@@ -50,7 +50,7 @@ Kinetic<EngineType>::Kinetic(std::shared_ptr<system_type> _system,
 template <typename EngineType>
 void Kinetic<EngineType>::run(state_type &state,
                               monte::OccLocation &occ_location,
-                              run_manager_type &run_manager) {
+                              run_manager_type<EngineType> &run_manager) {
   this->state = &state;
   this->occ_location = &occ_location;
   this->conditions = make_conditions(*this->system, state);

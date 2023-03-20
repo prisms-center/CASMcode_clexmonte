@@ -1,7 +1,7 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/canonical/canonical.hh"
 #include "casm/clexmonte/run/io/RunParams.hh"
-#include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
+#include "casm/clexmonte/run/io/json/RunParams_json_io_impl.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexmonte/system/io/json/System_json_io.hh"
 #include "gtest/gtest.h"
@@ -45,6 +45,7 @@ TEST(canonical_RunParams_json_io_test, Test1) {
   // Make calculation object:
   typedef clexmonte::canonical::Canonical_mt19937_64 calculation_type;
   auto calculation = std::make_shared<calculation_type>(system);
+  auto engine = calculation->random_number_generator.engine;
 
   /// Make state sampling & analysis functions
   auto sampling_functions =
@@ -67,8 +68,8 @@ TEST(canonical_RunParams_json_io_test, Test1) {
   run_params_json["sampling_fixtures"]["thermo"]["results_io"]["kwargs"]
                  ["output_dir"] =
                      (test_dir / output_dir_relpath / "thermo").string();
-  InputParser<clexmonte::RunParams> run_params_parser(
-      run_params_json, sampling_functions, analysis_functions,
+  InputParser<clexmonte::RunParams<std::mt19937_64>> run_params_parser(
+      run_params_json, engine, sampling_functions, analysis_functions,
       state_generator_methods, results_io_methods);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
@@ -127,6 +128,7 @@ TEST(canonical_RunParams_json_io_test, Test2) {
   // Make calculation object:
   typedef clexmonte::canonical::Canonical_mt19937_64 calculation_type;
   auto calculation = std::make_shared<calculation_type>(system);
+  auto engine = calculation->random_number_generator.engine;
 
   /// Make state sampling & analysis functions
   auto sampling_functions =
@@ -150,8 +152,8 @@ TEST(canonical_RunParams_json_io_test, Test2) {
       (test_dir / "thermo_sampling.period1.json").string();
   run_params_json["sampling_fixtures"]["thermo_period10"] =
       (test_dir / "thermo_sampling.period10.json").string();
-  InputParser<clexmonte::RunParams> run_params_parser(
-      run_params_json, sampling_functions, analysis_functions,
+  InputParser<clexmonte::RunParams<std::mt19937_64>> run_params_parser(
+      run_params_json, engine, sampling_functions, analysis_functions,
       state_generator_methods, results_io_methods);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
@@ -160,7 +162,7 @@ TEST(canonical_RunParams_json_io_test, Test2) {
 
   EXPECT_TRUE(run_params_parser.valid());
 
-  clexmonte::RunParams &run_params = *run_params_parser.value;
+  clexmonte::RunParams<std::mt19937_64> &run_params = *run_params_parser.value;
   EXPECT_TRUE(run_params.sampling_fixture_params.size() == 2);
 
   fs::remove(test_dir / "thermo_sampling.period1.json");

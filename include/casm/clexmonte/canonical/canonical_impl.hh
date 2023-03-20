@@ -44,7 +44,7 @@ Canonical<EngineType>::Canonical(
 template <typename EngineType>
 void Canonical<EngineType>::run(state_type &state,
                                 monte::OccLocation &occ_location,
-                                run_manager_type &run_manager) {
+                                run_manager_type<EngineType> &run_manager) {
   if (!state.conditions.scalar_values.count("temperature")) {
     throw std::runtime_error(
         "Error in Canonical::run: state `temperature` not set.");

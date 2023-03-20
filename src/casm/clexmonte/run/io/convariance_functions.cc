@@ -48,16 +48,15 @@ results_analysis_function_type make_variance_f(
         double normalization_constant =
             make_normalization_constant_f(run_data, results);
 
-        Index N_samples_for_statistics = N_samples_for_statistics(results);
+        Index N_stats = N_samples_for_statistics(results);
 
         Index n = sampler.n_components();
         Eigen::VectorXd var = Eigen::VectorXd::Zero(n);
         for (Index i = 0; i < n; ++i) {
-          if (N_samples_for_statistics == 0) {
+          if (N_stats == 0) {
             var(i) = std::numeric_limits<double>::quiet_NaN();
           } else {
-            Eigen::VectorXd x =
-                sampler.component(i).tail(N_samples_for_statistics);
+            Eigen::VectorXd x = sampler.component(i).tail(N_stats);
             var(i) = monte::variance(x) / normalization_constant;
           }
         }
@@ -128,20 +127,18 @@ results_analysis_function_type make_covariance_f(
         double normalization_constant =
             make_normalization_constant_f(run_data, results);
 
-        Index N_samples_for_statistics = N_samples_for_statistics(results);
+        Index N_stats = N_samples_for_statistics(results);
 
         Index m = first_sampler.n_components();
         Index n = second_sampler.n_components();
         Eigen::MatrixXd cov = Eigen::MatrixXd::Zero(m, n);
         for (Index i = 0; i < m; ++i) {
           for (Index j = 0; j < n; ++j) {
-            if (N_samples_for_statistics == 0) {
+            if (N_stats == 0) {
               cov(i, j) = std::numeric_limits<double>::quiet_NaN();
             } else {
-              Eigen::VectorXd x =
-                  first_sampler.component(i).tail(N_samples_for_statistics);
-              Eigen::VectorXd y =
-                  second_sampler.component(j).tail(N_samples_for_statistics);
+              Eigen::VectorXd x = first_sampler.component(i).tail(N_stats);
+              Eigen::VectorXd y = second_sampler.component(j).tail(N_stats);
               cov(i, j) = monte::covariance(x, y) / normalization_constant;
             }
           }

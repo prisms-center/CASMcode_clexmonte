@@ -11,9 +11,7 @@ class InputParser;
 
 namespace clexmonte {
 
-struct RunParams;
-
-void parse(InputParser<sampling_figure_params_type> &parser, std::string label,
+void parse(InputParser<sampling_fixture_params_type> &parser, std::string label,
            std::map<std::string, state_sampling_function_type> const
                &sampling_functions,
            std::map<std::string, results_analysis_function_type> const
