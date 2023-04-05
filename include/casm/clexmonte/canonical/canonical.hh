@@ -82,6 +82,9 @@ struct Canonical {
   /// Update species in monte::OccLocation tracker?
   bool update_species = false;
 
+  /// Method does not allow time-based sampling
+  bool time_sampling_allowed = false;
+
   /// Current state
   state_type const *state;
 

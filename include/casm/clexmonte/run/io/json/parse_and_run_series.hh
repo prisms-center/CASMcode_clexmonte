@@ -84,7 +84,8 @@ void parse_and_run_series(fs::path system_json_file,
   }
   InputParser<clexmonte::RunParams<engine_type>> run_params_parser(
       run_params_json, engine, sampling_functions, analysis_functions,
-      state_generator_methods, results_io_methods);
+      state_generator_methods, results_io_methods,
+      calculation->time_sampling_allowed);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
   report_and_throw_if_invalid(run_params_parser, CASM::log(),

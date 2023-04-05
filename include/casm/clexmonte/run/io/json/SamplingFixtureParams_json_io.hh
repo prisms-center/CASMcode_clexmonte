@@ -16,7 +16,8 @@ void parse(InputParser<sampling_fixture_params_type> &parser, std::string label,
                &sampling_functions,
            std::map<std::string, results_analysis_function_type> const
                &analysis_functions,
-           MethodParserMap<results_io_type> const &results_io_methods);
+           MethodParserMap<results_io_type> const &results_io_methods,
+           bool time_sampling_allowed);
 
 }  // namespace clexmonte
 }  // namespace CASM

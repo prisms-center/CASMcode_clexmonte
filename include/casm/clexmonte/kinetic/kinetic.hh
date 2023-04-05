@@ -30,6 +30,9 @@ struct Kinetic {
   /// Update species in monte::OccLocation tracker
   bool update_species = true;
 
+  /// Method allows time-based sampling
+  bool time_sampling_allowed = true;
+
   // TODO:
   // /// If true: rejection-free KMC, if false: rejection-KMC
   // bool rejection_free = true;

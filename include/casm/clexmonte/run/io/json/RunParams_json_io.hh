@@ -37,7 +37,8 @@ void parse(InputParser<RunParams<EngineType>> &parser,
            std::map<std::string, results_analysis_function_type> const
                &analysis_functions,
            MethodParserMap<state_generator_type> const &state_generator_methods,
-           MethodParserMap<results_io_type> const &results_io_methods);
+           MethodParserMap<results_io_type> const &results_io_methods,
+           bool time_sampling_allowed);
 
 }  // namespace clexmonte
 }  // namespace CASM

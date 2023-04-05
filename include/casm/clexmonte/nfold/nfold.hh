@@ -21,6 +21,9 @@ struct Nfold : public semi_grand_canonical::SemiGrandCanonical<EngineType> {
                  std::shared_ptr<EngineType> _random_number_engine =
                      std::shared_ptr<EngineType>());
 
+  /// Method allows time-based sampling
+  bool time_sampling_allowed = true;
+
   /// Data for N-fold way implementation
   std::shared_ptr<NfoldEventData> event_data;
 
