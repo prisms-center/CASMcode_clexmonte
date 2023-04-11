@@ -1,6 +1,7 @@
 #ifndef CASM_clexmonte_run_RunParams_json_io_impl
 #define CASM_clexmonte_run_RunParams_json_io_impl
 
+#include "casm/clexmonte/misc/subparse_from_file.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/run/io/json/SamplingFixtureParams_json_io.hh"
 #include "casm/clexmonte/run/io/json/StateGenerator_json_io.hh"
@@ -61,6 +62,7 @@ namespace clexmonte {
 /// \endcode
 template <typename EngineType>
 void parse(InputParser<RunParams<EngineType>> &parser,
+           std::vector<fs::path> search_path,
            std::shared_ptr<EngineType> engine,
            std::map<std::string, state_sampling_function_type> const
                &sampling_functions,
@@ -91,11 +93,10 @@ void parse(InputParser<RunParams<EngineType>> &parser,
               fs::path(key) / label, label, sampling_functions,
               analysis_functions, results_io_methods, time_sampling_allowed);
         } else if (it->is_string()) {
-          subparser =
-              parser.template subparse_from_file<sampling_fixture_params_type>(
-                  fs::path(key) / label, label, sampling_functions,
-                  analysis_functions, results_io_methods,
-                  time_sampling_allowed);
+          subparser = subparse_from_file<sampling_fixture_params_type>(
+              parser, fs::path(key) / label, search_path, label,
+              sampling_functions, analysis_functions, results_io_methods,
+              time_sampling_allowed);
         } else {
           parser.insert_error(fs::path(key) / label,
                               "Error: must be a file name or JSON object");

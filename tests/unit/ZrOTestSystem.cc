@@ -61,7 +61,8 @@ void ZrOTestSystem::set_clex(std::string clex_name, std::string bset_name,
 }
 
 void ZrOTestSystem::make_system() {
-  InputParser<clexmonte::System> parser(system_json);
+  std::vector<fs::path> search_path;
+  InputParser<clexmonte::System> parser(system_json, search_path);
   std::runtime_error error_if_invalid{"Error reading ZrOTestSystem data"};
   report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
 

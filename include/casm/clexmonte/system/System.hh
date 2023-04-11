@@ -47,12 +47,17 @@ struct SupercellSystemData;
 struct System {
   /// \brief Constructor
   System(std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
-         composition::CompositionConverter const &_composition_converter);
+         composition::CompositionConverter const &_composition_converter,
+         Index _n_dimensions = 3);
 
   // --- Crystal structure
 
   /// Primitive crystal structure and allowed degrees of freedom (DoF)
   std::shared_ptr<config::Prim const> prim;
+
+  /// Number of dimensions (used for example in normalizing kinetic
+  /// coefficients)
+  Index n_dimensions;
 
   // --- Composition
 
@@ -65,7 +70,7 @@ struct System {
   // --- Order parameters
 
   /// DoFSpace that define order parameters
-  std::map<std::string, clexulator::DoFSpace> order_parameter_definitions;
+  std::map<std::string, clexulator::DoFSpace> dof_spaces;
 
   // --- Cluster expansions
 

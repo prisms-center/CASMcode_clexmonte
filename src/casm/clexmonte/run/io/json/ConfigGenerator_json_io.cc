@@ -6,6 +6,9 @@
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexulator/io/json/ConfigDoFValues_json_io.hh"
+#include "casm/configuration/Configuration.hh"
+#include "casm/configuration/copy_configuration.hh"
+#include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/monte/state/FixedConfigGenerator.hh"
 
 namespace CASM {
@@ -34,6 +37,25 @@ void parse(
 
 /// \brief Construct FixedConfigGenerator from JSON
 ///
+/// Expected format:
+/// \code
+///   "transformation_matrix_to_supercell": array, shape=3x3
+///       Supercell
+///
+///   "dof": object, optional
+///       Initial ConfigDoFValues, in standard basis, for the Monte
+///       Carlo supercell. If no initial given, the default
+///       configuration is used.
+///
+///   "motif": object, optional
+///       Initial Configuration, with ConfigDoFValues in standard basis,
+///       which will be copied and tiled into the Monte Carlo supercell.
+///       There is no warning if the tiling is not perfect. If no
+///       initial given, the default configuration is used.
+///
+/// \endcode
+///
+///
 /// Requires:
 /// - `Configuration from_standard_values(
 ///        system_type const &system,
@@ -49,17 +71,29 @@ void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
     return;
   }
 
-  // TODO: validation of dof types and dimensions?
-  // Note: expect "dof" to be in standard basis
-  std::unique_ptr<clexulator::ConfigDoFValues> standard_dof_values =
-      parser.optional<clexulator::ConfigDoFValues>("dof");
+  std::unique_ptr<clexmonte::Configuration> configuration;
+  if (parser.self.contains("dof") && !parser.self["dof"].is_null()) {
+    // TODO: validation of dof types and dimensions?
+    // Note: expect "dof" to be in standard basis
+    std::unique_ptr<clexulator::ConfigDoFValues> standard_dof_values =
+        parser.optional<clexulator::ConfigDoFValues>("dof");
+    configuration = std::make_unique<Configuration>(T, *standard_dof_values);
+  } else if (parser.self.contains("motif") && !parser.self["motif"].is_null()) {
+    // Note: expect motif dof to be in standard basis
+    std::unique_ptr<config::Configuration> motif =
+        parser.optional<config::Configuration>("motif", system->prim);
+    std::shared_ptr<config::Supercell const> supercell =
+        std::make_shared<config::Supercell const>(system->prim, T);
+    config::Configuration tmp = copy_configuration(*motif, supercell);
+    configuration = std::make_unique<Configuration>(T, tmp.dof_values);
+  }
 
   if (parser.valid()) {
-    if (standard_dof_values != nullptr) {
+    if (configuration != nullptr) {
+      clexmonte::Configuration tmp =
+          from_standard_values(*system, *configuration);
       parser.value =
-          notstd::make_unique<monte::FixedConfigGenerator<Configuration>>(
-              from_standard_values(*system,
-                                   Configuration(T, *standard_dof_values)));
+          notstd::make_unique<monte::FixedConfigGenerator<Configuration>>(tmp);
     } else {
       parser.value =
           notstd::make_unique<monte::FixedConfigGenerator<Configuration>>(

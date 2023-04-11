@@ -2,9 +2,12 @@
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
+#include "casm/clexmonte/misc/subparse_from_file.hh"
 #include "casm/clexmonte/system/System.hh"
+#include "casm/clexmonte/system/io/json/system_data_json_io.hh"
 #include "casm/clexulator/NeighborList.hh"
 #include "casm/clexulator/io/json/Clexulator_json_io.hh"
+#include "casm/clexulator/io/json/DoFSpace_json_io.hh"
 #include "casm/clexulator/io/json/SparseCoefficients_json_io.hh"
 #include "casm/composition/io/json/CompositionConverter_json_io.hh"
 #include "casm/configuration/clusterography/io/json/IntegralCluster_json_io.hh"
@@ -21,6 +24,7 @@ namespace {
 /// \brief Parse
 template <typename ParserType, typename RequiredType>
 bool parse_from_files_object(ParserType &parser, fs::path option,
+                             std::vector<fs::path> search_path,
                              std::vector<RequiredType> &vec,
                              std::map<std::string, Index> &glossary) {
   auto obj_it = parser.self.find(option);
@@ -30,8 +34,8 @@ bool parse_from_files_object(ParserType &parser, fs::path option,
   }
   Index i = 0;
   for (auto it = obj_it->begin(); it != obj_it->end(); ++it) {
-    auto subparser = parser.template subparse_from_file<RequiredType>(
-        option / std::to_string(i));
+    auto subparser = subparse_from_file<RequiredType>(
+        parser, option / std::to_string(i), search_path);
     if (!subparser->valid()) {
       return false;
     }
@@ -44,10 +48,11 @@ bool parse_from_files_object(ParserType &parser, fs::path option,
 
 /// \brief Parse from file
 template <typename ParserType, typename RequiredType, typename... Args>
-bool parse_from_file(ParserType &parser, fs::path option, RequiredType &value,
+bool parse_from_file(ParserType &parser, fs::path option,
+                     std::vector<fs::path> search_path, RequiredType &value,
                      Args &&...args) {
-  auto subparser = parser.template subparse_from_file<RequiredType>(
-      option, std::forward<Args>(args)...);
+  auto subparser = subparse_from_file<RequiredType>(
+      parser, option, search_path, std::forward<Args>(args)...);
   if (!subparser->valid()) {
     return false;
   }
@@ -82,7 +87,7 @@ bool parse_and_validate_basis_set_name(ParserType &parser, fs::path option,
 /// - coefficients/freq: SparseCoefficients file path
 template <typename ParserType>
 bool parse_event(
-    ParserType &parser, fs::path option,
+    ParserType &parser, fs::path option, std::vector<fs::path> search_path,
     std::map<std::string, OccEventTypeData> &event_type_data,
     std::map<std::string, LocalMultiClexData> &local_multiclex,
     xtal::BasicStructure const &prim,
@@ -116,7 +121,7 @@ bool parse_event(
   Index i = 0;
   for (auto it = coeffs_it->begin(); it != coeffs_it->end(); ++it) {
     std::string key = it.name();
-    if (!parse_from_file(parser, option / "coefficients" / key,
+    if (!parse_from_file(parser, option / "coefficients" / key, search_path,
                          curr_local_multiclex.coefficients[i])) {
       return false;
     }
@@ -143,9 +148,8 @@ bool parse_event(
   /// --- Parse "event", construct and validate equivalents ---
 
   // parse "event" (from file)
-  auto event_subparser =
-      parser.template subparse_from_file<occ_events::OccEvent>(option / "event",
-                                                               event_system);
+  auto event_subparser = subparse_from_file<occ_events::OccEvent>(
+      parser, option / "event", search_path, event_system);
   if (!event_subparser->valid()) {
     return false;
   }
@@ -184,6 +188,11 @@ bool parse_event(
 ///   "prim": <xtal::BasicStructure or file path>
 ///       Specifies the primitive crystal structure and allowed DoF. Must
 ///       be the prim used to generate the cluster expansion.
+///
+///   "n_dimensions": int = 3
+///       Number of dimensions to use when calculating properties such as
+///       kinetic coefficients. Does not actually restrict calculations
+///       to a certain number of dimensions.
 ///
 ///   "composition_axes": <composition::CompositionConverter>
 ///       Specifies composition axes
@@ -303,9 +312,12 @@ bool parse_event(
 ///       Input specifies the path to a file specifying how some KMC events are
 ///       defined (a CASM::occ_events::OccSystem in JSON format).
 ///
+///   "dof_spaces": object (optional)
+///        Key:value pairs, where the keys are DoFSpace names and the value is
+///        a DoFSpace or path to a file containing a DoFSpace.
 /// \endcode
 ///
-void parse(InputParser<System> &parser) {
+void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
   // Parse "prim"
   std::shared_ptr<xtal::BasicStructure const> shared_prim =
       parser.require<xtal::BasicStructure>("prim", TOL);
@@ -322,6 +334,9 @@ void parse(InputParser<System> &parser) {
   parser.value = std::make_unique<System>(shared_prim, *composition_axes);
   System &system = *parser.value;
 
+  // Parse "n_dimensions"
+  parser.optional(system.n_dimensions, "n_dimensions");
+
   // Parse "basis_sets"
   if (parser.self.contains("basis_sets")) {
     auto &basis_sets = system.basis_sets;
@@ -332,7 +347,7 @@ void parse(InputParser<System> &parser) {
     for (auto it = begin; it != end; ++it) {
       // parse "basis_sets"/<name>/"source"
       auto subparser = parser.subparse<clexulator::Clexulator>(
-          fs::path("basis_sets") / it.name(), prim_neighbor_list);
+          fs::path("basis_sets") / it.name(), prim_neighbor_list, search_path);
       if (subparser->valid()) {
         auto clexulator = std::make_shared<clexulator::Clexulator>(
             std::move(*subparser->value));
@@ -354,7 +369,8 @@ void parse(InputParser<System> &parser) {
     for (auto it = begin; it != end; ++it) {
       // parse "local_basis_sets"/<name>/"source"
       auto subparser = parser.subparse<std::vector<clexulator::Clexulator>>(
-          fs::path("local_basis_sets") / it.name(), prim_neighbor_list);
+          fs::path("local_basis_sets") / it.name(), prim_neighbor_list,
+          search_path);
       if (subparser->valid()) {
         auto local_clexulator =
             std::make_shared<std::vector<clexulator::Clexulator>>(
@@ -363,8 +379,9 @@ void parse(InputParser<System> &parser) {
       }
 
       // parse "local_basis_sets"/<name>/"equivalents_info"
-      auto info_subparser = parser.subparse_from_file<EquivalentsInfo>(
-          fs::path("local_basis_sets") / it.name() / "equivalents_info", prim);
+      auto info_subparser = subparse_from_file<EquivalentsInfo>(
+          parser, fs::path("local_basis_sets") / it.name() / "equivalents_info",
+          search_path, prim);
       if (info_subparser->valid()) {
         equivalents_info.emplace(it.name(), std::move(*info_subparser->value));
       }
@@ -390,13 +407,13 @@ void parse(InputParser<System> &parser) {
       }
 
       // "clex"/<name>/"coefficients" (SparseCoefficients)
-      if (!parse_from_file(parser, clex_path / "coefficients",
+      if (!parse_from_file(parser, clex_path / "coefficients", search_path,
                            curr.coefficients)) {
         continue;
       }
 
       // "clex"/<name>/"coefficients" (BasisSetClusterInfo)
-      if (!parse_from_file(parser, clex_path / "coefficients",
+      if (!parse_from_file(parser, clex_path / "coefficients", search_path,
                            curr.cluster_info, prim, basis_sets)) {
         continue;
       }
@@ -425,13 +442,13 @@ void parse(InputParser<System> &parser) {
 
       // "multiclex"/<name>/"coefficients"
       if (!parse_from_files_object(parser, clex_path / "coefficients",
-                                   curr.coefficients,
+                                   search_path, curr.coefficients,
                                    curr.coefficients_glossary)) {
         continue;
       }
 
       // "multiclex"/<name>/"coefficients" (BasisSetClusterInfo)
-      if (!parse_from_file(parser, clex_path / "coefficients",
+      if (!parse_from_file(parser, clex_path / "coefficients", search_path,
                            curr.cluster_info, prim, basis_sets)) {
         continue;
       }
@@ -459,7 +476,7 @@ void parse(InputParser<System> &parser) {
       }
 
       // "local_clex"/<name>/"coefficients"
-      if (!parse_from_file(parser, clex_path / "coefficients",
+      if (!parse_from_file(parser, clex_path / "coefficients", search_path,
                            curr.coefficients)) {
         continue;
       }
@@ -488,7 +505,7 @@ void parse(InputParser<System> &parser) {
 
       // "local_multiclex"/<name>/"coefficients"
       if (!parse_from_files_object(parser, clex_path / "coefficients",
-                                   curr.coefficients,
+                                   search_path, curr.coefficients,
                                    curr.coefficients_glossary)) {
         continue;
       }
@@ -500,9 +517,8 @@ void parse(InputParser<System> &parser) {
   // Parse "event_system"
   if (parser.self.contains("event_system")) {
     auto const &basicstructure = system.prim->basicstructure;
-    auto event_system_subparser =
-        parser.subparse_from_file<occ_events::OccSystem>("event_system",
-                                                         basicstructure);
+    auto event_system_subparser = subparse_from_file<occ_events::OccSystem>(
+        parser, "event_system", search_path, basicstructure);
     if (event_system_subparser->valid()) {
       system.event_system = std::make_shared<occ_events::OccSystem>(
           std::move(*event_system_subparser->value));
@@ -519,7 +535,7 @@ void parse(InputParser<System> &parser) {
       auto begin = parser.self["events"].begin();
       auto end = parser.self["events"].end();
       for (auto it = begin; it != end; ++it) {
-        parse_event(parser, fs::path("events") / it.name(),
+        parse_event(parser, fs::path("events") / it.name(), search_path,
                     system.event_type_data, system.local_multiclex_data,
                     *basicstructure, system.local_basis_sets,
                     system.equivalents_info, system.occevent_symgroup_rep,
@@ -528,8 +544,31 @@ void parse(InputParser<System> &parser) {
     }
   }
 
-  // Parse DoFSpaces
-  // TODO...
+  // Parse "dof_spaces"
+  if (parser.self.contains("dof_spaces")) {
+    std::string key = "dof_spaces";
+    auto begin = parser.self[key].begin();
+    auto end = parser.self[key].end();
+    for (auto it = begin; it != end; ++it) {
+      std::string label = it.name();
+      std::shared_ptr<InputParser<clexulator::DoFSpace>> subparser;
+      if (it->is_obj()) {
+        subparser = parser.template subparse<clexulator::DoFSpace>(
+            fs::path(key) / label, system.prim->basicstructure);
+      } else if (it->is_string()) {
+        subparser = subparse_from_file<clexulator::DoFSpace>(
+            parser, fs::path(key) / label, search_path,
+            system.prim->basicstructure);
+      } else {
+        parser.insert_error(fs::path(key) / label,
+                            "Error: must be a file name or JSON object");
+        continue;
+      }
+      if (subparser->valid()) {
+        system.dof_spaces.emplace(label, *subparser->value);
+      }
+    }
+  }
 }
 
 }  // namespace clexmonte

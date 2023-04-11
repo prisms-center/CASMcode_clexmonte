@@ -11,13 +11,12 @@ namespace {
 
 std::map<std::string, std::shared_ptr<clexulator::OrderParameter>>
 make_order_parameters(
-    std::map<std::string, clexulator::DoFSpace> const
-        &order_parameter_definitions,
+    std::map<std::string, clexulator::DoFSpace> const &dof_spaces,
     Eigen::Matrix3l const &transformation_matrix_to_super,
     xtal::UnitCellCoordIndexConverter const &supercell_index_converter) {
   std::map<std::string, std::shared_ptr<clexulator::OrderParameter>>
       order_parameters;
-  for (auto const &pair : order_parameter_definitions) {
+  for (auto const &pair : dof_spaces) {
     auto res = order_parameters.emplace(
         pair.first, std::make_shared<clexulator::OrderParameter>(pair.second));
     clexulator::OrderParameter &order_parameter = *res.first->second;
@@ -30,9 +29,18 @@ make_order_parameters(
 }  // namespace
 
 /// \brief Constructor
+///
+/// \param _shared_prim The prim
+/// \param _composition_converter The composition axes
+/// \param _n_dimensions Number of dimensions to use when calculating
+///     properties such as kinetic coefficients. Does not actually restrict
+///     calculations to a certain number of dimensions.
+///
 System::System(std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
-               composition::CompositionConverter const &_composition_converter)
+               composition::CompositionConverter const &_composition_converter,
+               Index _n_dimensions)
     : prim(std::make_shared<config::Prim const>(_shared_prim)),
+      n_dimensions(_n_dimensions),
       composition_converter(_composition_converter),
       composition_calculator(composition_converter.components(),
                              xtal::allowed_molecule_names(*_shared_prim)),
@@ -46,10 +54,9 @@ SupercellSystemData::SupercellSystemData(
     System const &system, Eigen::Matrix3l const &transformation_matrix_to_super)
     : convert(*system.prim->basicstructure, transformation_matrix_to_super),
       occ_candidate_list(convert),
-      order_parameters(
-          make_order_parameters(system.order_parameter_definitions,
-                                convert.transformation_matrix_to_super(),
-                                convert.index_converter())) {
+      order_parameters(make_order_parameters(
+          system.dof_spaces, convert.transformation_matrix_to_super(),
+          convert.index_converter())) {
   // make supercell_neighbor_list
   if (system.prim_neighbor_list != nullptr) {
     supercell_neighbor_list = std::make_shared<clexulator::SuperNeighborList>(
@@ -148,7 +155,7 @@ SupercellSystemData::SupercellSystemData(
   }
 
   // make order_parameters
-  for (auto const &pair : system.order_parameter_definitions) {
+  for (auto const &pair : system.dof_spaces) {
     auto const &key = pair.first;
     auto const &definition = pair.second;
     auto _order_parameter =

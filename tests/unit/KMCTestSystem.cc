@@ -175,7 +175,8 @@ void KMCTestSystem::write_input() { json.write(test_dir / "input.json"); }
 void KMCTestSystem::make_system() {
   EXPECT_TRUE(json.find_at(fs::path("kwargs") / "system") != json.end())
       << "Bad KMCTestSystem JSON input";
-  InputParser<clexmonte::System> parser(json["kwargs"]["system"]);
+  std::vector<fs::path> search_path;
+  InputParser<clexmonte::System> parser(json["kwargs"]["system"], search_path);
   std::runtime_error error_if_invalid{"Error reading KMC System JSON input"};
   report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
 

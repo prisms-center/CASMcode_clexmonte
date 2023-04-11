@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "casm/global/filesystem.hh"
+
 namespace CASM {
 
 template <typename T>
@@ -30,16 +32,8 @@ struct EquivalentsInfo;
 struct OccEventTypeData;
 struct System;
 
-/// \brief Parse BasisSetClusterInfo from a bspecs.json / eci.json file
-void parse(
-    InputParser<BasisSetClusterInfo> &parser, config::Prim const &prim,
-    std::map<std::string, std::shared_ptr<clexulator::Clexulator>> basis_sets);
-
-/// \brief Parse EquivalentsInfo from JSON
-void parse(InputParser<EquivalentsInfo> &parser, config::Prim const &prim);
-
 /// \brief Parse System from JSON
-void parse(InputParser<System> &parser);
+void parse(InputParser<System> &parser, std::vector<fs::path> search_path);
 
 }  // namespace clexmonte
 }  // namespace CASM
