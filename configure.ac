@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([CASM],
+AC_INIT([casm-clexmonte],
         m4_esyscmd([tr -d '\n' < ./casm_version.txt]),
         [casm-developers@lists.engr.ucsb.edu],
         [],
@@ -30,7 +30,6 @@ LT_INIT([shared disable-static])
 LT_LIB_DLLOAD
 AC_DISABLE_STATIC
 
-# AX_CXX_COMPILE_STDCXX_11
 AX_CXX_COMPILE_STDCXX_17
 
 #Require at least this version
