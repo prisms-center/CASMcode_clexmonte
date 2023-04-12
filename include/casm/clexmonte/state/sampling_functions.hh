@@ -67,9 +67,10 @@ template <typename CalculationType>
 state_sampling_function_type make_potential_energy_f(
     std::shared_ptr<CalculationType> const &calculation);
 
-/// \brief Make acceptance rate sampling function ("acceptance_rate")
+/// \brief Make order parameter sampling function ("order_parameter_X")
 template <typename CalculationType>
-state_sampling_function_type make_acceptance_rate_f(
+void make_order_parameter_f(
+    std::vector<state_sampling_function_type> &functions,
     std::shared_ptr<CalculationType> const &calculation);
 
 // --- Inline definitions ---
@@ -258,10 +259,29 @@ state_sampling_function_type make_potential_energy_f(
       });
 }
 
-/// \brief Make acceptance rate sampling function ("acceptance_rate")
+/// \brief Make order parameter sampling function ("order_parameter_<key>")
+///
+/// Creates one "order_parameter_<key>" function for each DoFSpace in
+/// the `calculation->system->dof_spaces` map.
 template <typename CalculationType>
-state_sampling_function_type make_acceptance_rate_f(
-    std::shared_ptr<CalculationType> const &calculation);
+void make_order_parameter_f(
+    std::vector<state_sampling_function_type> &functions,
+    std::shared_ptr<CalculationType> const &calculation) {
+  for (auto const &pair : calculation->system->dof_spaces) {
+    std::string key = pair.first;
+    clexulator::DoFSpace const &dof_space = pair.second;
+    std::string name = "order_parameter_" + key;
+    std::string desc = "Order parameters";
+
+    functions.push_back(state_sampling_function_type(
+        name, desc, {dof_space.subspace_dim},  // vector size
+        [calculation, key]() {
+          return get_order_parameter(*calculation->system, *calculation->state,
+                                     key)
+              ->value();
+        }));
+  }
+}
 
 }  // namespace clexmonte
 }  // namespace CASM

@@ -22,6 +22,10 @@ void parse_and_run_series(fs::path system_json_file,
                           fs::path run_params_json_file) {
   typedef typename CalculationType::engine_type engine_type;
 
+  std::vector<fs::path> search_path;
+  fs::path system_root = system_json_file.parent_path();
+  fs::path run_root = run_params_json_file.parent_path();
+
   /// Parse and construct system
   if (!fs::exists(system_json_file)) {
     std::stringstream msg;
@@ -31,7 +35,8 @@ void parse_and_run_series(fs::path system_json_file,
     throw std::runtime_error(msg.str());
   }
   jsonParser system_json(system_json_file);
-  InputParser<clexmonte::System> system_parser(system_json);
+  InputParser<clexmonte::System> system_parser(system_json,
+                                               search_path = {system_root});
   std::runtime_error system_error_if_invalid{
       "Error reading Monte Carlo system JSON input"};
   report_and_throw_if_invalid(system_parser, CASM::log(),
@@ -83,8 +88,8 @@ void parse_and_run_series(fs::path system_json_file,
     throw std::runtime_error(msg.str());
   }
   InputParser<clexmonte::RunParams<engine_type>> run_params_parser(
-      run_params_json, engine, sampling_functions, analysis_functions,
-      state_generator_methods, results_io_methods,
+      run_params_json, search_path = {run_root}, engine, sampling_functions,
+      analysis_functions, state_generator_methods, results_io_methods,
       calculation->time_sampling_allowed);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};

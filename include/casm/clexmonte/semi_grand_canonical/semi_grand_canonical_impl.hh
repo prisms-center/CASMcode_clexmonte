@@ -101,6 +101,8 @@ SemiGrandCanonical<EngineType>::standard_sampling_functions(
       make_formation_energy_f(calculation),
       make_potential_energy_f(calculation)};
 
+  make_order_parameter_f(functions, calculation);
+
   std::map<std::string, state_sampling_function_type> function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);

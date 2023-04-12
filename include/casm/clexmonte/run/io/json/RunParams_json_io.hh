@@ -3,6 +3,7 @@
 
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
+#include "casm/global/filesystem.hh"
 
 namespace CASM {
 
@@ -31,6 +32,7 @@ MethodParserMap<results_io_type> standard_results_io_methods(
 
 template <typename EngineType>
 void parse(InputParser<RunParams<EngineType>> &parser,
+           std::vector<fs::path> search_path,
            std::shared_ptr<EngineType> engine,
            std::map<std::string, state_sampling_function_type> const
                &sampling_functions,

@@ -13,6 +13,8 @@ using namespace CASM;
 
 /// Simple test of canonical Monte Carlo
 TEST(canonical_run_test, Test1) {
+  std::vector<fs::path> search_path;
+
   fs::path test_data_dir = test::data_dir("clexmonte") / "Clex_ZrO_Occ";
   fs::path clexulator_src_relpath = fs::path("basis_sets") /
                                     "bset.formation_energy" /
@@ -37,7 +39,7 @@ TEST(canonical_run_test, Test1) {
       (test_dir / clexulator_src_relpath).string();
   system_json["clex"]["formation_energy"]["coefficients"] =
       (test_dir / eci_relpath).string();
-  InputParser<clexmonte::System> system_parser(system_json);
+  InputParser<clexmonte::System> system_parser(system_json, search_path);
   std::runtime_error system_error_if_invalid{
       "Error reading canonical Monte Carlo system JSON input"};
   report_and_throw_if_invalid(system_parser, CASM::log(),
@@ -72,8 +74,8 @@ TEST(canonical_run_test, Test1) {
                  ["output_dir"] =
                      (test_dir / output_dir_relpath / "thermo").string();
   InputParser<clexmonte::RunParams<std::mt19937_64>> run_params_parser(
-      run_params_json, engine, sampling_functions, analysis_functions,
-      state_generator_methods, results_io_methods,
+      run_params_json, search_path, engine, sampling_functions,
+      analysis_functions, state_generator_methods, results_io_methods,
       calculation->time_sampling_allowed);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
@@ -104,6 +106,8 @@ TEST(canonical_run_test, Test1) {
 /// - Second sampling fixture, labeled "thermo_period10": sampling every
 ///   10 passes and specified using file "thermo_sampling.period10.json"
 TEST(canonical_run_test, Test2) {
+  std::vector<fs::path> search_path;
+
   fs::path test_data_dir = test::data_dir("clexmonte") / "Clex_ZrO_Occ";
   fs::path clexulator_src_relpath = fs::path("basis_sets") /
                                     "bset.formation_energy" /
@@ -150,7 +154,7 @@ TEST(canonical_run_test, Test2) {
       (test_dir / clexulator_src_relpath).string();
   system_json["clex"]["formation_energy"]["coefficients"] =
       (test_dir / eci_relpath).string();
-  InputParser<clexmonte::System> system_parser(system_json);
+  InputParser<clexmonte::System> system_parser(system_json, search_path);
   std::runtime_error system_error_if_invalid{
       "Error reading canonical Monte Carlo system JSON input"};
   report_and_throw_if_invalid(system_parser, CASM::log(),
@@ -186,8 +190,8 @@ TEST(canonical_run_test, Test2) {
   run_params_json["sampling_fixtures"]["thermo_period10"] =
       (test_dir / "thermo_sampling.period10.json").string();
   InputParser<clexmonte::RunParams<std::mt19937_64>> run_params_parser(
-      run_params_json, engine, sampling_functions, analysis_functions,
-      state_generator_methods, results_io_methods,
+      run_params_json, search_path, engine, sampling_functions,
+      analysis_functions, state_generator_methods, results_io_methods,
       calculation->time_sampling_allowed);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};

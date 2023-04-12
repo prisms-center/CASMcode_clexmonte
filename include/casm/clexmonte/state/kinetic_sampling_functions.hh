@@ -309,7 +309,7 @@ state_sampling_function_type make_L_isotropic_f(
             kmc_data.prev_time.at(kmc_data.sampling_fixture_label);
         double delta_time = time_curr - time_prev;
 
-        double dim = 3.0;
+        double dim = system.n_dimensions;
         double normalization = (2.0 * dim * delta_time);
 
         Eigen::VectorXd mean_R_squared = mean_R_squared_collective_isotropic(
@@ -400,7 +400,7 @@ state_sampling_function_type make_D_tracer_isotropic_f(
             kmc_data.prev_time.at(kmc_data.sampling_fixture_label);
         double delta_time = time_curr - time_prev;
 
-        double dim = 3.0;
+        double dim = system.n_dimensions;
         double normalization = (2.0 * dim * delta_time);
 
         Eigen::VectorXd mean_R_squared = mean_R_squared_individual_isotropic(
