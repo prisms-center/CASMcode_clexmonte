@@ -16,7 +16,7 @@ inline Eigen::VectorXd to_VectorXd(double value) {
 
 inline Eigen::VectorXd to_VectorXd(std::vector<double> const &value) {
   Eigen::VectorXd vec(value.size());
-  for (int i = 0; i < value.size(); ++i) {
+  for (long unsigned int i = 0; i < value.size(); ++i) {
     vec(i) = value[i];
   }
   return vec;
