@@ -57,7 +57,10 @@ namespace clexmonte {
 ///         If not empty, name of a directory in which to write
 ///         completed_runs.json. If empty, completed_runs.json is not
 ///         written, which means restarts are not possible.
-///
+///     "global_cutoff": bool = true
+///         If true, the entire run is stopped when any sampling fixture
+///         is completed. Otherwise, all fixtures must complete for the
+///         run to be completed.
 /// }
 /// \endcode
 template <typename EngineType>
@@ -138,6 +141,7 @@ void parse(InputParser<RunParams<EngineType>> &parser,
   std::string output_dir;
   parser.optional(output_dir, "completed_runs/output_dir");
   run_manager_params.output_dir = fs::path(output_dir);
+  parser.optional_else(run_manager_params.global_cutoff, "global_cutoff", true);
 
   if (parser.valid()) {
     parser.value = std::make_unique<RunParams<EngineType>>(
