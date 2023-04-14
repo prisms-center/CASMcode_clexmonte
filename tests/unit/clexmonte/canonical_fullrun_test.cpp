@@ -270,11 +270,12 @@ TEST(canonical_fullrun_test, Test1) {
 
   // - Set requested precision for convergence
   auto &requested_precision = completion_check_params.requested_precision;
-  set_value(requested_precision, sampling_functions, "formation_energy", 0.001);
-  set_value(requested_precision, sampling_functions, "formation_energy_corr",
-            0.01);
-  set_value_by_component_name(requested_precision, sampling_functions,
-                              "mol_composition", "O", 0.01);
+  set_abs_precision(requested_precision, sampling_functions, "formation_energy",
+                    0.001);
+  set_abs_precision(requested_precision, sampling_functions,
+                    "formation_energy_corr", 0.01);
+  set_abs_precision_by_component_name(requested_precision, sampling_functions,
+                                      "mol_composition", "O", 0.01);
 
   // - Set other completion check parameters or use defaults
   // completion_check_params.confidence = 0.95; // default=0.95
