@@ -50,11 +50,13 @@ std::vector<monte::OccSwap>::const_iterator find_grand_canonical_swap(
       composition_calculator.mean_num_each_component(occupation);
   auto const &index_converter = species_to_component_index_converter;
 
-  double best_dist = (current_mol_composition - target_mol_composition).norm();
+  double original_dist =
+      (current_mol_composition - target_mol_composition).norm();
+  double best_dist = original_dist;
 
   double volume = occupation.size() / composition_calculator.n_sublat();
   double dn = 1. / volume;
-  double tol = CASM::TOL;
+  double tol = dn * 1e-3;
 
   // store <distance_to_target_mol_composition>:{swap_iterator, number of swaps}
   typedef std::vector<monte::OccSwap>::const_iterator iterator_type;
@@ -68,10 +70,18 @@ std::vector<monte::OccSwap>::const_iterator find_grand_canonical_swap(
       tmol_composition[index_converter[it->cand_a.species_index]] -= dn;
       tmol_composition[index_converter[it->cand_b.species_index]] += dn;
       double dist = (tmol_composition - target_mol_composition).norm();
-      if (dist < best_dist - tol) {
+
+      // if no clear improvement, skip
+      if (dist > original_dist - tol) {
+        continue;
+
+        // if clear improvement, new best
+      } else if (dist < best_dist - tol) {
         choices.clear();
         choices.push_back({it, occ_location.cand_size(it->cand_a)});
         best_dist = dist;
+
+        // if tied with existing improvement, add as a choice
       } else if (dist < best_dist + tol) {
         choices.push_back({it, occ_location.cand_size(it->cand_a)});
       }
