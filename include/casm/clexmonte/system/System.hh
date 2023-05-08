@@ -72,6 +72,10 @@ struct System {
   /// DoFSpace that define order parameters
   std::map<std::string, clexulator::DoFSpace> dof_spaces;
 
+  /// Indices of DoFSpace basis vectors forming subspaces in which
+  /// order parameter magnitudes are to be calculated
+  std::map<std::string, std::vector<std::vector<Index>>> dof_subspaces;
+
   // --- Cluster expansions
 
   /// Prim neighbor list

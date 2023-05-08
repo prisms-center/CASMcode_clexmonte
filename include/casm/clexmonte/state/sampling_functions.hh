@@ -73,6 +73,13 @@ void make_order_parameter_f(
     std::vector<state_sampling_function_type> &functions,
     std::shared_ptr<CalculationType> const &calculation);
 
+/// \brief Make subspace order parameter sampling function
+/// ("subspace_order_parameter_X")
+template <typename CalculationType>
+void make_subspace_order_parameter_f(
+    std::vector<state_sampling_function_type> &functions,
+    std::shared_ptr<CalculationType> const &calculation);
+
 // --- Inline definitions ---
 
 /// \brief Make temperature sampling function ("temperature")
@@ -279,6 +286,71 @@ void make_order_parameter_f(
           return get_order_parameter(*calculation->system, *calculation->state,
                                      key)
               ->value();
+        }));
+  }
+}
+
+/// \brief Make subspace order parameter sampling function
+/// ("subspace_order_parameter_<key>")
+///
+/// Creates one "subspace_order_parameter_<key>" function for each DoFSpace
+/// specified in the `calculation->system->dof_subspaces` map, which measures
+/// the magnitude of the order parameter in each subspace.
+///
+/// Example system input JSON, to measure the magnitude of the order parameter
+/// in four distinct subspaces:
+/// \code
+/// {
+///   ...
+///   "dof_spaces": {
+///     "0": "dof_spaces/dof_space.0.json"
+///   },
+///   "dof_subspaces": {
+///     "0": [
+///       [0],  # subspace formed by DoFSpace basis vector 0
+///       [1, 2], # subspace formed by DoFSpace basis vectors 1, 2
+///       [3, 4, 5], # subspace formed by DoFSpace basis vector 3, 4, 5
+///       [6, 7, 8, 9, 10, 11]  # subspace formed by DoFSpace basis vector 6-11
+///     ]
+///   }
+///   ...
+/// }
+/// \endcode
+template <typename CalculationType>
+void make_subspace_order_parameter_f(
+    std::vector<state_sampling_function_type> &functions,
+    std::shared_ptr<CalculationType> const &calculation) {
+  for (auto const &pair : calculation->system->dof_spaces) {
+    std::string key = pair.first;
+    std::string name = "subspace_order_parameter_" + key;
+    std::string desc = "Order parameter magnitudes by subspace";
+
+    auto it = calculation->system->dof_subspaces.find(key);
+    if (it == calculation->system->dof_subspaces.end()) {
+      continue;
+    }
+    Index n_subspaces = it->second.size();
+    functions.push_back(state_sampling_function_type(
+        name, desc, {n_subspaces},  // vector size
+        [calculation, key]() {
+          Eigen::VectorXd eta = get_order_parameter(*calculation->system,
+                                                    *calculation->state, key)
+                                    ->value();
+
+          auto const &subspaces = calculation->system->dof_subspaces.at(key);
+          Eigen::VectorXd eta_subspace =
+              Eigen::VectorXd::Zero(subspaces.size());
+          for (int i = 0; i < subspaces.size(); ++i) {
+            double x = 0.0;
+            for (int j : subspaces[i]) {
+              if (j < 0 || j >= eta.size()) {
+                throw std::runtime_error("Invalid dof_subspaces");
+              }
+              x += eta(j) * eta(j);
+            }
+            eta_subspace(i) = sqrt(x);
+          }
+          return eta_subspace;
         }));
   }
 }

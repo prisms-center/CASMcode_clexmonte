@@ -315,6 +315,10 @@ bool parse_event(
 ///   "dof_spaces": object (optional)
 ///        Key:value pairs, where the keys are DoFSpace names and the value is
 ///        a DoFSpace or path to a file containing a DoFSpace.
+///
+///   "dof_subspaces": array of array of int (optional)
+///        Indices of DoFSpace basis vectors forming subspaces in which
+///        order parameter magnitudes are to be calculated.
 /// \endcode
 ///
 void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
@@ -569,6 +573,9 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
       }
     }
   }
+
+  // Parse "dof_subspaces"
+  parser.optional(system.dof_subspaces, "dof_subspaces");
 }
 
 }  // namespace clexmonte

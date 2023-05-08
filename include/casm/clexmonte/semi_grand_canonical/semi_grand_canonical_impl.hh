@@ -102,6 +102,7 @@ SemiGrandCanonical<EngineType>::standard_sampling_functions(
       make_potential_energy_f(calculation)};
 
   make_order_parameter_f(functions, calculation);
+  make_subspace_order_parameter_f(functions, calculation);
 
   std::map<std::string, state_sampling_function_type> function_map;
   for (auto const &f : functions) {
