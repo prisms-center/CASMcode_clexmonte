@@ -40,20 +40,20 @@ namespace clexmonte {
 ///         requested run will be performed as a preliminary step before
 ///         each actual run begins. This may be useful when not running
 ///         in automatic convergence mode.
-///     "save_all_initial_states": bool = false
+///     "completed_runs/save_all_initial_states": bool = false
 ///         If true, save initial states for analysis, output, or state
 ///         generation.
-///     "save_all_final_states": bool = false
+///     "completed_runs/save_all_final_states": bool = false
 ///         If true, save final states for analysis, output, or state
 ///         generation.
-///     "save_last_final_state": bool = true
+///     "completed_runs/save_last_final_state": bool = true
 ///         If true, save final state for last run for analysis, output
 ///         or state generation.
-///     "write_initial_states": bool = false
+///     "completed_runs/write_initial_states": bool = false
 ///         If true, write saved initial states to completed_runs.json.
-///     "write_final_states": bool = false
+///     "completed_runs/write_final_states": bool = false
 ///         If true, write saved final states to completed_runs.json.
-///     "output_dir": str = ""
+///     "completed_runs/output_dir": str = ""
 ///         If not empty, name of a directory in which to write
 ///         completed_runs.json. If empty, completed_runs.json is not
 ///         written, which means restarts are not possible.
