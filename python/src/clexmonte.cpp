@@ -24,16 +24,17 @@ using namespace CASM;
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
-PYBIND11_MODULE(_kmc, m) {
+PYBIND11_MODULE(_clexmonte, m) {
   using namespace CASMpy;
 
   m.doc() = R"pbdoc(
-        Kinetic Monte Carlo classes and methods
+        Cluster expansion Monte Carlo classes and methods
 
-        libcasm.kmc
-        -----------
+        libcasm.clexmonte
+        -----------------
 
-        The libcasm.kmc package contains data structures and methods for running kinetic Monte Carlo calculations.
+        The libcasm.clexmonte package contains data structures and methods for
+        running Monte Carlo calculations using cluster expansions.
 
     )pbdoc";
 

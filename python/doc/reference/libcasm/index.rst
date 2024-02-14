@@ -9,4 +9,4 @@ Reference (libcasm)
     :template: custom-module-template.rst
     :recursive:
 
-    libcasm.kmc
+    libcasm.clexmonte
