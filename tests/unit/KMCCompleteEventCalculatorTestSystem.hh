@@ -21,7 +21,8 @@ class KMCCompleteEventCalculatorTestSystem
                                        std::string _test_dir_name,
                                        fs::path _input_file_path);
 
-  // Note: For correct atom tracking and stochastic canonical / grand canoncical
+  // Note: For correct atom tracking and stochastic canonical / semi-grand
+  // canoncical
   //  event choosing, after this, occ_location->initialize must be called again
   // if the configuration is modified directly instead of via
   // occ_location->apply. Event calculations would be still be correct.

@@ -6,8 +6,8 @@
 #include "casm/clexmonte/run/io/json/ConfigGenerator_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/parse_conditions.hh"
-#include "casm/monte/state/IncrementalConditionsStateGenerator.hh"
-#include "casm/monte/state/StateSampler.hh"
+#include "casm/monte/run_management/IncrementalConditionsStateGenerator.hh"
+#include "casm/monte/run_management/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {

@@ -79,7 +79,7 @@ bool parse_and_validate_basis_set_name(ParserType &parser, fs::path option,
 /// \brief Parse "events"/<event_name> from JSON
 ///
 /// TODO: document format (see
-/// tests/unit/clexmonte/data/kmc/system_template.json)
+/// tests/unit/clexmonte/data/clexmonte/system_template.json)
 /// - event : occ_events::OccEvent file path
 /// - local_basis_set: name (matching one in System::local_basis_sets /
 /// equivalents_info)

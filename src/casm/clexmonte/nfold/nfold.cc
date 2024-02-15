@@ -1,11 +1,11 @@
-#include "casm/clexmonte/conditional_nfold/conditional_nfold_impl.hh"
+#include "casm/clexmonte/nfold/nfold_impl.hh"
 
 namespace CASM {
 namespace clexmonte {
-namespace conditional_nfold {
+namespace nfold {
 
-template struct ConditionalNfold<std::mt19937_64>;
+template struct Nfold<std::mt19937_64>;
 
-}  // namespace conditional_nfold
+}  // namespace nfold
 }  // namespace clexmonte
 }  // namespace CASM

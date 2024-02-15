@@ -30,7 +30,7 @@ template <typename GeneratorType>
 void enforce_composition(
     Eigen::VectorXi &occupation, Eigen::VectorXd const &target_mol_composition,
     composition::CompositionCalculator const &composition_calculator,
-    std::vector<monte::OccSwap> const &grand_canonical_swaps,
+    std::vector<monte::OccSwap> const &semigrand_canonical_swaps,
     monte::OccLocation &occ_location, GeneratorType &random_number_generator);
 
 // --- Implementation ---
@@ -38,7 +38,7 @@ void enforce_composition(
 namespace enforce_composition_impl {
 
 template <typename GeneratorType>
-std::vector<monte::OccSwap>::const_iterator find_grand_canonical_swap(
+std::vector<monte::OccSwap>::const_iterator find_semigrand_canonical_swap(
     Eigen::VectorXi &occupation, Eigen::VectorXd const &target_mol_composition,
     composition::CompositionCalculator const &composition_calculator,
     std::vector<Index> const &species_to_component_index_converter,
@@ -106,7 +106,8 @@ std::vector<monte::OccSwap>::const_iterator find_grand_canonical_swap(
     }
   }
   throw std::runtime_error(
-      "Error in CASM::clexmonte::find_grand_canonical_swap, failed enforcing "
+      "Error in CASM::clexmonte::find_semigrand_canonical_swap, failed "
+      "enforcing "
       "composition");
 };
 
@@ -154,7 +155,7 @@ template <typename GeneratorType>
 void enforce_composition(
     Eigen::VectorXi &occupation, Eigen::VectorXd const &target_mol_composition,
     composition::CompositionCalculator const &composition_calculator,
-    std::vector<monte::OccSwap> const &grand_canonical_swaps,
+    std::vector<monte::OccSwap> const &semigrand_canonical_swaps,
     monte::OccLocation &occ_location, GeneratorType &random_number_generator) {
   monte::Conversions const &convert = occ_location.convert();
 
@@ -163,11 +164,11 @@ void enforce_composition(
       enforce_composition_impl::make_species_to_component_index_converter(
           composition_calculator, convert);
 
-  auto begin = grand_canonical_swaps.begin();
-  auto end = grand_canonical_swaps.end();
+  auto begin = semigrand_canonical_swaps.begin();
+  auto end = semigrand_canonical_swaps.end();
   monte::OccEvent event;
   while (true) {
-    auto it = enforce_composition_impl::find_grand_canonical_swap(
+    auto it = enforce_composition_impl::find_semigrand_canonical_swap(
         occupation, target_mol_composition, composition_calculator,
         species_to_component_index_converter, random_number_generator,
         occ_location, begin, end);
@@ -177,8 +178,8 @@ void enforce_composition(
     }
 
     /// propose event of chosen candidate type and apply swap
-    monte::propose_grand_canonical_event_from_swap(event, occ_location, *it,
-                                                   random_number_generator);
+    monte::propose_semigrand_canonical_event_from_swap(event, occ_location, *it,
+                                                       random_number_generator);
     occ_location.apply(event, occupation);
   }
 }

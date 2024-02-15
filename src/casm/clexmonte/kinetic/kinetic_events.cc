@@ -182,7 +182,7 @@ void KineticEventData::update(state_type const &state,
   prim_event_calculators = clexmonte::kinetic::make_prim_event_calculators(
       system, state, prim_event_list, conditions);
 
-  // TODO: rejection-kmc option does not require impact table
+  // TODO: rejection-clexmonte option does not require impact table
   event_list = clexmonte::make_complete_event_list(
       prim_event_list, prim_impact_info_list, occ_location);
 

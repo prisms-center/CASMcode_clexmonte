@@ -29,7 +29,7 @@ typedef monte::BasicStatistics statistics_type;
 
 typedef monte::State<config_type> state_type;
 
-typedef monte::StateSamplingFunction<config_type> state_sampling_function_type;
+typedef monte::StateSamplingFunction state_sampling_function_type;
 typedef monte::ResultsAnalysisFunction<config_type, statistics_type>
     results_analysis_function_type;
 typedef monte::StateModifyingFunction<config_type>

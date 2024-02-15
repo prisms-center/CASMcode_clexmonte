@@ -4,8 +4,8 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
-#include "casm/monte/state/State.hh"
-#include "casm/monte/state/io/json/ValueMap_json_io.hh"
+#include "casm/monte/io/json/ValueMap_json_io.hh"
+#include "casm/monte/run_management/State.hh"
 
 namespace CASM {
 

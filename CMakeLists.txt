@@ -50,7 +50,7 @@ endif()
 if(DEFINED CASM_PREFIX)
   set(CASMcode_global_ROOT ${CASM_PREFIX}/share/CASMcode_global/cmake)
   set(CASMcode_crystallography_ROOT ${CASM_PREFIX}/share/CASMcode_crystallography/cmake)
-  set(CASMcode_composition_ROOT ${CASM_PREFIX}/share/CASMcode_compositionr/cmake)
+  set(CASMcode_composition_ROOT ${CASM_PREFIX}/share/CASMcode_composition/cmake)
   set(CASMcode_clexulator_ROOT ${CASM_PREFIX}/share/CASMcode_clexulator/cmake)
   set(CASMcode_configuration_ROOT ${CASM_PREFIX}/share/CASMcode_configuration/cmake)
   set(CASMcode_monte_ROOT ${CASM_PREFIX}/share/CASMcode_monte/cmake)
@@ -112,9 +112,6 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/canonical/canonical.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/canonical/canonical_impl.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/canonical/canonical_json_io.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/conditional_nfold/conditional_nfold.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/conditional_nfold/conditional_nfold_impl.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/conditional_nfold/conditional_nfold_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/definitions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/CompleteEventList.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/ImpactTable.hh
@@ -157,10 +154,10 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/SamplingFixtureParams_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/StateGenerator_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/parse_and_run_series.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semi_grand_canonical/semi_grand_canonical.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semi_grand_canonical/semi_grand_canonical_impl.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semi_grand_canonical/semi_grand_canonical_json_io.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semi_grand_canonical/semi_grand_canonical_potential.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_impl.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/Conditions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/Configuration.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/CorrMatchingPotential.hh
@@ -181,7 +178,6 @@ set(
 set(
   libcasm_clexmonte_SOURCES
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/canonical/canonical.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/conditional_nfold/conditional_nfold.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/CompleteEventList.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/ImpactTable.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/event_methods.cc
@@ -199,8 +195,8 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/RunParams_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/SamplingFixtureParams_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/StateGenerator_json_io.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semi_grand_canonical/semi_grand_canonical.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semi_grand_canonical/semi_grand_canonical_potential.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semigrand_canonical/semigrand_canonical.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/Conditions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/CorrMatchingPotential.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/io/json/Configuration_json_io.cc
@@ -234,6 +230,10 @@ target_link_libraries(casm_clexmonte
   ${CMAKE_DL_LIBS}
   CASM::casm_global
   CASM::casm_crystallography
+  CASM::casm_composition
+  CASM::casm_clexulator
+  CASM::casm_configuration
+  CASM::casm_monte
 )
 if(APPLE)
   set_target_properties(
@@ -321,7 +321,7 @@ if(DEFINED SKBUILD)
   ### libcasm.clexmonte._clexmonte ###
   pybind11_add_module(_clexmonte MODULE
                       "${PROJECT_SOURCE_DIR}/python/src/clexmonte.cpp")
-  target_link_libraries(_monte PRIVATE
+  target_link_libraries(_clexmonte PRIVATE
     CASM::casm_global
     CASM::casm_crystallography
     CASM::casm_composition

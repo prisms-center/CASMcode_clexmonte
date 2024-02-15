@@ -11,7 +11,7 @@
 #include "casm/clexmonte/system/System.hh"
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/composition/io/json/CompositionConverter_json_io.hh"
-#include "casm/monte/state/ValueMap.hh"
+#include "casm/monte/ValueMap.hh"
 
 namespace CASM {
 namespace clexmonte {

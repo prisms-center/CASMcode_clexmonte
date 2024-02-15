@@ -2,7 +2,7 @@
 
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/misc/CASM_Eigen_math.hh"
-#include "casm/monte/state/ValueMap.hh"
+#include "casm/monte/ValueMap.hh"
 
 namespace CASM {
 namespace clexmonte {

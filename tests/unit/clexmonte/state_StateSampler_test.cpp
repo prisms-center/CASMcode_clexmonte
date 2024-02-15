@@ -11,7 +11,7 @@
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/events/OccLocation.hh"
 #include "casm/monte/methods/metropolis.hh"
-#include "casm/monte/state/StateSampler.hh"
+#include "casm/monte/run_management/StateSampler.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
 
@@ -117,7 +117,7 @@ TEST_F(state_StateSamplerTest, Test1) {
       propose_canonical_event(event, occ_location, canonical_swaps,
                               random_number_generator);
 
-      double delta_potential_energy = potential.occ_delta_extensive_value(
+      double delta_potential_energy = potential.occ_delta_per_supercell(
           event.linear_site_index, event.new_occ);
 
       // Accept or reject event

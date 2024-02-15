@@ -14,9 +14,9 @@
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/events/OccLocation.hh"
 #include "casm/monte/methods/occupation_metropolis.hh"
-#include "casm/monte/results/Results.hh"
-#include "casm/monte/state/State.hh"
-#include "casm/monte/state/StateSampler.hh"
+#include "casm/monte/run_management/Results.hh"
+#include "casm/monte/run_management/State.hh"
+#include "casm/monte/run_management/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -71,15 +71,15 @@ void Canonical<EngineType>::run(state_type &state,
   std::vector<monte::OccSwap> canonical_swaps =
       make_canonical_swaps(convert, occ_candidate_list);
 
-  std::vector<monte::OccSwap> grand_canonical_swaps =
-      make_grand_canonical_swaps(convert, occ_candidate_list);
+  std::vector<monte::OccSwap> semigrand_canonical_swaps =
+      make_semigrand_canonical_swaps(convert, occ_candidate_list);
 
   // Enforce composition
   clexmonte::enforce_composition(
       get_occupation(state),
       state.conditions.vector_values.at("mol_composition"),
-      get_composition_calculator(*system), grand_canonical_swaps, occ_location,
-      random_number_generator);
+      get_composition_calculator(*system), semigrand_canonical_swaps,
+      occ_location, random_number_generator);
 
   // Run Monte Carlo at a single condition
   typedef monte::RandomNumberGenerator<EngineType> generator_type;

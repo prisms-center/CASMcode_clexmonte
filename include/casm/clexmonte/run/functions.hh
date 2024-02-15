@@ -8,15 +8,15 @@
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/monte/MethodLog.hh"
-#include "casm/monte/RunManager.hh"
-#include "casm/monte/SamplingFixture.hh"
 #include "casm/monte/events/OccLocation.hh"
-#include "casm/monte/results/Results.hh"
-#include "casm/monte/results/ResultsAnalysisFunction.hh"
-#include "casm/monte/results/io/ResultsIO.hh"
-#include "casm/monte/state/StateGenerator.hh"
-#include "casm/monte/state/io/json/RunData_json_io.hh"
-#include "casm/monte/state/io/json/ValueMap_json_io.hh"
+#include "casm/monte/io/json/ValueMap_json_io.hh"
+#include "casm/monte/run_management/Results.hh"
+#include "casm/monte/run_management/ResultsAnalysisFunction.hh"
+#include "casm/monte/run_management/RunManager.hh"
+#include "casm/monte/run_management/SamplingFixture.hh"
+#include "casm/monte/run_management/StateGenerator.hh"
+#include "casm/monte/run_management/io/ResultsIO.hh"
+#include "casm/monte/run_management/io/json/RunData_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -37,7 +37,7 @@ void run_series(
 /// \brief Perform a series of runs, according to a state_generator
 ///
 /// \param calculation A calculation instance, such as canonical::Canonical,
-///     semi_grand_canonical::SemiGrandCanonical, or kinetic::Kinetic.
+///     semigrand_canonical::SemiGrandCanonical, or kinetic::Kinetic.
 /// \param state_generator A monte::StateGenerator, which produces a
 ///     a series of initial states
 /// \param run_manager_params Parameters controlling the run manager

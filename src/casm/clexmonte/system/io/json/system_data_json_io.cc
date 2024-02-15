@@ -78,7 +78,7 @@ void parse(
 /// \brief Parse equivalents_info.json
 ///
 /// TODO: document format (see
-/// tests/unit/clexmonte/data/kmc/system_template.json)
+/// tests/unit/clexmonte/data/clexmonte/system_template.json)
 void parse(InputParser<EquivalentsInfo> &parser, config::Prim const &prim) {
   xtal::BasicStructure const &basicstructure = *prim.basicstructure;
 

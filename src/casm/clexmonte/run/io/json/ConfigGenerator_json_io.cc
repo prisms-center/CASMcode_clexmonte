@@ -9,7 +9,7 @@
 #include "casm/configuration/Configuration.hh"
 #include "casm/configuration/copy_configuration.hh"
 #include "casm/configuration/io/json/Configuration_json_io.hh"
-#include "casm/monte/state/FixedConfigGenerator.hh"
+#include "casm/monte/run_management/FixedConfigGenerator.hh"
 
 namespace CASM {
 namespace clexmonte {

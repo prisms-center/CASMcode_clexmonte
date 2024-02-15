@@ -5,7 +5,7 @@
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/ConfigDoFValues.hh"
 #include "casm/clexulator/LocalClusterExpansion.hh"
-#include "casm/monte/state/State.hh"
+#include "casm/monte/run_management/State.hh"
 
 namespace CASM {
 namespace clexmonte {

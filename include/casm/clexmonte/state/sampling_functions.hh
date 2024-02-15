@@ -8,7 +8,7 @@
 #include "casm/clexulator/Correlations.hh"
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"
-#include "casm/monte/state/StateSampler.hh"
+#include "casm/monte/run_management/StateSampler.hh"
 
 // debugging
 #include "casm/casm_io/container/stream_io.hh"
@@ -215,8 +215,8 @@ state_sampling_function_type make_formation_energy_corr_f(
         auto const &state = *calculation->state;
         clexulator::Correlations &correlations =
             *get_corr(system, state, "formation_energy");
-        auto const &extensive_corr = correlations.extensive();
-        return correlations.intensive(extensive_corr);
+        auto const &per_supercell_corr = correlations.per_supercell();
+        return correlations.per_unitcell(per_supercell_corr);
       });
 }
 
@@ -236,8 +236,7 @@ state_sampling_function_type make_formation_energy_f(
         auto &system = *calculation->system;
         auto const &state = *calculation->state;
         Eigen::VectorXd value(1);
-        value(0) =
-            get_clex(system, state, "formation_energy")->intensive_value();
+        value(0) = get_clex(system, state, "formation_energy")->per_unitcell();
         return value;
       });
 }

@@ -1,5 +1,5 @@
-#ifndef CASM_clexmonte_semi_grand_canonical_potential
-#define CASM_clexmonte_semi_grand_canonical_potential
+#ifndef CASM_clexmonte_semigrand_canonical_potential
+#define CASM_clexmonte_semigrand_canonical_potential
 
 #include <random>
 
@@ -8,7 +8,7 @@
 
 namespace CASM {
 namespace clexmonte {
-namespace semi_grand_canonical {
+namespace semigrand_canonical {
 
 /// \brief Implements potential for semi-grand canonical Monte Carlo
 class SemiGrandCanonicalPotential {
@@ -27,13 +27,14 @@ class SemiGrandCanonicalPotential {
   /// \brief Pointer to current conditions
   std::shared_ptr<Conditions> const &conditions() const;
 
-  /// \brief Calculate (extensive) cluster expansion value
-  double extensive_value();
+  /// \brief Calculate (per_supercell) cluster expansion value
+  double per_supercell();
 
-  /// \brief Calculate change in (extensive) cluster expansion value due to a
+  /// \brief Calculate change in (per_supercell) cluster expansion value due to
+  /// a
   ///     series of occupation changes
-  double occ_delta_extensive_value(std::vector<Index> const &linear_site_index,
-                                   std::vector<int> const &new_occ);
+  double occ_delta_per_supercell(std::vector<Index> const &linear_site_index,
+                                 std::vector<int> const &new_occ);
 
  private:
   /// System pointer
@@ -57,7 +58,7 @@ class SemiGrandCanonicalPotential {
 
 typedef SemiGrandCanonicalPotential potential_type;
 
-}  // namespace semi_grand_canonical
+}  // namespace semigrand_canonical
 }  // namespace clexmonte
 }  // namespace CASM
 

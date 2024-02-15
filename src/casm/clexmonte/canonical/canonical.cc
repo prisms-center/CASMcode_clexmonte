@@ -41,14 +41,14 @@ std::shared_ptr<Conditions> const &CanonicalPotential::conditions() const {
   return m_conditions;
 }
 
-/// \brief Calculate (extensive) canonical potential value
-double CanonicalPotential::extensive_value() {
-  return m_formation_energy_clex->extensive_value();
+/// \brief Calculate (per_supercell) canonical potential value
+double CanonicalPotential::per_supercell() {
+  return m_formation_energy_clex->per_supercell();
 }
 
-/// \brief Calculate change in (extensive) canonical potential value due
+/// \brief Calculate change in (per_supercell) canonical potential value due
 ///     to a series of occupation changes
-double CanonicalPotential::occ_delta_extensive_value(
+double CanonicalPotential::occ_delta_per_supercell(
     std::vector<Index> const &linear_site_index,
     std::vector<int> const &new_occ) {
   return m_formation_energy_clex->occ_delta_value(linear_site_index, new_occ);

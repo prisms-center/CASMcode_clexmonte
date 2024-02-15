@@ -11,7 +11,7 @@
 #include "casm/clexulator/Correlations.hh"
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"
-#include "casm/monte/state/StateSampler.hh"
+#include "casm/monte/run_management/StateSampler.hh"
 
 // debugging
 #include "casm/casm_io/container/stream_io.hh"
@@ -123,7 +123,7 @@ state_sampling_function_type make_kmc_potential_energy_f(
         double n_unitcells =
             get_transformation_matrix_to_super(*calculation->state)
                 .determinant();
-        return monte::reshaped(potential.extensive_value() / n_unitcells);
+        return monte::reshaped(potential.per_supercell() / n_unitcells);
       });
 }
 

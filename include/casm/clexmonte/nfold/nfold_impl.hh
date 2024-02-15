@@ -2,7 +2,7 @@
 #define CASM_clexmonte_nfold_impl
 
 #include "casm/clexmonte/nfold/nfold.hh"
-#include "casm/clexmonte/semi_grand_canonical/semi_grand_canonical_impl.hh"
+#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_impl.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/monte/methods/nfold.hh"
 
@@ -13,7 +13,7 @@ namespace nfold {
 template <typename EngineType>
 Nfold<EngineType>::Nfold(std::shared_ptr<system_type> _system,
                          std::shared_ptr<EngineType> _random_number_engine)
-    : semi_grand_canonical::SemiGrandCanonical<EngineType>(
+    : semigrand_canonical::SemiGrandCanonical<EngineType>(
           _system, _random_number_engine) {}
 
 /// \brief Perform a single run, evolving current state
@@ -39,7 +39,7 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
   Index n_unitcells = this->transformation_matrix_to_super.determinant();
 
   // Construct potential
-  typedef semi_grand_canonical::SemiGrandCanonicalPotential potential_type;
+  typedef semigrand_canonical::SemiGrandCanonicalPotential potential_type;
   auto potential = std::make_shared<potential_type>(this->system);
   potential->set(this->state, this->conditions);
 
@@ -48,8 +48,8 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
       get_index_conversions(*this->system, state);
   monte::OccCandidateList const &occ_candidate_list =
       get_occ_candidate_list(*this->system, state);
-  std::vector<monte::OccSwap> grand_canonical_swaps =
-      make_grand_canonical_swaps(convert, occ_candidate_list);
+  std::vector<monte::OccSwap> semigrand_canonical_swaps =
+      make_semigrand_canonical_swaps(convert, occ_candidate_list);
 
   // if same supercell
   // -> just re-set potential & avoid re-constructing event list
@@ -63,12 +63,13 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
     n_unitcells = this->transformation_matrix_to_super.determinant();
 
     // Event data
-    this->event_data = std::make_shared<NfoldEventData>(
-        this->system, state, occ_location, grand_canonical_swaps, potential);
+    this->event_data =
+        std::make_shared<NfoldEventData>(this->system, state, occ_location,
+                                         semigrand_canonical_swaps, potential);
 
     // Nfold data
     Index n_allowed_per_unitcell =
-        get_n_allowed_per_unitcell(convert, grand_canonical_swaps);
+        get_n_allowed_per_unitcell(convert, semigrand_canonical_swaps);
     this->nfold_data.n_events_possible =
         static_cast<double>(n_unitcells) * n_allowed_per_unitcell;
   }

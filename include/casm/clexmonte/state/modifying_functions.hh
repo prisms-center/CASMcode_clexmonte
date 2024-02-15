@@ -4,7 +4,7 @@
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/composition/CompositionCalculator.hh"
-#include "casm/monte/state/StateModifyingFunction.hh"
+#include "casm/monte/run_management/StateModifyingFunction.hh"
 
 // debugging
 #include "casm/casm_io/container/stream_io.hh"

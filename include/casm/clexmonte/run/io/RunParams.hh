@@ -5,15 +5,15 @@
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/monte/MethodLog.hh"
-#include "casm/monte/RunManager.hh"
-#include "casm/monte/SamplingFixture.hh"
 #include "casm/monte/checks/CompletionCheck.hh"
-#include "casm/monte/results/ResultsAnalysisFunction.hh"
-#include "casm/monte/results/io/ResultsIO.hh"
+#include "casm/monte/run_management/IncrementalConditionsStateGenerator.hh"
+#include "casm/monte/run_management/ResultsAnalysisFunction.hh"
+#include "casm/monte/run_management/RunManager.hh"
+#include "casm/monte/run_management/SamplingFixture.hh"
+#include "casm/monte/run_management/State.hh"
+#include "casm/monte/run_management/StateSampler.hh"
+#include "casm/monte/run_management/io/ResultsIO.hh"
 #include "casm/monte/sampling/SamplingParams.hh"
-#include "casm/monte/state/IncrementalConditionsStateGenerator.hh"
-#include "casm/monte/state/State.hh"
-#include "casm/monte/state/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {

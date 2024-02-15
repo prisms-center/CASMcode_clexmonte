@@ -42,7 +42,7 @@ TEST_F(events_EventStateCalculator_Test, Test1) {
   // std::cout << "#prim events: " << prim_event_list.size() << std::endl;
 
   // Note: This calls occ_location->initialize. For correct atom tracking and
-  // stochastic canonical / grand canoncical event choosing,
+  // stochastic canonical / semi-grand canoncical event choosing,
   // occ_location->initialize must be called again if the configuration is
   // modified directly instead of via occ_location->apply. Event calculations
   // would be still be correct.

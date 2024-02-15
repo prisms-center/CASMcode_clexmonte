@@ -63,7 +63,7 @@ TEST_F(canonical_MetropolisTest, Test1) {
                             random_number_generator);
 
     // std::cout << "Calculate delta_potential_energy" << std::endl;
-    double delta_potential_energy = potential.occ_delta_extensive_value(
+    double delta_potential_energy = potential.occ_delta_per_supercell(
         event.linear_site_index, event.new_occ);
 
     // Accept or reject event

@@ -26,7 +26,7 @@ void KMCCompleteEventListTestSystem::make_prim_event_list(
 /// \brief Make complete event list
 ///
 /// Note: This calls occ_location->initialize. For correct atom tracking and
-/// stochastic canonical / grand canoncical event choosing,
+/// stochastic canonical / semi-grand canoncical event choosing,
 /// occ_location->initialize must be called again if the configuration is
 /// modified directly instead of via occ_location->apply. Event calculations
 /// would be still be correct.

@@ -6,7 +6,7 @@
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/events/CompleteEventList.hh"
 #include "casm/clexmonte/events/event_data.hh"
-#include "casm/clexmonte/semi_grand_canonical/semi_grand_canonical_potential.hh"
+#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -37,10 +37,10 @@ struct CompleteEventCalculator {
   EventState event_state;
 
   /// \brief Potential
-  std::shared_ptr<semi_grand_canonical::SemiGrandCanonicalPotential> potential;
+  std::shared_ptr<semigrand_canonical::SemiGrandCanonicalPotential> potential;
 
   CompleteEventCalculator(
-      std::shared_ptr<semi_grand_canonical::SemiGrandCanonicalPotential>
+      std::shared_ptr<semigrand_canonical::SemiGrandCanonicalPotential>
           _potential,
       std::vector<PrimEventData> const &_prim_event_list,
       std::map<EventID, EventData> const &_event_list);
@@ -53,8 +53,8 @@ struct NfoldEventData {
   NfoldEventData(
       std::shared_ptr<system_type> system, state_type const &state,
       monte::OccLocation const &occ_location,
-      std::vector<monte::OccSwap> const &grand_canonical_swaps,
-      std::shared_ptr<semi_grand_canonical::SemiGrandCanonicalPotential>
+      std::vector<monte::OccSwap> const &semigrand_canonical_swaps,
+      std::shared_ptr<semigrand_canonical::SemiGrandCanonicalPotential>
           potential);
 
   /// The `prim events`, one translationally distinct instance

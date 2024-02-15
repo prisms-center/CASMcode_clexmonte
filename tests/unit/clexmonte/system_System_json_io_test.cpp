@@ -11,9 +11,9 @@ using namespace CASM;
 class system_FCCBinaryVacancySystemJsonIOTest : public test::KMCTestSystem {
  protected:
   system_FCCBinaryVacancySystemJsonIOTest()
-      : KMCTestSystem(
-            "FCC_binary_vacancy", "FCCBinaryVacancySystemJsonIOTest",
-            test::data_dir("clexmonte") / "kmc" / "system_template.json") {}
+      : KMCTestSystem("FCC_binary_vacancy", "FCCBinaryVacancySystemJsonIOTest",
+                      test::data_dir("clexmonte") / "clexmonte" /
+                          "system_template.json") {}
 };
 
 TEST_F(system_FCCBinaryVacancySystemJsonIOTest, Test1) {

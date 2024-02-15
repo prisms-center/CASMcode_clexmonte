@@ -2,13 +2,13 @@
 
 #include "casm/clexmonte/run/io/json/ResultsIO_json_io.hh"
 #include "casm/monte/MethodLog.hh"
-#include "casm/monte/SamplingFixture.hh"
 #include "casm/monte/checks/io/json/CompletionCheck_json_io.hh"
-#include "casm/monte/results/ResultsAnalysisFunction.hh"
-#include "casm/monte/results/io/ResultsIO.hh"
-#include "casm/monte/results/io/json/jsonResultsIO_impl.hh"
+#include "casm/monte/run_management/ResultsAnalysisFunction.hh"
+#include "casm/monte/run_management/SamplingFixture.hh"
+#include "casm/monte/run_management/StateSampler.hh"
+#include "casm/monte/run_management/io/ResultsIO.hh"
+#include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
 #include "casm/monte/sampling/io/json/SamplingParams_json_io.hh"
-#include "casm/monte/state/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -38,8 +38,7 @@ namespace clexmonte {
 ///             - "param_thermocalc_susc": Thermo-Chemical susceptibility
 ///               (param_composition)
 ///
-///             Unless otherwise noted, assume intensive (per unit cell)
-///             properties.
+///             Unless otherwise noted, assume per unitcell properties.
 ///
 ///     "results_io": <monte::ResultsIO> = null
 ///         Options controlling sampling fixture results output.

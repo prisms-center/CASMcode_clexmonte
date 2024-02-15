@@ -2,7 +2,7 @@
 #define CASM_clexmonte_state_Conditions
 
 #include "casm/clexmonte/state/CorrMatchingPotential.hh"
-#include "casm/monte/state/ValueMap.hh"
+#include "casm/monte/ValueMap.hh"
 
 namespace CASM {
 

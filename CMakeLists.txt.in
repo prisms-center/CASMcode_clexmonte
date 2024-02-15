@@ -50,7 +50,7 @@ endif()
 if(DEFINED CASM_PREFIX)
   set(CASMcode_global_ROOT ${CASM_PREFIX}/share/CASMcode_global/cmake)
   set(CASMcode_crystallography_ROOT ${CASM_PREFIX}/share/CASMcode_crystallography/cmake)
-  set(CASMcode_composition_ROOT ${CASM_PREFIX}/share/CASMcode_compositionr/cmake)
+  set(CASMcode_composition_ROOT ${CASM_PREFIX}/share/CASMcode_composition/cmake)
   set(CASMcode_clexulator_ROOT ${CASM_PREFIX}/share/CASMcode_clexulator/cmake)
   set(CASMcode_configuration_ROOT ${CASM_PREFIX}/share/CASMcode_configuration/cmake)
   set(CASMcode_monte_ROOT ${CASM_PREFIX}/share/CASMcode_monte/cmake)
@@ -134,6 +134,10 @@ target_link_libraries(casm_clexmonte
   ${CMAKE_DL_LIBS}
   CASM::casm_global
   CASM::casm_crystallography
+  CASM::casm_composition
+  CASM::casm_clexulator
+  CASM::casm_configuration
+  CASM::casm_monte
 )
 if(APPLE)
   set_target_properties(
@@ -221,7 +225,7 @@ if(DEFINED SKBUILD)
   ### libcasm.clexmonte._clexmonte ###
   pybind11_add_module(_clexmonte MODULE
                       "${PROJECT_SOURCE_DIR}/python/src/clexmonte.cpp")
-  target_link_libraries(_monte PRIVATE
+  target_link_libraries(_clexmonte PRIVATE
     CASM::casm_global
     CASM::casm_crystallography
     CASM::casm_composition

@@ -1,13 +1,13 @@
-#include "casm/clexmonte/semi_grand_canonical/semi_grand_canonical_impl.hh"
+#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_impl.hh"
 #include "casm/clexmonte/state/make_conditions.hh"
 #include "casm/clexmonte/state/sampling_functions.hh"
 #include "casm/clexmonte/system/System.hh"
-#include "casm/monte/results/ResultsAnalysisFunction.hh"
-#include "casm/monte/state/ValueMap.hh"
+#include "casm/monte/ValueMap.hh"
+#include "casm/monte/run_management/ResultsAnalysisFunction.hh"
 
 namespace CASM {
 namespace clexmonte {
-namespace semi_grand_canonical {
+namespace semigrand_canonical {
 
 /// \brief Helper for making a conditions ValueMap for semi-grand
 ///     canonical Monte Carlo calculations
@@ -73,6 +73,6 @@ monte::ValueMap make_conditions_increment(
 
 template struct SemiGrandCanonical<std::mt19937_64>;
 
-}  // namespace semi_grand_canonical
+}  // namespace semigrand_canonical
 }  // namespace clexmonte
 }  // namespace CASM

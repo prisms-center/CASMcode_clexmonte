@@ -16,7 +16,7 @@ namespace clexmonte {
 namespace nfold {
 
 CompleteEventCalculator::CompleteEventCalculator(
-    std::shared_ptr<semi_grand_canonical::SemiGrandCanonicalPotential>
+    std::shared_ptr<semigrand_canonical::SemiGrandCanonicalPotential>
         _potential,
     std::vector<PrimEventData> const &_prim_event_list,
     std::map<EventID, EventData> const &_event_list)
@@ -46,7 +46,7 @@ double CompleteEventCalculator::calculate_rate(EventID const &id) {
   event_state.is_allowed = true;
 
   // calculate change in energy to final state
-  event_state.dE_final = potential->occ_delta_extensive_value(
+  event_state.dE_final = potential->occ_delta_per_supercell(
       event_data.event.linear_site_index, prim_event_data.occ_final);
 
   // calculate rate
@@ -104,7 +104,7 @@ occ_events::OccPosition _make_atom_in_resevoir_position(
 }
 
 /// \brief Convert monte::OccSwap to occ_events::OccEvent
-occ_events::OccEvent _make_grand_canonical_swap_event(
+occ_events::OccEvent _make_semigrand_canonical_swap_event(
     monte::OccSwap const &swap, occ_events::OccSystem const &event_system,
     monte::Conversions const &convert) {
   occ_events::OccPosition pos_a =
@@ -126,20 +126,20 @@ occ_events::OccEvent _make_grand_canonical_swap_event(
 /// \brief Make OccEventTypeData for semi-grand canonical events
 std::map<std::string, OccEventTypeData> _make_event_type_data(
     std::shared_ptr<system_type> system, state_type const &state,
-    std::vector<monte::OccSwap> const &grand_canonical_swaps) {
+    std::vector<monte::OccSwap> const &semigrand_canonical_swaps) {
   auto event_system = get_event_system(*system);
   monte::Conversions const &convert = get_index_conversions(*system, state);
 
   std::map<std::string, OccEventTypeData> event_type_data;
   auto const &occevent_symgroup_rep = get_occevent_symgroup_rep(*system);
-  for (monte::OccSwap const &swap : grand_canonical_swaps) {
+  for (monte::OccSwap const &swap : semigrand_canonical_swaps) {
     // do not repeat forward and reverse -
     //   reverse will be constructed by make_prim_event_list(
     if (swap.cand_a.species_index < swap.cand_b.species_index) {
       continue;
     }
     occ_events::OccEvent event =
-        _make_grand_canonical_swap_event(swap, *event_system, convert);
+        _make_semigrand_canonical_swap_event(swap, *event_system, convert);
     std::set<occ_events::OccEvent> orbit =
         occ_events::make_prim_periodic_orbit(event, occevent_symgroup_rep);
 
@@ -159,20 +159,20 @@ std::map<std::string, OccEventTypeData> _make_event_type_data(
 NfoldEventData::NfoldEventData(
     std::shared_ptr<system_type> system, state_type const &state,
     monte::OccLocation const &occ_location,
-    std::vector<monte::OccSwap> const &grand_canonical_swaps,
-    std::shared_ptr<semi_grand_canonical::SemiGrandCanonicalPotential>
+    std::vector<monte::OccSwap> const &semigrand_canonical_swaps,
+    std::shared_ptr<semigrand_canonical::SemiGrandCanonicalPotential>
         potential) {
   // Make OccEvents from SemiGrandCanonical swaps
   // key: event_type_name, value: symmetrically equivalent events
   system->event_type_data =
-      _make_event_type_data(system, state, grand_canonical_swaps);
+      _make_event_type_data(system, state, semigrand_canonical_swaps);
 
   prim_event_list = clexmonte::make_prim_event_list(*system);
 
   prim_impact_info_list = clexmonte::make_prim_impact_info_list(
       *system, prim_event_list, {"formation_energy"});
 
-  // TODO: rejection-kmc option does not require impact table
+  // TODO: rejection-clexmonte option does not require impact table
   event_list = clexmonte::make_complete_event_list(
       prim_event_list, prim_impact_info_list, occ_location);
 

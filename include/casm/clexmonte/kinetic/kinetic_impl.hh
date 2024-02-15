@@ -18,9 +18,9 @@
 #include "casm/monte/RandomNumberGenerator.hh"
 #include "casm/monte/checks/CompletionCheck.hh"
 #include "casm/monte/methods/kinetic_monte_carlo.hh"
-#include "casm/monte/results/Results.hh"
-#include "casm/monte/state/State.hh"
-#include "casm/monte/state/StateSampler.hh"
+#include "casm/monte/run_management/Results.hh"
+#include "casm/monte/run_management/State.hh"
+#include "casm/monte/run_management/StateSampler.hh"
 
 // debug
 #include "casm/casm_io/json/jsonParser.hh"
@@ -76,13 +76,13 @@ void Kinetic<EngineType>::run(state_type &state,
   monte::Conversions const &convert = get_index_conversions(*system, state);
   monte::OccCandidateList const &occ_candidate_list =
       get_occ_candidate_list(*system, state);
-  std::vector<monte::OccSwap> grand_canonical_swaps =
-      make_grand_canonical_swaps(convert, occ_candidate_list);
+  std::vector<monte::OccSwap> semigrand_canonical_swaps =
+      make_semigrand_canonical_swaps(convert, occ_candidate_list);
   clexmonte::enforce_composition(
       get_occupation(state),
       state.conditions.vector_values.at("mol_composition"),
-      get_composition_calculator(*system), grand_canonical_swaps, occ_location,
-      this->random_number_generator);
+      get_composition_calculator(*system), semigrand_canonical_swaps,
+      occ_location, this->random_number_generator);
 
   // Used to apply selected events: EventID -> monte::OccEvent
   auto get_event_f = [&](EventID const &selected_event_id) {

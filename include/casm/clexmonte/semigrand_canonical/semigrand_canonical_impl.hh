@@ -1,10 +1,10 @@
-#ifndef CASM_clexmonte_semi_grand_canonical_impl
-#define CASM_clexmonte_semi_grand_canonical_impl
+#ifndef CASM_clexmonte_semigrand_canonical_impl
+#define CASM_clexmonte_semigrand_canonical_impl
 
 #include "casm/clexmonte/events/lotto.hh"
 #include "casm/clexmonte/run/analysis_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
-#include "casm/clexmonte/semi_grand_canonical/semi_grand_canonical.hh"
+#include "casm/clexmonte/semigrand_canonical/semigrand_canonical.hh"
 #include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/modifying_functions.hh"
@@ -14,13 +14,13 @@
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/events/OccLocation.hh"
 #include "casm/monte/methods/occupation_metropolis.hh"
-#include "casm/monte/results/Results.hh"
-#include "casm/monte/state/State.hh"
-#include "casm/monte/state/StateSampler.hh"
+#include "casm/monte/run_management/Results.hh"
+#include "casm/monte/run_management/State.hh"
+#include "casm/monte/run_management/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {
-namespace semi_grand_canonical {
+namespace semigrand_canonical {
 
 template <typename EngineType>
 SemiGrandCanonical<EngineType>::SemiGrandCanonical(
@@ -69,14 +69,14 @@ void SemiGrandCanonical<EngineType>::run(
   monte::OccCandidateList const &occ_candidate_list =
       get_occ_candidate_list(*this->system, state);
 
-  std::vector<monte::OccSwap> grand_canonical_swaps =
-      make_grand_canonical_swaps(convert, occ_candidate_list);
+  std::vector<monte::OccSwap> semigrand_canonical_swaps =
+      make_semigrand_canonical_swaps(convert, occ_candidate_list);
 
   // Run Monte Carlo at a single condition
   typedef monte::RandomNumberGenerator<EngineType> generator_type;
   monte::occupation_metropolis(
-      state, occ_location, *potential, grand_canonical_swaps,
-      monte::propose_grand_canonical_event<generator_type>,
+      state, occ_location, *potential, semigrand_canonical_swaps,
+      monte::propose_semigrand_canonical_event<generator_type>,
       random_number_generator, run_manager);
 }
 
@@ -137,7 +137,7 @@ SemiGrandCanonical<EngineType>::standard_modifying_functions(
   return std::map<std::string, state_modifying_function_type>();
 }
 
-}  // namespace semi_grand_canonical
+}  // namespace semigrand_canonical
 }  // namespace clexmonte
 }  // namespace CASM
 

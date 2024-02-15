@@ -4,8 +4,8 @@
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/crystallography/BasicStructure.hh"
-#include "casm/monte/state/FixedConfigGenerator.hh"
-#include "casm/monte/state/State.hh"
+#include "casm/monte/run_management/FixedConfigGenerator.hh"
+#include "casm/monte/run_management/State.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
 

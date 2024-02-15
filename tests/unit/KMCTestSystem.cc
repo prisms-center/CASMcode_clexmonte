@@ -12,7 +12,7 @@ namespace test {
 KMCTestSystem::KMCTestSystem()
     : KMCTestSystem(
           "FCC_binary_vacancy", "FCCBinaryVacancy_default",
-          test::data_dir("clexmonte") / "kmc" / "system_template.json") {
+          test::data_dir("clexmonte") / "clexmonte" / "system_template.json") {
   set_clex("formation_energy", "default", "formation_energy_eci.json");
 
   {
@@ -38,7 +38,7 @@ KMCTestSystem::KMCTestSystem()
 ///     copied and tested (CASM_test_projects/<_test_dir_name>)
 /// \param _input_file_path Path to template input file that will be
 ///     updated and parsed to construct the System. For example,
-///     use `test::data_dir("clexmonte") / "kmc" / "system_template.json".
+///     use `test::data_dir("clexmonte") / "clexmonte" / "system_template.json".
 ///     It is expected to have at least:
 ///     \code
 ///     {

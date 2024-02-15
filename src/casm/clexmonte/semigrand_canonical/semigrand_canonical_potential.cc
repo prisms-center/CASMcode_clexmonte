@@ -1,4 +1,4 @@
-#include "casm/clexmonte/semi_grand_canonical/semi_grand_canonical_potential.hh"
+#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh"
 
 #include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
@@ -6,7 +6,7 @@
 
 namespace CASM {
 namespace clexmonte {
-namespace semi_grand_canonical {
+namespace semigrand_canonical {
 
 SemiGrandCanonicalPotential::SemiGrandCanonicalPotential(
     std::shared_ptr<system_type> _system)
@@ -63,8 +63,8 @@ std::shared_ptr<Conditions> const &SemiGrandCanonicalPotential::conditions()
   return m_conditions;
 }
 
-/// \brief Calculate (extensive) semi-grand potential value
-double SemiGrandCanonicalPotential::extensive_value() {
+/// \brief Calculate (per_supercell) semi-grand potential value
+double SemiGrandCanonicalPotential::per_supercell() {
   Eigen::VectorXi const &occupation = get_occupation(*m_state);
   Eigen::VectorXd mol_composition =
       get_composition_calculator(*m_system).mean_num_each_component(occupation);
@@ -72,7 +72,7 @@ double SemiGrandCanonicalPotential::extensive_value() {
       get_composition_converter(*m_system).param_composition(mol_composition);
   Eigen::VectorXd const &param_chem_pot = *m_conditions->param_chem_pot;
 
-  double formation_energy = m_formation_energy_clex->extensive_value();
+  double formation_energy = m_formation_energy_clex->per_supercell();
 
   double potential_energy =
       formation_energy - m_n_unitcells * param_chem_pot.dot(param_composition);
@@ -80,9 +80,9 @@ double SemiGrandCanonicalPotential::extensive_value() {
   return potential_energy;
 }
 
-/// \brief Calculate change in (extensive) semi-grand potential value due
+/// \brief Calculate change in (per_supercell) semi-grand potential value due
 ///     to a series of occupation changes
-double SemiGrandCanonicalPotential::occ_delta_extensive_value(
+double SemiGrandCanonicalPotential::occ_delta_per_supercell(
     std::vector<Index> const &linear_site_index,
     std::vector<int> const &new_occ) {
   Eigen::MatrixXd const &exchange_chem_pot = *m_conditions->exchange_chem_pot;
@@ -103,6 +103,6 @@ double SemiGrandCanonicalPotential::occ_delta_extensive_value(
   return delta_potential_energy;
 }
 
-}  // namespace semi_grand_canonical
+}  // namespace semigrand_canonical
 }  // namespace clexmonte
 }  // namespace CASM

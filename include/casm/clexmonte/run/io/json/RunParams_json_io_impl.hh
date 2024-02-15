@@ -5,9 +5,9 @@
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/run/io/json/SamplingFixtureParams_json_io.hh"
 #include "casm/clexmonte/run/io/json/StateGenerator_json_io.hh"
-#include "casm/monte/state/FixedConfigGenerator.hh"
-#include "casm/monte/state/StateGenerator.hh"
-#include "casm/monte/state/StateSampler.hh"
+#include "casm/monte/run_management/FixedConfigGenerator.hh"
+#include "casm/monte/run_management/StateGenerator.hh"
+#include "casm/monte/run_management/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {

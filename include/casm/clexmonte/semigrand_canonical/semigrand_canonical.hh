@@ -1,15 +1,15 @@
-#ifndef CASM_clexmonte_semi_grand_canonical
-#define CASM_clexmonte_semi_grand_canonical
+#ifndef CASM_clexmonte_semigrand_canonical
+#define CASM_clexmonte_semigrand_canonical
 
 #include <random>
 
 #include "casm/clexmonte/definitions.hh"
-#include "casm/clexmonte/semi_grand_canonical/semi_grand_canonical_potential.hh"
+#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 
 namespace CASM {
 namespace clexmonte {
-namespace semi_grand_canonical {
+namespace semigrand_canonical {
 
 /// \brief Helper for making a conditions ValueMap for semi-grand
 ///     canonical Monte Carlo calculations
@@ -85,7 +85,7 @@ struct SemiGrandCanonical {
 /// \brief Explicitly instantiated SemiGrandCanonical calculator
 typedef SemiGrandCanonical<std::mt19937_64> SemiGrandCanonical_mt19937_64;
 
-}  // namespace semi_grand_canonical
+}  // namespace semigrand_canonical
 }  // namespace clexmonte
 }  // namespace CASM
 
