@@ -146,6 +146,10 @@ target_link_libraries(casm_testing
   CASM::casm_global
   CASM::casm_composition
   CASM::casm_crystallography
+  CASM::casm_clexulator
+  CASM::casm_configuration
+  CASM::casm_monte
+  CASM::casm_clexmonte
 )
 target_compile_options(casm_testing
   PUBLIC
@@ -159,7 +163,21 @@ enable_testing()
 ################################################################
 # casm_unit_clexmonte
 add_executable(casm_unit_clexmonte
-@casm_unit_clexmonte_source_files@)
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/canonical_RunParams_json_io_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/canonical_conditions_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/canonical_fullrun_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/canonical_metropolis_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/canonical_run_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/events_CompleteEventCalculator_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/events_EventStateCalculator_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/events_RejectionFree_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/events_System_impact_table_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/state_FixedConfigGenerator_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/state_IncrementalConditionsStateGenerator_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/state_StateSampler_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/system_System_json_io_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/gtest_main_run_all.cpp
+)
 target_link_libraries(casm_unit_clexmonte
   gtest_all
   CASM::casm_global
@@ -177,4 +195,4 @@ target_include_directories(casm_unit_clexmonte
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/unit>
 )
 
-add_test(NAME casm_unit_celxmonte COMMAND casm_unit_clexmonte)
+add_test(NAME casm_unit_clexmonte COMMAND casm_unit_clexmonte)

@@ -140,6 +140,10 @@ target_link_libraries(casm_testing
   CASM::casm_global
   CASM::casm_composition
   CASM::casm_crystallography
+  CASM::casm_clexulator
+  CASM::casm_configuration
+  CASM::casm_monte
+  CASM::casm_clexmonte
 )
 target_compile_options(casm_testing
   PUBLIC
@@ -171,4 +175,4 @@ target_include_directories(casm_unit_clexmonte
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/unit>
 )
 
-add_test(NAME casm_unit_celxmonte COMMAND casm_unit_clexmonte)
+add_test(NAME casm_unit_clexmonte COMMAND casm_unit_clexmonte)

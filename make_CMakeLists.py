@@ -169,7 +169,7 @@ additional = ["unit/gtest_main_run_all.cpp"]
 
 files = unit_test_source_files("unit/clexmonte", additional)
 cmake_file_strings = as_cmake_file_strings(files)
-cmakelists = cmakelists.replace("@casm_unit_monte_source_files@", cmake_file_strings)
+cmakelists = cmakelists.replace("@casm_unit_clexmonte_source_files@", cmake_file_strings)
 
 with open("CMakeLists.txt", "w") as f:
     f.write(cmakelists)

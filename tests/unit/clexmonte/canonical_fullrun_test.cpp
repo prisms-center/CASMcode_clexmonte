@@ -20,6 +20,7 @@
 #include "casm/monte/run_management/StateModifyingFunction.hh"
 #include "casm/monte/run_management/StateSampler.hh"
 #include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
+#include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
 #include "casm/monte/sampling/SamplingParams.hh"
 #include "casm/system/RuntimeLibrary.hh"
 #include "gtest/gtest.h"
@@ -261,6 +262,10 @@ TEST(canonical_fullrun_test, Test1) {
   // ### Construct monte::CompletionCheckParams
   monte::CompletionCheckParams<clexmonte::statistics_type>
       completion_check_params;
+  completion_check_params.equilibration_check_f =
+      monte::default_equilibration_check;
+  completion_check_params.calc_statistics_f =
+      monte::BasicStatisticsCalculator();
 
   // - Set monte::CutoffCheckParams
   completion_check_params.cutoff_params.min_count = std::nullopt;
@@ -269,13 +274,10 @@ TEST(canonical_fullrun_test, Test1) {
   completion_check_params.cutoff_params.max_sample = std::nullopt;
 
   // - Set requested precision for convergence
-  auto &requested_precision = completion_check_params.requested_precision;
-  set_abs_precision(requested_precision, sampling_functions, "formation_energy",
-                    0.001);
-  set_abs_precision(requested_precision, sampling_functions,
-                    "formation_energy_corr", 0.01);
-  set_abs_precision_by_component_name(requested_precision, sampling_functions,
-                                      "mol_composition", "O", 0.01);
+  converge(sampling_functions, completion_check_params)
+      .set_abs_precision("formation_energy", 0.001)
+      .set_abs_precision("formation_energy_corr", 0.01)
+      .set_abs_precision("mol_composition", 0.01, {"O"});
 
   // - Set other completion check parameters or use defaults
   // completion_check_params.confidence = 0.95; // default=0.95

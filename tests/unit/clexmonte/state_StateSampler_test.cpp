@@ -12,6 +12,7 @@
 #include "casm/monte/events/OccLocation.hh"
 #include "casm/monte/methods/metropolis.hh"
 #include "casm/monte/run_management/StateSampler.hh"
+#include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
 
@@ -22,6 +23,8 @@ using namespace CASM::clexmonte;
 
 class state_StateSamplerTest : public test::ZrOTestSystem {
  public:
+  typedef std::mt19937_64 engine_type;
+
   state_StateSamplerTest()
       : calculator(std::make_shared<canonical::Canonical_mt19937_64>(system)) {
     sampling_functions =
@@ -97,11 +100,11 @@ TEST_F(state_StateSamplerTest, Test1) {
     bool do_sample_trajectory = false;
     bool do_sample_time = false;
 
-    StateSampler state_sampler(calculator->random_number_generator.engine,
-                               SAMPLE_MODE::BY_PASS, functions, sample_method,
-                               sample_begin, sampling_period,
-                               samples_per_period, log_sampling_shift,
-                               do_sample_trajectory, do_sample_time);
+    StateSampler<config_type, engine_type> state_sampler(
+        calculator->random_number_generator.engine, SAMPLE_MODE::BY_PASS,
+        functions, sample_method, sample_begin, sampling_period,
+        samples_per_period, log_sampling_shift, do_sample_trajectory,
+        do_sample_time);
     state_sampler.reset(steps_per_pass);
     state_sampler.sample_data_by_count_if_due(state, log);
 
