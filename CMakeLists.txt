@@ -136,22 +136,26 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/Matrix3lCompare.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/diffusion_calculations.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/eigen.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/polymorphic_method_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/subparse_from_file.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/to_json.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_events.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_impl.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/ConfigGenerator.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/FixedConfigGenerator.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/IncrementalConditionsStateGenerator.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/RunData.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/StateGenerator.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/StateModifyingFunction.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/analysis_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/covariance_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/RunParams.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/ConfigGenerator_json_io.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/ResultsIO_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/RunData_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/RunParams_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/RunParams_json_io_impl.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/SamplingFixtureParams_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/StateGenerator_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/parse_and_run_series.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical.hh

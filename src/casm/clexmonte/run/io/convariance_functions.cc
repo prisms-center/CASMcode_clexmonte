@@ -30,11 +30,10 @@ namespace clexmonte {
 results_analysis_function_type make_variance_f(
     std::string name, std::string description, std::string sampler_name,
     std::vector<std::string> component_names, std::vector<Index> shape,
-    std::function<double(run_data_type const &, results_type const &)>
-        make_normalization_constant_f) {
+    std::function<double()> make_normalization_constant_f) {
   return results_analysis_function_type(
       name, description, component_names, shape,
-      [=](run_data_type const &run_data, results_type const &results) {
+      [=](results_type const &results) {
         // validation of sampled data:
         auto it = results.samplers.find(sampler_name);
         if (it == results.samplers.end()) {
@@ -45,8 +44,7 @@ results_analysis_function_type make_variance_f(
         }
         auto const &sampler = *it->second;
 
-        double normalization_constant =
-            make_normalization_constant_f(run_data, results);
+        double normalization_constant = make_normalization_constant_f();
 
         Index N_stats = N_samples_for_statistics(results);
 
@@ -87,8 +85,7 @@ results_analysis_function_type make_covariance_f(
     std::string second_sampler_name,
     std::vector<std::string> first_component_names,
     std::vector<std::string> second_component_names,
-    std::function<double(run_data_type const &, results_type const &)>
-        make_normalization_constant_f) {
+    std::function<double()> make_normalization_constant_f) {
   std::vector<std::string> cov_matrix_component_names;
   for (std::string col_name : second_component_names) {
     for (std::string row_name : first_component_names) {
@@ -102,8 +99,7 @@ results_analysis_function_type make_covariance_f(
 
   return results_analysis_function_type(
       name, description, cov_matrix_component_names, shape,
-      [=](run_data_type const &run_data,
-          results_type const &results) -> Eigen::VectorXd {
+      [=](results_type const &results) -> Eigen::VectorXd {
         // validation of sampled data:
         auto first_it = results.samplers.find(first_sampler_name);
         if (first_it == results.samplers.end()) {
@@ -124,8 +120,7 @@ results_analysis_function_type make_covariance_f(
         }
         auto const &second_sampler = *second_it->second;
 
-        double normalization_constant =
-            make_normalization_constant_f(run_data, results);
+        double normalization_constant = make_normalization_constant_f();
 
         Index N_stats = N_samples_for_statistics(results);
 

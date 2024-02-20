@@ -2,8 +2,8 @@
 #define CASM_clexmonte_run_RunParams_json_io
 
 #include "casm/clexmonte/definitions.hh"
-#include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
 #include "casm/global/filesystem.hh"
+#include "casm/monte/misc/polymorphic_method_json_io.hh"
 
 namespace CASM {
 
@@ -20,8 +20,7 @@ MethodParserMap<config_generator_type> standard_config_generator_methods(
 
 MethodParserMap<state_generator_type> standard_state_generator_methods(
     std::shared_ptr<system_type> const &system,
-    std::map<std::string, state_modifying_function_type> const
-        &modifying_functions,
+    StateModifyingFunctionMap const &modifying_functions,
     MethodParserMap<config_generator_type> const &config_generator_methods);
 
 MethodParserMap<results_io_type> standard_results_io_methods(

@@ -2,7 +2,7 @@
 #define CASM_clexmonte_run_StateGenerator_json_io
 
 #include "casm/clexmonte/definitions.hh"
-#include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
+#include "casm/monte/misc/polymorphic_method_json_io.hh"
 
 namespace CASM {
 
@@ -17,13 +17,10 @@ void parse(
     MethodParserMap<state_generator_type> const &state_generator_methods);
 
 /// \brief Construct IncrementalConditionsStateGenerator from JSON
-void parse(
-    InputParser<monte::IncrementalConditionsStateGenerator<Configuration>>
-        &parser,
-    std::shared_ptr<system_type> const &system,
-    std::map<std::string, state_modifying_function_type> const
-        &modifying_functions,
-    MethodParserMap<config_generator_type> config_generator_methods);
+void parse(InputParser<IncrementalConditionsStateGenerator> &parser,
+           std::shared_ptr<system_type> const &system,
+           StateModifyingFunctionMap const &modifying_functions,
+           MethodParserMap<config_generator_type> config_generator_methods);
 
 }  // namespace clexmonte
 }  // namespace CASM

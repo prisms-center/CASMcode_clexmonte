@@ -2,9 +2,9 @@
 #define CASM_clexmonte_state_modifying_functions
 
 #include "casm/clexmonte/definitions.hh"
+#include "casm/clexmonte/run/StateModifyingFunction.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/composition/CompositionCalculator.hh"
-#include "casm/monte/run_management/StateModifyingFunction.hh"
 
 // debugging
 #include "casm/casm_io/container/stream_io.hh"
@@ -33,7 +33,7 @@ namespace clexmonte {
 /// - `composition::CompositionCalculator const &
 ///   get_composition_calculator(SystemType &)`
 template <typename CalculationType>
-state_modifying_function_type make_set_mol_composition_f(
+StateModifyingFunction make_set_mol_composition_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 // --- Inline definitions ---
@@ -56,9 +56,9 @@ state_modifying_function_type make_set_mol_composition_f(
 /// - `composition::CompositionCalculator const &
 ///   get_composition_calculator(SystemType &)`
 template <typename CalculationType>
-state_modifying_function_type make_set_mol_composition_f(
+StateModifyingFunction make_set_mol_composition_f(
     std::shared_ptr<CalculationType> const &calculation) {
-  return state_modifying_function_type(
+  return StateModifyingFunction(
       "set_mol_composition",
       "Set `mol_composition` conditions equal to the mol composition of the "
       "state",

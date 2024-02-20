@@ -1,5 +1,8 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/canonical/canonical.hh"
+#include "casm/clexmonte/run/FixedConfigGenerator.hh"
+#include "casm/clexmonte/run/IncrementalConditionsStateGenerator.hh"
+#include "casm/clexmonte/run/StateModifyingFunction.hh"
 #include "casm/clexmonte/run/functions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
@@ -12,12 +15,9 @@
 #include "casm/crystallography/io/BasicStructureIO.hh"
 #include "casm/monte/MethodLog.hh"
 #include "casm/monte/checks/CompletionCheck.hh"
-#include "casm/monte/run_management/FixedConfigGenerator.hh"
-#include "casm/monte/run_management/IncrementalConditionsStateGenerator.hh"
 #include "casm/monte/run_management/ResultsAnalysisFunction.hh"
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/run_management/SamplingFixture.hh"
-#include "casm/monte/run_management/StateModifyingFunction.hh"
 #include "casm/monte/run_management/StateSampler.hh"
 #include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
 #include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
@@ -183,8 +183,7 @@ TEST(canonical_fullrun_test, Test1) {
                                             transformation_matrix_to_super);
 
   // - Construct a configuration generator
-  auto config_generator = notstd::make_unique<
-      monte::FixedConfigGenerator<clexmonte::Configuration>>(
+  auto config_generator = notstd::make_unique<clexmonte::FixedConfigGenerator>(
       initial_configuration);
 
   // - Construct initial conditions
@@ -216,13 +215,14 @@ TEST(canonical_fullrun_test, Test1) {
   //   - For example, instead of setting composition as a independent
   //     condition, "mol_composition" could be a calculated from
   //     the generated configuration.
-  std::vector<clexmonte::state_modifying_function_type> modifiers;
+  std::vector<clexmonte::StateModifyingFunction> modifiers;
 
   // - Construct the state generator
-  monte::IncrementalConditionsStateGenerator<clexmonte::Configuration>
-      state_generator(std::move(config_generator), initial_conditions,
-                      conditions_increment, n_states, dependent_runs,
-                      modifiers);
+  clexmonte::RunDataOutputParams output_params;
+  output_params.do_save_all_final_states = true;
+  clexmonte::IncrementalConditionsStateGenerator state_generator(
+      output_params, std::move(config_generator), initial_conditions,
+      conditions_increment, n_states, dependent_runs, modifiers);
 
   // ### Construct monte::SamplingParams
   monte::SamplingParams sampling_params;
@@ -309,7 +309,7 @@ TEST(canonical_fullrun_test, Test1) {
   method_log.logfile_path = test_dir / output_dir_relpath / "status.json";
   method_log.log_frequency = 60;  // seconds
 
-  monte::RunManagerParams run_manager_params;
+  clexmonte::run_manager_params_type run_manager_params;
 
   std::vector<clexmonte::sampling_fixture_params_type> sampling_fixture_params;
   std::string label = "thermo";

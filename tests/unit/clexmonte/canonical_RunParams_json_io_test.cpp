@@ -4,6 +4,7 @@
 #include "casm/clexmonte/run/io/json/RunParams_json_io_impl.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexmonte/system/io/json/System_json_io.hh"
+#include "casm/monte/run_management/io/json/ResultsIO_json_io.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
 

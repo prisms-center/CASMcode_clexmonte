@@ -131,10 +131,10 @@ SemiGrandCanonical<EngineType>::standard_analysis_functions(
 
 /// \brief Construct functions that may be used to modify states
 template <typename EngineType>
-std::map<std::string, state_modifying_function_type>
+StateModifyingFunctionMap
 SemiGrandCanonical<EngineType>::standard_modifying_functions(
     std::shared_ptr<SemiGrandCanonical<EngineType>> const &calculation) {
-  return std::map<std::string, state_modifying_function_type>();
+  return StateModifyingFunctionMap();
 }
 
 }  // namespace semigrand_canonical

@@ -88,8 +88,8 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
   };
 
   // Run nfold-way
-  monte::nfold(state, occ_location, this->nfold_data, event_selector,
-               get_event_f, run_manager);
+  monte::nfold<EventID>(state, occ_location, this->nfold_data, event_selector,
+                        get_event_f, run_manager);
 }
 
 }  // namespace nfold

@@ -59,20 +59,24 @@ results_analysis_function_type make_param_thermochem_susc_f(
 
 /// \brief Calculates `(kB * temperature * temperature) / n_unitcells`
 template <typename CalculationType>
-double heat_capacity_normalization_constant_f(run_data_type const &run_data,
-                                              results_type const &results) {
-  // validate temperature
-  auto const &conditions = run_data.conditions;
-  if (!conditions.scalar_values.count("temperature")) {
-    std::stringstream msg;
-    msg << "Results analysis error: heat_capacity requires temperature "
-           "condition";
-    throw std::runtime_error(msg.str());
-  }
-  double temperature = conditions.scalar_values.at("temperature");
+std::function<double()> make_heat_capacity_normalization_constant_f(
+    std::shared_ptr<CalculationType> const &calculation) {
+  return [=]() -> double {
+    // validate temperature
+    auto const &state = *calculation->state;
+    auto const &conditions = state.conditions;
+    Index n_unitcells = get_transformation_matrix_to_super(state).determinant();
+    if (!conditions.scalar_values.count("temperature")) {
+      std::stringstream msg;
+      msg << "Results analysis error: heat_capacity requires temperature "
+             "condition";
+      throw std::runtime_error(msg.str());
+    }
+    double temperature = conditions.scalar_values.at("temperature");
 
-  // calculate
-  return (CASM::KB * temperature * temperature) / run_data.n_unitcells;
+    // calculate
+    return (CASM::KB * temperature * temperature) / n_unitcells;
+  };
 }
 
 /// \brief Make heat capacity analysis function ("heat_capacity")
@@ -89,27 +93,29 @@ results_analysis_function_type make_heat_capacity_f(
       "Heat capacity (per unit cell) = "
       "var(potential_energy_per_unitcell)*n_unitcells/(kB*T*T)",
       "potential_energy", {"0"}, {},
-      heat_capacity_normalization_constant_f<CalculationType>);
+      make_heat_capacity_normalization_constant_f<CalculationType>(
+          calculation));
 }
 
 /// \brief Calculates `(kB * temperature) / n_unitcells`
-inline std::function<double(run_data_type const &, results_type const &results)>
-make_susc_normalization_constant_f(std::string name) {
-  return [=](run_data_type const &run_data,
-             results_type const &results) -> double {
+template <typename CalculationType>
+std::function<double()> make_susc_normalization_constant_f(
+    std::shared_ptr<CalculationType> const &calculation, std::string name) {
+  return [=]() -> double {
     // validate temperature
-    auto const &conditions = run_data.conditions;
+    auto const &state = *calculation->state;
+    auto const &conditions = state.conditions;
+    Index n_unitcells = get_transformation_matrix_to_super(state).determinant();
     if (!conditions.scalar_values.count("temperature")) {
       std::stringstream msg;
       msg << "Results analysis error: " << name
-          << " requires temperature "
-             "condition";
+          << " requires temperature condition";
       throw std::runtime_error(msg.str());
     }
     double temperature = conditions.scalar_values.at("temperature");
 
     // calculate
-    return (CASM::KB * temperature) / run_data.n_unitcells;
+    return (CASM::KB * temperature) / n_unitcells;
   };
 }
 
@@ -130,7 +136,7 @@ results_analysis_function_type make_mol_susc_f(
       "Chemical susceptibility (per unit cell) = "
       "cov(mol_composition_i, mol_composition_j)*n_unitcells/(kB*T)",
       "mol_composition", "mol_composition", component_names, component_names,
-      make_susc_normalization_constant_f("mol_susc"));
+      make_susc_normalization_constant_f(calculation, "mol_susc"));
 }
 
 /// \brief Make param_composition susceptibility analysis function
@@ -157,7 +163,8 @@ results_analysis_function_type make_param_susc_f(
       "Chemical susceptibility (per unit cell) = "
       "cov(param_composition_i, param_composition_j)*n_unitcells/(kB*T)",
       "param_composition", "param_composition", component_names,
-      component_names, make_susc_normalization_constant_f("param_susc"));
+      component_names,
+      make_susc_normalization_constant_f(calculation, "param_susc"));
 }
 
 /// \brief Make mol_composition thermo-chemical susceptibility
@@ -183,7 +190,7 @@ results_analysis_function_type make_mol_thermochem_susc_f(
       "cov(potential_energy, mol_composition)*n_unitcells/(kB*T)",
       "potential_energy", "mol_composition", first_component_names,
       second_component_names,
-      make_susc_normalization_constant_f("mol_thermochem_susc"));
+      make_susc_normalization_constant_f(calculation, "mol_thermochem_susc"));
 }
 
 /// \brief Make param_composition thermo-chemical susceptibility
@@ -214,7 +221,7 @@ results_analysis_function_type make_param_thermochem_susc_f(
       "cov(potential_energy, param_composition)*n_unitcells/(kB*T)",
       "potential_energy", "param_composition", first_component_names,
       second_component_names,
-      make_susc_normalization_constant_f("param_thermochem_susc"));
+      make_susc_normalization_constant_f(calculation, "param_thermochem_susc"));
 }
 
 }  // namespace clexmonte

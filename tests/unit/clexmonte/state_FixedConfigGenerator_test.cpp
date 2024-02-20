@@ -1,10 +1,10 @@
 #include "ZrOTestSystem.hh"
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/clexmonte/canonical/canonical.hh"
+#include "casm/clexmonte/run/FixedConfigGenerator.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/crystallography/BasicStructure.hh"
-#include "casm/monte/run_management/FixedConfigGenerator.hh"
 #include "casm/monte/run_management/State.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
@@ -23,7 +23,7 @@ TEST_F(state_FixedConfigGeneratorTest, Test1) {
   monte::ValueMap conditions =
       canonical::make_conditions(300.0, system->composition_converter,
                                  {{"Zr", 2.0}, {"O", 1.0}, {"Va", 1.0}});
-  std::vector<run_data_type> completed_runs;
+  std::vector<RunData> completed_runs;
 
   Eigen::Matrix3l T = Eigen::Matrix3l::Identity() * 2;
   Index volume = T.determinant();
@@ -32,7 +32,7 @@ TEST_F(state_FixedConfigGeneratorTest, Test1) {
     init_config.dof_values.occupation(2 * volume + i) = 1;
   }
 
-  FixedConfigGenerator<Configuration> config_generator(init_config);
+  FixedConfigGenerator config_generator(init_config);
   for (Index j = 0; j < 10; ++j) {
     Configuration config = config_generator(conditions, completed_runs);
     EXPECT_EQ(config.dof_values.occupation, init_config.dof_values.occupation);

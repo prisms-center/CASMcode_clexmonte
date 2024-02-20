@@ -135,13 +135,12 @@ Canonical<EngineType>::standard_analysis_functions(
 
 /// \brief Construct functions that may be used to modify states
 template <typename EngineType>
-std::map<std::string, state_modifying_function_type>
-Canonical<EngineType>::standard_modifying_functions(
+StateModifyingFunctionMap Canonical<EngineType>::standard_modifying_functions(
     std::shared_ptr<Canonical<EngineType>> const &calculation) {
-  std::vector<state_modifying_function_type> functions = {
+  std::vector<StateModifyingFunction> functions = {
       make_set_mol_composition_f(calculation)};
 
-  std::map<std::string, state_modifying_function_type> function_map;
+  StateModifyingFunctionMap function_map;
   for (auto const &f : functions) {
     function_map.emplace(f.name, f);
   }

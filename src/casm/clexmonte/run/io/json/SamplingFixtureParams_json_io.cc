@@ -1,12 +1,12 @@
-#include "casm/clexmonte/run/io/json/SamplingFixtureParams_json_io.hh"
+#include "casm/monte/run_management/io/json/SamplingFixtureParams_json_io.hh"
 
-#include "casm/clexmonte/run/io/json/ResultsIO_json_io.hh"
 #include "casm/monte/MethodLog.hh"
 #include "casm/monte/checks/io/json/CompletionCheck_json_io.hh"
 #include "casm/monte/run_management/ResultsAnalysisFunction.hh"
 #include "casm/monte/run_management/SamplingFixture.hh"
 #include "casm/monte/run_management/StateSampler.hh"
 #include "casm/monte/run_management/io/ResultsIO.hh"
+#include "casm/monte/run_management/io/json/ResultsIO_json_io.hh"
 #include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
 #include "casm/monte/sampling/io/json/SamplingParams_json_io.hh"
 

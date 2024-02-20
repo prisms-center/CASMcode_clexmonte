@@ -2,14 +2,14 @@
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
+#include "casm/clexmonte/run/FixedConfigGenerator.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexulator/io/json/ConfigDoFValues_json_io.hh"
 #include "casm/configuration/Configuration.hh"
 #include "casm/configuration/copy_configuration.hh"
 #include "casm/configuration/io/json/Configuration_json_io.hh"
-#include "casm/monte/run_management/FixedConfigGenerator.hh"
+#include "casm/monte/misc/polymorphic_method_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -24,11 +24,11 @@ namespace clexmonte {
 ///   method: string (required)
 ///     The name of the chosen config generation method. Currently, the only
 ///     option is:
-///     - "fixed": monte::FixedConfigGenerator
+///     - "fixed": FixedConfigGenerator
 ///
 ///   kwargs: dict (optional, default={})
 ///     Method-specific options. See documentation for particular methods:
-///     - "fixed": `parse(InputParser<monte::FixedConfigGenerator> &, ...)`
+///     - "fixed": `parse(InputParser<FixedConfigGenerator> &, ...)`
 void parse(
     InputParser<config_generator_type> &parser,
     MethodParserMap<config_generator_type> const &config_generator_methods) {
@@ -63,7 +63,7 @@ void parse(
 /// - `Configuration make_default_configuration(
 ///        system_type const &system,
 ///        Eigen::Matrix3l const &transformation_matrix_to_super)`
-void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
+void parse(InputParser<FixedConfigGenerator> &parser,
            std::shared_ptr<system_type> const &system) {
   Eigen::Matrix3l T;
   parser.require(T, "transformation_matrix_to_supercell");
@@ -92,12 +92,10 @@ void parse(InputParser<monte::FixedConfigGenerator<Configuration>> &parser,
     if (configuration != nullptr) {
       clexmonte::Configuration tmp =
           from_standard_values(*system, *configuration);
-      parser.value =
-          notstd::make_unique<monte::FixedConfigGenerator<Configuration>>(tmp);
+      parser.value = notstd::make_unique<FixedConfigGenerator>(tmp);
     } else {
-      parser.value =
-          notstd::make_unique<monte::FixedConfigGenerator<Configuration>>(
-              make_default_configuration(*system, T));
+      parser.value = notstd::make_unique<FixedConfigGenerator>(
+          make_default_configuration(*system, T));
     }
   }
 }

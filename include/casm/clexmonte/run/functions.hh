@@ -4,6 +4,8 @@
 #include "casm/casm_io/Log.hh"
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/misc/to_json.hh"
+#include "casm/clexmonte/run/StateGenerator.hh"
+#include "casm/clexmonte/run/io/json/RunData_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
@@ -14,9 +16,7 @@
 #include "casm/monte/run_management/ResultsAnalysisFunction.hh"
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/run_management/SamplingFixture.hh"
-#include "casm/monte/run_management/StateGenerator.hh"
 #include "casm/monte/run_management/io/ResultsIO.hh"
-#include "casm/monte/run_management/io/json/RunData_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -25,7 +25,7 @@ namespace clexmonte {
 template <typename CalculationType>
 void run_series(
     CalculationType &calculation, state_generator_type &state_generator,
-    monte::RunManagerParams const &run_manager_params,
+    run_manager_params_type const &run_manager_params,
     std::vector<sampling_fixture_params_type> const &sampling_fixture_params,
     std::vector<sampling_fixture_params_type> const &before_first_run =
         std::vector<sampling_fixture_params_type>({}),
@@ -38,7 +38,7 @@ void run_series(
 ///
 /// \param calculation A calculation instance, such as canonical::Canonical,
 ///     semigrand_canonical::SemiGrandCanonical, or kinetic::Kinetic.
-/// \param state_generator A monte::StateGenerator, which produces a
+/// \param state_generator A StateGenerator, which produces a
 ///     a series of initial states
 /// \param run_manager_params Parameters controlling the run manager
 /// \param sampling_fixture_params Parameters controlling each
@@ -54,7 +54,7 @@ void run_series(
 template <typename CalculationType>
 void run_series(
     CalculationType &calculation, state_generator_type &state_generator,
-    monte::RunManagerParams const &run_manager_params,
+    run_manager_params_type const &run_manager_params,
     std::vector<sampling_fixture_params_type> const &sampling_fixture_params,
     std::vector<sampling_fixture_params_type> const &before_first_run,
     std::vector<sampling_fixture_params_type> const &before_each_run) {
@@ -67,19 +67,20 @@ void run_series(
 
   run_manager_type<engine_type> run_manager(run_manager_params, engine,
                                             sampling_fixture_params);
-
   // Final states are made available to the state generator which can use them
   // to determine the next state and enable restarts
   log.indent() << "Checking for completed runs..." << std::endl;
-  run_manager.read_completed_runs();
-  log.indent() << "Found " << run_manager.completed_runs.size() << std::endl
+  state_generator.read_completed_runs();
+  log.indent() << "Found " << state_generator.n_completed_runs() << std::endl
                << std::endl;
 
   // For all states generated, prepare input and run canonical Monte Carlo
-  while (!state_generator.is_complete(run_manager.completed_runs)) {
+  while (!state_generator.is_complete()) {
+    run_manager.run_index = state_generator.n_completed_runs() + 1;
+
     // Get initial state for the next calculation
     log.indent() << "Generating next state..." << std::endl;
-    state_type state = state_generator.next_state(run_manager.completed_runs);
+    state_type state = state_generator.next_state();
     log.indent() << qto_json(state.conditions) << std::endl;
     log.indent() << "Done" << std::endl;
 
@@ -93,7 +94,7 @@ void run_series(
     occ_location.initialize(get_occupation(state));
 
     // Optional, before first run:
-    if (before_first_run.size() && run_manager.completed_runs.size() == 0) {
+    if (before_first_run.size() && state_generator.n_completed_runs() == 0) {
       run_manager_type<engine_type> tmp_run_manager(run_manager_params, engine,
                                                     before_first_run);
       // Run Monte Carlo at a single condition
@@ -112,14 +113,25 @@ void run_series(
       log.indent() << "\"Before-each-run\" run: Done" << std::endl;
     }
 
-    // Run Monte Carlo at a single condition
-    log.indent() << "Performing Run " << run_manager.completed_runs.size() + 1
-                 << "..." << std::endl;
-    calculation.run(state, occ_location, run_manager);
-    log.indent() << "Run " << run_manager.completed_runs.size() << " Done"
-                 << std::endl;
+    // Prepare run data
+    RunData run_data;
+    run_data.transformation_matrix_to_super =
+        get_transformation_matrix_to_super(state);
+    run_data.n_unitcells =
+        run_data.transformation_matrix_to_super.determinant();
+    run_data.initial_state = state;
 
+    // Run Monte Carlo at a single condition
+    log.indent() << "Performing Run " << run_manager.run_index << "..."
+                 << std::endl;
+    calculation.run(state, occ_location, run_manager);
+    log.indent() << "Run " << run_manager.run_index << " Done" << std::endl;
     log.indent() << std::endl;
+
+    // Finalize run data
+    run_data.final_state = state;
+    state_generator.push_back(run_data);
+    state_generator.write_completed_runs();
   }
   log.indent() << "Monte Carlo calculation series complete" << std::endl;
 }

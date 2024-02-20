@@ -2,11 +2,11 @@
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/misc/polymorphic_method_json_io.hh"
+#include "casm/clexmonte/run/IncrementalConditionsStateGenerator.hh"
 #include "casm/clexmonte/run/io/json/ConfigGenerator_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/parse_conditions.hh"
-#include "casm/monte/run_management/IncrementalConditionsStateGenerator.hh"
+#include "casm/monte/misc/polymorphic_method_json_io.hh"
 #include "casm/monte/run_management/StateSampler.hh"
 
 namespace CASM {
@@ -28,7 +28,7 @@ namespace clexmonte {
 ///   method: string (required)
 ///     The name of the chosen state generation method. Currently, the only
 ///     option is:
-///     - "incremental": monte::IncrementalConditionsStateGenerator
+///     - "incremental": IncrementalConditionsStateGenerator
 ///
 ///   kwargs: dict (optional, default={})
 ///     Method-specific options. See documentation for particular methods:
@@ -174,13 +174,10 @@ void parse(
 ///     This relieves the user of having to calculate the composition of the
 ///     initial configuration and set it in `initial_conditions` manually.
 ///
-void parse(
-    InputParser<monte::IncrementalConditionsStateGenerator<Configuration>>
-        &parser,
-    std::shared_ptr<system_type> const &system,
-    std::map<std::string, state_modifying_function_type> const
-        &modifying_functions,
-    MethodParserMap<config_generator_type> config_generator_methods) {
+void parse(InputParser<IncrementalConditionsStateGenerator> &parser,
+           std::shared_ptr<system_type> const &system,
+           StateModifyingFunctionMap const &modifying_functions,
+           MethodParserMap<config_generator_type> config_generator_methods) {
   /// Parse "initial_configuration"
   auto config_generator_subparser = parser.subparse<config_generator_type>(
       "initial_configuration", config_generator_methods);
@@ -198,7 +195,7 @@ void parse(
   /// Parse "modifiers"
   std::vector<std::string> modifier_names;
   parser.optional(modifier_names, "modifiers");
-  std::vector<state_modifying_function_type> selected_modifiers;
+  std::vector<StateModifyingFunction> selected_modifiers;
   for (auto const &name : modifier_names) {
     auto it = modifying_functions.find(name);
     if (it == modifying_functions.end()) {
@@ -220,10 +217,12 @@ void parse(
   bool dependent_runs = true;
   parser.optional(dependent_runs, "dependent_runs");
 
+  /// TODO: parse "..."
+  RunDataOutputParams output_params;
+
   if (parser.valid()) {
-    parser.value = std::make_unique<
-        monte::IncrementalConditionsStateGenerator<Configuration>>(
-        std::move(config_generator_subparser->value),
+    parser.value = std::make_unique<IncrementalConditionsStateGenerator>(
+        output_params, std::move(config_generator_subparser->value),
         *initial_conditions_subparser->value,
         *conditions_increment_subparser->value, n_states, dependent_runs,
         selected_modifiers);

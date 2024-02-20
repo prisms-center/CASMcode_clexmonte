@@ -2,12 +2,13 @@
 #define CASM_clexmonte_run_RunParams_json_io_impl
 
 #include "casm/clexmonte/misc/subparse_from_file.hh"
+#include "casm/clexmonte/run/FixedConfigGenerator.hh"
+#include "casm/clexmonte/run/IncrementalConditionsStateGenerator.hh"
+#include "casm/clexmonte/run/StateGenerator.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
-#include "casm/clexmonte/run/io/json/SamplingFixtureParams_json_io.hh"
 #include "casm/clexmonte/run/io/json/StateGenerator_json_io.hh"
-#include "casm/monte/run_management/FixedConfigGenerator.hh"
-#include "casm/monte/run_management/StateGenerator.hh"
 #include "casm/monte/run_management/StateSampler.hh"
+#include "casm/monte/run_management/io/json/SamplingFixtureParams_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -17,7 +18,7 @@ namespace clexmonte {
 /// Input file summary:
 /// \code
 /// {
-///     "state_generation": <monte::StateGenerator>
+///     "state_generation": <StateGenerator>
 ///         Specifies a "path" of input states at which to run Monte Carlo
 ///         calculations. Each state is an initial configuration and set of
 ///         thermodynamic conditions (temperature, chemical potential,
@@ -125,22 +126,22 @@ void parse(InputParser<RunParams<EngineType>> &parser,
   std::vector<sampling_fixture_params_type> before_each_run =
       _parse_sampling_fixtures("before_each_run", is_required = false);
 
-  monte::RunManagerParams run_manager_params;
-  parser.optional_else(run_manager_params.do_save_all_initial_states,
-                       "completed_runs/save_all_initial_states", false);
-  parser.optional_else(run_manager_params.do_save_all_final_states,
-                       "completed_runs/save_all_final_states", false);
-  parser.optional_else(run_manager_params.do_save_all_final_states,
-                       "completed_runs/save_all_final_states", false);
-  parser.optional_else(run_manager_params.do_save_last_final_state,
-                       "completed_runs/save_last_final_state", true);
-  parser.optional_else(run_manager_params.do_write_initial_states,
-                       "completed_runs/write_initial_states", false);
-  parser.optional_else(run_manager_params.do_write_final_states,
-                       "completed_runs/write_final_states", false);
-  std::string output_dir;
-  parser.optional(output_dir, "completed_runs/output_dir");
-  run_manager_params.output_dir = fs::path(output_dir);
+  run_manager_params_type run_manager_params;
+  //  parser.optional_else(run_manager_params.do_save_all_initial_states,
+  //                       "completed_runs/save_all_initial_states", false);
+  //  parser.optional_else(run_manager_params.do_save_all_final_states,
+  //                       "completed_runs/save_all_final_states", false);
+  //  parser.optional_else(run_manager_params.do_save_all_final_states,
+  //                       "completed_runs/save_all_final_states", false);
+  //  parser.optional_else(run_manager_params.do_save_last_final_state,
+  //                       "completed_runs/save_last_final_state", true);
+  //  parser.optional_else(run_manager_params.do_write_initial_states,
+  //                       "completed_runs/write_initial_states", false);
+  //  parser.optional_else(run_manager_params.do_write_final_states,
+  //                       "completed_runs/write_final_states", false);
+  //  std::string output_dir;
+  //  parser.optional(output_dir, "completed_runs/output_dir");
+  //  run_manager_params.output_dir = fs::path(output_dir);
   parser.optional_else(run_manager_params.global_cutoff, "global_cutoff", true);
 
   if (parser.valid()) {

@@ -116,8 +116,7 @@ struct Canonical {
       std::shared_ptr<Canonical<EngineType>> const &calculation);
 
   /// \brief Construct functions that may be used to modify states
-  static std::map<std::string, state_modifying_function_type>
-  standard_modifying_functions(
+  static StateModifyingFunctionMap standard_modifying_functions(
       std::shared_ptr<Canonical<EngineType>> const &calculation);
 };
 
