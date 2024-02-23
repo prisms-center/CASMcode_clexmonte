@@ -18,7 +18,6 @@
 #include "casm/monte/run_management/ResultsAnalysisFunction.hh"
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/run_management/SamplingFixture.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 #include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
 #include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
 #include "casm/monte/sampling/SamplingParams.hh"
@@ -89,6 +88,7 @@ TEST(canonical_fullrun_test, Test1) {
 
   // Create an output directory
   fs::path output_dir_relpath = "output";
+  fs::path output_dir = test_dir / output_dir_relpath;
 
   // Error message
   std::runtime_error error_if_invalid{
@@ -220,6 +220,7 @@ TEST(canonical_fullrun_test, Test1) {
   // - Construct the state generator
   clexmonte::RunDataOutputParams output_params;
   output_params.do_save_all_final_states = true;
+  output_params.output_dir = output_dir;
   clexmonte::IncrementalConditionsStateGenerator state_generator(
       output_params, std::move(config_generator), initial_conditions,
       conditions_increment, n_states, dependent_runs, modifiers);
@@ -234,21 +235,20 @@ TEST(canonical_fullrun_test, Test1) {
   //
   // Default=SAMPLE_METHOD::LINEAR
   //
-  // For SAMPLE_METHOD::LINEAR, take the n-th sample when:
+  // For SAMPLE_METHOD::LINEAR, take the n-th (n=0,1,2,...) sample when:
   //
-  //    sample/pass = round( begin + (period / samples_per_period) * n )
-  //           time = begin + (period / samples_per_period) * n
+  //    sample/pass = round( begin + period * n )
+  //           time = begin + period * n
   //
   // For SAMPLE_METHOD::LOG, take the n-th sample when:
   //
-  //    sample/pass = round( begin + period ^ ( (n + shift) /
-  //                      samples_per_period ) )
-  //           time = begin + period ^ ( (n + shift) / samples_per_period )
+  //    sample/pass = round( begin + base ^ (n + shift)
+  //           time = begin + base ^ (n + shift)
   //
   sampling_params.sample_method = monte::SAMPLE_METHOD::LINEAR;
-  sampling_params.begin = 0.0;
+  sampling_params.begin = 1.0;
   sampling_params.period = 1.0;
-  sampling_params.samples_per_period = 1.0;
+  sampling_params.base = 1.0;
   sampling_params.shift = 0.0;
 
   // - What sampling functions to sample
@@ -288,12 +288,12 @@ TEST(canonical_fullrun_test, Test1) {
   // completion_check_params.check_shift = 1.0;  // default=1
 
   // ### Construct monte::jsonResultsIO
-  fs::path output_dir = test_dir / output_dir_relpath;
+  fs::path output_thermo_dir = output_dir / "thermo";
   bool write_trajectory = true;
   bool write_observations = true;
   auto results_io =
       std::make_unique<monte::jsonResultsIO<clexmonte::results_type>>(
-          output_dir,          // fs::path,
+          output_thermo_dir,   // fs::path,
           sampling_functions,  // std::map<std::string,
                                // state_sampling_function_type>
           analysis_functions,  // std::map<std::string,
@@ -306,10 +306,10 @@ TEST(canonical_fullrun_test, Test1) {
 
   // Create monte::MethodLog
   monte::MethodLog method_log;
-  method_log.logfile_path = test_dir / output_dir_relpath / "status.json";
+  method_log.logfile_path = output_thermo_dir / "status.json";
   method_log.log_frequency = 60;  // seconds
 
-  clexmonte::run_manager_params_type run_manager_params;
+  bool global_cutoff = true;
 
   std::vector<clexmonte::sampling_fixture_params_type> sampling_fixture_params;
   std::string label = "thermo";
@@ -317,32 +317,49 @@ TEST(canonical_fullrun_test, Test1) {
       "thermo", sampling_functions, analysis_functions, sampling_params,
       completion_check_params, std::move(results_io), method_log);
 
-  clexmonte::run_series(*calculation, state_generator, run_manager_params,
-                        sampling_fixture_params);
+  clexmonte::run_series(*calculation, state_generator, sampling_fixture_params,
+                        global_cutoff);
 
-  // check output files
-  EXPECT_TRUE(fs::exists(output_dir));
-  if (fs::exists(output_dir / "status.json")) {
-    fs::remove(output_dir / "status.json");
-  }
+  // check output/ files presence
+  EXPECT_TRUE(fs::exists(output_dir / "completed_runs.json"));
 
-  EXPECT_TRUE(fs::exists(output_dir / "summary.json"));
-  EXPECT_EQ(test::file_count(output_dir), 12);
+  // check reading output/completed_runs.json
+  clexmonte::IncrementalConditionsStateGenerator state_generator_2(
+      output_params, std::move(config_generator), initial_conditions,
+      conditions_increment, n_states, dependent_runs, modifiers);
+  state_generator_2.read_completed_runs();
+  EXPECT_EQ(state_generator_2.n_completed_runs(), 11);
+
+  // check output/thermo files presence
+  EXPECT_TRUE(fs::exists(output_thermo_dir));
+  EXPECT_TRUE(fs::exists(output_thermo_dir / "summary.json"));
+  EXPECT_EQ(test::file_count(output_thermo_dir), 13);
   for (int i = 1; i <= 11; ++i) {
-    fs::path run_dir = output_dir / (std::string("run.") + std::to_string(i));
+    fs::path run_dir =
+        output_thermo_dir / (std::string("run.") + std::to_string(i));
     EXPECT_TRUE(fs::exists(run_dir));
     EXPECT_EQ(test::file_count(run_dir), 2);
     EXPECT_TRUE(fs::exists(run_dir / "observations.json"));
     EXPECT_TRUE(fs::exists(run_dir / "trajectory.json"));
   }
 
-  // remove
+  // remove output/thermo/ files
+  if (fs::exists(output_thermo_dir / "status.json")) {
+    fs::remove(output_thermo_dir / "status.json");
+  }
   for (int i = 1; i <= 11; ++i) {
-    fs::path run_dir = output_dir / (std::string("run.") + std::to_string(i));
+    fs::path run_dir =
+        output_thermo_dir / (std::string("run.") + std::to_string(i));
     fs::remove(run_dir / "observations.json");
     fs::remove(run_dir / "trajectory.json");
     fs::remove(run_dir);
   }
-  fs::remove(output_dir / "summary.json");
+  fs::remove(output_thermo_dir / "summary.json");
+  fs::remove(output_thermo_dir);
+
+  // remove output/ files
+  fs::remove(output_dir / "completed_runs.json");
+
+  // remote output/
   fs::remove(output_dir);
 }

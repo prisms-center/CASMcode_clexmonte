@@ -28,7 +28,7 @@ struct Nfold : public semigrand_canonical::SemiGrandCanonical<EngineType> {
   std::shared_ptr<NfoldEventData> event_data;
 
   /// Data for sampling functions
-  monte::NfoldData<config_type, engine_type> nfold_data;
+  monte::NfoldData<config_type, statistics_type, engine_type> nfold_data;
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,

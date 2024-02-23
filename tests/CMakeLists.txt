@@ -172,9 +172,9 @@ add_executable(casm_unit_clexmonte
   ${PROJECT_SOURCE_DIR}/unit/clexmonte/events_EventStateCalculator_test.cpp
   ${PROJECT_SOURCE_DIR}/unit/clexmonte/events_RejectionFree_test.cpp
   ${PROJECT_SOURCE_DIR}/unit/clexmonte/events_System_impact_table_test.cpp
-  ${PROJECT_SOURCE_DIR}/unit/clexmonte/state_FixedConfigGenerator_test.cpp
-  ${PROJECT_SOURCE_DIR}/unit/clexmonte/state_IncrementalConditionsStateGenerator_test.cpp
-  ${PROJECT_SOURCE_DIR}/unit/clexmonte/state_StateSampler_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/run_FixedConfigGenerator_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/run_IncrementalConditionsStateGenerator_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/run_SamplingFixture_test.cpp
   ${PROJECT_SOURCE_DIR}/unit/clexmonte/system_System_json_io_test.cpp
   ${PROJECT_SOURCE_DIR}/unit/gtest_main_run_all.cpp
 )

@@ -6,7 +6,6 @@
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/monte/misc/polymorphic_method_json_io.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 #include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
 
 namespace CASM {

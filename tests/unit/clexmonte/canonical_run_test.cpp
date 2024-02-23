@@ -84,10 +84,10 @@ TEST(canonical_run_test, Test1) {
 
   clexmonte::RunParams<std::mt19937_64> &run_params = *run_params_parser.value;
 
-  clexmonte::run_series(
-      *calculation, *run_params.state_generator, run_params.run_manager_params,
-      run_params.sampling_fixture_params, run_params.before_first_run,
-      run_params.before_each_run);
+  clexmonte::run_series(*calculation, *run_params.state_generator,
+                        run_params.sampling_fixture_params,
+                        run_params.global_cutoff, run_params.before_first_run,
+                        run_params.before_each_run);
 
   EXPECT_TRUE(fs::exists(test_dir / "output"));
   EXPECT_TRUE(fs::exists(test_dir / "output" / "thermo"));
@@ -200,10 +200,10 @@ TEST(canonical_run_test, Test2) {
 
   clexmonte::RunParams<std::mt19937_64> &run_params = *run_params_parser.value;
 
-  clexmonte::run_series(
-      *calculation, *run_params.state_generator, run_params.run_manager_params,
-      run_params.sampling_fixture_params, run_params.before_first_run,
-      run_params.before_each_run);
+  clexmonte::run_series(*calculation, *run_params.state_generator,
+                        run_params.sampling_fixture_params,
+                        run_params.global_cutoff, run_params.before_first_run,
+                        run_params.before_each_run);
 
   EXPECT_TRUE(fs::exists(test_dir / "output"));
 

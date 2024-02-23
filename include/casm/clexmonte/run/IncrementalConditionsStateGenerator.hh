@@ -15,6 +15,7 @@
 #include "casm/casm_io/SafeOfstream.hh"
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/jsonParser.hh"
+#include "casm/clexmonte/misc/parse_array.hh"
 #include "casm/clexmonte/run/io/json/RunData_json_io.hh"
 
 namespace CASM {
@@ -159,8 +160,19 @@ class IncrementalConditionsStateGenerator : public StateGenerator {
     if (!fs::exists(completed_runs_path)) {
       return;
     }
+
     jsonParser json(completed_runs_path);
-    m_completed_runs = json.get<std::vector<RunData>>();
+    ParentInputParser parser{json};
+    auto subparser =
+        parser.parse_as_with<std::vector<RunData>>(parse_array<RunData>);
+
+    std::stringstream ss;
+    ss << "Error in IncrementalConditionsStateGenerator: failed to read "
+       << completed_runs_path;
+    std::runtime_error error_if_invalid{ss.str()};
+    report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
+
+    m_completed_runs = *subparser->value;
   }
 
   void write_completed_runs() const override {

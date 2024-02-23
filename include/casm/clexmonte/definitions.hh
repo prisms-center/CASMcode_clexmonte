@@ -35,7 +35,6 @@ typedef monte::ResultsAnalysisFunction<config_type, statistics_type>
 typedef monte::SamplingFixtureParams<config_type, statistics_type>
     sampling_fixture_params_type;
 
-typedef monte::RunManagerParams run_manager_params_type;
 template <typename EngineType>
 using run_manager_type =
     monte::RunManager<config_type, statistics_type, EngineType>;

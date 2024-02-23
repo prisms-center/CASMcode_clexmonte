@@ -8,7 +8,6 @@
 #include "casm/clexulator/Correlations.hh"
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 
 // debugging
 #include "casm/casm_io/container/stream_io.hh"

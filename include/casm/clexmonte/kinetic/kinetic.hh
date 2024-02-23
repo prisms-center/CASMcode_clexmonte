@@ -59,7 +59,7 @@ struct Kinetic {
   // --- Data used by kinetic sampling functions ---
 
   /// Data for sampling functions
-  monte::KMCData<config_type, engine_type> kmc_data;
+  monte::KMCData<config_type, statistics_type, engine_type> kmc_data;
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,

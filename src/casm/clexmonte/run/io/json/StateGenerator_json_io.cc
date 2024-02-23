@@ -7,7 +7,6 @@
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/parse_conditions.hh"
 #include "casm/monte/misc/polymorphic_method_json_io.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -79,7 +78,7 @@ void parse(
 ///        Configuration. The attributes are:
 ///
 ///          transformation_matrix_to_super: 3x3 matrix of int
-///            Matrix, T, specifiying the supercell lattice vectors in terms of
+///            Matrix, T, specifying the supercell lattice vectors in terms of
 ///            the primitive cell vectors, according to `S = P * T`, where the
 ///            columns of P are the primitive lattice vectors (a,b,c) and the
 ///            columns of S are the supercell lattice vectors.
@@ -119,7 +118,7 @@ void parse(
 ///         Parametric composition, in terms of the chosen composition axes. May
 ///         be:
 ///
-///         - An array of number, specifying the parameteric composition along
+///         - An array of number, specifying the parametric composition along
 ///           each axis (i.e. `[a, b, ...]`). The size must match the number
 ///           of composition axes.
 ///
@@ -131,12 +130,12 @@ void parse(
 ///         Parametric chemical potential, i.e. the chemical potential conjugate
 ///         to the chosen composition axes. May be:
 ///
-///         - An array of number, specifying the parameteric chemical potential
+///         - An array of number, specifying the parametric chemical potential
 ///           for each axis (i.e. `[a, b, ...]`). The size must match the number
 ///           of composition axes.
 ///
 ///         - A dict, where the keys are the axes names ("a", "b", etc.), and
-///           values are the corresponding parameteric chemical potential
+///           values are the corresponding parametric chemical potential
 ///           values. All composition axes must be included.
 ///
 ///
@@ -147,19 +146,47 @@ void parse(
 ///     state will be generated.
 ///
 ///   n_state: integer (required)
-///     Total number of states to generate. Includes the inital state.
+///     Total number of states to generate. Includes the initial state.
 ///
 ///   dependent_runs: bool (optional, default=true)
 ///     If true, only use the ConfigGenerator specified by
 ///     "initial_configuration" for the first state. For subsequent states at
 ///     new conditions, use the configuration of the final state for the
-///     initial configuration at the next condistions. Choosing `true` tends to
+///     initial configuration at the next conditions. Choosing `true` tends to
 ///     result in smoother calculation results from condition to condition and
 ///     more hysteresis.
 ///
 ///     If false, then always use the ConfigGenerator to determine the initial
 ///     configuration. Choosing `false` tends to result in noisier calculation
 ///     results from condition to condition and less hysteresis.
+///
+///   completed_runs: dict (optional)
+///     Controls storage and output of completed runs data used for handling
+///     restarts. One of "save_all_final_states" or "save_last_final_state"
+///     must be true for the "dependent_runs" option. May include:
+///
+///       "save_all_initial_states": bool = false
+///         If true, save initial states for analysis, output, or state
+///         generation.
+///
+///       "save_all_final_states": bool = false
+///         If true, save final states for analysis, output, or state
+///         generation.
+///
+///       "save_last_final_state": bool = true
+///         If true, save final state for last run for analysis, output
+///         or state generation.
+///
+///       "write_initial_states": bool = false
+///         If true, write saved initial states to completed_runs.json.
+///
+///       "write_final_states": bool = false
+///         If true, write saved final states to completed_runs.json.
+///
+///       "output_dir": str = ""
+///         If not empty, name of a directory in which to write
+///         completed_runs.json. If empty, completed_runs.json is not
+///         written, which means restarts are not possible.
 ///
 ///   modifiers: Array of string (optional, default=[])
 ///     Names of functions that should be used to modify the state generated
@@ -217,8 +244,9 @@ void parse(InputParser<IncrementalConditionsStateGenerator> &parser,
   bool dependent_runs = true;
   parser.optional(dependent_runs, "dependent_runs");
 
-  /// TODO: parse "..."
+  /// Parse "completed_runs"
   RunDataOutputParams output_params;
+  parser.optional(output_params, "completed_runs");
 
   if (parser.valid()) {
     parser.value = std::make_unique<IncrementalConditionsStateGenerator>(

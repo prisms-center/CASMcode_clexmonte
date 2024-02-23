@@ -10,16 +10,15 @@
 #include "casm/misc/CASM_Eigen_math.hh"
 #include "casm/misc/CASM_math.hh"
 #include "casm/monte/run_management/State.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
 
 using namespace test;
 
-class state_IncrementalConditionsStateGeneratorTest
-    : public test::ZrOTestSystem {};
+class run_IncrementalConditionsStateGeneratorTest : public test::ZrOTestSystem {
+};
 
-TEST_F(state_IncrementalConditionsStateGeneratorTest, Test1) {
+TEST_F(run_IncrementalConditionsStateGeneratorTest, Test1) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;
@@ -52,6 +51,7 @@ TEST_F(state_IncrementalConditionsStateGeneratorTest, Test1) {
   std::vector<StateModifyingFunction> modifiers;
 
   RunDataOutputParams output_params;
+  output_params.output_dir = test_dir / "output";
   incremental_state_generator_type state_generator(
       output_params, std::move(config_generator), init_conditions,
       conditions_increment, n_states, dependent_runs, modifiers);
@@ -70,9 +70,25 @@ TEST_F(state_IncrementalConditionsStateGeneratorTest, Test1) {
     run_data.n_unitcells = T.determinant();
     state_generator.push_back(run_data);
   }
+
+  state_generator.write_completed_runs();
+
+  EXPECT_TRUE(fs::exists(output_params.output_dir / "completed_runs.json"));
+  {
+    // test `read_completed_runs()`
+    incremental_state_generator_type state_generator_read_test(
+        output_params,
+        notstd::make_unique<fixed_config_generator_type>(init_config),
+        init_conditions, conditions_increment, n_states, dependent_runs,
+        modifiers);
+    state_generator_read_test.read_completed_runs();
+    EXPECT_EQ(state_generator_read_test.n_completed_runs(), n_states);
+  }
+  fs::remove(output_params.output_dir / "completed_runs.json");
+  fs::remove(output_params.output_dir);
 }
 
-TEST_F(state_IncrementalConditionsStateGeneratorTest, Test2) {
+TEST_F(run_IncrementalConditionsStateGeneratorTest, Test2) {
   using namespace CASM;
   using namespace CASM::monte;
   using namespace CASM::clexmonte;

@@ -11,7 +11,6 @@
 #include "casm/clexulator/Correlations.hh"
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 
 // debugging
 #include "casm/casm_io/container/stream_io.hh"
@@ -485,10 +484,11 @@ state_sampling_function_type make_jumps_per_atom_by_type_f(
             calculation->kmc_data.atom_name_index_list;
         auto const &n_jumps = calculation->occ_location->current_atom_n_jumps();
 
-        auto const &state_sampler = *calculation->kmc_data.state_sampler;
-        double steps_per_pass = state_sampler.steps_per_pass;
-        double step = state_sampler.step;
-        double pass = state_sampler.pass;
+        auto const &sampling_fixture = *calculation->kmc_data.sampling_fixture;
+        auto const &counter = sampling_fixture.counter();
+        double steps_per_pass = counter.steps_per_pass;
+        double step = counter.step;
+        double pass = counter.pass;
         double n_events = steps_per_pass * pass + step;
 
         // reset stored data if necessary
@@ -549,10 +549,11 @@ state_sampling_function_type make_jumps_per_event_by_type_f(
             calculation->kmc_data.atom_name_index_list;
         auto const &n_jumps = calculation->occ_location->current_atom_n_jumps();
 
-        auto const &state_sampler = *calculation->kmc_data.state_sampler;
-        double steps_per_pass = state_sampler.steps_per_pass;
-        double step = state_sampler.step;
-        double pass = state_sampler.pass;
+        auto const &sampling_fixture = *calculation->kmc_data.sampling_fixture;
+        auto const &counter = sampling_fixture.counter();
+        double steps_per_pass = counter.steps_per_pass;
+        double step = counter.step;
+        double pass = counter.pass;
         double n_events = steps_per_pass * pass + step;
 
         // reset stored data if necessary
@@ -612,10 +613,11 @@ state_sampling_function_type make_jumps_per_atom_per_event_by_type_f(
             calculation->kmc_data.atom_name_index_list;
         auto const &n_jumps = calculation->occ_location->current_atom_n_jumps();
 
-        auto const &state_sampler = *calculation->kmc_data.state_sampler;
-        double steps_per_pass = state_sampler.steps_per_pass;
-        double step = state_sampler.step;
-        double pass = state_sampler.pass;
+        auto const &sampling_fixture = *calculation->kmc_data.sampling_fixture;
+        auto const &counter = sampling_fixture.counter();
+        double steps_per_pass = counter.steps_per_pass;
+        double step = counter.step;
+        double pass = counter.pass;
         double n_events = steps_per_pass * pass + step;
 
         // reset stored data if necessary

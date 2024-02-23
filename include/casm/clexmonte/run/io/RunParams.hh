@@ -11,7 +11,6 @@
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/run_management/SamplingFixture.hh"
 #include "casm/monte/run_management/State.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 #include "casm/monte/run_management/io/ResultsIO.hh"
 #include "casm/monte/sampling/SamplingParams.hh"
 
@@ -25,8 +24,8 @@ struct RunParams {
   /// \brief Constructor
   RunParams(std::shared_ptr<EngineType> _engine,
             std::unique_ptr<state_generator_type> _state_generator,
-            run_manager_params_type _run_manager_params,
             std::vector<sampling_fixture_params_type> _sampling_fixture_params,
+            bool _global_cutoff = true,
             std::vector<sampling_fixture_params_type> _before_first_run =
                 std::vector<sampling_fixture_params_type>({}),
             std::vector<sampling_fixture_params_type> _before_each_run =
@@ -39,13 +38,20 @@ struct RunParams {
   std::unique_ptr<state_generator_type> state_generator;
 
   /// Run manager parameters
-  run_manager_params_type run_manager_params;
+  bool global_cutoff;
 
   /// Parameters for 0 or more sampling fixtures
   std::vector<sampling_fixture_params_type> sampling_fixture_params;
 
+  /// If included, the requested run will be performed at the initial
+  /// conditions as a preliminary step before the actual first run
+  /// begins. This may be useful when not running in automatic
+  /// convergence mode.
   std::vector<sampling_fixture_params_type> before_first_run;
 
+  /// If included, the requested run will be performed as a preliminary
+  /// step before each actual run begins. This may be useful when not
+  /// running in automatic convergence mode.
   std::vector<sampling_fixture_params_type> before_each_run;
 };
 
@@ -56,13 +62,13 @@ template <typename EngineType>
 RunParams<EngineType>::RunParams(
     std::shared_ptr<EngineType> _engine,
     std::unique_ptr<state_generator_type> _state_generator,
-    run_manager_params_type _run_manager_params,
     std::vector<sampling_fixture_params_type> _sampling_fixture_params,
+    bool _global_cutoff,
     std::vector<sampling_fixture_params_type> _before_first_run,
     std::vector<sampling_fixture_params_type> _before_each_run)
     : engine(_engine),
       state_generator(std::move(_state_generator)),
-      run_manager_params(std::move(_run_manager_params)),
+      global_cutoff(_global_cutoff),
       sampling_fixture_params(std::move(_sampling_fixture_params)),
       before_first_run(std::move(_before_first_run)),
       before_each_run(std::move(_before_each_run)) {}

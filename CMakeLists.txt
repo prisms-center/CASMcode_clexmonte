@@ -136,6 +136,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/Matrix3lCompare.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/diffusion_calculations.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/eigen.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/parse_array.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/subparse_from_file.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/to_json.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold.hh
@@ -192,7 +193,6 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/kinetic_events.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold_events.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/RunParams.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/convariance_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/ConfigGenerator_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/ResultsIO_json_io.cc

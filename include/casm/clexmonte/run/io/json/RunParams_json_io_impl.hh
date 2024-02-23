@@ -7,7 +7,6 @@
 #include "casm/clexmonte/run/StateGenerator.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/run/io/json/StateGenerator_json_io.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 #include "casm/monte/run_management/io/json/SamplingFixtureParams_json_io.hh"
 
 namespace CASM {
@@ -24,7 +23,7 @@ namespace clexmonte {
 ///         thermodynamic conditions (temperature, chemical potential,
 ///         composition, etc.).
 ///     "random_number_generator":
-///         (Future) Options controlling the random number generator.
+///         (TODO) Options controlling the random number generator.
 ///     "sampling_fixtures": JSON object
 ///         A JSON object, whose keys are labels and values are paths to
 ///         input files for sampling fixtures. A Monte Carlo run continues
@@ -41,23 +40,6 @@ namespace clexmonte {
 ///         requested run will be performed as a preliminary step before
 ///         each actual run begins. This may be useful when not running
 ///         in automatic convergence mode.
-///     "completed_runs/save_all_initial_states": bool = false
-///         If true, save initial states for analysis, output, or state
-///         generation.
-///     "completed_runs/save_all_final_states": bool = false
-///         If true, save final states for analysis, output, or state
-///         generation.
-///     "completed_runs/save_last_final_state": bool = true
-///         If true, save final state for last run for analysis, output
-///         or state generation.
-///     "completed_runs/write_initial_states": bool = false
-///         If true, write saved initial states to completed_runs.json.
-///     "completed_runs/write_final_states": bool = false
-///         If true, write saved final states to completed_runs.json.
-///     "completed_runs/output_dir": str = ""
-///         If not empty, name of a directory in which to write
-///         completed_runs.json. If empty, completed_runs.json is not
-///         written, which means restarts are not possible.
 ///     "global_cutoff": bool = true
 ///         If true, the entire run is stopped when any sampling fixture
 ///         is completed. Otherwise, all fixtures must complete for the
@@ -126,28 +108,14 @@ void parse(InputParser<RunParams<EngineType>> &parser,
   std::vector<sampling_fixture_params_type> before_each_run =
       _parse_sampling_fixtures("before_each_run", is_required = false);
 
-  run_manager_params_type run_manager_params;
-  //  parser.optional_else(run_manager_params.do_save_all_initial_states,
-  //                       "completed_runs/save_all_initial_states", false);
-  //  parser.optional_else(run_manager_params.do_save_all_final_states,
-  //                       "completed_runs/save_all_final_states", false);
-  //  parser.optional_else(run_manager_params.do_save_all_final_states,
-  //                       "completed_runs/save_all_final_states", false);
-  //  parser.optional_else(run_manager_params.do_save_last_final_state,
-  //                       "completed_runs/save_last_final_state", true);
-  //  parser.optional_else(run_manager_params.do_write_initial_states,
-  //                       "completed_runs/write_initial_states", false);
-  //  parser.optional_else(run_manager_params.do_write_final_states,
-  //                       "completed_runs/write_final_states", false);
-  //  std::string output_dir;
-  //  parser.optional(output_dir, "completed_runs/output_dir");
-  //  run_manager_params.output_dir = fs::path(output_dir);
-  parser.optional_else(run_manager_params.global_cutoff, "global_cutoff", true);
+  bool global_cutoff;
+  parser.optional_else(global_cutoff, "global_cutoff", true);
 
   if (parser.valid()) {
     parser.value = std::make_unique<RunParams<EngineType>>(
-        engine, std::move(state_generator_subparser->value), run_manager_params,
-        sampling_fixture_params, before_first_run, before_each_run);
+        engine, std::move(state_generator_subparser->value),
+        sampling_fixture_params, global_cutoff, before_first_run,
+        before_each_run);
   }
 }
 

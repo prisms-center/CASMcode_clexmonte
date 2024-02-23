@@ -16,7 +16,6 @@
 #include "casm/monte/methods/occupation_metropolis.hh"
 #include "casm/monte/run_management/Results.hh"
 #include "casm/monte/run_management/State.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 
 namespace CASM {
 namespace clexmonte {

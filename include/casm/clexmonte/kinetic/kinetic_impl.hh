@@ -20,7 +20,6 @@
 #include "casm/monte/methods/kinetic_monte_carlo.hh"
 #include "casm/monte/run_management/Results.hh"
 #include "casm/monte/run_management/State.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 
 // debug
 #include "casm/casm_io/json/jsonParser.hh"

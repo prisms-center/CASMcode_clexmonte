@@ -4,7 +4,6 @@
 #include "casm/clexmonte/run/covariance_functions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/monte/run_management/ResultsAnalysisFunction.hh"
-#include "casm/monte/run_management/StateSampler.hh"
 
 // debugging
 #include "casm/casm_io/container/stream_io.hh"
