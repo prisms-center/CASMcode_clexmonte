@@ -139,7 +139,28 @@ Kinetic<EngineType>::standard_sampling_functions(
     function_map.emplace(f.name, f);
   }
   return function_map;
-};
+}
+
+/// \brief Construct functions that may be used to sample various quantities of
+///     the Monte Carlo calculation as it runs
+///
+/// \param calculation Shared pointer to Canonical calculation, which
+///     can be used by sampling functions to access system and calculation data
+///     such as the prim, the cluster expansion, and the composition axes.
+///
+template <typename EngineType>
+std::map<std::string, json_state_sampling_function_type>
+Kinetic<EngineType>::standard_json_sampling_functions(
+    std::shared_ptr<Kinetic<EngineType>> const &calculation) {
+  std::vector<json_state_sampling_function_type> functions = {
+      make_config_f(calculation)};
+
+  std::map<std::string, json_state_sampling_function_type> function_map;
+  for (auto const &f : functions) {
+    function_map.emplace(f.name, f);
+  }
+  return function_map;
+}
 
 /// \brief Construct functions that may be used to analyze Monte Carlo
 ///     calculation results

@@ -195,9 +195,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold_events.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/convariance_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/ConfigGenerator_json_io.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/ResultsIO_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/RunParams_json_io.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/SamplingFixtureParams_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/StateGenerator_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semigrand_canonical/semigrand_canonical.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.cc

@@ -47,18 +47,14 @@ MethodParserMap<state_generator_type> standard_state_generator_methods(
   return state_generator_methods;
 }
 
-MethodParserMap<results_io_type> standard_results_io_methods(
-    std::map<std::string, state_sampling_function_type> const
-        &sampling_functions,
-    std::map<std::string, results_analysis_function_type> const
-        &analysis_functions) {
+MethodParserMap<results_io_type> standard_results_io_methods() {
   MethodParserFactory<results_io_type> f;
   MethodParserMap<results_io_type> results_io_methods;
 
-  results_io_methods.insert(f.template make<monte::jsonResultsIO<results_type>>(
-      "json", sampling_functions, analysis_functions)
-                            // To add additional state generators:
-                            // f.make<DerivedClassName>("<name>", ...args...),
+  results_io_methods.insert(
+      f.template make<monte::jsonResultsIO<results_type>>("json")
+      // To add additional state generators:
+      // f.make<DerivedClassName>("<name>", ...args...),
   );
   return results_io_methods;
 }

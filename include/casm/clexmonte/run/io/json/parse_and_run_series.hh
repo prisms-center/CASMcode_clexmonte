@@ -76,8 +76,7 @@ void parse_and_run_series(fs::path system_json_file,
       clexmonte::standard_config_generator_methods(calculation->system);
   auto state_generator_methods = clexmonte::standard_state_generator_methods(
       calculation->system, modifying_functions, config_generator_methods);
-  auto results_io_methods = clexmonte::standard_results_io_methods(
-      sampling_functions, analysis_functions);
+  auto results_io_methods = clexmonte::standard_results_io_methods();
 
   /// Parse and construct run parameters
   if (!fs::exists(run_params_json_file)) {

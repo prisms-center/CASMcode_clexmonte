@@ -55,6 +55,8 @@ TEST(canonical_run_test, Test1) {
   /// Make state sampling & analysis functions
   auto sampling_functions =
       calculation_type::standard_sampling_functions(calculation);
+  auto json_sampling_functions =
+      calculation_type::standard_json_sampling_functions(calculation);
   auto analysis_functions =
       calculation_type::standard_analysis_functions(calculation);
   auto modifying_functions =
@@ -65,8 +67,7 @@ TEST(canonical_run_test, Test1) {
       clexmonte::standard_config_generator_methods(calculation->system);
   auto state_generator_methods = clexmonte::standard_state_generator_methods(
       calculation->system, modifying_functions, config_generator_methods);
-  auto results_io_methods = clexmonte::standard_results_io_methods(
-      sampling_functions, analysis_functions);
+  auto results_io_methods = clexmonte::standard_results_io_methods();
 
   /// Parse and construct run parameters
   jsonParser run_params_json(test_data_dir / "run_params_complete.json");
@@ -75,8 +76,8 @@ TEST(canonical_run_test, Test1) {
                      (test_dir / output_dir_relpath / "thermo").string();
   InputParser<clexmonte::RunParams<std::mt19937_64>> run_params_parser(
       run_params_json, search_path, engine, sampling_functions,
-      analysis_functions, state_generator_methods, results_io_methods,
-      calculation->time_sampling_allowed);
+      json_sampling_functions, analysis_functions, state_generator_methods,
+      results_io_methods, calculation->time_sampling_allowed);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
   report_and_throw_if_invalid(run_params_parser, CASM::log(),
@@ -170,6 +171,8 @@ TEST(canonical_run_test, Test2) {
   /// Make state sampling & analysis functions
   auto sampling_functions =
       calculation_type::standard_sampling_functions(calculation);
+  auto json_sampling_functions =
+      calculation_type::standard_json_sampling_functions(calculation);
   auto analysis_functions =
       calculation_type::standard_analysis_functions(calculation);
   auto modifying_functions =
@@ -180,8 +183,7 @@ TEST(canonical_run_test, Test2) {
       clexmonte::standard_config_generator_methods(calculation->system);
   auto state_generator_methods = clexmonte::standard_state_generator_methods(
       calculation->system, modifying_functions, config_generator_methods);
-  auto results_io_methods = clexmonte::standard_results_io_methods(
-      sampling_functions, analysis_functions);
+  auto results_io_methods = clexmonte::standard_results_io_methods();
 
   /// Parse and construct run parameters
   jsonParser run_params_json(test_data_dir / "run_params_by_file.json");
@@ -191,8 +193,8 @@ TEST(canonical_run_test, Test2) {
       (test_dir / "thermo_sampling.period10.json").string();
   InputParser<clexmonte::RunParams<std::mt19937_64>> run_params_parser(
       run_params_json, search_path, engine, sampling_functions,
-      analysis_functions, state_generator_methods, results_io_methods,
-      calculation->time_sampling_allowed);
+      json_sampling_functions, analysis_functions, state_generator_methods,
+      results_io_methods, calculation->time_sampling_allowed);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
   report_and_throw_if_invalid(run_params_parser, CASM::log(),

@@ -153,9 +153,19 @@ TEST(canonical_fullrun_test, Test1) {
   auto calculation = std::make_shared<calculation_type>(system);
 
   // ### Construct sampling functions & analysis functions
-  std::map<std::string, clexmonte::state_sampling_function_type>
-      sampling_functions =
-          calculation_type::standard_sampling_functions(calculation);
+  monte::StateSamplingFunctionMap sampling_functions =
+      calculation_type::standard_sampling_functions(calculation);
+  EXPECT_EQ(sampling_functions.size(), 6);
+  EXPECT_EQ(sampling_functions.count("temperature"), 1);
+  EXPECT_EQ(sampling_functions.count("mol_composition"), 1);
+  EXPECT_EQ(sampling_functions.count("param_composition"), 1);
+  EXPECT_EQ(sampling_functions.count("formation_energy_corr"), 1);
+  EXPECT_EQ(sampling_functions.count("formation_energy"), 1);
+  EXPECT_EQ(sampling_functions.count("potential_energy"), 1);
+  monte::jsonStateSamplingFunctionMap json_sampling_functions =
+      calculation_type::standard_json_sampling_functions(calculation);
+  EXPECT_EQ(json_sampling_functions.size(), 1);
+  EXPECT_EQ(json_sampling_functions.count("config"), 1);
   std::map<std::string, clexmonte::results_analysis_function_type>
       analysis_functions =
           calculation_type::standard_analysis_functions(calculation);
@@ -256,6 +266,8 @@ TEST(canonical_fullrun_test, Test1) {
       {"temperature", "mol_composition", "param_composition",
        "formation_energy_corr", "formation_energy", "potential_energy"});
 
+  sampling_params.json_sampler_names = std::vector<std::string>({"config"});
+
   // - Store configurations at sampling time
   sampling_params.do_sample_trajectory = false;
 
@@ -293,14 +305,7 @@ TEST(canonical_fullrun_test, Test1) {
   bool write_observations = true;
   auto results_io =
       std::make_unique<monte::jsonResultsIO<clexmonte::results_type>>(
-          output_thermo_dir,   // fs::path,
-          sampling_functions,  // std::map<std::string,
-                               // state_sampling_function_type>
-          analysis_functions,  // std::map<std::string,
-                               // results_analysis_function_type>
-          write_trajectory,    // bool
-          write_observations   // bool
-      );
+          output_thermo_dir, write_trajectory, write_observations);
 
   // ~~~~ Run ~~~~
 
@@ -314,8 +319,9 @@ TEST(canonical_fullrun_test, Test1) {
   std::vector<clexmonte::sampling_fixture_params_type> sampling_fixture_params;
   std::string label = "thermo";
   sampling_fixture_params.emplace_back(
-      "thermo", sampling_functions, analysis_functions, sampling_params,
-      completion_check_params, std::move(results_io), method_log);
+      "thermo", sampling_functions, json_sampling_functions, analysis_functions,
+      sampling_params, completion_check_params, std::move(results_io),
+      method_log);
 
   clexmonte::run_series(*calculation, state_generator, sampling_fixture_params,
                         global_cutoff);

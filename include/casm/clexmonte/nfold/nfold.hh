@@ -36,6 +36,7 @@ struct Nfold : public semigrand_canonical::SemiGrandCanonical<EngineType> {
 
   typedef semigrand_canonical::SemiGrandCanonical<EngineType> Base;
   using Base::standard_analysis_functions;
+  using Base::standard_json_sampling_functions;
   using Base::standard_modifying_functions;
   using Base::standard_sampling_functions;
 };

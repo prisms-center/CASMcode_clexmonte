@@ -103,10 +103,15 @@ struct Canonical {
            run_manager_type<EngineType> &run_manager);
 
   /// \brief Construct functions that may be used to sample various quantities
-  /// of
-  ///     the Monte Carlo calculation as it runs
+  ///     of the Monte Carlo calculation as it runs
   static std::map<std::string, state_sampling_function_type>
   standard_sampling_functions(
+      std::shared_ptr<Canonical<EngineType>> const &calculation);
+
+  /// \brief Construct functions that may be used to sample various quantities
+  ///     of the Monte Carlo calculation as it runs
+  static std::map<std::string, json_state_sampling_function_type>
+  standard_json_sampling_functions(
       std::shared_ptr<Canonical<EngineType>> const &calculation);
 
   /// \brief Construct functions that may be used to analyze Monte Carlo

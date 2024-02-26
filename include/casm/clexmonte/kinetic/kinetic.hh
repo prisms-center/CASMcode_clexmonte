@@ -71,6 +71,12 @@ struct Kinetic {
   standard_sampling_functions(
       std::shared_ptr<Kinetic<EngineType>> const &calculation);
 
+  /// \brief Construct functions that may be used to sample various quantities
+  ///     of the Monte Carlo calculation as it runs
+  static std::map<std::string, json_state_sampling_function_type>
+  standard_json_sampling_functions(
+      std::shared_ptr<Kinetic<EngineType>> const &calculation);
+
   /// \brief Construct functions that may be used to analyze Monte Carlo
   ///     calculation results
   static std::map<std::string, results_analysis_function_type>

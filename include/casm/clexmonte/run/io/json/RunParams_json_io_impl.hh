@@ -50,9 +50,9 @@ template <typename EngineType>
 void parse(InputParser<RunParams<EngineType>> &parser,
            std::vector<fs::path> search_path,
            std::shared_ptr<EngineType> engine,
-           std::map<std::string, state_sampling_function_type> const
-               &sampling_functions,
-           std::map<std::string, results_analysis_function_type> const
+           monte::StateSamplingFunctionMap const &sampling_functions,
+           monte::jsonStateSamplingFunctionMap const &json_sampling_functions,
+           monte::ResultsAnalysisFunctionMap<config_type, statistics_type> const
                &analysis_functions,
            MethodParserMap<state_generator_type> const &state_generator_methods,
            MethodParserMap<results_io_type> const &results_io_methods,
@@ -77,12 +77,13 @@ void parse(InputParser<RunParams<EngineType>> &parser,
         if (it->is_obj()) {
           subparser = parser.template subparse<sampling_fixture_params_type>(
               fs::path(key) / label, label, sampling_functions,
-              analysis_functions, results_io_methods, time_sampling_allowed);
+              json_sampling_functions, analysis_functions, results_io_methods,
+              time_sampling_allowed);
         } else if (it->is_string()) {
           subparser = subparse_from_file<sampling_fixture_params_type>(
               parser, fs::path(key) / label, search_path, label,
-              sampling_functions, analysis_functions, results_io_methods,
-              time_sampling_allowed);
+              sampling_functions, json_sampling_functions, analysis_functions,
+              results_io_methods, time_sampling_allowed);
         } else {
           parser.insert_error(fs::path(key) / label,
                               "Error: must be a file name or JSON object");

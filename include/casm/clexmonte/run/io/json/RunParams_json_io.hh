@@ -23,19 +23,15 @@ MethodParserMap<state_generator_type> standard_state_generator_methods(
     StateModifyingFunctionMap const &modifying_functions,
     MethodParserMap<config_generator_type> const &config_generator_methods);
 
-MethodParserMap<results_io_type> standard_results_io_methods(
-    std::map<std::string, state_sampling_function_type> const
-        &sampling_functions,
-    std::map<std::string, results_analysis_function_type> const
-        &analysis_functions);
+MethodParserMap<results_io_type> standard_results_io_methods();
 
 template <typename EngineType>
 void parse(InputParser<RunParams<EngineType>> &parser,
            std::vector<fs::path> search_path,
            std::shared_ptr<EngineType> engine,
-           std::map<std::string, state_sampling_function_type> const
-               &sampling_functions,
-           std::map<std::string, results_analysis_function_type> const
+           monte::StateSamplingFunctionMap const &sampling_functions,
+           monte::jsonStateSamplingFunctionMap const &json_sampling_functions,
+           monte::ResultsAnalysisFunctionMap<config_type, statistics_type> const
                &analysis_functions,
            MethodParserMap<state_generator_type> const &state_generator_methods,
            MethodParserMap<results_io_type> const &results_io_methods,

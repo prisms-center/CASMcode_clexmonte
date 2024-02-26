@@ -2,7 +2,9 @@
 #define CASM_clexmonte_state_sampling_functions
 
 #include "casm/clexmonte/misc/eigen.hh"
+#include "casm/clexmonte/misc/to_json.hh"
 #include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexulator/Clexulator.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/Correlations.hh"
@@ -77,6 +79,11 @@ void make_order_parameter_f(
 template <typename CalculationType>
 void make_subspace_order_parameter_f(
     std::vector<state_sampling_function_type> &functions,
+    std::shared_ptr<CalculationType> const &calculation);
+
+/// \brief Make configuration sampling function
+template <typename CalculationType>
+json_state_sampling_function_type make_config_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 // --- Inline definitions ---
@@ -351,6 +358,18 @@ void make_subspace_order_parameter_f(
           return eta_subspace;
         }));
   }
+}
+
+/// \brief Make configuration sampling function
+template <typename CalculationType>
+json_state_sampling_function_type make_config_f(
+    std::shared_ptr<CalculationType> const &calculation) {
+  std::string name = "config";
+  std::string desc = "The Monte Carlo configuration as JSON";
+  return json_state_sampling_function_type(
+      name, desc, [calculation]() -> jsonParser {
+        return qto_json(calculation->state->configuration);
+      });
 }
 
 }  // namespace clexmonte

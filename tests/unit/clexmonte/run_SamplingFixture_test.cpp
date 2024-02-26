@@ -12,7 +12,6 @@
 #include "casm/monte/events/OccLocation.hh"
 #include "casm/monte/methods/metropolis.hh"
 #include "casm/monte/run_management/SamplingFixture.hh"
-#include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
 #include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
 #include "gtest/gtest.h"
 #include "testdir.hh"
@@ -31,10 +30,14 @@ class run_SamplingFixtureTest : public test::ZrOTestSystem {
     sampling_functions =
         canonical::Canonical_mt19937_64::standard_sampling_functions(
             calculator);
+    json_sampling_functions =
+        canonical::Canonical_mt19937_64::standard_json_sampling_functions(
+            calculator);
   }
 
   std::shared_ptr<canonical::Canonical_mt19937_64> calculator;
-  std::map<std::string, state_sampling_function_type> sampling_functions;
+  StateSamplingFunctionMap sampling_functions;
+  jsonStateSamplingFunctionMap json_sampling_functions;
   ResultsAnalysisFunctionMap<config_type, statistics_type> analysis_functions;
 };
 
@@ -109,8 +112,9 @@ TEST_F(run_SamplingFixtureTest, Test1) {
     MethodLog method_log;
 
     SamplingFixtureParams<config_type, statistics_type> sampling_fixture_params(
-        label, sampling_functions, analysis_functions, sampling_params,
-        completion_check_params, std::move(results_io), method_log);
+        label, sampling_functions, json_sampling_functions, analysis_functions,
+        sampling_params, completion_check_params, std::move(results_io),
+        method_log);
 
     SamplingFixture<config_type, statistics_type, engine_type> sampling_fixture(
         sampling_fixture_params, calculator->random_number_generator.engine);
@@ -230,8 +234,9 @@ TEST_F(run_SamplingFixtureTest, Test2) {
     MethodLog method_log;
 
     SamplingFixtureParams<config_type, statistics_type> sampling_fixture_params(
-        label, sampling_functions, analysis_functions, sampling_params,
-        completion_check_params, std::move(results_io), method_log);
+        label, sampling_functions, json_sampling_functions, analysis_functions,
+        sampling_params, completion_check_params, std::move(results_io),
+        method_log);
 
     SamplingFixture<config_type, statistics_type, engine_type> sampling_fixture(
         sampling_fixture_params, calculator->random_number_generator.engine);

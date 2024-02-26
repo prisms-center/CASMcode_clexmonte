@@ -30,6 +30,7 @@ struct Conditions;
 // ### Sampling ###
 
 typedef monte::StateSamplingFunction state_sampling_function_type;
+typedef monte::jsonStateSamplingFunction json_state_sampling_function_type;
 typedef monte::ResultsAnalysisFunction<config_type, statistics_type>
     results_analysis_function_type;
 typedef monte::SamplingFixtureParams<config_type, statistics_type>
