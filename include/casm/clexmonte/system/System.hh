@@ -133,6 +133,23 @@ struct System {
   /// - std::vector<clexulator::SparseCoefficients>
   std::map<std::string, LocalMultiClexData> local_multiclex_data;
 
+  // --- Monte Carlo events
+
+  /// Single swap types for canonical Monte Carlo events
+  ///
+  /// Defaults to all possible canonical swaps
+  std::vector<monte::OccSwap> canonical_swaps;
+
+  /// Single swap types for semi-grand canonical Monte Carlo events
+  ///
+  /// Defaults to all possible semi-grand canonical swaps
+  std::vector<monte::OccSwap> semigrand_canonical_swaps;
+
+  /// Multiple swap types for semi-grand canonical Monte Carlo events
+  ///
+  /// Defaults to empty
+  std::vector<monte::MultiOccSwap> semigrand_canonical_multiswaps;
+
   // --- KMC events
 
   /// KMC events index definitions
@@ -317,6 +334,17 @@ std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
 std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
     System const &system, LocalMultiClexData const &local_multiclex_data,
     Index equivalent_index);
+
+/// \brief Single swap types for canonical Monte Carlo events
+std::vector<monte::OccSwap> const &get_canonical_swaps(System const &system);
+
+/// \brief Single swap types for semi-grand canonical Monte Carlo events
+std::vector<monte::OccSwap> const &get_semigrand_canonical_swaps(
+    System const &system);
+
+/// \brief Multiple swap types for semi-grand canonical Monte Carlo events
+std::vector<monte::MultiOccSwap> const &get_semigrand_canonical_multiswaps(
+    System const &system);
 
 /// \brief KMC events index definitions
 std::shared_ptr<occ_events::OccSystem> get_event_system(System const &system);

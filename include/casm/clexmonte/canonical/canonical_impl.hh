@@ -17,6 +17,11 @@
 #include "casm/monte/run_management/Results.hh"
 #include "casm/monte/run_management/State.hh"
 
+// temporary
+#include "casm/casm_io/container/json_io.hh"
+#include "casm/casm_io/json/InputParser_impl.hh"
+#include "casm/monte/events/io/OccCandidate_json_io.hh"
+
 namespace CASM {
 namespace clexmonte {
 namespace canonical {
@@ -30,7 +35,7 @@ Canonical<EngineType>::Canonical(
       state(nullptr),
       transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)),
       occ_location(nullptr) {
-  if (!is_clex_data(*system, "formation_energy")) {
+  if (!is_clex_data(*this->system, "formation_energy")) {
     throw std::runtime_error(
         "Error constructing Canonical: no 'formation_energy' clex.");
   }
@@ -62,22 +67,18 @@ void Canonical<EngineType>::run(state_type &state,
   CanonicalPotential potential(this->system);
   potential.set(this->state, this->conditions);
 
-  /// \brief Construct swaps
-  monte::Conversions const &convert = get_index_conversions(*system, state);
-  monte::OccCandidateList const &occ_candidate_list =
-      get_occ_candidate_list(*system, state);
+  /// \brief Get swaps
+  std::vector<monte::OccSwap> const &canonical_swaps =
+      get_canonical_swaps(*this->system);
 
-  std::vector<monte::OccSwap> canonical_swaps =
-      make_canonical_swaps(convert, occ_candidate_list);
-
-  std::vector<monte::OccSwap> semigrand_canonical_swaps =
-      make_semigrand_canonical_swaps(convert, occ_candidate_list);
+  std::vector<monte::OccSwap> const &semigrand_canonical_swaps =
+      get_semigrand_canonical_swaps(*this->system);
 
   // Enforce composition
   clexmonte::enforce_composition(
       get_occupation(state),
       state.conditions.vector_values.at("mol_composition"),
-      get_composition_calculator(*system), semigrand_canonical_swaps,
+      get_composition_calculator(*this->system), semigrand_canonical_swaps,
       occ_location, random_number_generator);
 
   // Run Monte Carlo at a single condition

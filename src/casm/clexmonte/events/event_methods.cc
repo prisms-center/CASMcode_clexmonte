@@ -6,41 +6,53 @@
 namespace CASM {
 namespace clexmonte {
 
+/// \brief Append events to the prim event list
+///
+/// \param prim_event_list The prim event list, which will be appended to with
+///     all the equivalent events, including the reverse event separately if
+///     it is not identical to the forward event (i.e. cyclical events).
+/// \param event_type_name The event name
+/// \param events The vector of equivalent events in an orbit, which must be in
+///     order consistent with equivalents info if the equivalent_index will be
+///     used for getting the correct local cluster expansion.
+void append_to_prim_event_list(
+    std::vector<PrimEventData> &prim_event_list, std::string event_type_name,
+    std::vector<occ_events::OccEvent> const &events) {
+  Index equivalent_index = 0;
+  for (occ_events::OccEvent const &equiv : events) {
+    // forward
+    PrimEventData data;
+    data.event_type_name = event_type_name;
+    data.equivalent_index = equivalent_index;
+    data.is_forward = true;
+    data.prim_event_index = prim_event_list.size();
+    data.event = equiv;
+    auto clust_occupation = make_cluster_occupation(data.event);
+    data.sites = clust_occupation.first.elements();
+    data.occ_init = clust_occupation.second[0];
+    data.occ_final = clust_occupation.second[1];
+    prim_event_list.push_back(data);
+
+    occ_events::OccEvent reverse_equiv = copy_reverse(equiv);
+    if (reverse_equiv != equiv) {
+      PrimEventData rev_data = data;
+      rev_data.is_forward = false;
+      rev_data.prim_event_index = prim_event_list.size();
+      rev_data.event = reverse_equiv;
+      rev_data.occ_init = data.occ_final;
+      rev_data.occ_final = data.occ_init;
+      prim_event_list.push_back(rev_data);
+    }
+    ++equivalent_index;
+  }
+}
+
 /// \brief Construct linear list of events associated with the origin unit cell
 std::vector<PrimEventData> make_prim_event_list(
     std::map<std::string, OccEventTypeData> const &event_type_data) {
   std::vector<PrimEventData> prim_event_list;
-
-  Index event_type_index = 0;
   for (auto const &pair : event_type_data) {
-    Index equivalent_index = 0;
-    for (occ_events::OccEvent const &equiv : pair.second.events) {
-      // forward
-      PrimEventData data;
-      data.event_type_name = pair.first;
-      data.equivalent_index = equivalent_index;
-      data.is_forward = true;
-      data.prim_event_index = prim_event_list.size();
-      data.event = equiv;
-      auto clust_occupation = make_cluster_occupation(data.event);
-      data.sites = clust_occupation.first.elements();
-      data.occ_init = clust_occupation.second[0];
-      data.occ_final = clust_occupation.second[1];
-      prim_event_list.push_back(data);
-
-      occ_events::OccEvent reverse_equiv = copy_reverse(equiv);
-      if (reverse_equiv != equiv) {
-        PrimEventData rev_data = data;
-        rev_data.is_forward = false;
-        rev_data.prim_event_index = prim_event_list.size();
-        rev_data.event = reverse_equiv;
-        rev_data.occ_init = data.occ_final;
-        rev_data.occ_final = data.occ_init;
-        prim_event_list.push_back(rev_data);
-      }
-      ++equivalent_index;
-    }
-    ++event_type_index;
+    append_to_prim_event_list(prim_event_list, pair.first, pair.second.events);
   }
   return prim_event_list;
 }

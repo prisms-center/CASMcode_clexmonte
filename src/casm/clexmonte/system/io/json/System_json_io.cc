@@ -2,6 +2,7 @@
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
+#include "casm/clexmonte/misc/parse_array.hh"
 #include "casm/clexmonte/misc/subparse_from_file.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexmonte/system/io/json/system_data_json_io.hh"
@@ -15,6 +16,7 @@
 #include "casm/configuration/occ_events/io/json/OccEvent_json_io.hh"
 #include "casm/configuration/occ_events/io/json/OccSystem_json_io.hh"
 #include "casm/crystallography/io/BasicStructureIO.hh"
+#include "casm/monte/events/io/OccCandidate_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -76,7 +78,7 @@ bool parse_and_validate_basis_set_name(ParserType &parser, fs::path option,
   return true;
 }
 
-/// \brief Parse "events"/<event_name> from JSON
+/// \brief Parse "kmc_events"/<event_name> from JSON
 ///
 /// TODO: document format (see
 /// tests/unit/clexmonte/data/kmc/system_template.json)
@@ -284,7 +286,7 @@ bool parse_event(
 ///               ...
 ///           }
 ///
-///   "events": object (optional)
+///   "kmc_events": object (optional)
 ///       Input specifies KMC events. A JSON object specifiying one or
 ///       more events:
 ///
@@ -529,17 +531,65 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
     }
   }
 
-  // Parse "event_system" and "events"
-  if (parser.self.contains("events")) {
-    if (system.event_system == nullptr) {
-      parser.insert_error("events", "event_system is required to parse events");
+  // Parse "canonical_swaps", "semigrand_canonical_swaps",
+  // "semigrand_canonical_multiswaps"
+  // TODO: these should probably be constructed by system to ensure the
+  //  species list order is consistent
+  monte::Conversions convert(*system.prim->basicstructure,
+                             Eigen::Matrix3l::Identity());
+  monte::OccCandidateList occ_candidate_list(convert);
+  if (parser.self.contains("canonical_swaps")) {
+    auto subparser = parser.subparse_with<std::vector<monte::OccSwap>>(
+        parse_array<monte::OccSwap, monte::Conversions const &>,
+        "canonical_swaps", convert);
+    if (subparser->valid()) {
+      system.canonical_swaps = std::move(*subparser->value);
+    }
+  }
+  if (parser.self.contains("semigrand_canonical_swaps")) {
+    auto subparser = parser.subparse_with<std::vector<monte::OccSwap>>(
+        parse_array<monte::OccSwap, monte::Conversions const &>,
+        "semigrand_canonical_swaps", convert);
+    if (subparser->valid()) {
+      system.semigrand_canonical_swaps = std::move(*subparser->value);
+    }
+  }
+  if (parser.self.contains("semigrand_canonical_multiswaps")) {
+    jsonParser const &tjson = parser.self["semigrand_canonical_multiswaps"];
+    if (tjson.is_array()) {
+      auto subparser = parser.subparse_with<std::vector<monte::MultiOccSwap>>(
+          parse_array<monte::MultiOccSwap, monte::Conversions const &>,
+          "semigrand_canonical_multiswaps", convert);
+      if (subparser->valid()) {
+        system.semigrand_canonical_multiswaps = std::move(*subparser->value);
+      }
+    } else if (tjson.is_int()) {
+      int max_total_count = tjson.get<int>();
+      system.semigrand_canonical_multiswaps = monte::make_multiswaps(
+          system.semigrand_canonical_swaps, max_total_count);
+    } else if (tjson.is_null()) {
+      system.semigrand_canonical_multiswaps.clear();
     } else {
-      // parse "events"/<name>
+      parser.insert_error(
+          "semigrand_canonical_multiswaps",
+          "must be an array of MultiOccSwap, an integer indicating multiswaps "
+          "should be generated using this value for the maximum number of "
+          "single swaps per multiswap, or null.");
+    }
+  }
+
+  // Parse "kmc_events"
+  if (parser.self.contains("kmc_events")) {
+    if (system.event_system == nullptr) {
+      parser.insert_error("kmc_events",
+                          "event_system is required to parse events");
+    } else {
+      // parse "kmc_events"/<name>
       auto const &basicstructure = system.prim->basicstructure;
-      auto begin = parser.self["events"].begin();
-      auto end = parser.self["events"].end();
+      auto begin = parser.self["kmc_events"].begin();
+      auto end = parser.self["kmc_events"].end();
       for (auto it = begin; it != end; ++it) {
-        parse_event(parser, fs::path("events") / it.name(), search_path,
+        parse_event(parser, fs::path("kmc_events") / it.name(), search_path,
                     system.event_type_data, system.local_multiclex_data,
                     *basicstructure, system.local_basis_sets,
                     system.equivalents_info, system.occevent_symgroup_rep,

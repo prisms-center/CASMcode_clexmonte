@@ -10,7 +10,8 @@ namespace clexmonte {
 CompleteEventList make_complete_event_list(
     std::vector<PrimEventData> const &prim_event_list,
     std::vector<EventImpactInfo> const &prim_impact_info_list,
-    monte::OccLocation const &occ_location) {
+    monte::OccLocation const &occ_location,
+    std::vector<EventFilterGroup> const &event_filters) {
   CompleteEventList event_list;
 
   if (prim_event_list.size() != prim_impact_info_list.size()) {
@@ -28,8 +29,27 @@ CompleteEventList make_complete_event_list(
 
   for (Index unitcell_index = 0; unitcell_index < n_unitcells;
        ++unitcell_index) {
+    EventFilterGroup const *filter = nullptr;
+    for (auto const &test_filter : event_filters) {
+      if (test_filter.unitcell_index.count(unitcell_index)) {
+        filter = &test_filter;
+        break;
+      }
+    }
+
     for (Index prim_event_index = 0; prim_event_index < prim_event_list.size();
          ++prim_event_index) {
+      if (filter) {
+        if (filter->include_by_default == true &&
+            filter->prim_event_index.count(prim_event_index)) {
+          continue;
+        }
+        if (filter->include_by_default == false &&
+            !filter->prim_event_index.count(prim_event_index)) {
+          continue;
+        }
+      }
+
       PrimEventData const &prim_event_data = prim_event_list[prim_event_index];
 
       // set event_id

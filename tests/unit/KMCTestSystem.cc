@@ -16,14 +16,14 @@ KMCTestSystem::KMCTestSystem()
   set_clex("formation_energy", "default", "formation_energy_eci.json");
 
   {
-    fs::path event_relpath = fs::path("events") / "event.A_Va_1NN";
+    fs::path event_relpath = fs::path("kmc_events") / "event.A_Va_1NN";
     set_local_basis_set("A_Va_1NN");
     set_event("A_Va_1NN", event_relpath / "kra_eci.json",
               event_relpath / "freq_eci.json");
   }
 
   {
-    fs::path event_relpath = fs::path("events") / "event.B_Va_1NN";
+    fs::path event_relpath = fs::path("kmc_events") / "event.B_Va_1NN";
     set_local_basis_set("B_Va_1NN");
     set_event("B_Va_1NN", event_relpath / "kra_eci.json",
               event_relpath / "freq_eci.json");
@@ -151,19 +151,19 @@ void KMCTestSystem::set_local_basis_set(std::string bset_name) {
 void KMCTestSystem::set_event(std::string event_name,
                               std::string kra_eci_relpath,
                               std::string freq_eci_relpath) {
-  fs::create_directories(test_dir / "events");
-  fs::copy_file(test_data_dir / "events" / "event_system.json",
-                test_dir / "events" / "event_system.json", copy_options);
+  fs::create_directories(test_dir / "kmc_events");
+  fs::copy_file(test_data_dir / "kmc_events" / "event_system.json",
+                test_dir / "kmc_events" / "event_system.json", copy_options);
   json["kwargs"]["system"]["event_system"] =
-      (test_dir / fs::path("events") / "event_system.json").string();
+      (test_dir / fs::path("kmc_events") / "event_system.json").string();
 
   fs::path event_relpath =
-      fs::path("events") / ("event." + event_name) / "event.json";
+      fs::path("kmc_events") / ("event." + event_name) / "event.json";
   fs::create_directories((test_dir / event_relpath).parent_path());
   fs::copy_file(test_data_dir / event_relpath, test_dir / event_relpath,
                 copy_options);
 
-  auto &j = json["kwargs"]["system"]["events"][event_name];
+  auto &j = json["kwargs"]["system"]["kmc_events"][event_name];
   j["event"] = (test_data_dir / event_relpath).string();
   j["local_basis_set"] = event_name;
   j["coefficients"]["kra"] = (test_data_dir / kra_eci_relpath).string();

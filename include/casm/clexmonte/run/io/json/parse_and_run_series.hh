@@ -60,6 +60,11 @@ void parse_and_run_series(fs::path system_json_file,
   }
   InputParser<CalculationType> calculation_parser(calculation_options_json,
                                                   system, engine);
+  std::runtime_error calculation_error_if_invalid{
+      "Error reading Monte Carlo calculation_options JSON input"};
+  report_and_throw_if_invalid(calculation_parser, CASM::log(),
+                              calculation_error_if_invalid);
+
   std::shared_ptr<CalculationType> calculation(
       calculation_parser.value.release());
 

@@ -117,7 +117,9 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/ImpactTable.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/event_data.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/event_methods.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/json/EventFilterGroup_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/json/EventState_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/json/PrimEventData_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/lotto.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/lotto/event_rate_tree.hpp
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/lotto/event_rate_tree_impl.hpp
@@ -186,7 +188,9 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/CompleteEventList.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/ImpactTable.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/event_methods.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/EventFilterGroup_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/EventState_json_io.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/PrimEventData_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/io/json/EventState_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/io/stream/EventState_stream_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/kinetic.cc

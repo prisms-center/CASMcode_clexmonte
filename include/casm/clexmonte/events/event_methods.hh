@@ -30,6 +30,11 @@ std::vector<EventImpactInfo> make_prim_impact_info_list(
     std::vector<std::string> const &clex_names = {"formation_energy"},
     std::vector<std::string> const &multiclex_names = {});
 
+/// \brief Append events to the prim event list
+void append_to_prim_event_list(std::vector<PrimEventData> &prim_event_list,
+                               std::string event_type_name,
+                               std::vector<occ_events::OccEvent> const &events);
+
 /// \brief Construct linear list of events associated with the origin unit
 /// cell
 template <typename SystemType>

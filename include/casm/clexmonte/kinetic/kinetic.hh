@@ -19,13 +19,17 @@ struct Kinetic {
 
   explicit Kinetic(std::shared_ptr<system_type> _system,
                    std::shared_ptr<EngineType> _random_number_engine =
-                       std::shared_ptr<EngineType>());
+                       std::shared_ptr<EngineType>(),
+                   std::vector<EventFilterGroup> _event_filters = {});
 
   /// System data
   std::shared_ptr<system_type> system;
 
   /// Random number generator
   monte::RandomNumberGenerator<EngineType> random_number_generator;
+
+  /// Event filters
+  std::vector<EventFilterGroup> event_filters;
 
   /// Update species in monte::OccLocation tracker
   bool update_species = true;

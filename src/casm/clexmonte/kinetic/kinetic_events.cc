@@ -174,9 +174,10 @@ KineticEventData::KineticEventData(std::shared_ptr<system_type> _system)
 ///
 /// This must be called before first use and when changing supercells,
 /// conditions, etc. to build the event list and event calculator
-void KineticEventData::update(state_type const &state,
-                              std::shared_ptr<Conditions> conditions,
-                              monte::OccLocation const &occ_location) {
+void KineticEventData::update(
+    state_type const &state, std::shared_ptr<Conditions> conditions,
+    monte::OccLocation const &occ_location,
+    std::vector<EventFilterGroup> const &event_filters) {
   // These are constructed/re-constructed so cluster expansions point
   // at the current state
   prim_event_calculators = clexmonte::kinetic::make_prim_event_calculators(
@@ -184,7 +185,7 @@ void KineticEventData::update(state_type const &state,
 
   // TODO: rejection-clexmonte option does not require impact table
   event_list = clexmonte::make_complete_event_list(
-      prim_event_list, prim_impact_info_list, occ_location);
+      prim_event_list, prim_impact_info_list, occ_location, event_filters);
 
   // Construct CompleteEventCalculator
   event_calculator =

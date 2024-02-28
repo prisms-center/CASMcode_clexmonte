@@ -47,7 +47,14 @@ System::System(std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
       occevent_symgroup_rep(occ_events::make_occevent_symgroup_rep(
           prim->sym_info.unitcellcoord_symgroup_rep,
           prim->sym_info.occ_symgroup_rep,
-          prim->sym_info.atom_position_symgroup_rep)) {}
+          prim->sym_info.atom_position_symgroup_rep)) {
+  monte::Conversions convert(*prim->basicstructure,
+                             Eigen::Matrix3l::Identity());
+  monte::OccCandidateList occ_candidate_list(convert);
+  canonical_swaps = monte::make_canonical_swaps(convert, occ_candidate_list);
+  semigrand_canonical_swaps =
+      monte::make_semigrand_canonical_swaps(convert, occ_candidate_list);
+}
 
 /// \brief Constructor
 SupercellSystemData::SupercellSystemData(
@@ -426,6 +433,23 @@ std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
   return nhood;
 }
 
+/// \brief Single swap types for canonical Monte Carlo events
+std::vector<monte::OccSwap> const &get_canonical_swaps(System const &system) {
+  return system.canonical_swaps;
+}
+
+/// \brief Single swap types for semi-grand canonical Monte Carlo events
+std::vector<monte::OccSwap> const &get_semigrand_canonical_swaps(
+    System const &system) {
+  return system.semigrand_canonical_swaps;
+}
+
+/// \brief Multiple swap types for semi-grand canonical Monte Carlo events
+std::vector<monte::MultiOccSwap> const &get_semigrand_canonical_multiswaps(
+    System const &system) {
+  return system.semigrand_canonical_multiswaps;
+}
+
 /// \brief KMC events index definitions
 std::shared_ptr<occ_events::OccSystem> get_event_system(System const &system) {
   if (system.event_system == nullptr) {
@@ -451,7 +475,7 @@ std::map<std::string, OccEventTypeData> const &get_event_type_data(
 /// \brief KMC events
 OccEventTypeData const &get_event_type_data(System const &system,
                                             std::string const &key) {
-  return _verify(system.event_type_data, key, "events");
+  return _verify(system.event_type_data, key, "kmc_events");
 }
 
 /// \brief Random alloy correlation matching

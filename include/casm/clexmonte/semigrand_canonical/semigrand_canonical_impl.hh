@@ -62,14 +62,9 @@ void SemiGrandCanonical<EngineType>::run(
   auto potential = std::make_shared<SemiGrandCanonicalPotential>(this->system);
   potential->set(this->state, this->conditions);
 
-  /// \brief Construct swaps
-  monte::Conversions const &convert =
-      get_index_conversions(*this->system, state);
-  monte::OccCandidateList const &occ_candidate_list =
-      get_occ_candidate_list(*this->system, state);
-
-  std::vector<monte::OccSwap> semigrand_canonical_swaps =
-      make_semigrand_canonical_swaps(convert, occ_candidate_list);
+  // Get swaps
+  std::vector<monte::OccSwap> const &semigrand_canonical_swaps =
+      get_semigrand_canonical_swaps(*this->system);
 
   // Run Monte Carlo at a single condition
   typedef monte::RandomNumberGenerator<EngineType> generator_type;

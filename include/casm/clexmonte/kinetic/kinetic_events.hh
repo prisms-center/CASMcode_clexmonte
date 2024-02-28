@@ -124,7 +124,8 @@ struct KineticEventData {
 
   /// \brief Update for given state, conditions, and occupants
   void update(state_type const &state, std::shared_ptr<Conditions> conditions,
-              monte::OccLocation const &occ_location);
+              monte::OccLocation const &occ_location,
+              std::vector<EventFilterGroup> const &event_filters);
 
   /// The system
   std::shared_ptr<system_type> system;

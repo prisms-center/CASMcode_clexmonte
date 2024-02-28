@@ -32,9 +32,11 @@ namespace kinetic {
 /// \brief Implements kinetic Monte Carlo calculations
 template <typename EngineType>
 Kinetic<EngineType>::Kinetic(std::shared_ptr<system_type> _system,
-                             std::shared_ptr<EngineType> _random_number_engine)
+                             std::shared_ptr<EngineType> _random_number_engine,
+                             std::vector<EventFilterGroup> _event_filters)
     : system(_system),
       random_number_generator(_random_number_engine),
+      event_filters(_event_filters),
       event_data(std::make_shared<KineticEventData>(system)),
       state(nullptr),
       transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)),
@@ -68,15 +70,13 @@ void Kinetic<EngineType>::run(state_type &state,
     this->transformation_matrix_to_super =
         get_transformation_matrix_to_super(state);
     n_unitcells = this->transformation_matrix_to_super.determinant();
-    this->event_data->update(state, this->conditions, occ_location);
+    this->event_data->update(state, this->conditions, occ_location,
+                             this->event_filters);
   }
 
   // Enforce composition -- occ_location is maintained up-to-date
-  monte::Conversions const &convert = get_index_conversions(*system, state);
-  monte::OccCandidateList const &occ_candidate_list =
-      get_occ_candidate_list(*system, state);
-  std::vector<monte::OccSwap> semigrand_canonical_swaps =
-      make_semigrand_canonical_swaps(convert, occ_candidate_list);
+  std::vector<monte::OccSwap> const &semigrand_canonical_swaps =
+      get_semigrand_canonical_swaps(*this->system);
   clexmonte::enforce_composition(
       get_occupation(state),
       state.conditions.vector_values.at("mol_composition"),

@@ -43,13 +43,9 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
   auto potential = std::make_shared<potential_type>(this->system);
   potential->set(this->state, this->conditions);
 
-  // Construct swaps
-  monte::Conversions const &convert =
-      get_index_conversions(*this->system, state);
-  monte::OccCandidateList const &occ_candidate_list =
-      get_occ_candidate_list(*this->system, state);
-  std::vector<monte::OccSwap> semigrand_canonical_swaps =
-      make_semigrand_canonical_swaps(convert, occ_candidate_list);
+  // Get swaps
+  std::vector<monte::OccSwap> const &semigrand_canonical_swaps =
+      get_semigrand_canonical_swaps(*this->system);
 
   // if same supercell
   // -> just re-set potential & avoid re-constructing event list
@@ -68,6 +64,8 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
                                          semigrand_canonical_swaps, potential);
 
     // Nfold data
+    monte::Conversions const &convert =
+        get_index_conversions(*this->system, state);
     Index n_allowed_per_unitcell =
         get_n_allowed_per_unitcell(convert, semigrand_canonical_swaps);
     this->nfold_data.n_events_possible =

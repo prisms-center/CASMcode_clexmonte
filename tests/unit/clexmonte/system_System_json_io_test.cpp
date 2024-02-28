@@ -20,14 +20,14 @@ TEST_F(system_FCCBinaryVacancySystemJsonIOTest, Test1) {
   set_clex("formation_energy", "default", "formation_energy_eci.json");
 
   {
-    fs::path event_relpath = fs::path("events") / "event.A_Va_1NN";
+    fs::path event_relpath = fs::path("kmc_events") / "event.A_Va_1NN";
     set_local_basis_set("A_Va_1NN");
     set_event("A_Va_1NN", event_relpath / "kra_eci.json",
               event_relpath / "freq_eci.json");
   }
 
   {
-    fs::path event_relpath = fs::path("events") / "event.B_Va_1NN";
+    fs::path event_relpath = fs::path("kmc_events") / "event.B_Va_1NN";
     set_local_basis_set("B_Va_1NN");
     set_event("B_Va_1NN", event_relpath / "kra_eci.json",
               event_relpath / "freq_eci.json");
