@@ -7,3 +7,7 @@ from ._clexmonte import (
 from ._clexmonte_system import (
     System,
 )
+
+from ._clexmonte_state import (
+    MonteCarloConfiguration,
+)

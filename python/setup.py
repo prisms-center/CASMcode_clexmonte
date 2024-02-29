@@ -74,6 +74,9 @@ ext_modules = [
     Pybind11Extension(
         "libcasm.clexmonte._clexmonte_system", ["src/clexmonte_system.cpp"], **ext_modules_params
     ),
+    Pybind11Extension(
+        "libcasm.clexmonte._clexmonte_state", ["src/clexmonte_state.cpp"], **ext_modules_params
+    ),
 ]
 setup(
     name="libcasm-clexmonte",
