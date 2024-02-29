@@ -345,4 +345,25 @@ if(DEFINED SKBUILD)
       _clexmonte PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
   endif()
 
+  ### libcasm.clexmonte._clexmonte_system ###
+  pybind11_add_module(_clexmonte_system MODULE
+                      "${PROJECT_SOURCE_DIR}/python/src/clexmonte_system.cpp")
+  target_link_libraries(_clexmonte_system PRIVATE
+    CASM::casm_global
+    CASM::casm_crystallography
+    CASM::casm_composition
+    CASM::casm_clexulator
+    CASM::casm_configuration
+    CASM::casm_monte
+    casm_clexmonte
+  )
+  install(TARGETS _clexmonte_system DESTINATION clexmonte)
+  if(APPLE)
+    set_target_properties(
+      _clexmonte_system PROPERTIES INSTALL_RPATH "@loader_path/../lib")
+  else()
+    set_target_properties(
+      _clexmonte_system PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
+  endif()
+
 endif()

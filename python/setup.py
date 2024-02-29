@@ -41,7 +41,6 @@ extra_link_args = [
     "-lcasm_clexmonte",
 ]
 
-
 # The main interface is through Pybind11Extension.
 # * You can add cxx_std=11/14/17, and then build_ext can be removed.
 # * You can set include_pybind11=false to add the include directory yourself,
@@ -71,6 +70,9 @@ ext_modules_params = {
 ext_modules = [
     Pybind11Extension(
         "libcasm.clexmonte._clexmonte", ["src/clexmonte.cpp"], **ext_modules_params
+    ),
+    Pybind11Extension(
+        "libcasm.clexmonte._clexmonte_system", ["src/clexmonte_system.cpp"], **ext_modules_params
     ),
 ]
 setup(
