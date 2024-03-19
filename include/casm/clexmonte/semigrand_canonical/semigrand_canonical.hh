@@ -4,6 +4,7 @@
 #include <random>
 
 #include "casm/clexmonte/definitions.hh"
+#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_conditions.hh"
 #include "casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 
@@ -57,7 +58,7 @@ struct SemiGrandCanonical {
   monte::OccLocation const *occ_location;
 
   /// The current state's conditions in efficient-to-use form
-  std::shared_ptr<clexmonte::Conditions> conditions;
+  std::shared_ptr<SemiGrandCanonicalConditions> conditions;
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,

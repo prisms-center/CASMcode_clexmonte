@@ -49,7 +49,7 @@ namespace CASM {
 ///
 /// Notes:
 /// - This does not convert the DoF values basis, values are written in the
-///   basis in which they are provided
+///   basis in which they are provided, which is expected to be the prim basis
 ///
 /// \ingroup clexmonte_Configuration_JSON
 jsonParser &to_json(clexmonte::Configuration const &configuration,
@@ -57,10 +57,24 @@ jsonParser &to_json(clexmonte::Configuration const &configuration,
   json["transformation_matrix_to_supercell"] =
       configuration.transformation_matrix_to_super;
   json["dof"] = configuration.dof_values;
+  json["basis"] = "prim";
   return json;
 }
 
 void parse(InputParser<clexmonte::Configuration> &parser) {
+  if (parser.self.contains("basis")) {
+    if (!parser.self["basis"].is_string() ||
+        parser.self["basis"].get<std::string>() != "prim") {
+      parser.error.insert(
+          "Error reading clexmonte::Configuration: "
+          "The \"basis\" must be \"prim\".");
+    }
+  } else {
+    parser.error.insert(
+        "Error reading clexmonte::Configuration: "
+        "Missing \"basis\" value, which must be "
+        "\"prim\".");
+  }
   Eigen::Matrix3l T;
   parser.require(T, "transformation_matrix_to_supercell");
   auto dof_values_subparser =
@@ -76,7 +90,7 @@ void parse(InputParser<clexmonte::Configuration> &parser) {
 ///
 /// Notes:
 /// - This does not convert the DoF values basis, values stay in the basis in
-/// which they are provided
+/// which they are provided, which is expected to be the prim basis
 /// - This does not check the validity of the DoF values dimensions
 ///
 /// \ingroup clexmonte_Configuration_JSON

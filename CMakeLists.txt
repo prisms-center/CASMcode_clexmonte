@@ -162,6 +162,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/StateGenerator_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/parse_and_run_series.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_conditions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_impl.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh
@@ -173,6 +174,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/io/json/CorrMatchingPotential_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/io/json/State_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/io/json/parse_conditions.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/io/json/parse_conditions_impl.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/kinetic_sampling_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/make_conditions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/modifying_functions.hh

@@ -5,7 +5,7 @@ project = "libcasm-clexmonte"
 version = "2.0"  # The short X.Y version.
 release = "2.0a1"  # The full version, including alpha/beta/rc tags.
 project_desc = "CASM cluster expansion Monte Carlo simulations"
-logo_text = "libcasm-monte"
+logo_text = "libcasm-clexmonte"
 github_url = "https://github.com/prisms-center/CASMcode_clexmonte/"
 pypi_url = "https://pypi.org/project/libcasm-clexmonte/"
 intersphinx_libcasm_packages = [
@@ -16,7 +16,6 @@ intersphinx_libcasm_packages = [
     ("configuration", "2.0"),
     ("monte", "2.0"),
 ]
-
 
 # -- CASM common configuration ---
 
@@ -68,7 +67,6 @@ for package, vers in intersphinx_libcasm_packages:
     intersphinx_mapping[package] = (url, inventory)
 
 print(intersphinx_mapping)
-
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom

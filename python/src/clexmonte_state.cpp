@@ -13,6 +13,7 @@
 // clexmonte
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
+#include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexmonte/system/io/json/System_json_io.hh"
 #include "casm/configuration/Configuration.hh"
@@ -27,6 +28,19 @@ namespace py = pybind11;
 namespace CASMpy {
 
 using namespace CASM;
+
+clexmonte::state_type make_state(clexmonte::config_type const &configuration,
+                                 std::optional<monte::ValueMap> conditions,
+                                 std::optional<monte::ValueMap> properties) {
+  if (!conditions.has_value()) {
+    conditions = monte::ValueMap();
+  }
+  if (!properties.has_value()) {
+    properties = monte::ValueMap();
+  }
+  return clexmonte::state_type(configuration, conditions.value(),
+                               properties.value());
+}
 
 }  // namespace CASMpy
 
@@ -54,13 +68,14 @@ PYBIND11_MODULE(_clexmonte_state, m) {
   py::module::import("libcasm.configuration");
   py::module::import("libcasm.xtal");
 
-  py::class_<clexmonte::Configuration>(m, "MonteCarloConfiguration",
-                                       R"pbdoc(
+  py::class_<clexmonte::config_type>(m, "MonteCarloConfiguration",
+                                     R"pbdoc(
       Cluster expansion model configuration for Monte Carlo simulations
 
-      The MonteCarloConfiguration class is a slightly simplified version
-      of the :class:`libcasm.configuration.Configuration` data structure, which
-      does not include supercell symmetry data.
+      The MonteCarloConfiguration class holds the representation of the
+      current microstate. It is similar to the
+      :class:`libcasm.configuration.Configuration` data structure, but does not
+      include supercell symmetry data.
 
       Note that this class provides direct access to
       :class:`~libcasm.clexulator.ConfigDoFValues`, which must be used
@@ -107,7 +122,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
           )pbdoc",
            py::arg("transformation_matrix_to_super"), py::arg("dof_values"))
       .def_readwrite("transformation_matrix_to_super",
-                     &clexmonte::Configuration::transformation_matrix_to_super,
+                     &clexmonte::config_type::transformation_matrix_to_super,
                      R"pbdoc(
           numpy.ndarray[numpy.int64[3, 3]]: The supercell transformation matrix
 
@@ -116,7 +131,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
           ``S = L @ T``, where S and L are shape=(3,3)  matrices with
           lattice vectors as columns.
           )pbdoc")
-      .def_readwrite("dof_values", &clexmonte::Configuration::dof_values,
+      .def_readwrite("dof_values", &clexmonte::config_type::dof_values,
                      R"pbdoc(
           libcasm.clexulator.ConfigDoFValues: The degree of freedom (DoF) \
           values.
@@ -125,23 +140,19 @@ PYBIND11_MODULE(_clexmonte_state, m) {
           `transformation_matrix_to_super`. For use with cluster expansion and
           order parameter calculators, DoF values should be in the prim basis.
           )pbdoc")
-      .def(
-          "dof_values_ptr",
-          [](clexmonte::Configuration &self) { return &self.dof_values; },
-          "Return a pointer to the ConfigDoFValues")
       .def("__copy__",
-           [](clexmonte::Configuration const &self) {
-             return clexmonte::Configuration(self);
+           [](clexmonte::config_type const &self) {
+             return clexmonte::config_type(self);
            })
       .def("__deepcopy__",
-           [](clexmonte::Configuration const &self, py::dict) {
-             return clexmonte::Configuration(self);
+           [](clexmonte::config_type const &self, py::dict) {
+             return clexmonte::config_type(self);
            })
       .def_static(
           "from_dict",
           [](const nlohmann::json &data) {
             jsonParser json{data};
-            InputParser<clexmonte::Configuration> parser(json);
+            InputParser<clexmonte::config_type> parser(json);
             std::runtime_error error_if_invalid{
                 "Error in libcasm.clexmonte.MonteCarloConfiguration.from_dict"};
             report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
@@ -166,7 +177,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
           py::arg("data"))
       .def(
           "to_dict",
-          [](clexmonte::Configuration const &self) {
+          [](clexmonte::config_type const &self) {
             jsonParser json;
             to_json(self, json);
             return static_cast<nlohmann::json>(json);
@@ -189,8 +200,8 @@ PYBIND11_MODULE(_clexmonte_state, m) {
           )pbdoc")
       .def_static(
           "from_config_with_sym_info",
-          [](config::Configuration const &config) -> clexmonte::Configuration {
-            return clexmonte::Configuration(
+          [](config::Configuration const &config) -> clexmonte::config_type {
+            return clexmonte::config_type(
                 config.supercell->superlattice.transformation_matrix_to_super(),
                 config.dof_values);
           },
@@ -215,7 +226,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
           py::arg("config"))
       .def(
           "to_config_with_sym_info",
-          [](clexmonte::Configuration const &self,
+          [](clexmonte::config_type const &self,
              std::optional<std::shared_ptr<config::Prim const>> prim,
              std::optional<std::shared_ptr<config::SupercellSet>> supercells)
               -> config::Configuration {
@@ -261,6 +272,87 @@ PYBIND11_MODULE(_clexmonte_state, m) {
               supercells in order to avoid duplicates.
           )pbdoc",
           py::arg("prim") = std::nullopt, py::arg("supercells") = std::nullopt);
+
+  py::class_<clexmonte::state_type>(m, "MonteCarloState",
+                                    R"pbdoc(
+      Cluster expansion model state for Monte Carlo simulations
+
+      The MonteCarloState class holds:
+      - the current configuration
+      - the thermodynamic conditions
+      - configuration properties, if calculated by a Monte Carlo calculator.
+
+      .. rubric:: Special Methods
+
+      - MonteCarloState may be copied with `copy.copy` or `copy.deepcopy`.
+
+
+      )pbdoc")
+      .def(py::init<>(&make_state),
+           R"pbdoc(
+          .. rubric:: Constructor
+
+          Parameters
+          ----------
+          configuration : MonteCarloConfiguration
+              The initial configuration (microstate).
+          conditions : Optional[libcasm.monte.ValueMap] = None
+              The thermodynamic conditions, as a ValueMap. The accepted
+              keys and types depend on the Monte Carlo calculation method and
+              are documented with the
+              :func:`~libcasm.clexmonte.make_conditions_from_value_map`
+              function. If None provided, an empty
+              :class:`~libcasm.monte.ValueMap` is used.
+          properties : Optional[libcasm.monte.ValueMap] = None
+              Current properties of the state, if provided by the Monte Carlo
+              calculation method. If None provided, an empty
+              :class:`~libcasm.monte.ValueMap` is used.
+          )pbdoc",
+           py::arg("configuration"), py::arg("conditions") = std::nullopt,
+           py::arg("properties") = std::nullopt)
+      .def_readwrite("configuration", &clexmonte::state_type::configuration,
+                     R"pbdoc(
+         MonteCarloConfiguration: The configuration
+          )pbdoc")
+      .def_readwrite("conditions", &clexmonte::state_type::configuration,
+                     R"pbdoc(
+         libcasm.monte.ValueMap: The thermodynamic conditions
+         )pbdoc")
+      .def_readwrite("properties", &clexmonte::state_type::configuration,
+                     R"pbdoc(
+         libcasm.monte.ValueMap: Properties of the state, if provided by the \
+         Monte Carlo calculation method.
+         )pbdoc")
+      .def("__copy__",
+           [](clexmonte::state_type const &self) {
+             return clexmonte::state_type(self);
+           })
+      .def("__deepcopy__", [](clexmonte::state_type const &self,
+                              py::dict) { return clexmonte::state_type(self); })
+      .def_static(
+          "from_dict",
+          [](const nlohmann::json &data) {
+            jsonParser json{data};
+            InputParser<clexmonte::state_type> parser(json);
+            std::runtime_error error_if_invalid{
+                "Error in libcasm.clexmonte.MonteCarloState.from_dict"};
+            report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
+            return std::move(*parser.value);
+          },
+          R"pbdoc(
+          Construct MonteCarloState from a Python dict
+          )pbdoc",
+          py::arg("data"))
+      .def(
+          "to_dict",
+          [](clexmonte::state_type const &self) {
+            jsonParser json;
+            to_json(self, json);
+            return static_cast<nlohmann::json>(json);
+          },
+          R"pbdoc(
+          Represent MonteCarloState as a Python dict
+          )pbdoc");
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

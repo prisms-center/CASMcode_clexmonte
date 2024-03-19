@@ -192,7 +192,7 @@ Eigen::VectorXd InputToVectors::make_param_chem_pot() {
   if (as_mol || found_n) {
     std::stringstream msg;
     msg << err_msg
-        << "chemical potential must be specified in terms of the parameteric "
+        << "chemical potential must be specified in terms of the parametric "
            "composition axes";
     throw std::runtime_error(msg.str());
   }
@@ -200,7 +200,7 @@ Eigen::VectorXd InputToVectors::make_param_chem_pot() {
     return vector_x;
   } else {
     std::stringstream msg;
-    msg << err_msg << "parameteric chemical potential not found";
+    msg << err_msg << "parametric chemical potential not found";
     throw std::runtime_error(msg.str());
   }
 }

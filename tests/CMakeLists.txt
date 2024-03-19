@@ -175,6 +175,7 @@ add_executable(casm_unit_clexmonte
   ${PROJECT_SOURCE_DIR}/unit/clexmonte/run_FixedConfigGenerator_test.cpp
   ${PROJECT_SOURCE_DIR}/unit/clexmonte/run_IncrementalConditionsStateGenerator_test.cpp
   ${PROJECT_SOURCE_DIR}/unit/clexmonte/run_SamplingFixture_test.cpp
+  ${PROJECT_SOURCE_DIR}/unit/clexmonte/semigrand_canonical_fullrun_test.cpp
   ${PROJECT_SOURCE_DIR}/unit/clexmonte/system_System_json_io_test.cpp
   ${PROJECT_SOURCE_DIR}/unit/gtest_main_run_all.cpp
 )

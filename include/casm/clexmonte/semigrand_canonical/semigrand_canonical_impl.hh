@@ -57,7 +57,9 @@ void SemiGrandCanonical<EngineType>::run(
   this->transformation_matrix_to_super =
       get_transformation_matrix_to_super(state);
   this->occ_location = &occ_location;
-  this->conditions = make_conditions(*this->system, state);
+  this->conditions = std::make_shared<SemiGrandCanonicalConditions>(
+      get_composition_converter(*this->system));
+  this->conditions->set_all(state.conditions);
 
   auto potential = std::make_shared<SemiGrandCanonicalPotential>(this->system);
   potential->set(this->state, this->conditions);

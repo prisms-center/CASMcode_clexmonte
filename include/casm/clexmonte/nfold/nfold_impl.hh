@@ -35,7 +35,10 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
   // Store state info / pointers
   this->state = &state;
   this->occ_location = &occ_location;
-  this->conditions = make_conditions(*this->system, state);
+  this->conditions =
+      std::make_shared<semigrand_canonical::SemiGrandCanonicalConditions>(
+          get_composition_converter(*this->system));
+  this->conditions->set_all(state.conditions);
   Index n_unitcells = this->transformation_matrix_to_super.determinant();
 
   // Construct potential

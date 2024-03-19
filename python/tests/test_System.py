@@ -1,5 +1,5 @@
-import libcasm.xtal as xtal
 import libcasm.configuration as casmconfig
+import libcasm.xtal as xtal
 from libcasm.clexmonte import (
     System,
 )
@@ -13,8 +13,8 @@ from libcasm.composition import (
 
 
 def test_System_constructor_1(
-        FCCBinaryVacancy_xtal_prim,
-        FCCBinaryVacancy_CompositionConverter,
+    FCCBinaryVacancy_xtal_prim,
+    FCCBinaryVacancy_CompositionConverter,
 ):
     system = System(
         xtal_prim=FCCBinaryVacancy_xtal_prim,
@@ -32,19 +32,10 @@ def test_System_constructor_1(
 def test_System_from_dict_1():
     data = {
         "prim": {
-            "basis": [
-                {
-                    "coordinate": [0.0, 0.0, 0.0],
-                    "occupants": ["A", "B", "Va"]
-                }
-            ],
+            "basis": [{"coordinate": [0.0, 0.0, 0.0], "occupants": ["A", "B", "Va"]}],
             "coordinate_mode": "Fractional",
-            "lattice_vectors": [
-                [0.0, 2.0, 2.0],
-                [2.0, 0.0, 2.0],
-                [2.0, 2.0, 0.0]
-            ],
-            "title": "FCC_binary_vacancy"
+            "lattice_vectors": [[0.0, 2.0, 2.0], [2.0, 0.0, 2.0], [2.0, 2.0, 0.0]],
+            "title": "FCC_binary_vacancy",
         },
         "composition_axes": {
             "a": [0.000000000000, 1.000000000000, 0.000000000000],
@@ -53,7 +44,8 @@ def test_System_from_dict_1():
             "independent_compositions": 2,
             "mol_formula": "A(1-a-b)B(a)Va(b)",
             "origin": [1.000000000000, 0.000000000000, 0.000000000000],
-            "param_formula": "a(0.333333-0.333333A+0.666667B-0.333333Va)b(0.333333-0.333333A-0.333333B+0.666667Va)"
+            "param_formula": "a(0.333333-0.333333A+0.666667B-0.333333Va)"
+            + "b(0.333333-0.333333A-0.333333B+0.666667Va)",
         },
     }
     system = System.from_dict(data)

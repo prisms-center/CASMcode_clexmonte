@@ -29,8 +29,9 @@ clexulator::ConfigDoFValues const *SemiGrandCanonicalPotential::get() const {
 /// - If state supercell is modified this must be called again
 /// - State DoF values can be modified without calling this again
 /// - If state conditions are modified this must be called again
-void SemiGrandCanonicalPotential::set(state_type const *state,
-                                      std::shared_ptr<Conditions> conditions) {
+void SemiGrandCanonicalPotential::set(
+    state_type const *state,
+    std::shared_ptr<SemiGrandCanonicalConditions> conditions) {
   // supercell-specific
   m_state = state;
   if (m_state == nullptr) {
@@ -43,23 +44,14 @@ void SemiGrandCanonicalPotential::set(state_type const *state,
 
   // conditions-specific
   m_conditions = conditions;
-  if (!m_conditions->param_chem_pot.has_value()) {
-    throw std::runtime_error(
-        "Error setting SemiGrandCanonicalPotential state: no param_chem_pot");
-  }
-  if (!m_conditions->exchange_chem_pot.has_value()) {
-    throw std::runtime_error(
-        "Error setting SemiGrandCanonicalPotential state: no "
-        "exchange_chem_pot");
-  }
 }
 
 /// \brief Pointer to current state
 state_type const *SemiGrandCanonicalPotential::state() const { return m_state; }
 
 /// \brief Pointer to current conditions
-std::shared_ptr<Conditions> const &SemiGrandCanonicalPotential::conditions()
-    const {
+std::shared_ptr<SemiGrandCanonicalConditions> const &
+SemiGrandCanonicalPotential::conditions() const {
   return m_conditions;
 }
 
@@ -70,7 +62,7 @@ double SemiGrandCanonicalPotential::per_supercell() {
       get_composition_calculator(*m_system).mean_num_each_component(occupation);
   Eigen::VectorXd param_composition =
       get_composition_converter(*m_system).param_composition(mol_composition);
-  Eigen::VectorXd const &param_chem_pot = *m_conditions->param_chem_pot;
+  Eigen::VectorXd const &param_chem_pot = m_conditions->param_chem_pot;
 
   double formation_energy = m_formation_energy_clex->per_supercell();
 
@@ -85,7 +77,7 @@ double SemiGrandCanonicalPotential::per_supercell() {
 double SemiGrandCanonicalPotential::occ_delta_per_supercell(
     std::vector<Index> const &linear_site_index,
     std::vector<int> const &new_occ) {
-  Eigen::MatrixXd const &exchange_chem_pot = *m_conditions->exchange_chem_pot;
+  Eigen::MatrixXd const &exchange_chem_pot = m_conditions->exchange_chem_pot;
   monte::Conversions const &convert = *m_convert;
   Eigen::VectorXi const &occupation = get_occupation(*m_state);
 

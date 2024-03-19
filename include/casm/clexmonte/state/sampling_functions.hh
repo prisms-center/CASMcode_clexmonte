@@ -52,6 +52,12 @@ template <typename CalculationType>
 state_sampling_function_type make_param_chem_pot_f(
     std::shared_ptr<CalculationType> const &calculation);
 
+/// \brief Make parametric chemical potential sampling function
+/// ("param_chem_pot"), for optional param_chem_pot
+template <typename CalculationType>
+state_sampling_function_type make_opt_param_chem_pot_f(
+    std::shared_ptr<CalculationType> const &calculation);
+
 /// \brief Make formation energy correlations sampling function
 ///     ("formation_energy_corr")
 template <typename CalculationType>
@@ -173,6 +179,31 @@ state_sampling_function_type make_param_composition_f(
 /// ("param_chem_pot")
 template <typename CalculationType>
 state_sampling_function_type make_param_chem_pot_f(
+    std::shared_ptr<CalculationType> const &calculation) {
+  auto const &system = *calculation->system;
+  // name param_chem_pot components "a", "b", ... for each independent
+  // composition axis
+  composition::CompositionConverter const &composition_converter =
+      get_composition_converter(system);
+  std::vector<std::string> component_names;
+  for (Index i = 0; i < composition_converter.independent_compositions(); ++i) {
+    component_names.push_back(composition_converter.comp_var(i));
+  }
+  std::vector<Index> shape;
+  shape.push_back(component_names.size());
+
+  return state_sampling_function_type(
+      "param_chem_pot",
+      "Chemical potential conjugate to parametric composition axes",
+      component_names,  // component names
+      shape,
+      [calculation]() { return calculation->conditions->param_chem_pot; });
+}
+
+/// \brief Make parametric chemical potential sampling function
+/// ("param_chem_pot"), for optional param_chem_pot
+template <typename CalculationType>
+state_sampling_function_type make_opt_param_chem_pot_f(
     std::shared_ptr<CalculationType> const &calculation) {
   auto const &system = *calculation->system;
   // name param_chem_pot components "a", "b", ... for each independent

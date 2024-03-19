@@ -1,4 +1,5 @@
 import pytest
+
 import libcasm.xtal as xtal
 from libcasm.composition import (
     CompositionConverter,
@@ -8,19 +9,10 @@ from libcasm.composition import (
 @pytest.fixture
 def FCCBinaryVacancy_xtal_prim():
     data = {
-        "basis": [
-            {
-                "coordinate": [0.0, 0.0, 0.0],
-                "occupants": ["A", "B", "Va"]
-            }
-        ],
+        "basis": [{"coordinate": [0.0, 0.0, 0.0], "occupants": ["A", "B", "Va"]}],
         "coordinate_mode": "Fractional",
-        "lattice_vectors": [
-            [0.0, 2.0, 2.0],
-            [2.0, 0.0, 2.0],
-            [2.0, 2.0, 0.0]
-        ],
-        "title": "FCC_binary_vacancy"
+        "lattice_vectors": [[0.0, 2.0, 2.0], [2.0, 0.0, 2.0], [2.0, 2.0, 0.0]],
+        "title": "FCC_binary_vacancy",
     }
     return xtal.Prim.from_dict(data)
 
@@ -34,6 +26,7 @@ def FCCBinaryVacancy_CompositionConverter():
         "independent_compositions": 2,
         "mol_formula": "A(1-a-b)B(a)Va(b)",
         "origin": [1.000000000000, 0.000000000000, 0.000000000000],
-        "param_formula": "a(0.333333-0.333333A+0.666667B-0.333333Va)b(0.333333-0.333333A-0.333333B+0.666667Va)"
+        "param_formula": "a(0.333333-0.333333A+0.666667B-0.333333Va)"
+        + "b(0.333333-0.333333A-0.333333B+0.666667Va)",
     }
     return CompositionConverter.from_dict(data)

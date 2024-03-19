@@ -4,6 +4,7 @@
 #include <random>
 
 #include "casm/clexmonte/definitions.hh"
+#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_conditions.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 
 namespace CASM {
@@ -19,13 +20,14 @@ class SemiGrandCanonicalPotential {
   clexulator::ConfigDoFValues const *get() const;
 
   /// \brief Reset pointer to state currently being calculated
-  void set(state_type const *state, std::shared_ptr<Conditions> conditions);
+  void set(state_type const *state,
+           std::shared_ptr<SemiGrandCanonicalConditions> conditions);
 
   /// \brief Pointer to current state
   state_type const *state() const;
 
   /// \brief Pointer to current conditions
-  std::shared_ptr<Conditions> const &conditions() const;
+  std::shared_ptr<SemiGrandCanonicalConditions> const &conditions() const;
 
   /// \brief Calculate (per_supercell) cluster expansion value
   double per_supercell();
@@ -50,7 +52,7 @@ class SemiGrandCanonicalPotential {
   double m_n_unitcells;
 
   /// Conditions, depends on current state
-  std::shared_ptr<Conditions> m_conditions;
+  std::shared_ptr<SemiGrandCanonicalConditions> m_conditions;
 
   /// Index conversions, depends on current state
   monte::Conversions const *m_convert;

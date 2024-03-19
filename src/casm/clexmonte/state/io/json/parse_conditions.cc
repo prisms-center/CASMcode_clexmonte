@@ -191,7 +191,7 @@ void parse_temperature(InputParser<monte::ValueMap> &parser) {
 /// monte::ValueMap with:
 /// - vector_values["mol_composition"]: (size = system components size)
 ///
-/// If unsuccesfully parsed, `parser.valid() == false`.
+/// If unsuccessfully parsed, `parser.valid() == false`.
 ///
 /// Expected:
 ///
@@ -210,10 +210,6 @@ void parse_mol_composition(InputParser<monte::ValueMap> &parser,
   if (parser.value == nullptr) {
     throw std::runtime_error(
         "Error in parse_mol_composition: parser must have non-empty value");
-  }
-
-  if (!parser.self.contains("mol_composition")) {
-    return;
   }
 
   auto const &composition_converter = get_composition_converter(*system);
@@ -259,7 +255,7 @@ void parse_mol_composition(InputParser<monte::ValueMap> &parser,
 /// monte::ValueMap with:
 /// - vector_values["param_composition"]: (size = system components size)
 ///
-/// If unsuccesfully parsed, `parser.valid() == false`.
+/// If unsuccessfully parsed, `parser.valid() == false`.
 ///
 /// Expected:
 ///
