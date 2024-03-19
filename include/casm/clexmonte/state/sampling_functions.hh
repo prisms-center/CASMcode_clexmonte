@@ -248,10 +248,7 @@ state_sampling_function_type make_formation_energy_corr_f(
       "formation_energy_corr",
       "Formation energy basis set correlations (normalized per primitive cell)",
       shape, [calculation]() {
-        auto &system = *calculation->system;
-        auto const &state = *calculation->state;
-        clexulator::Correlations &correlations =
-            *get_corr(system, state, "formation_energy");
+        auto &correlations = calculation->formation_energy->correlations();
         auto const &per_supercell_corr = correlations.per_supercell();
         return correlations.per_unitcell(per_supercell_corr);
       });
@@ -270,10 +267,8 @@ state_sampling_function_type make_formation_energy_f(
       "Formation energy of the configuration (normalized per primitive cell)",
       {},  // scalar
       [calculation]() {
-        auto &system = *calculation->system;
-        auto const &state = *calculation->state;
         Eigen::VectorXd value(1);
-        value(0) = get_clex(system, state, "formation_energy")->per_unitcell();
+        value(0) = calculation->formation_energy->per_unitcell();
         return value;
       });
 }
@@ -281,10 +276,7 @@ state_sampling_function_type make_formation_energy_f(
 /// \brief Make potential energy sampling function ("potential_energy")
 ///
 /// Notes:
-/// - This version reads from state.properties, so it works
-///   for methods such as `Canonical` and `SemiGrandCanonical`
-///   which keep the potential_energy updated, but not `Kinetic`.
-///   For `Kinetic` use `make_canonical_potential_energy_f`.
+/// - This uses calculation->potential->per_unitcell()
 ///
 /// Requires:
 /// - "potential_energy" is a scalar state property
@@ -296,9 +288,9 @@ state_sampling_function_type make_potential_energy_f(
       "Potential energy of the state (normalized per primitive cell)",
       {},  // scalar
       [calculation]() {
-        auto const &state = *calculation->state;
-        return monte::reshaped(
-            state.properties.scalar_values.at("potential_energy"));
+        Eigen::VectorXd value(1);
+        value(0) = calculation->potential->per_unitcell();
+        return value;
       });
 }
 

@@ -38,17 +38,6 @@ StateModifyingFunction make_set_mol_composition_f(
 
 // --- Inline definitions ---
 
-/// \brief Make potential energy sampling function ("potential_energy")
-///
-/// Notes:
-/// - This version reads from state.properties, so it works
-///   for methods such as `Canonical` and `SemiGrandCanonical`
-///   which keep the potential_energy updated, but not `Kinetic`.
-///   For `Kinetic` use `make_canonical_potential_energy_f`.
-///
-/// Requires:
-/// - "potential_energy" is a scalar state property
-
 /// \brief Make a state modifying function that sets `mol_composition`
 ///     condition equal to the mol composition of the state
 ///

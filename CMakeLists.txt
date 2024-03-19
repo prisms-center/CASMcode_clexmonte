@@ -135,6 +135,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/kinetic/kinetic_events.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/kinetic/kinetic_impl.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/kinetic/kinetic_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/methods/occupation_metropolis.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/Matrix3lCompare.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/diffusion_calculations.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/eigen.hh
@@ -161,6 +162,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/RunParams_json_io_impl.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/StateGenerator_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/parse_and_run_series.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/event_generator.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_conditions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_impl.hh

@@ -26,15 +26,21 @@ class SemiGrandCanonicalPotential {
   /// \brief Pointer to current state
   state_type const *state() const;
 
-  /// \brief Pointer to current conditions
+  /// \brief Pointer to current conditions, valid for current state
   std::shared_ptr<SemiGrandCanonicalConditions> const &conditions() const;
 
-  /// \brief Calculate (per_supercell) cluster expansion value
+  /// \brief Pointer to formation energy cluster expansion calculator, valid for
+  /// current state
+  std::shared_ptr<clexulator::ClusterExpansion> const &formation_energy() const;
+
+  /// \brief Calculate (per_supercell) semi-grand potential value
   double per_supercell();
 
-  /// \brief Calculate change in (per_supercell) cluster expansion value due to
-  /// a
-  ///     series of occupation changes
+  /// \brief Calculate (per_unitcell) semi-grand potential value
+  double per_unitcell();
+
+  /// \brief Calculate change in (per_supercell) semi-grand potential value due
+  ///     to a series of occupation changes
   double occ_delta_per_supercell(std::vector<Index> const &linear_site_index,
                                  std::vector<int> const &new_occ);
 

@@ -64,8 +64,10 @@ void Canonical<EngineType>::run(state_type &state,
   this->occ_location = &occ_location;
   this->conditions = make_conditions(*this->system, state);
 
-  CanonicalPotential potential(this->system);
-  potential.set(this->state, this->conditions);
+  // Make potential calculator
+  this->potential = std::make_shared<CanonicalPotential>(this->system);
+  this->potential->set(this->state, this->conditions);
+  this->formation_energy = this->potential->formation_energy();
 
   /// \brief Get swaps
   std::vector<monte::OccSwap> const &canonical_swaps =
@@ -83,7 +85,8 @@ void Canonical<EngineType>::run(state_type &state,
 
   // Run Monte Carlo at a single condition
   typedef monte::RandomNumberGenerator<EngineType> generator_type;
-  monte::occupation_metropolis(state, occ_location, potential, canonical_swaps,
+  monte::occupation_metropolis(state, occ_location, *this->potential,
+                               canonical_swaps,
                                monte::propose_canonical_event<generator_type>,
                                random_number_generator, run_manager);
 }

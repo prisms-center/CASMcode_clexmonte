@@ -83,8 +83,11 @@ TEST_F(run_SamplingFixtureTest, Test1) {
     CountType steps_per_pass = occ_location.mol_size();
 
     // Make potential energy calculator & set for particular supercell
-    canonical::CanonicalPotential potential(system);
-    potential.set(&state, conditions);
+    // Note: usually this happens in calculator->run
+    calculator->potential =
+        std::make_shared<canonical::CanonicalPotential>(system);
+    calculator->potential->set(&state, conditions);
+    calculator->formation_energy = calculator->potential->formation_energy();
 
     // Set calculator pointers
     calculator->state = &state;
@@ -133,8 +136,9 @@ TEST_F(run_SamplingFixtureTest, Test1) {
       propose_canonical_event(event, occ_location, canonical_swaps,
                               random_number_generator);
 
-      double delta_potential_energy = potential.occ_delta_per_supercell(
-          event.linear_site_index, event.new_occ);
+      double delta_potential_energy =
+          calculator->potential->occ_delta_per_supercell(
+              event.linear_site_index, event.new_occ);
 
       // Accept or reject event
       bool accept = metropolis_acceptance(delta_potential_energy, beta,
@@ -204,8 +208,10 @@ TEST_F(run_SamplingFixtureTest, Test2) {
     CountType steps_per_pass = occ_location.mol_size();
 
     // Make potential energy calculator & set for particular supercell
-    canonical::CanonicalPotential potential(system);
-    potential.set(&state, conditions);
+    calculator->potential =
+        std::make_shared<canonical::CanonicalPotential>(system);
+    calculator->potential->set(&state, conditions);
+    calculator->formation_energy = calculator->potential->formation_energy();
 
     // Set calculator pointers
     calculator->state = &state;
@@ -255,8 +261,9 @@ TEST_F(run_SamplingFixtureTest, Test2) {
       propose_canonical_event(event, occ_location, canonical_swaps,
                               random_number_generator);
 
-      double delta_potential_energy = potential.occ_delta_per_supercell(
-          event.linear_site_index, event.new_occ);
+      double delta_potential_energy =
+          calculator->potential->occ_delta_per_supercell(
+              event.linear_site_index, event.new_occ);
 
       // Accept or reject event
       bool accept = metropolis_acceptance(delta_potential_energy, beta,

@@ -32,11 +32,6 @@ namespace clexmonte {
 //   SystemType=clexmonte::System).
 // ---
 
-/// \brief Make KMC potential energy sampling function ("potential_energy")
-template <typename CalculationType>
-state_sampling_function_type make_kmc_potential_energy_f(
-    std::shared_ptr<CalculationType> const &calculation);
-
 /// \brief Make center of mass isotropic squared displacement sampling function
 ///     ("mean_R_squared_collective_isotropic")
 template <typename CalculationType>
@@ -103,28 +98,6 @@ state_sampling_function_type make_jumps_per_atom_per_event_by_type_f(
     std::shared_ptr<CalculationType> const &calculation);
 
 // --- Inline definitions ---
-
-/// \brief Make KMC potential energy sampling function ("potential_energy")
-///
-/// This is a canonical potential energy, equal to the formation energy,
-/// but entirely calculated at the sampling time, instead of taken from
-/// state.properties.
-template <typename CalculationType>
-state_sampling_function_type make_kmc_potential_energy_f(
-    std::shared_ptr<CalculationType> const &calculation) {
-  return state_sampling_function_type(
-      "potential_energy",
-      "Potential energy of the state (normalized per primitive cell)",
-      {},  // scalar
-      [calculation]() {
-        canonical::CanonicalPotential potential(calculation->system);
-        potential.set(calculation->state, calculation->conditions);
-        double n_unitcells =
-            get_transformation_matrix_to_super(*calculation->state)
-                .determinant();
-        return monte::reshaped(potential.per_supercell() / n_unitcells);
-      });
-}
 
 /// \brief Make center of mass isotropic squared displacement sampling function
 ///     ("mean_R_squared_collective_isotropic")

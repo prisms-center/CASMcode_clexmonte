@@ -57,12 +57,25 @@ struct SemiGrandCanonical {
   /// Occupant tracker
   monte::OccLocation const *occ_location;
 
-  /// The current state's conditions in efficient-to-use form
+  /// The current state's conditions in efficient-to-use form, set
+  ///    when the `run` method is called
   std::shared_ptr<SemiGrandCanonicalConditions> conditions;
+
+  /// The current state's potential calculator, set
+  ///    when the `run` method is called
+  std::shared_ptr<SemiGrandCanonicalPotential> potential;
+
+  /// The current state's formation energy cluster expansion calculator, set
+  ///    when the `run` method is called
+  std::shared_ptr<clexulator::ClusterExpansion> formation_energy;
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
            run_manager_type<EngineType> &run_manager);
+
+  /// \brief Perform a single run, evolving current state
+  void run_v2(state_type &state, monte::OccLocation &occ_location,
+              run_manager_type<EngineType> &run_manager);
 
   /// \brief Construct functions that may be used to sample various quantities
   /// of

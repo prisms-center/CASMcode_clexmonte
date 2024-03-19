@@ -3,6 +3,7 @@
 
 #include <random>
 
+#include "casm/clexmonte/canonical/canonical.hh"
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/kinetic/kinetic_events.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
@@ -59,6 +60,14 @@ struct Kinetic {
   ///
   /// Note: This is shared with the calculators in `prim_event_calculators`
   std::shared_ptr<clexmonte::Conditions> conditions;
+
+  /// The current state's potential calculator, set
+  ///    when the `run` method is called - for sampling function only
+  std::shared_ptr<canonical::CanonicalPotential> potential;
+
+  /// The current state's formation energy cluster expansion calculator, set
+  ///    when the `run` method is called
+  std::shared_ptr<clexulator::ClusterExpansion> formation_energy;
 
   // --- Data used by kinetic sampling functions ---
 

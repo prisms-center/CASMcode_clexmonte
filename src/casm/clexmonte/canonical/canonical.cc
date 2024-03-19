@@ -36,14 +36,26 @@ void CanonicalPotential::set(state_type const *state,
 /// \brief Pointer to current state
 state_type const *CanonicalPotential::state() const { return m_state; }
 
-/// \brief Pointer to current conditions
+/// \brief Pointer to current conditions, valid for current state
 std::shared_ptr<Conditions> const &CanonicalPotential::conditions() const {
   return m_conditions;
+}
+
+/// \brief Pointer to formation energy cluster expansion calculator, valid for
+///     current state
+std::shared_ptr<clexulator::ClusterExpansion> const &
+CanonicalPotential::formation_energy() const {
+  return m_formation_energy_clex;
 }
 
 /// \brief Calculate (per_supercell) canonical potential value
 double CanonicalPotential::per_supercell() {
   return m_formation_energy_clex->per_supercell();
+}
+
+/// \brief Calculate (per_unitcell) canonical potential value
+double CanonicalPotential::per_unitcell() {
+  return m_formation_energy_clex->per_unitcell();
 }
 
 /// \brief Calculate change in (per_supercell) canonical potential value due

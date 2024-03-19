@@ -49,10 +49,17 @@ void SemiGrandCanonicalPotential::set(
 /// \brief Pointer to current state
 state_type const *SemiGrandCanonicalPotential::state() const { return m_state; }
 
-/// \brief Pointer to current conditions
+/// \brief Pointer to current conditions, valid for current state
 std::shared_ptr<SemiGrandCanonicalConditions> const &
 SemiGrandCanonicalPotential::conditions() const {
   return m_conditions;
+}
+
+/// \brief Pointer to formation energy cluster expansion calculator, valid for
+///     current state
+std::shared_ptr<clexulator::ClusterExpansion> const &
+SemiGrandCanonicalPotential::formation_energy() const {
+  return m_formation_energy_clex;
 }
 
 /// \brief Calculate (per_supercell) semi-grand potential value
@@ -70,6 +77,11 @@ double SemiGrandCanonicalPotential::per_supercell() {
       formation_energy - m_n_unitcells * param_chem_pot.dot(param_composition);
 
   return potential_energy;
+}
+
+/// \brief Calculate (per_unitcell) semi-grand potential value
+double SemiGrandCanonicalPotential::per_unitcell() {
+  return this->per_supercell() / m_n_unitcells;
 }
 
 /// \brief Calculate change in (per_supercell) semi-grand potential value due

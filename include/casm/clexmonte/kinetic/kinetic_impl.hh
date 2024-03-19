@@ -57,6 +57,12 @@ void Kinetic<EngineType>::run(state_type &state,
   this->conditions = make_conditions(*this->system, state);
   Index n_unitcells = this->transformation_matrix_to_super.determinant();
 
+  // Make potential calculator - for sampling function only
+  this->potential =
+      std::make_shared<canonical::CanonicalPotential>(this->system);
+  this->potential->set(this->state, this->conditions);
+  this->formation_energy = this->potential->formation_energy();
+
   // if same supercell
   // -> just re-set state & conditions & avoid re-constructing event list
   if (this->transformation_matrix_to_super ==
@@ -118,7 +124,7 @@ Kinetic<EngineType>::standard_sampling_functions(
       make_param_composition_f(calculation),
       make_formation_energy_corr_f(calculation),
       make_formation_energy_f(calculation),
-      make_kmc_potential_energy_f(calculation),
+      make_potential_energy_f(calculation),
       make_mean_R_squared_collective_isotropic_f(calculation),
       make_mean_R_squared_collective_anisotropic_f(calculation),
       make_mean_R_squared_individual_isotropic_f(calculation),

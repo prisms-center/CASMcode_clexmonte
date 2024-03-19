@@ -41,10 +41,12 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
   this->conditions->set_all(state.conditions);
   Index n_unitcells = this->transformation_matrix_to_super.determinant();
 
-  // Construct potential
-  typedef semigrand_canonical::SemiGrandCanonicalPotential potential_type;
-  auto potential = std::make_shared<potential_type>(this->system);
-  potential->set(this->state, this->conditions);
+  // Make potential calculator
+  this->potential =
+      std::make_shared<semigrand_canonical::SemiGrandCanonicalPotential>(
+          this->system);
+  this->potential->set(this->state, this->conditions);
+  this->formation_energy = this->potential->formation_energy();
 
   // Get swaps
   std::vector<monte::OccSwap> const &semigrand_canonical_swaps =
@@ -55,16 +57,16 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
   if (this->transformation_matrix_to_super ==
           get_transformation_matrix_to_super(state) &&
       this->conditions != nullptr) {
-    this->event_data->event_calculator->potential = potential;
+    this->event_data->event_calculator->potential = this->potential;
   } else {
     this->transformation_matrix_to_super =
         get_transformation_matrix_to_super(state);
     n_unitcells = this->transformation_matrix_to_super.determinant();
 
     // Event data
-    this->event_data =
-        std::make_shared<NfoldEventData>(this->system, state, occ_location,
-                                         semigrand_canonical_swaps, potential);
+    this->event_data = std::make_shared<NfoldEventData>(
+        this->system, state, occ_location, semigrand_canonical_swaps,
+        this->potential);
 
     // Nfold data
     monte::Conversions const &convert =

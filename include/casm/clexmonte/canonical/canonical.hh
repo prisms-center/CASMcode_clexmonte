@@ -23,11 +23,18 @@ class CanonicalPotential {
   /// \brief Pointer to current state
   state_type const *state() const;
 
-  /// \brief Pointer to current conditions
+  /// \brief Pointer to current conditions, valid for current state
   std::shared_ptr<Conditions> const &conditions() const;
+
+  /// \brief Pointer to formation energy cluster expansion calculator, valid for
+  /// current state
+  std::shared_ptr<clexulator::ClusterExpansion> const &formation_energy() const;
 
   /// \brief Calculate (per_supercell) cluster expansion value
   double per_supercell();
+
+  /// \brief Calculate (per_unitcell) canonical potential value
+  double per_unitcell();
 
   /// \brief Calculate change in (per_supercell) cluster expansion value due to
   /// a
@@ -97,6 +104,14 @@ struct Canonical {
 
   /// The current state's conditions in efficient-to-use form
   std::shared_ptr<clexmonte::Conditions> conditions;
+
+  /// The current state's potential calculator, set
+  ///    when the `run` method is called
+  std::shared_ptr<CanonicalPotential> potential;
+
+  /// The current state's formation energy cluster expansion calculator, set
+  ///    when the `run` method is called
+  std::shared_ptr<clexulator::ClusterExpansion> formation_energy;
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
