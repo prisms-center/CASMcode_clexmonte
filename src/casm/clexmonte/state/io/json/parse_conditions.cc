@@ -16,6 +16,27 @@
 namespace CASM {
 namespace clexmonte {
 
+void parse(InputParser<Conditions> &parser,
+           std::shared_ptr<system_type> const &system, bool is_increment) {
+  auto conditions_subparser = parser.parse_as_with<monte::ValueMap>(
+      parse_conditions, system, is_increment);
+  if (conditions_subparser->valid()) {
+    if (!is_increment) {
+      parser.value =
+          std::make_unique<Conditions>(make_conditions_from_value_map(
+              *conditions_subparser->value, *get_prim_basicstructure(*system),
+              get_composition_converter(*system),
+              get_random_alloy_corr_f(*system), CASM::TOL /*TODO*/));
+    } else {
+      parser.value =
+          std::make_unique<Conditions>(make_conditions_increment_from_value_map(
+              *conditions_subparser->value, *get_prim_basicstructure(*system),
+              get_composition_converter(*system),
+              get_random_alloy_corr_f(*system), CASM::TOL /*TODO*/));
+    }
+  }
+}
+
 /// \brief Parse all conditions
 ///
 /// Example input (all optional for purposes of this method):

@@ -2,7 +2,7 @@
 #define CASM_clexmonte_nfold
 
 #include "casm/clexmonte/nfold/nfold_events.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical.hh"
+#include "casm/clexmonte/semigrand_canonical/calculator.hh"
 #include "casm/monte/methods/nfold.hh"
 
 namespace CASM {

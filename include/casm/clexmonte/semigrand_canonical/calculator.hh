@@ -4,8 +4,8 @@
 #include <random>
 
 #include "casm/clexmonte/definitions.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_conditions.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh"
+#include "casm/clexmonte/semigrand_canonical/conditions.hh"
+#include "casm/clexmonte/semigrand_canonical/potential.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 
 namespace CASM {
@@ -30,6 +30,7 @@ monte::ValueMap make_conditions_increment(
 template <typename EngineType>
 struct SemiGrandCanonical {
   typedef EngineType engine_type;
+  typedef SemiGrandCanonicalConditions conditions_type;
 
   explicit SemiGrandCanonical(
       std::shared_ptr<system_type> _system,
@@ -72,14 +73,6 @@ struct SemiGrandCanonical {
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
            run_manager_type<EngineType> &run_manager);
-
-  /// \brief Perform a single run, evolving current state
-  void run_v1(state_type &state, monte::OccLocation &occ_location,
-              run_manager_type<EngineType> &run_manager);
-
-  /// \brief Perform a single run, evolving current state
-  void run_v2(state_type &state, monte::OccLocation &occ_location,
-              run_manager_type<EngineType> &run_manager);
 
   /// \brief Construct functions that may be used to sample various quantities
   /// of

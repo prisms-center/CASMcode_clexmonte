@@ -7,6 +7,7 @@
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/state/io/json/parse_conditions.hh"
+#include "casm/clexmonte/state/make_conditions.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/composition/io/json/CompositionConverter_json_io.hh"
@@ -42,7 +43,7 @@ void parse_temperature(InputParser<ConditionsType> &parser) {
     throw std::runtime_error(
         "Error in parse_temperature: parser must have non-empty value");
   }
-  auto subparser = parser.subparse<double>(temperature, "temperature");
+  auto subparser = parser.template subparse<double>("temperature");
   if (subparser->valid()) {
     parser.value->set_temperature(*subparser->value);
   }
@@ -67,37 +68,36 @@ void parse_temperature(InputParser<ConditionsType> &parser) {
 ///     must be included.
 ///
 template <typename ConditionsType>
-void parse_param_chem_pot(InputParser<ConditionsType> &parser) {
+void parse_param_chem_pot(
+    InputParser<ConditionsType> &parser,
+    composition::CompositionConverter const &composition_converter) {
   if (parser.value == nullptr) {
     throw std::runtime_error(
         "Error in parse_composition: parser must have non-empty value");
   }
 
-  if (!parser.self.contains("param_chem_pot") {
+  if (!parser.self.contains("param_chem_pot")) {
     std::stringstream msg;
     msg << "Error: 'param_chem_pot' must be provided";
     parser.insert_error("param_chem_pot", msg.str());
     return;
   }
 
-  std::optional<Eigen::VectorXd> param_chem_pot;
+  Eigen::VectorXd param_chem_pot;
 
   if (parser.self["param_chem_pot"].is_array()) {
-    Eigen::VectorXd tmp_vectorxd;
-    parser.optional(tmp_vectorxd, "param_chem_pot");
-    if (value.size() != composition_converter.independent_compositions()) {
+    parser.optional(param_chem_pot, "param_chem_pot");
+    if (param_chem_pot.size() !=
+        composition_converter.independent_compositions()) {
       std::stringstream msg;
       msg << "Error: 'param_chem_pot' size mismatch.";
       parser.insert_error("param_chem_pot", msg.str());
-    } else {
-      param_chem_pot = tmp_vectorxd;
     }
   } else if (parser.self["param_chem_pot"].is_object()) {
     std::map<std::string, double> input;
     parser.optional(input, "param_chem_pot");
     try {
-      tmp_vectorxd = make_param_chem_pot(composition_converter, input);
-      param_chem_pot = tmp_vectorxd;
+      param_chem_pot = make_param_chem_pot(composition_converter, input);
     } catch (std::exception &e) {
       std::stringstream msg;
       msg << "Error: could not construct composition from option "
@@ -108,6 +108,10 @@ void parse_param_chem_pot(InputParser<ConditionsType> &parser) {
     std::stringstream msg;
     msg << "Error: 'param_chem_pot' must be an array or object";
     parser.insert_error("param_chem_pot", msg.str());
+  }
+
+  if (parser.valid()) {
+    parser.value->set_param_chem_pot(param_chem_pot);
   }
 }
 
@@ -138,7 +142,10 @@ void parse_param_chem_pot(InputParser<ConditionsType> &parser) {
 ///     composition axes size. All composition axes must be included.
 ///
 template <typename ConditionsType>
-void parse_composition(InputParser<ConditionsType> &parser, bool is_increment) {
+void parse_composition(
+    InputParser<ConditionsType> &parser,
+    composition::CompositionConverter const &composition_converter,
+    bool is_increment) {
   if (parser.value == nullptr) {
     throw std::runtime_error(
         "Error in parse_composition: parser must have non-empty value");
@@ -185,8 +192,8 @@ void parse_composition(InputParser<ConditionsType> &parser, bool is_increment) {
   /// Get "param_composition" if exists
   if (parser.self.contains("param_composition")) {
     if (parser.self["param_composition"].is_array()) {
-      parser.optional(tmp_valuexd, "param_composition");
-      param_composition = tmp_valuexd;
+      parser.optional(tmp_vectorxd, "param_composition");
+      param_composition = tmp_vectorxd;
     } else if (parser.self["param_composition"].is_object()) {
       std::map<std::string, double> input;
       parser.optional(input, "param_composition");
@@ -199,7 +206,7 @@ void parse_composition(InputParser<ConditionsType> &parser, bool is_increment) {
           tmp_vectorxd = make_param_composition_increment(
               composition_converter, input, do_not_convert);
         }
-        param_composition = tmp_valuexd;
+        param_composition = tmp_vectorxd;
       } catch (std::exception &e) {
         std::stringstream msg;
         msg << "Error: could not construct composition from option "

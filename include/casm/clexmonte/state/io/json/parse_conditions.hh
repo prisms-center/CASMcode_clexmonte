@@ -12,7 +12,8 @@ class InputParser;
 
 namespace clexmonte {
 
-// TODO: switch to parsing ConditionsType instead of parsing ValueMap
+void parse(InputParser<Conditions> &parser,
+           std::shared_ptr<system_type> const &system, bool is_increment);
 
 /// \brief Parse all conditions
 void parse_conditions(InputParser<monte::ValueMap> &parser,
@@ -73,8 +74,7 @@ void parse_temperature(InputParser<ConditionsType> &parser);
 template <typename ConditionsType>
 void parse_param_chem_pot(
     InputParser<ConditionsType> &parser,
-    composition::CompositionConverter const &composition_converter,
-    bool is_increment, bool tol);
+    composition::CompositionConverter const &composition_converter);
 
 /// \brief Parse 'mol_composition' and/or 'param_composition' (at least one of
 /// which is required, if both are provided they must be equivalent)
@@ -82,7 +82,7 @@ template <typename ConditionsType>
 void parse_composition(
     InputParser<ConditionsType> &parser,
     composition::CompositionConverter const &composition_converter,
-    bool is_increment, bool tol);
+    bool is_increment);
 }  // namespace clexmonte
 }  // namespace CASM
 

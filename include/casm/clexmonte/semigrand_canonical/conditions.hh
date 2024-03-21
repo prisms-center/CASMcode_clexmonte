@@ -30,12 +30,12 @@ struct SemiGrandCanonicalConditions : public TemperatureConditionsMixin,
       : TemperatureConditionsMixin(_temperature_is_zero_tol),
         ParamChemPotConditionsMixin(_composition_converter) {}
 
-  void set_all(monte::ValueMap const &map) {
+  void set_all(monte::ValueMap const &map, bool is_increment) {
     this->set_temperature(map);
     this->set_param_chem_pot(map);
   }
 
-  monte::ValueMap to_value_map() const {
+  monte::ValueMap to_value_map(bool is_increment) const {
     monte::ValueMap map;
     this->put_temperature(map);
     this->put_param_chem_pot(map);

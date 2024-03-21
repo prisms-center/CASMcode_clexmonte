@@ -6,11 +6,29 @@
 #include "casm/clexmonte/run/IncrementalConditionsStateGenerator.hh"
 #include "casm/clexmonte/run/StateGenerator.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
-#include "casm/clexmonte/run/io/json/StateGenerator_json_io.hh"
+#include "casm/clexmonte/run/io/json/StateGenerator_json_io_impl.hh"
 #include "casm/monte/run_management/io/json/SamplingFixtureParams_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
+
+template <typename ConditionsType>
+MethodParserMap<state_generator_type> standard_state_generator_methods(
+    std::shared_ptr<system_type> const &system,
+    StateModifyingFunctionMap const &modifying_functions,
+    MethodParserMap<config_generator_type> const &config_generator_methods,
+    ConditionsType const *ptr) {
+  MethodParserFactory<state_generator_type> sf;
+  MethodParserMap<state_generator_type> state_generator_methods;
+  state_generator_methods.insert(
+      sf.make<IncrementalConditionsStateGenerator>(
+          "incremental", system, modifying_functions, config_generator_methods,
+          ptr)
+      // To add additional state generators:
+      // sf.make<DerivedClassName>("<name>", ...args...),
+  );
+  return state_generator_methods;
+}
 
 /// \brief Parse canonical Monte Carlo input file
 ///
@@ -46,7 +64,7 @@ namespace clexmonte {
 ///         run to be completed.
 /// }
 /// \endcode
-template <typename EngineType>
+template <typename EngineType, typename ConditionsType>
 void parse(InputParser<RunParams<EngineType>> &parser,
            std::vector<fs::path> search_path,
            std::shared_ptr<EngineType> engine,
@@ -56,7 +74,7 @@ void parse(InputParser<RunParams<EngineType>> &parser,
                &analysis_functions,
            MethodParserMap<state_generator_type> const &state_generator_methods,
            MethodParserMap<results_io_type> const &results_io_methods,
-           bool time_sampling_allowed) {
+           bool time_sampling_allowed, ConditionsType const *ptr) {
   /// TODO: "random_number_generator":
   ///     (Future) Options controlling the random number generator.
 
@@ -64,7 +82,6 @@ void parse(InputParser<RunParams<EngineType>> &parser,
   auto state_generator_subparser =
       parser.template subparse<state_generator_type>("state_generation",
                                                      state_generator_methods);
-
   // Construct sampling fixture parameters
   auto _parse_sampling_fixtures = [&](std::string key, bool is_required) {
     std::vector<sampling_fixture_params_type> sampling_fixture_params;

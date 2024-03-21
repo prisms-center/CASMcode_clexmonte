@@ -5,8 +5,8 @@
 #include "casm/clexmonte/methods/occupation_metropolis.hh"
 #include "casm/clexmonte/run/analysis_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
+#include "casm/clexmonte/semigrand_canonical/calculator.hh"
 #include "casm/clexmonte/semigrand_canonical/event_generator.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical.hh"
 #include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/modifying_functions.hh"
@@ -46,59 +46,6 @@ template <typename EngineType>
 void SemiGrandCanonical<EngineType>::run(
     state_type &state, monte::OccLocation &occ_location,
     run_manager_type<EngineType> &run_manager) {
-  this->run_v2(state, occ_location, run_manager);
-}
-
-/// \brief Perform a single run, evolving current state
-///
-/// Notes:
-/// - state and occ_location are evolved and end in modified states
-template <typename EngineType>
-void SemiGrandCanonical<EngineType>::run_v1(
-    state_type &state, monte::OccLocation &occ_location,
-    run_manager_type<EngineType> &run_manager) {
-  if (!state.conditions.scalar_values.count("temperature")) {
-    throw std::runtime_error(
-        "Error in Canonical::run: state `temperature` not set.");
-  }
-  if (!state.conditions.vector_values.count("param_chem_pot")) {
-    throw std::runtime_error(
-        "Error in Canonical::run: state `param_chem_pot` conditions not set.");
-  }
-
-  this->state = &state;
-  this->transformation_matrix_to_super =
-      get_transformation_matrix_to_super(state);
-  this->occ_location = &occ_location;
-  this->conditions = std::make_shared<SemiGrandCanonicalConditions>(
-      get_composition_converter(*this->system));
-  this->conditions->set_all(state.conditions);
-
-  // Make potential calculator
-  this->potential = std::make_shared<SemiGrandCanonicalPotential>(this->system);
-  this->potential->set(this->state, this->conditions);
-  this->formation_energy = this->potential->formation_energy();
-
-  // Get swaps
-  std::vector<monte::OccSwap> const &semigrand_canonical_swaps =
-      get_semigrand_canonical_swaps(*this->system);
-
-  // Run Monte Carlo at a single condition
-  typedef monte::RandomNumberGenerator<EngineType> generator_type;
-  monte::occupation_metropolis(
-      state, occ_location, *this->potential, semigrand_canonical_swaps,
-      monte::propose_semigrand_canonical_event<generator_type>,
-      random_number_generator, run_manager);
-}
-
-/// \brief Perform a single run, evolving current state
-///
-/// Notes:
-/// - state and occ_location are evolved and end in modified states
-template <typename EngineType>
-void SemiGrandCanonical<EngineType>::run_v2(
-    state_type &state, monte::OccLocation &occ_location,
-    run_manager_type<EngineType> &run_manager) {
   // Store state data, which makes it available to samplers
   this->state = &state;
   this->transformation_matrix_to_super =
@@ -106,7 +53,7 @@ void SemiGrandCanonical<EngineType>::run_v2(
   this->occ_location = &occ_location;
   this->conditions = std::make_shared<SemiGrandCanonicalConditions>(
       get_composition_converter(*this->system));
-  this->conditions->set_all(state.conditions);
+  this->conditions->set_all(state.conditions, false);
 
   // Make potential calculator
   this->potential = std::make_shared<SemiGrandCanonicalPotential>(this->system);

@@ -3,7 +3,7 @@
 #include "casm/clexmonte/run/IncrementalConditionsStateGenerator.hh"
 #include "casm/clexmonte/run/StateModifyingFunction.hh"
 #include "casm/clexmonte/run/functions.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical.hh"
+#include "casm/clexmonte/semigrand_canonical/calculator.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"

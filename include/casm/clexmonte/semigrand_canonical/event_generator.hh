@@ -2,8 +2,8 @@
 #define CASM_clexmonte_semigrand_canonical_event_generator
 
 #include "casm/clexmonte/definitions.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_conditions.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh"
+#include "casm/clexmonte/semigrand_canonical/conditions.hh"
+#include "casm/clexmonte/semigrand_canonical/potential.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 #include "casm/monte/events/OccEventProposal.hh"
 

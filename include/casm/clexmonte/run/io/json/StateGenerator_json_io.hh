@@ -17,10 +17,12 @@ void parse(
     MethodParserMap<state_generator_type> const &state_generator_methods);
 
 /// \brief Construct IncrementalConditionsStateGenerator from JSON
+template <typename ConditionsType>
 void parse(InputParser<IncrementalConditionsStateGenerator> &parser,
            std::shared_ptr<system_type> const &system,
            StateModifyingFunctionMap const &modifying_functions,
-           MethodParserMap<config_generator_type> config_generator_methods);
+           MethodParserMap<config_generator_type> config_generator_methods,
+           ConditionsType const *ptr = nullptr);
 
 }  // namespace clexmonte
 }  // namespace CASM

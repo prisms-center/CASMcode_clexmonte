@@ -4,7 +4,7 @@
 #include <random>
 
 #include "casm/clexmonte/definitions.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_conditions.hh"
+#include "casm/clexmonte/semigrand_canonical/conditions.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 
 namespace CASM {

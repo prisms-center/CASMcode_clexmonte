@@ -161,13 +161,14 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/RunParams_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/RunParams_json_io_impl.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/StateGenerator_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/StateGenerator_json_io_impl.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/run/io/json/parse_and_run_series.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/calculator.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/calculator_impl.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/conditions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/event_generator.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_conditions.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_impl.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_json_io.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/semigrand_canonical/potential.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/Conditions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/Configuration.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/CorrMatchingPotential.hh
@@ -205,8 +206,8 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/ConfigGenerator_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/RunParams_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/json/StateGenerator_json_io.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semigrand_canonical/semigrand_canonical.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semigrand_canonical/calculator.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semigrand_canonical/potential.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/Conditions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/CorrMatchingPotential.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/io/json/Configuration_json_io.cc

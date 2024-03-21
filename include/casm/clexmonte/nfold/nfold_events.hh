@@ -6,7 +6,7 @@
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/events/CompleteEventList.hh"
 #include "casm/clexmonte/events/event_data.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh"
+#include "casm/clexmonte/semigrand_canonical/potential.hh"
 
 namespace CASM {
 namespace clexmonte {

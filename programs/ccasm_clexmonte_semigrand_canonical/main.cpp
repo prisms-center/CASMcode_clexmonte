@@ -1,7 +1,7 @@
 #include "casm/casm_io/Log.hh"
 #include "casm/clexmonte/run/io/json/parse_and_run_series.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_json_io.hh"
+#include "casm/clexmonte/semigrand_canonical/calculator.hh"
+#include "casm/clexmonte/semigrand_canonical/json_io.hh"
 
 using namespace CASM;
 

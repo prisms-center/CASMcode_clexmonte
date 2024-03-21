@@ -77,10 +77,12 @@ void parse_and_run_series(fs::path system_json_file,
       CalculationType::standard_modifying_functions(calculation);
 
   /// Make config generator / state generator / results_io JSON parsers
+  CalculationType::conditions_type const *conditions_ptr = nullptr;
   auto config_generator_methods =
       clexmonte::standard_config_generator_methods(calculation->system);
   auto state_generator_methods = clexmonte::standard_state_generator_methods(
-      calculation->system, modifying_functions, config_generator_methods);
+      calculation->system, modifying_functions, config_generator_methods,
+      conditions_ptr);
   auto results_io_methods = clexmonte::standard_results_io_methods();
 
   /// Parse and construct run parameters
@@ -94,7 +96,7 @@ void parse_and_run_series(fs::path system_json_file,
   InputParser<clexmonte::RunParams<engine_type>> run_params_parser(
       run_params_json, search_path = {system_root, run_root}, engine,
       sampling_functions, analysis_functions, state_generator_methods,
-      results_io_methods, calculation->time_sampling_allowed);
+      results_io_methods, calculation->time_sampling_allowed, conditions_ptr);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
   report_and_throw_if_invalid(run_params_parser, CASM::log(),

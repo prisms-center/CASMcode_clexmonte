@@ -63,10 +63,12 @@ TEST(canonical_run_test, Test1) {
       calculation_type::standard_modifying_functions(calculation);
 
   /// Make config generator / state generator / results_io JSON parsers
+  clexmonte::Conditions const *conditions_ptr;
   auto config_generator_methods =
       clexmonte::standard_config_generator_methods(calculation->system);
   auto state_generator_methods = clexmonte::standard_state_generator_methods(
-      calculation->system, modifying_functions, config_generator_methods);
+      calculation->system, modifying_functions, config_generator_methods,
+      conditions_ptr);
   auto results_io_methods = clexmonte::standard_results_io_methods();
 
   /// Parse and construct run parameters
@@ -77,7 +79,7 @@ TEST(canonical_run_test, Test1) {
   InputParser<clexmonte::RunParams<std::mt19937_64>> run_params_parser(
       run_params_json, search_path, engine, sampling_functions,
       json_sampling_functions, analysis_functions, state_generator_methods,
-      results_io_methods, calculation->time_sampling_allowed);
+      results_io_methods, calculation->time_sampling_allowed, conditions_ptr);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
   report_and_throw_if_invalid(run_params_parser, CASM::log(),
@@ -179,10 +181,12 @@ TEST(canonical_run_test, Test2) {
       calculation_type::standard_modifying_functions(calculation);
 
   /// Make config generator / state generator / results_io JSON parsers
+  clexmonte::Conditions const *conditions_ptr = nullptr;
   auto config_generator_methods =
       clexmonte::standard_config_generator_methods(calculation->system);
   auto state_generator_methods = clexmonte::standard_state_generator_methods(
-      calculation->system, modifying_functions, config_generator_methods);
+      calculation->system, modifying_functions, config_generator_methods,
+      conditions_ptr);
   auto results_io_methods = clexmonte::standard_results_io_methods();
 
   /// Parse and construct run parameters
@@ -194,7 +198,7 @@ TEST(canonical_run_test, Test2) {
   InputParser<clexmonte::RunParams<std::mt19937_64>> run_params_parser(
       run_params_json, search_path, engine, sampling_functions,
       json_sampling_functions, analysis_functions, state_generator_methods,
-      results_io_methods, calculation->time_sampling_allowed);
+      results_io_methods, calculation->time_sampling_allowed, conditions_ptr);
   std::runtime_error run_params_error_if_invalid{
       "Error reading Monte Carlo run parameters JSON input"};
   report_and_throw_if_invalid(run_params_parser, CASM::log(),

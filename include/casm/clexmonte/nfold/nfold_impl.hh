@@ -2,7 +2,7 @@
 #define CASM_clexmonte_nfold_impl
 
 #include "casm/clexmonte/nfold/nfold.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_impl.hh"
+#include "casm/clexmonte/semigrand_canonical/calculator_impl.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/monte/methods/nfold.hh"
 
@@ -38,7 +38,7 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
   this->conditions =
       std::make_shared<semigrand_canonical::SemiGrandCanonicalConditions>(
           get_composition_converter(*this->system));
-  this->conditions->set_all(state.conditions);
+  this->conditions->set_all(state.conditions, false);
   Index n_unitcells = this->transformation_matrix_to_super.determinant();
 
   // Make potential calculator

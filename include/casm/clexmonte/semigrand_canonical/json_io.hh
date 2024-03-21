@@ -3,8 +3,9 @@
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical.hh"
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_conditions.hh"
+#include "casm/clexmonte/semigrand_canonical/calculator.hh"
+#include "casm/clexmonte/semigrand_canonical/conditions.hh"
+#include "casm/clexmonte/state/io/json/parse_conditions_impl.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -21,14 +22,14 @@ void parse(InputParser<SemiGrandCanonical<EngineType>> &parser,
 
 inline void parse(InputParser<SemiGrandCanonicalConditions> &parser,
                   std::shared_ptr<system_type> system, bool is_increment) {
+  double temperature_is_zero_tol = 1e-10; /*TODO*/
   parser.value = std::make_unique<SemiGrandCanonicalConditions>(
-      get_composition_converter(*system), );
+      get_composition_converter(*system), temperature_is_zero_tol);
 
   parse_temperature(parser);
 
   double param_chem_pot_tol = CASM::TOL; /*TODO*/
-  parse_param_chem_pot(parser, get_composition_converter(*system), is_increment,
-                       param_chem_pot_tol);
+  parse_param_chem_pot(parser, get_composition_converter(*system));
 }
 
 }  // namespace semigrand_canonical

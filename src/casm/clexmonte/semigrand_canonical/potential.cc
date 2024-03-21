@@ -1,4 +1,4 @@
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_potential.hh"
+#include "casm/clexmonte/semigrand_canonical/potential.hh"
 
 #include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"

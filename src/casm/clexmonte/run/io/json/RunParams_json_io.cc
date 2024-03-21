@@ -32,21 +32,6 @@ MethodParserMap<config_generator_type> standard_config_generator_methods(
   return config_generator_methods;
 }
 
-MethodParserMap<state_generator_type> standard_state_generator_methods(
-    std::shared_ptr<system_type> const &system,
-    StateModifyingFunctionMap const &modifying_functions,
-    MethodParserMap<config_generator_type> const &config_generator_methods) {
-  MethodParserFactory<state_generator_type> sf;
-  MethodParserMap<state_generator_type> state_generator_methods;
-  state_generator_methods.insert(
-      sf.make<IncrementalConditionsStateGenerator>(
-          "incremental", system, modifying_functions, config_generator_methods)
-      // To add additional state generators:
-      // sf.make<DerivedClassName>("<name>", ...args...),
-  );
-  return state_generator_methods;
-}
-
 MethodParserMap<results_io_type> standard_results_io_methods() {
   MethodParserFactory<results_io_type> f;
   MethodParserMap<results_io_type> results_io_methods;

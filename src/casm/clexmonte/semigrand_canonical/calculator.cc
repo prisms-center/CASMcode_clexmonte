@@ -1,4 +1,4 @@
-#include "casm/clexmonte/semigrand_canonical/semigrand_canonical_impl.hh"
+#include "casm/clexmonte/semigrand_canonical/calculator_impl.hh"
 #include "casm/clexmonte/state/make_conditions.hh"
 #include "casm/clexmonte/state/sampling_functions.hh"
 #include "casm/clexmonte/system/System.hh"

@@ -909,6 +909,8 @@ struct Conditions {
       Eigen::VectorXd const &_mol_composition,
       composition::CompositionConverter const &_composition_converter,
       bool is_increment);
+
+  monte::ValueMap to_value_map(bool is_increment) const;
 };
 
 /// \brief Return initial + n_increment*increment

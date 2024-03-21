@@ -79,6 +79,14 @@ void Conditions::set_mol_composition(
   }
 }
 
+monte::ValueMap Conditions::to_value_map(bool is_increment) const {
+  if (!is_increment) {
+    return make_value_map_from_conditions(*this);
+  } else {
+    return make_value_map_from_conditions_increment(*this);
+  }
+}
+
 /// \brief Return initial + n_increment*increment
 ///
 /// Notes:
