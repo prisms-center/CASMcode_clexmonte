@@ -1,0 +1,40 @@
+{
+  "state_generation": {
+    "method": "incremental",
+    "kwargs": {
+      "initial_configuration": {
+        "method": "fixed",
+        "kwargs": {
+          "transformation_matrix_to_supercell": [
+            [6, 0, 0],
+            [0, 6, 0],
+            [0, 0, 6]],
+          "_dof": null
+        }
+      },
+      "initial_conditions": {
+        "temperature": 300.0,
+        "mol_composition": {
+          "Zr": 2.0,
+          "O": 0.1,
+          "Va": 1.9
+        }
+      },
+      "conditions_increment": {
+        "temperature": 10.0,
+        "mol_composition": {
+          "Zr": 0.0,
+          "O": 0.0,
+          "Va": 0.0
+        }
+      },
+      "n_states": 11,
+      "dependent_runs": false,
+      "modifiers": []
+    }
+  },
+  "sampling_fixtures": {
+    "thermo_period1": "TODO",
+    "thermo_period10": "TODO"
+  }
+}

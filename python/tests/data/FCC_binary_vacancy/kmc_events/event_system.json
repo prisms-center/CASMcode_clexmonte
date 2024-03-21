@@ -1,0 +1,24 @@
+{
+  "atom_name_list": ["A", "B", "Va"],
+  "atom_position_to_name_index": [
+    [
+      [0],
+      [1],
+      [2]
+    ]
+  ],
+  "chemical_name_list": ["A", "B", "Va"],
+  "is_indivisible_chemical_list": [true, true, true],
+  "is_vacancy_list": [false, false, true],
+  "occupant_to_chemical_index": [
+    [0, 1, 2]
+  ],
+  "occupant_to_orientation_index": [
+    [0, 1, 2]
+  ],
+  "orientation_name_list": ["A", "B", "Va"],
+  "orientation_to_occupant_index": [
+    [0, 1, 2]
+  ],
+  "vacancy_name_list": ["VA", "Va", "va"]
+}

@@ -1,6 +1,8 @@
 import copy
+
 import numpy as np
 
+import libcasm.configuration as casmconfig
 from libcasm.clexmonte import (
     MonteCarloConfiguration,
 )
@@ -8,7 +10,6 @@ from libcasm.clexulator import (
     ConfigDoFValues,
     make_default_config_dof_values,
 )
-import libcasm.configuration as casmconfig
 
 
 def test_MonteCarloConfiguration_constructor_1(

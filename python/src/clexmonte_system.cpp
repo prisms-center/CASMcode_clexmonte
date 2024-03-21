@@ -11,6 +11,7 @@
 #include "pybind11_json/pybind11_json.hpp"
 
 // clexmonte
+#include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexmonte/system/io/json/System_json_io.hh"
 
@@ -24,7 +25,15 @@ namespace CASMpy {
 
 using namespace CASM;
 
-} // namespace CASMpy
+std::shared_ptr<clexmonte::System> make_system(
+    std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
+    composition::CompositionConverter const &_composition_converter,
+    Index _n_dimensions) {
+  return std::make_shared<clexmonte::System>(
+      _shared_prim, _composition_converter, _n_dimensions);
+}
+
+}  // namespace CASMpy
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
@@ -48,6 +57,7 @@ PYBIND11_MODULE(_clexmonte_system, m) {
   py::module::import("libcasm.clexulator");
   py::module::import("libcasm.composition");
   py::module::import("libcasm.configuration");
+  py::module::import("libcasm.monte.events");
   py::module::import("libcasm.xtal");
 
   py::class_<clexmonte::System, std::shared_ptr<clexmonte::System>>(m, "System",
@@ -62,8 +72,7 @@ PYBIND11_MODULE(_clexmonte_system, m) {
         lists, and cluster expansion basis sets and coefficients.
 
       )pbdoc")
-      .def(py::init<std::shared_ptr<xtal::BasicStructure const> const &,
-                    composition::CompositionConverter const &, Index>(),
+      .def(py::init<>(&make_system),
            R"pbdoc(
          .. rubric:: Constructor
 
@@ -117,6 +126,368 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           libcasm.clexulator.PrimNeighborList: Neighbor list used for cluster \
           expansions.
           )pbdoc")
+      .def(
+          "is_basis_set",
+          [](clexmonte::System &m, std::string key) -> bool {
+            return clexmonte::is_basis_set(m, key);
+          },
+          R"pbdoc(
+          Check if a basis set calculator exists
+
+          Parameters
+          ----------
+          key : str
+              Basis set name
+
+          Returns
+          -------
+          clexulator : libcasm.clexulator.Clexulator
+              True if basis set calculator exists for `key`.
+          )pbdoc",
+          py::arg("key"))
+      .def(
+          "is_local_basis_set",
+          [](clexmonte::System &m, std::string key) -> bool {
+            return clexmonte::is_local_basis_set(m, key);
+          },
+          R"pbdoc(
+          Check if a local basis set calculator exists
+
+          Parameters
+          ----------
+          key : str
+              Local basis set name
+
+          Returns
+          -------
+          exists : bool
+              True if local basis set calculator exists for `key`.
+          )pbdoc",
+          py::arg("key"))
+      .def(
+          "basis_set",
+          [](clexmonte::System &m,
+             std::string key) -> std::shared_ptr<clexulator::Clexulator> {
+            return clexmonte::get_basis_set(m, key);
+          },
+          R"pbdoc(
+          Get a basis set (Clexulator)
+
+          Parameters
+          ----------
+          key : str
+              Basis set name
+
+          Returns
+          -------
+          clexulator : libcasm.clexulator.LocalClexulator
+              The  cluster expansion basis set calculator.
+          )pbdoc",
+          py::arg("key"))
+      .def(
+          "local_basis_set",
+          [](clexmonte::System &m, std::string key)
+              -> std::shared_ptr<clexulator::LocalClexulatorWrapper> {
+            return std::make_shared<clexulator::LocalClexulatorWrapper>(
+                clexmonte::get_local_basis_set(m, key));
+          },
+          R"pbdoc(
+          Get a local basis set (LocalClexulator)
+
+          Parameters
+          ----------
+          key : str
+              Local basis set name
+
+          Returns
+          -------
+          local_clexulator : libcasm.clexulator.LocalClexulator
+              The local cluster expansion basis set calculator.
+          )pbdoc",
+          py::arg("key"))
+      //
+      .def(
+          "is_clex",
+          [](clexmonte::System &m, std::string key) -> bool {
+            return clexmonte::is_clex_data(m, key);
+          },
+          R"pbdoc(
+          Check if a cluster expansion exists
+
+          Parameters
+          ----------
+          key : str
+              Cluster expansion name
+
+          Returns
+          -------
+          exists : bool
+              True if cluster expansion exists for `key`.
+          )pbdoc",
+          py::arg("key"))
+      .def(
+          "is_multiclex",
+          [](clexmonte::System &m, std::string key) -> bool {
+            return clexmonte::is_multiclex_data(m, key);
+          },
+          R"pbdoc(
+          Check if a multi-cluster expansion exists
+
+          Parameters
+          ----------
+          key : str
+              Multi-cluster expansion name
+
+          Returns
+          -------
+          exists : bool
+              True if multi-cluster expansion exists for `key`.
+          )pbdoc",
+          py::arg("key"))
+      .def(
+          "is_local_clex",
+          [](clexmonte::System &m, std::string key) -> bool {
+            return clexmonte::is_local_clex_data(m, key);
+          },
+          R"pbdoc(
+          Check if a local cluster expansion exists
+
+          Parameters
+          ----------
+          key : str
+              Local cluster expansion name
+
+          Returns
+          -------
+          exists : bool
+              True if local cluster expansion exists for `key`.
+          )pbdoc",
+          py::arg("key"))
+      .def(
+          "is_local_multiclex",
+          [](clexmonte::System &m, std::string key) -> bool {
+            return clexmonte::is_local_multiclex_data(m, key);
+          },
+          R"pbdoc(
+          Check if a local multi-cluster expansion exists
+
+          Parameters
+          ----------
+          key : str
+              Local multi-cluster expansion name
+
+          Returns
+          -------
+          exists : bool
+              True if local multi-cluster expansion exists for `key`.
+          )pbdoc",
+          py::arg("key"))
+      //
+      .def(
+          "clex",
+          [](clexmonte::System &m, clexmonte::state_type const &state,
+             std::string key) -> std::shared_ptr<clexulator::ClusterExpansion> {
+            return clexmonte::get_clex(m, state, key);
+          },
+          R"pbdoc(
+          Get a cluster expansion calculator
+
+          Parameters
+          ----------
+          state : libcasm.clexmonte.MonteCarloState
+              The state to be calculated
+          key : str
+              Cluster expansion name
+
+          Returns
+          -------
+          clex : libcasm.clexulator.ClusterExpansion
+              The cluster expansion calculator for `key`, set to calculate for
+              `state`.
+          )pbdoc",
+          py::arg("state"), py::arg("key"))
+      .def(
+          "multiclex",
+          [](clexmonte::System &m, clexmonte::state_type const &state,
+             std::string key)
+              -> std::shared_ptr<clexulator::MultiClusterExpansion> {
+            return clexmonte::get_multiclex(m, state, key);
+          },
+          R"pbdoc(
+          Get a multi-cluster expansion calculator
+
+          Parameters
+          ----------
+          state : libcasm.clexmonte.MonteCarloState
+              The state to be calculated
+          key : str
+              Multi-cluster expansion name
+
+          Returns
+          -------
+          multiclex : libcasm.clexulator.MultiClusterExpansion
+              The multi-cluster expansion calculator for `key`, set to
+              calculate for `state`.
+          )pbdoc",
+          py::arg("state"), py::arg("key"))
+      .def(
+          "local_clex",
+          [](clexmonte::System &m, clexmonte::state_type const &state,
+             std::string key)
+              -> std::shared_ptr<clexulator::LocalClusterExpansion> {
+            return clexmonte::get_local_clex(m, state, key);
+          },
+          R"pbdoc(
+          Get a local cluster expansion
+
+          Parameters
+          ----------
+          state : libcasm.clexmonte.MonteCarloState
+              The state to be calculated
+          key : str
+              Local cluster expansion name
+
+          Returns
+          -------
+          local_clex : libcasm.clexulator.LocalClusterExpansion
+              The local cluster expansion calculator for `key`, set to
+              calculate for `state`.
+          )pbdoc",
+          py::arg("state"), py::arg("key"))
+      .def(
+          "local_multiclex",
+          [](clexmonte::System &m, clexmonte::state_type const &state,
+             std::string key)
+              -> std::shared_ptr<clexulator::MultiLocalClusterExpansion> {
+            return clexmonte::get_local_multiclex(m, state, key);
+          },
+          R"pbdoc(
+          Get a local multi-cluster expansion
+
+          Parameters
+          ----------
+          state : libcasm.clexmonte.MonteCarloState
+              The state to be calculated
+          key : str
+              Local multi-cluster expansion name
+
+          Returns
+          -------
+          local_multiclex : libcasm.clexulator.MultiLocalClusterExpansion
+              The local multi-cluster expansion calculator for `key`, set to
+              calculate for `state`.
+          )pbdoc",
+          py::arg("state"), py::arg("key"))
+      //
+      .def(
+          "dof_space",
+          [](clexmonte::System &m,
+             std::string key) -> std::shared_ptr<clexulator::DoFSpace> {
+            return std::make_shared<clexulator::DoFSpace>(m.dof_spaces.at(key));
+          },
+          R"pbdoc(
+          Get the DoFSpace for an order parameter calculator
+
+          Parameters
+          ----------
+          key : str
+              The order parameter name
+
+          Returns
+          -------
+          dof_space : libcasm.clexulator.DoFSpace
+              The DoFSpace of the order parameter calculator for `key`.
+          )pbdoc",
+          py::arg("key"))
+      .def(
+          "order_parameter",
+          [](clexmonte::System &m, clexmonte::state_type const &state,
+             std::string key) -> std::shared_ptr<clexulator::OrderParameter> {
+            return clexmonte::get_order_parameter(m, state, key);
+          },
+          R"pbdoc(
+          Get an order parameter calculator
+
+          Parameters
+          ----------
+          state : libcasm.clexmonte.MonteCarloState
+              The state to be calculated
+          key : str
+              The order parameter name
+
+          Returns
+          -------
+          order_parameter : libcasm.clexulator.OrderParameter
+              The order parameter calculator for `key`, set to calculate for
+              `state`.
+          )pbdoc",
+          py::arg("state"), py::arg("key"))
+      .def(
+          "order_parameter_subspaces",
+          [](clexmonte::System &m,
+             std::string key) -> std::vector<std::vector<Index>> {
+            return m.dof_subspaces.at(key);
+          },
+          R"pbdoc(
+          Get the indices of DoFSpace basis vectors forming subspaces
+
+          Parameters
+          ----------
+          key : str
+              The order parameter name
+
+          Returns
+          -------
+          order_parameter_subspaces : list[list[int]]
+              The array `order_parameter_subspaces[i]` is the indices of the
+              DoFSpace basis vectors that form the `i`-th subspace.
+          )pbdoc",
+          py::arg("key"))
+      //
+      .def(
+          "canonical_swaps",
+          [](clexmonte::System &m) -> std::vector<monte::OccSwap> {
+            return clexmonte::get_canonical_swaps(m);
+          },
+          R"pbdoc(
+          Get the swap types for canonical Monte Carlo events
+
+          Returns
+          -------
+          canonical_swaps : list[libcasm.monte.OccSwap]
+              The swap types allowed for canonical Monte Carlo events
+          )pbdoc")
+      .def(
+          "semigrand_canonical_swaps",
+          [](clexmonte::System &m) -> std::vector<monte::OccSwap> {
+            return clexmonte::get_semigrand_canonical_swaps(m);
+          },
+          R"pbdoc(
+          Get the single site swap types for semi-grand canonical Monte Carlo \
+          events
+
+          Returns
+          -------
+          semigrand_canonical_swaps : list[libcasm.monte.OccSwap]
+              The single swap types allowed to be proposed for semi-grand
+              canonical Monte Carlo events. May be empty.
+          )pbdoc")
+      .def(
+          "semigrand_canonical_multiswaps",
+          [](clexmonte::System &m) -> std::vector<monte::MultiOccSwap> {
+            return clexmonte::get_semigrand_canonical_multiswaps(m);
+          },
+          R"pbdoc(
+          Get the multi-site swap types for semi-grand canonical Monte Carlo \
+          events
+
+          Returns
+          -------
+          semigrand_canonical_multiswaps : list[libcasm.monte.OccSwap]
+              The multi-site swap types for semi-grand canonical Monte Carlo
+              events. May be empty.
+          )pbdoc")
+      //
       .def_static(
           "from_dict",
           [](const nlohmann::json &data,

@@ -66,6 +66,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
   py::module::import("libcasm.clexulator");
   py::module::import("libcasm.composition");
   py::module::import("libcasm.configuration");
+  py::module::import("libcasm.monte");
   py::module::import("libcasm.xtal");
 
   py::class_<clexmonte::config_type>(m, "MonteCarloConfiguration",
@@ -278,6 +279,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
       Cluster expansion model state for Monte Carlo simulations
 
       The MonteCarloState class holds:
+
       - the current configuration
       - the thermodynamic conditions
       - configuration properties, if calculated by a Monte Carlo calculator.

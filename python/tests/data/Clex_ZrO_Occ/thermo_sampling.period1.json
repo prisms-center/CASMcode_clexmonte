@@ -1,0 +1,45 @@
+{
+  "_comment": "This has a sampling period of 1 pass",
+  "sampling": {
+    "sample_by": "pass",
+    "spacing": "linear",
+    "begin": 0,
+    "period": 1,
+    "quantities": [
+      "formation_energy",
+      "formation_energy_corr",
+      "mol_composition",
+      "param_composition",
+      "potential_energy"],
+    "sample_trajectory": false
+  },
+  "completion_check": {
+    "cutoff": {
+      "count": {
+        "min": null,
+        "max": 1000
+      }
+    },
+    "begin": 0.0,
+    "period": 10.0,
+    "confidence": 0.95,
+    "convergence": [
+      {
+        "quantity": "potential_energy",
+        "precision": 0.001
+      }
+    ]
+  },
+  "results_io": {
+    "method": "json",
+    "kwargs": {
+      "output_dir": "output/thermo_period1",
+      "write_trajectory": false,
+      "write_observations": false
+    }
+  },
+  "_log": {
+    "file": "output/thermo_period1/status.json",
+    "frequency_in_s": 5.0
+  }
+}

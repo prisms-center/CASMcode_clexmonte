@@ -1,0 +1,25 @@
+{
+  "basis_function_specs" : {
+    "dof_specs": {
+      "occ": {
+        "site_basis_functions" : "occupation"
+      }
+    }
+  },
+  "cluster_specs": {
+    "method": "local_max_length",
+    "params": {
+      "phenomenal": {
+        "coordinate_mode": "Integral",
+        "sites": [
+          [0, 0, 0, 0],
+          [0, 0, 0, 1]
+        ]
+      },
+      "generating_group": [0, 16, 18, 23, 25, 27, 32, 47],
+      "orbit_branch_specs": {
+        "1" : {"cutoff_radius": 3.}
+      }
+    }
+  }
+}

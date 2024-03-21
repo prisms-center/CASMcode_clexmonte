@@ -1,0 +1,76 @@
+{
+  "cluster": {
+    "distances": [2.8284271247461903],
+    "max_length": 2.8284271247461903,
+    "min_length": 2.8284271247461903,
+    "sites": [
+      [0, 0, 0, 0],
+      [0, 0, 0, 1]
+    ]
+  },
+  "equivalence_map": [0, 16, 18, 23, 25, 27, 32, 47],
+  "equivalence_map_descriptions": [
+    "1",
+    "2 x, -x, 0",
+    "2 0, 0, z",
+    "2 x, x, -x",
+    "m x, x, z",
+    "m 2*x, 2*y, -x-y",
+    "m x, -x, z",
+    "-1 0.0000000 0.0000000 0.0000000"
+  ],
+  "event_invariants": {
+    "distances": [2.8284271247461903],
+    "molecule_count": [
+      [0, 1, 1]
+    ],
+    "size": 2
+  },
+  "invariant_group": [0, 16, 18, 23, 25, 27, 32, 47],
+  "invariant_group_descriptions": [
+    "1",
+    "2 x, -x, 0",
+    "2 0, 0, z",
+    "2 x, x, -x",
+    "m x, x, z",
+    "m 2*x, 2*y, -x-y",
+    "m x, -x, z",
+    "-1 0.0000000 0.0000000 0.0000000"
+  ],
+  "occupation": {
+    "index": {
+      "final": [2, 1],
+      "initial": [1, 2]
+    },
+    "name": {
+      "final": ["Va", "B"],
+      "initial": ["B", "Va"]
+    }
+  },
+  "trajectories": [
+    [
+      {
+        "chemical_name": "B",
+        "coordinate": [0, 0, 0, 0],
+        "occupant_index": 1
+      },
+      {
+        "chemical_name": "B",
+        "coordinate": [0, 0, 0, 1],
+        "occupant_index": 1
+      }
+    ],
+    [
+      {
+        "chemical_name": "Va",
+        "coordinate": [0, 0, 0, 1],
+        "occupant_index": 2
+      },
+      {
+        "chemical_name": "Va",
+        "coordinate": [0, 0, 0, 0],
+        "occupant_index": 2
+      }
+    ]
+  ]
+}
