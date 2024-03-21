@@ -11,14 +11,15 @@ namespace {
 
 std::map<std::string, std::shared_ptr<clexulator::OrderParameter>>
 make_order_parameters(
-    std::map<std::string, clexulator::DoFSpace> const &dof_spaces,
+    std::map<std::string, std::shared_ptr<clexulator::DoFSpace const>> const
+        &dof_spaces,
     Eigen::Matrix3l const &transformation_matrix_to_super,
     xtal::UnitCellCoordIndexConverter const &supercell_index_converter) {
   std::map<std::string, std::shared_ptr<clexulator::OrderParameter>>
       order_parameters;
   for (auto const &pair : dof_spaces) {
     auto res = order_parameters.emplace(
-        pair.first, std::make_shared<clexulator::OrderParameter>(pair.second));
+        pair.first, std::make_shared<clexulator::OrderParameter>(*pair.second));
     clexulator::OrderParameter &order_parameter = *res.first->second;
     order_parameter.update(transformation_matrix_to_super,
                            supercell_index_converter);
@@ -164,7 +165,7 @@ SupercellSystemData::SupercellSystemData(
   // make order_parameters
   for (auto const &pair : system.dof_spaces) {
     auto const &key = pair.first;
-    auto const &definition = pair.second;
+    auto const &definition = *pair.second;
     auto _order_parameter =
         std::make_shared<clexulator::OrderParameter>(definition);
     _order_parameter->update(convert.transformation_matrix_to_super(),

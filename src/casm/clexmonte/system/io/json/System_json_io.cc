@@ -653,7 +653,9 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
         continue;
       }
       if (subparser->valid()) {
-        system.dof_spaces.emplace(label, *subparser->value);
+        system.dof_spaces.emplace(
+            label,
+            std::make_shared<clexulator::DoFSpace const>(*subparser->value));
       }
     }
   }

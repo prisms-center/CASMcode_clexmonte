@@ -304,7 +304,7 @@ void make_order_parameter_f(
     std::shared_ptr<CalculationType> const &calculation) {
   for (auto const &pair : calculation->system->dof_spaces) {
     std::string key = pair.first;
-    clexulator::DoFSpace const &dof_space = pair.second;
+    clexulator::DoFSpace const &dof_space = *pair.second;
     std::string name = "order_parameter_" + key;
     std::string desc = "Order parameters";
 

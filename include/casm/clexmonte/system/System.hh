@@ -70,7 +70,7 @@ struct System {
   // --- Order parameters
 
   /// DoFSpace that define order parameters
-  std::map<std::string, clexulator::DoFSpace> dof_spaces;
+  std::map<std::string, std::shared_ptr<clexulator::DoFSpace const>> dof_spaces;
 
   /// Indices of DoFSpace basis vectors forming subspaces in which
   /// order parameter magnitudes are to be calculated

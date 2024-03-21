@@ -382,8 +382,8 @@ PYBIND11_MODULE(_clexmonte_system, m) {
       .def(
           "dof_space",
           [](clexmonte::System &m,
-             std::string key) -> std::shared_ptr<clexulator::DoFSpace> {
-            return std::make_shared<clexulator::DoFSpace>(m.dof_spaces.at(key));
+             std::string key) -> std::shared_ptr<clexulator::DoFSpace const> {
+            return m.dof_spaces.at(key);
           },
           R"pbdoc(
           Get the DoFSpace for an order parameter calculator
