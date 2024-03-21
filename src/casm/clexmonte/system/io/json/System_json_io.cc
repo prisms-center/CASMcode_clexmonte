@@ -204,13 +204,23 @@ bool parse_event(
 ///       object containing one or more of:
 ///
 ///           "<name>": {
-///             "source": "<path>"
+///             "source": "<path>",
+///             "basis": "<path>"
 ///           }
 ///
 ///        where "<name>" is the basis set name, and "source" is the path to a
 ///        CASM clexulator source file, i.e.
 ///
 ///            "/path/to/basis_sets/bset.energy/ZrO_Clexulator_energy.cc"
+///
+///        and "basis" is the path to a CASM "basis.json" file for the basis
+///        set, i.e.
+///
+///            "/path/to/basis_sets/bset.energy/basis.json"
+///
+///        The "basis" input is required for the "formation_energy" basis set
+///        for kinetic Monte Carlo only.
+///
 ///
 ///   "local_basis_sets": object (optional)
 ///       Input specifies one or more CASM local-cluster expansion basis sets.
@@ -318,9 +328,11 @@ bool parse_event(
 ///        Key:value pairs, where the keys are DoFSpace names and the value is
 ///        a DoFSpace or path to a file containing a DoFSpace.
 ///
-///   "dof_subspaces": array of array of int (optional)
-///        Indices of DoFSpace basis vectors forming subspaces in which
-///        order parameter magnitudes are to be calculated.
+///   "dof_subspaces": object (optional)
+///        Key:value pairs, where the keys are DoFSpace names, and the values
+///        arrays of arrays of int. The inner-most arrays are indices of
+///        DoFSpace basis vectors forming subspaces in which order parameter
+///        magnitudes are to be calculated.
 /// \endcode
 ///
 void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
@@ -345,7 +357,9 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
 
   // Parse "basis_sets"
   if (parser.self.contains("basis_sets")) {
+    auto &prim = *system.prim;
     auto &basis_sets = system.basis_sets;
+    auto &basis_set_cluster_info = system.basis_set_cluster_info;
     auto &prim_neighbor_list = system.prim_neighbor_list;
 
     auto begin = parser.self["basis_sets"].begin();
@@ -358,6 +372,19 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
         auto clexulator = std::make_shared<clexulator::Clexulator>(
             std::move(*subparser->value));
         basis_sets.emplace(it.name(), clexulator);
+      }
+
+      // "basis_sets"/<name>/"basis" (BasisSetClusterInfo, optional)
+      if (parser.self.find_at(fs::path("basis_sets") / it.name() / "basis") !=
+          parser.self.end()) {
+        BasisSetClusterInfo cluster_info;
+        if (parse_from_file(parser,
+                            fs::path("basis_sets") / it.name() / "basis",
+                            search_path, cluster_info, prim, basis_sets)) {
+          basis_set_cluster_info.emplace(
+              it.name(), std::make_shared<BasisSetClusterInfo const>(
+                             std::move(cluster_info)));
+        }
       }
     }
   }
@@ -412,15 +439,15 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
         continue;
       }
 
+      // get basis set cluster info if available
+      auto find_it = system.basis_set_cluster_info.find(curr.basis_set_name);
+      if (find_it != system.basis_set_cluster_info.end()) {
+        curr.cluster_info = find_it->second;
+      }
+
       // "clex"/<name>/"coefficients" (SparseCoefficients)
       if (!parse_from_file(parser, clex_path / "coefficients", search_path,
                            curr.coefficients)) {
-        continue;
-      }
-
-      // "clex"/<name>/"coefficients" (BasisSetClusterInfo)
-      if (!parse_from_file(parser, clex_path / "coefficients", search_path,
-                           curr.cluster_info, prim, basis_sets)) {
         continue;
       }
 
@@ -446,16 +473,16 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
         continue;
       }
 
+      // get basis set cluster info if available
+      auto find_it = system.basis_set_cluster_info.find(curr.basis_set_name);
+      if (find_it != system.basis_set_cluster_info.end()) {
+        curr.cluster_info = find_it->second;
+      }
+
       // "multiclex"/<name>/"coefficients"
       if (!parse_from_files_object(parser, clex_path / "coefficients",
                                    search_path, curr.coefficients,
                                    curr.coefficients_glossary)) {
-        continue;
-      }
-
-      // "multiclex"/<name>/"coefficients" (BasisSetClusterInfo)
-      if (!parse_from_file(parser, clex_path / "coefficients", search_path,
-                           curr.cluster_info, prim, basis_sets)) {
         continue;
       }
 
@@ -584,6 +611,13 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
       parser.insert_error("kmc_events",
                           "event_system is required to parse events");
     } else {
+      auto const &clex_data = get_clex_data(system, "formation_energy");
+      if (!clex_data.cluster_info) {
+        std::cout << "Warning: no \"basis\" input for basis_set '"
+                  << clex_data.basis_set_name << "' (required for KMC)"
+                  << std::endl;
+      }
+
       // parse "kmc_events"/<name>
       auto const &basicstructure = system.prim->basicstructure;
       auto begin = parser.self["kmc_events"].begin();

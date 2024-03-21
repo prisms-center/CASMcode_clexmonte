@@ -12,21 +12,41 @@ namespace test {
 KMCTestSystem::KMCTestSystem()
     : KMCTestSystem(
           "FCC_binary_vacancy", "FCCBinaryVacancy_default",
-          test::data_dir("clexmonte") / "kmc" / "system_template.json") {
-  set_clex("formation_energy", "default", "formation_energy_eci.json");
+          test::data_dir("clexmonte") / "kmc" / "system_template.json") {}
 
-  {
-    fs::path event_relpath = fs::path("kmc_events") / "event.A_Va_1NN";
-    set_local_basis_set("A_Va_1NN");
-    set_event("A_Va_1NN", event_relpath / "kra_eci.json",
-              event_relpath / "freq_eci.json");
-  }
+void KMCTestSystem::setup_input_files(bool use_sparse_format_eci) {
+  if (!use_sparse_format_eci) {
+    set_clex("formation_energy", "default", "formation_energy_eci.json");
 
-  {
-    fs::path event_relpath = fs::path("kmc_events") / "event.B_Va_1NN";
-    set_local_basis_set("B_Va_1NN");
-    set_event("B_Va_1NN", event_relpath / "kra_eci.json",
-              event_relpath / "freq_eci.json");
+    {
+      fs::path event_relpath = fs::path("kmc_events") / "event.A_Va_1NN";
+      set_local_basis_set("A_Va_1NN");
+      set_event("A_Va_1NN", event_relpath / "kra_eci.json",
+                event_relpath / "freq_eci.json");
+    }
+
+    {
+      fs::path event_relpath = fs::path("kmc_events") / "event.B_Va_1NN";
+      set_local_basis_set("B_Va_1NN");
+      set_event("B_Va_1NN", event_relpath / "kra_eci.json",
+                event_relpath / "freq_eci.json");
+    }
+  } else {
+    set_clex("formation_energy", "default", "formation_energy_sparse_eci.json");
+
+    {
+      fs::path event_relpath = fs::path("kmc_events") / "event.A_Va_1NN";
+      set_local_basis_set("A_Va_1NN");
+      set_event("A_Va_1NN", event_relpath / "kra_sparse_eci.json",
+                event_relpath / "freq_sparse_eci.json");
+    }
+
+    {
+      fs::path event_relpath = fs::path("kmc_events") / "event.B_Va_1NN";
+      set_local_basis_set("B_Va_1NN");
+      set_event("B_Va_1NN", event_relpath / "kra_sparse_eci.json",
+                event_relpath / "freq_sparse_eci.json");
+    }
   }
   write_input();
   make_system();
@@ -72,16 +92,22 @@ void KMCTestSystem::set_clex(std::string clex_name, std::string bset_name,
   fs::path clexulator_src_relpath =
       fs::path("basis_sets") / ("bset." + bset_name) /
       (project_name + "_Clexulator_" + bset_name + ".cc");
+  fs::path basis_relpath =
+      fs::path("basis_sets") / ("bset." + bset_name) / "basis.json";
 
   fs::create_directories(test_dir / clexulator_src_relpath.parent_path());
   fs::copy_file(test_data_dir / clexulator_src_relpath,
                 test_dir / clexulator_src_relpath, copy_options);
+  fs::copy_file(test_data_dir / basis_relpath, test_dir / basis_relpath,
+                copy_options);
   fs::create_directories(test_dir / eci_relpath.parent_path());
   fs::copy_file(test_data_dir / eci_relpath, test_dir / eci_relpath,
                 copy_options);
 
   json["kwargs"]["system"]["basis_sets"][bset_name]["source"] =
       (test_dir / clexulator_src_relpath).string();
+  json["kwargs"]["system"]["basis_sets"][bset_name]["basis"] =
+      (test_dir / basis_relpath).string();
   json["kwargs"]["system"]["clex"][clex_name]["basis_set"] = bset_name;
   json["kwargs"]["system"]["clex"][clex_name]["coefficients"] =
       (test_dir / eci_relpath).string();
@@ -163,11 +189,19 @@ void KMCTestSystem::set_event(std::string event_name,
   fs::copy_file(test_data_dir / event_relpath, test_dir / event_relpath,
                 copy_options);
 
+  fs::create_directories((test_dir / kra_eci_relpath).parent_path());
+  fs::copy_file(test_data_dir / kra_eci_relpath, test_dir / kra_eci_relpath,
+                copy_options);
+
+  fs::create_directories((test_dir / freq_eci_relpath).parent_path());
+  fs::copy_file(test_data_dir / freq_eci_relpath, test_dir / freq_eci_relpath,
+                copy_options);
+
   auto &j = json["kwargs"]["system"]["kmc_events"][event_name];
-  j["event"] = (test_data_dir / event_relpath).string();
+  j["event"] = (test_dir / event_relpath).string();
   j["local_basis_set"] = event_name;
-  j["coefficients"]["kra"] = (test_data_dir / kra_eci_relpath).string();
-  j["coefficients"]["freq"] = (test_data_dir / freq_eci_relpath).string();
+  j["coefficients"]["kra"] = (test_dir / kra_eci_relpath).string();
+  j["coefficients"]["freq"] = (test_dir / freq_eci_relpath).string();
 }
 
 void KMCTestSystem::write_input() { json.write(test_dir / "input.json"); }

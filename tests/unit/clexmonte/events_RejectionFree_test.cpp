@@ -24,6 +24,7 @@ class events_RejectionFree_Test
 /// - expected runtime ~8s
 TEST_F(events_RejectionFree_Test, Test1) {
   using namespace clexmonte;
+  setup_input_files(false /*use_sparse_format_eci*/);
 
   // --- State setup ---
 

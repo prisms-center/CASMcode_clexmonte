@@ -96,6 +96,13 @@ struct System {
   ///   the SuperNeighborList needed to evaluate correlations
   std::map<std::string, std::shared_ptr<clexulator::Clexulator>> basis_sets;
 
+  /// Cluster expansion basis sets cluster info
+  ///
+  /// Notes:
+  /// - Maps basis set name -> BasisSetClusterInfo
+  std::map<std::string, std::shared_ptr<BasisSetClusterInfo const>>
+      basis_set_cluster_info;
+
   /// Data used to construct clexulator::ClusterExpansion. Contains:
   /// - basis_set_name
   /// - clexulator::SparseCoefficients
@@ -289,6 +296,12 @@ Configuration from_standard_values(
 /// \brief Convert configuration from prim basis to standard basis
 Configuration to_standard_values(
     System const &system, Configuration const &configuration_in_prim_basis);
+
+/// \brief Check for basis set (Clexulator)
+bool is_basis_set(System const &system, std::string const &key);
+
+/// \brief Check for local basis set (LocalClexulator)
+bool is_local_basis_set(System const &system, std::string const &key);
 
 /// \brief Helper to get the Clexulator
 std::shared_ptr<clexulator::Clexulator> get_basis_set(System const &system,

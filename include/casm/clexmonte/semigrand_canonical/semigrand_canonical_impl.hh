@@ -46,6 +46,17 @@ template <typename EngineType>
 void SemiGrandCanonical<EngineType>::run(
     state_type &state, monte::OccLocation &occ_location,
     run_manager_type<EngineType> &run_manager) {
+  this->run_v2(state, occ_location, run_manager);
+}
+
+/// \brief Perform a single run, evolving current state
+///
+/// Notes:
+/// - state and occ_location are evolved and end in modified states
+template <typename EngineType>
+void SemiGrandCanonical<EngineType>::run_v1(
+    state_type &state, monte::OccLocation &occ_location,
+    run_manager_type<EngineType> &run_manager) {
   if (!state.conditions.scalar_values.count("temperature")) {
     throw std::runtime_error(
         "Error in Canonical::run: state `temperature` not set.");

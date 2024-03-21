@@ -13,7 +13,7 @@
 namespace CASM {
 namespace clexmonte {
 
-/// \brief Parse BasisSetClusterInfo from a bspecs.json / eci.json file
+/// \brief Parse BasisSetClusterInfo from a basis.json / eci.json file
 ///
 /// Notes:
 /// - This is valid for periodic, not local-cluster orbits

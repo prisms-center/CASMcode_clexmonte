@@ -6,7 +6,6 @@
 #include "casm/monte/events/OccLocation.hh"
 
 namespace test {
-
 KMCCompleteEventListTestSystem::KMCCompleteEventListTestSystem()
     : KMCTestSystem() {}
 

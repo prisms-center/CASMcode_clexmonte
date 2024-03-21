@@ -337,6 +337,16 @@ typename MapType::mapped_type const &_verify(MapType const &m,
   return it->second;
 }
 
+/// \brief Check for basis set (Clexulator)
+bool is_basis_set(System const &system, std::string const &key) {
+  return system.basis_sets.find(key) != system.basis_sets.end();
+}
+
+/// \brief Check for local basis set (LocalClexulator)
+bool is_local_basis_set(System const &system, std::string const &key) {
+  return system.local_basis_sets.find(key) != system.local_basis_sets.end();
+}
+
 /// \brief Helper to get the Clexulator
 std::shared_ptr<clexulator::Clexulator> get_basis_set(System const &system,
                                                       std::string const &key) {

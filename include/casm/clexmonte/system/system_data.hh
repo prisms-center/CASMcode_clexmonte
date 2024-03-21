@@ -42,13 +42,13 @@ void expand(clust::IntegralCluster const &phenom,
 struct ClexData {
   std::string basis_set_name;
   clexulator::SparseCoefficients coefficients;
-  BasisSetClusterInfo cluster_info;
+  std::shared_ptr<BasisSetClusterInfo const> cluster_info;
 };
 
 struct MultiClexData {
   std::string basis_set_name;
   std::vector<clexulator::SparseCoefficients> coefficients;
-  BasisSetClusterInfo cluster_info;
+  std::shared_ptr<BasisSetClusterInfo const> cluster_info;
 
   /// \brief Map of key ("kra", "freq", etc.) to coefficients index
   std::map<std::string, Index> coefficients_glossary;

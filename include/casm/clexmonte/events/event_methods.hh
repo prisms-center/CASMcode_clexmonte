@@ -77,16 +77,28 @@ EventImpactInfo make_event_impact_info(
   // include impact neighborhood to include clex
   for (auto const &name : clex_names) {
     ClexData const &clex_data = get_clex_data(system, name);
-    expand(phenom, impact.required_update_neighborhood, clex_data.cluster_info,
+    if (!clex_data.cluster_info) {
+      std::stringstream msg;
+      msg << "Error in make_event_impact_info: clex '";
+      msg << name << "' does not have cluster_info";
+      throw std::runtime_error(msg.str());
+    }
+    expand(phenom, impact.required_update_neighborhood, *clex_data.cluster_info,
            clex_data.coefficients);
   }
 
   // include impact neighborhood to include multiclex
   for (auto const &name : multiclex_names) {
     MultiClexData const &multiclex_data = get_multiclex_data(system, name);
+    if (!multiclex_data.cluster_info) {
+      std::stringstream msg;
+      msg << "Error in make_event_impact_info: multiclex '";
+      msg << name << "' does not have cluster_info";
+      throw std::runtime_error(msg.str());
+    }
     for (auto const &coeffs : multiclex_data.coefficients) {
       expand(phenom, impact.required_update_neighborhood,
-             multiclex_data.cluster_info, coeffs);
+             *multiclex_data.cluster_info, coeffs);
     }
   }
 

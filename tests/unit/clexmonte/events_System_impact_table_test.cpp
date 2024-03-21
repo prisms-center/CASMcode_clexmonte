@@ -36,6 +36,8 @@ class events_impact_table_Test : public test::KMCTestSystem {
 
 /// \brief Impact neighborhood && Event lists test (FCC, 1NN interactions)
 TEST_F(events_impact_table_Test, Test1) {
+  setup_input_files(false /*use_sparse_format_eci*/);
+
   std::vector<clexmonte::PrimEventData> prim_event_list =
       make_prim_event_list(*system);
   EXPECT_EQ(prim_event_list.size(), 24);
@@ -76,6 +78,8 @@ TEST_F(events_impact_table_Test, Test1) {
 ///     + 1 * 3 (aligned reverse events)
 ///     + 1 * 2 (aligned equivalent events)
 TEST_F(events_impact_table_Test, Test2) {
+  setup_input_files(false /*use_sparse_format_eci*/);
+
   clexulator::SparseCoefficients constant_eci;
   constant_eci.index = {0};
   constant_eci.value = {0.};

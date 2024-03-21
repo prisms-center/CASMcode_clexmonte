@@ -74,6 +74,10 @@ struct SemiGrandCanonical {
            run_manager_type<EngineType> &run_manager);
 
   /// \brief Perform a single run, evolving current state
+  void run_v1(state_type &state, monte::OccLocation &occ_location,
+              run_manager_type<EngineType> &run_manager);
+
+  /// \brief Perform a single run, evolving current state
   void run_v2(state_type &state, monte::OccLocation &occ_location,
               run_manager_type<EngineType> &run_manager);
 

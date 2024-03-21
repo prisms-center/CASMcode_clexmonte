@@ -36,6 +36,8 @@ class KMCTestSystem : public testing::Test {
   KMCTestSystem(std::string _project_name, std::string _test_dir_name,
                 fs::path _input_file_path);
 
+  void setup_input_files(bool use_sparse_format_eci);
+
   /// \brief Copy formation_energy Clexulator and ECI to test_dir and update
   ///     input json with location
   void set_clex(std::string clex_name, std::string bset_name,

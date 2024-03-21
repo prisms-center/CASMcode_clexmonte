@@ -25,6 +25,7 @@ class events_CompleteEventCalculator_Test
 TEST_F(events_CompleteEventCalculator_Test, Test1) {
   using namespace clexmonte;
   // --- State setup ---
+  setup_input_files(false /*use_sparse_format_eci*/);
 
   // Create default state
   Index dim = 10;
