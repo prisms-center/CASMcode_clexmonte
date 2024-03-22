@@ -11,7 +11,10 @@
 #include "pybind11_json/pybind11_json.hpp"
 
 // clexmonte/semigrand_canonical
-#include "casm/clexmonte/semigrand_canonical"
+#include "casm/clexmonte/semigrand_canonical/calculator_impl.hh"
+#include "casm/clexmonte/semigrand_canonical/conditions.hh"
+#include "casm/clexmonte/semigrand_canonical/json_io.hh"
+#include "casm/clexmonte/semigrand_canonical/potential.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 
 #define STRINGIFY(x) #x
@@ -23,13 +26,17 @@ namespace py = pybind11;
 namespace CASMpy {
 
 using namespace CASM;
+namespace sgc = clexmonte::semigrand_canonical;
 
 // used for libcasm.clexmonte:
 typedef std::mt19937_64 engine_type;
-typedef RandomNumberGenerator<engine_type> generator_type;
-// clexmonte::system_type
-// clexmonte::config_type
-// clexmonte::state_type
+typedef monte::RandomNumberGenerator<engine_type> generator_type;
+typedef sgc::SemiGrandCanonical<engine_type> calculator_type;
+typedef sgc::SemiGrandCanonicalPotential potential_type;
+typedef sgc::SemiGrandCanonicalConditions conditions_type;
+typedef clexmonte::config_type config_type;
+typedef clexmonte::state_type state_type;
+typedef clexmonte::System system_type;
 
 }  // namespace CASMpy
 
@@ -41,8 +48,8 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
   m.doc() = R"pbdoc(
         Cluster expansion semi-grand canonical Monte Carlo
 
-        libcasm.clexmonte._semigrand_canonical
-        --------------------------------------
+        libcasm.clexmonte.semigrand_canonical._clexmonte_semigrand_canonical
+        --------------------------------------------------------------------
 
         Includes:
 
@@ -69,12 +76,9 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
   //  py::module::import("libcasm.configuration");
   //  py::module::import("libcasm.xtal");
   py::module::import("libcasm.monte");
-  py::module::import("libcasm.clexmonte._system");
-  py::module::import("libcasm.clexmonte._state");
+  py::module::import("libcasm.clexmonte");
 
-  py::class_<
-      clexmonte::semigrand_canonical::SemiGrandCanonical,
-      std::shared_ptr<clexmonte::semigrand_canonical::SemiGrandCanonical>>(
+  py::class_<calculator_type, std::shared_ptr<calculator_type>>(
       m, "SemiGrandCanonicalCalculator",
       R"pbdoc(
       Implements semi-grand canonical Monte Carlo calculations
@@ -95,7 +99,20 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
               :class:`~libcasm.monte.RandomNumberEngine` will be constructed
               and seeded using std::random_device.
         )pbdoc",
-           py::arg("system"), py::arg("engine") = py::none());
+           py::arg("system"), py::arg("engine") = py::none())
+      .def("run", &calculator_type::run, R"pbdoc(
+          Perform a single run, evolving the input state
+
+          Parameters
+          ----------
+          state : libcasm.clexmonte.State
+              The input state.
+          occ_location: libcasm.monte.OccLocation
+              Current occupant location list
+          run_manager: libcasm.clexmonte.RunManager
+              Specifies sampling and convergence criteria and collects results
+          )pbdoc",
+           py::arg("state"), py::arg("occ_location"), py::arg("run_manager"));
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

@@ -82,8 +82,13 @@ ext_modules = [
         **ext_modules_params,
     ),
     Pybind11Extension(
-        "libcasm.clexmonte._clexmonte_semigrand_canonical",
+        "libcasm.clexmonte.semigrand_canonical._clexmonte_semigrand_canonical",
         ["src/clexmonte_semigrand_canonical.cpp"],
+        **ext_modules_params,
+    ),
+    Pybind11Extension(
+        "libcasm.clexmonte._clexmonte_run_management",
+        ["src/clexmonte_run_management.cpp"],
         **ext_modules_params,
     ),
 ]

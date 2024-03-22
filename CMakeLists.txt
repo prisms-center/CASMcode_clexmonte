@@ -391,4 +391,46 @@ if(DEFINED SKBUILD)
     set_target_properties(
       _clexmonte_state PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
   endif()
+
+  ### libcasm.clexmonte._clexmonte_run_management ###
+  pybind11_add_module(_clexmonte_run_management MODULE
+                      "${PROJECT_SOURCE_DIR}/python/src/clexmonte_run_management.cpp")
+  target_link_libraries(_clexmonte_run_management PRIVATE
+    CASM::casm_global
+    CASM::casm_crystallography
+    CASM::casm_composition
+    CASM::casm_clexulator
+    CASM::casm_configuration
+    CASM::casm_monte
+    casm_clexmonte
+  )
+  install(TARGETS _clexmonte_run_management DESTINATION clexmonte)
+  if(APPLE)
+    set_target_properties(
+      _clexmonte_run_management PROPERTIES INSTALL_RPATH "@loader_path/../lib")
+  else()
+    set_target_properties(
+      _clexmonte_run_management PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
+  endif()
+
+  ### libcasm.clexmonte.semigrand_canonical._clexmonte_semigrand_canonical ###
+  pybind11_add_module(_clexmonte_semigrand_canonical MODULE
+                      "${PROJECT_SOURCE_DIR}/python/src/clexmonte_semigrand_canonical.cpp")
+  target_link_libraries(_clexmonte_semigrand_canonical PRIVATE
+    CASM::casm_global
+    CASM::casm_crystallography
+    CASM::casm_composition
+    CASM::casm_clexulator
+    CASM::casm_configuration
+    CASM::casm_monte
+    casm_clexmonte
+  )
+  install(TARGETS _clexmonte_semigrand_canonical DESTINATION clexmonte/semigrand_canonical)
+  if(APPLE)
+    set_target_properties(
+      _clexmonte_semigrand_canonical PROPERTIES INSTALL_RPATH "@loader_path/../lib")
+  else()
+    set_target_properties(
+      _clexmonte_semigrand_canonical PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
+  endif()
 endif()
