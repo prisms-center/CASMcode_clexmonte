@@ -25,10 +25,8 @@ namespace semigrand_canonical {
 
 template <typename EngineType>
 SemiGrandCanonical<EngineType>::SemiGrandCanonical(
-    std::shared_ptr<system_type> _system,
-    std::shared_ptr<EngineType> _random_number_engine)
+    std::shared_ptr<system_type> _system)
     : system(_system),
-      random_number_generator(_random_number_engine),
       state(nullptr),
       transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)),
       occ_location(nullptr) {
@@ -64,6 +62,10 @@ void SemiGrandCanonical<EngineType>::run(
     return this->potential->occ_delta_per_supercell(event.linear_site_index,
                                                     event.new_occ);
   };
+
+  // Random number generator
+  monte::RandomNumberGenerator<EngineType> random_number_generator(
+      run_manager.engine);
 
   // Make event generator
   auto event_generator =

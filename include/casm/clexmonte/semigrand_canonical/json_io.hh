@@ -16,8 +16,7 @@ void parse(InputParser<SemiGrandCanonical<EngineType>> &parser,
            std::shared_ptr<system_type> system,
            std::shared_ptr<EngineType> random_number_engine =
                std::shared_ptr<EngineType>()) {
-  parser.value = std::make_unique<SemiGrandCanonical<EngineType>>(
-      system, random_number_engine);
+  parser.value = std::make_unique<SemiGrandCanonical<EngineType>>(system);
 }
 
 inline void parse(InputParser<SemiGrandCanonicalConditions> &parser,

@@ -32,16 +32,10 @@ struct SemiGrandCanonical {
   typedef EngineType engine_type;
   typedef SemiGrandCanonicalConditions conditions_type;
 
-  explicit SemiGrandCanonical(
-      std::shared_ptr<system_type> _system,
-      std::shared_ptr<EngineType> _random_number_engine =
-          std::shared_ptr<EngineType>());
+  explicit SemiGrandCanonical(std::shared_ptr<system_type> _system);
 
   /// System data
   std::shared_ptr<system_type> system;
-
-  /// Random number generator
-  monte::RandomNumberGenerator<EngineType> random_number_generator;
 
   /// Update species in monte::OccLocation tracker?
   bool update_species = false;

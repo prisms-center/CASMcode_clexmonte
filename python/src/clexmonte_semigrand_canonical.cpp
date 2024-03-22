@@ -37,6 +37,7 @@ typedef sgc::SemiGrandCanonicalConditions conditions_type;
 typedef clexmonte::config_type config_type;
 typedef clexmonte::state_type state_type;
 typedef clexmonte::System system_type;
+typedef clexmonte::run_manager_type<engine_type> run_manager_type;
 
 }  // namespace CASMpy
 
@@ -83,8 +84,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
       R"pbdoc(
       Implements semi-grand canonical Monte Carlo calculations
       )pbdoc")
-      .def(py::init<std::shared_ptr<system_type>,
-                    std::shared_ptr<engine_type>>(),
+      .def(py::init<std::shared_ptr<system_type>>(),
            R"pbdoc(
         .. rubric:: Constructor
 
@@ -92,27 +92,41 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
         ----------
         system : libcasm.clexmonte.System
             Cluster expansion model system data.
-        engine : Optional[:class:`~libcasm.monte.RandomNumberEngine`] = None
-              A :class:`~libcasm.monte.RandomNumberEngine` to use for
-              generating random numbers. If provided, the engine will be
-              shared. If None, then a new
-              :class:`~libcasm.monte.RandomNumberEngine` will be constructed
-              and seeded using std::random_device.
         )pbdoc",
-           py::arg("system"), py::arg("engine") = py::none())
-      .def("run", &calculator_type::run, R"pbdoc(
+           py::arg("system"))
+      .def(
+          "run",  //&calculator_type::run,
+          [](calculator_type &self, state_type &state,
+             monte::OccLocation *occ_location, run_manager_type &run_manager) {
+            if (!occ_location) {
+              monte::Conversions const &convert =
+                  get_index_conversions(*self.system, state);
+              monte::OccCandidateList const &occ_candidate_list =
+                  get_occ_candidate_list(*self.system, state);
+              monte::OccLocation tmp(convert, occ_candidate_list,
+                                     self.update_species);
+              tmp.initialize(get_occupation(state));
+              self.run(state, tmp, run_manager);
+            } else {
+              self.run(state, *occ_location, run_manager);
+            }
+          },
+          R"pbdoc(
           Perform a single run, evolving the input state
 
           Parameters
           ----------
           state : libcasm.clexmonte.State
               The input state.
-          occ_location: libcasm.monte.OccLocation
-              Current occupant location list
           run_manager: libcasm.clexmonte.RunManager
               Specifies sampling and convergence criteria and collects results
+          occ_location: Optional[libcasm.monte.OccLocation] = None
+              Current occupant location list. If provided, the user is
+              responsible for ensuring it is up-to-date with the current
+              occupation of `state` and it is used and updated during the run.
+              If None, a occupant location list is generated for the run.
           )pbdoc",
-           py::arg("state"), py::arg("occ_location"), py::arg("run_manager"));
+          py::arg("state"), py::arg("occ_location"), py::arg("run_manager"));
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

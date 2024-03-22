@@ -17,9 +17,7 @@ template <typename EngineType>
 struct Nfold : public semigrand_canonical::SemiGrandCanonical<EngineType> {
   typedef EngineType engine_type;
 
-  explicit Nfold(std::shared_ptr<system_type> _system,
-                 std::shared_ptr<EngineType> _random_number_engine =
-                     std::shared_ptr<EngineType>());
+  explicit Nfold(std::shared_ptr<system_type> _system);
 
   /// Method allows time-based sampling
   bool time_sampling_allowed = true;

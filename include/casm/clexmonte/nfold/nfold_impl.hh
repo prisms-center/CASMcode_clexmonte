@@ -11,10 +11,8 @@ namespace clexmonte {
 namespace nfold {
 
 template <typename EngineType>
-Nfold<EngineType>::Nfold(std::shared_ptr<system_type> _system,
-                         std::shared_ptr<EngineType> _random_number_engine)
-    : semigrand_canonical::SemiGrandCanonical<EngineType>(
-          _system, _random_number_engine) {}
+Nfold<EngineType>::Nfold(std::shared_ptr<system_type> _system)
+    : semigrand_canonical::SemiGrandCanonical<EngineType>(_system) {}
 
 /// \brief Perform a single run, evolving current state
 ///
@@ -82,7 +80,8 @@ void Nfold<EngineType>::run(state_type &state, monte::OccLocation &occ_location,
       this->event_data->event_calculator,
       clexmonte::make_complete_event_id_list(n_unitcells,
                                              this->event_data->prim_event_list),
-      this->event_data->event_list.impact_table);
+      this->event_data->event_list.impact_table,
+      std::make_shared<lotto::RandomGenerator>(run_manager.engine));
 
   // Used to apply selected events: EventID -> monte::OccEvent
   auto get_event_f = [&](EventID const &selected_event_id) {
