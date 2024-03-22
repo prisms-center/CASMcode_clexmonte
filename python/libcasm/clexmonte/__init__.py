@@ -10,3 +10,11 @@ from ._clexmonte_state import (
 from ._clexmonte_system import (
     System,
 )
+from ._clexmonte_run_management import (
+    Results,
+    ResultsAnalysisFunction,
+    ResultsAnalysisFunctionMap,
+    RunManager,
+    SamplingFixture,
+    SamplingFixtureParams,
+)

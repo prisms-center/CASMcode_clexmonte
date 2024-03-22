@@ -98,6 +98,7 @@ setup(
     packages=[
         "libcasm",
         "libcasm.clexmonte",
+        "libcasm.clexmonte.semigrand_canonical",
     ],
     install_requires=[
         "pybind11",

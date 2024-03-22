@@ -6,6 +6,7 @@ setup(
     packages=[
         "libcasm",
         "libcasm.clexmonte",
+        "libcasm.clexmonte.semigrand_canonical",
     ],
     package_dir={"": "python"},
     cmake_install_dir="python/libcasm",

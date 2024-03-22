@@ -72,12 +72,80 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
 
 
     )pbdoc";
-  //  py::module::import("libcasm.clexulator");
-  //  py::module::import("libcasm.composition");
-  //  py::module::import("libcasm.configuration");
-  //  py::module::import("libcasm.xtal");
   py::module::import("libcasm.monte");
+  py::module::import("libcasm.monte.events");
   py::module::import("libcasm.clexmonte");
+
+  // TODO: Document methods
+  py::class_<conditions_type, std::shared_ptr<conditions_type>>(
+      m, "SemiGrandCanonicalConditions",
+      R"pbdoc(
+      Semi-grand canonical Monte Carlo thermodynamic conditions
+      )pbdoc")
+      .def(py::init<composition::CompositionConverter const &, double>(),
+           R"pbdoc(
+        .. rubric:: Constructor
+
+        Parameters
+        ----------
+        composition_converter : libcasm.composition.CompositionConverter
+            Cluster expansion model system data.
+        temperature_is_zero_tol: float = 1e-10
+        )pbdoc",
+           py::arg("composition_converter"),
+           py::arg("temperature_is_zero_tol") = 1e-10)
+      .def_readonly("temperature_is_zero_tol",
+                    &conditions_type::temperature_is_zero_tol)
+      .def_readonly("temperature", &conditions_type::temperature)
+      .def_readonly("beta", &conditions_type::beta)
+      .def("set_temperature",
+           [](conditions_type &self, double temperature) {
+             self.set_temperature(temperature);
+           })
+      .def("set_temperature_from_value_map",
+           [](conditions_type &self, monte::ValueMap const &map) {
+             self.set_temperature(map);
+           })
+      .def("put_temperature", &conditions_type::put_temperature)
+      .def_readonly("composition_converter",
+                    &conditions_type::composition_converter)
+      .def_readonly("param_chem_pot", &conditions_type::param_chem_pot)
+      .def_readonly("exchange_chem_pot", &conditions_type::exchange_chem_pot)
+      .def("set_param_chem_pot",
+           [](conditions_type &self, Eigen::VectorXd const &param_chem_pot) {
+             self.set_param_chem_pot(param_chem_pot);
+           })
+      .def("set_param_chem_pot_from_value_map",
+           [](conditions_type &self, monte::ValueMap const &map) {
+             self.set_param_chem_pot(map);
+           })
+      .def("put_param_chem_pot", &conditions_type::put_param_chem_pot)
+      .def("set_all", &conditions_type::set_all)
+      .def("to_value_map", &conditions_type::to_value_map);
+
+  // TODO: Document methods
+  py::class_<potential_type, std::shared_ptr<potential_type>>(
+      m, "SemiGrandCanonicalPotential",
+      R"pbdoc(
+      Semi-grand canonical potential calculator
+      )pbdoc")
+      .def(py::init<std::shared_ptr<system_type>>(),
+           R"pbdoc(
+        .. rubric:: Constructor
+
+        Parameters
+        ----------
+        system : System
+            System data.
+        )pbdoc",
+           py::arg("system"))
+      .def("set", &potential_type::set)
+      .def("state", &potential_type::state)
+      .def("conditions", &potential_type::conditions)
+      .def("formation_energy", &potential_type::formation_energy)
+      .def("per_supercell", &potential_type::per_supercell)
+      .def("per_unitcell", &potential_type::per_unitcell)
+      .def("occ_delta_per_supercell", &potential_type::occ_delta_per_supercell);
 
   py::class_<calculator_type, std::shared_ptr<calculator_type>>(
       m, "SemiGrandCanonicalCalculator",
@@ -120,13 +188,51 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
               The input state.
           run_manager: libcasm.clexmonte.RunManager
               Specifies sampling and convergence criteria and collects results
-          occ_location: Optional[libcasm.monte.OccLocation] = None
+          occ_location: Optional[libcasm.monte.events.OccLocation] = None
               Current occupant location list. If provided, the user is
               responsible for ensuring it is up-to-date with the current
               occupation of `state` and it is used and updated during the run.
               If None, a occupant location list is generated for the run.
           )pbdoc",
-          py::arg("state"), py::arg("occ_location"), py::arg("run_manager"));
+          py::arg("state"), py::arg("run_manager"), py::arg("occ_location"))
+      .def_readonly("system", &calculator_type::system, R"pbdoc(
+          System : System data.
+          )pbdoc")
+      .def_readonly("update_species", &calculator_type::update_species,
+                    R"pbdoc(
+          bool : True if this type of calculation tracks species location \
+          changes; False otherwise.
+          )pbdoc")
+      .def_readonly("time_sampling_allowed",
+                    &calculator_type::time_sampling_allowed, R"pbdoc(
+          bool : True if this calculation allows time-based sampling; \
+          False otherwise.
+          )pbdoc")
+      .def_readonly("state", &calculator_type::state, R"pbdoc(
+          Optional[MonteCarloState] : The current state.
+          )pbdoc")
+      .def_readonly("transformation_matrix_to_super",
+                    &calculator_type::transformation_matrix_to_super,
+                    R"pbdoc(
+          np.ndarray[np.int64] : The current state's supercell transformation \
+          matrix.
+          )pbdoc")
+      .def_readonly("occ_location", &calculator_type::occ_location, R"pbdoc(
+          libcasm.monte.events.OccLocation : The current state's occupant \
+          location list.
+          )pbdoc")
+      .def_readonly("conditions", &calculator_type::conditions, R"pbdoc(
+          SemiGrandCanonicalConditions : The current state's conditions.
+          )pbdoc")
+      .def_readonly("potential", &calculator_type::potential, R"pbdoc(
+          SemiGrandCanonicalPotential : The current state's potential \
+          calculator.
+          )pbdoc")
+      .def_readonly("formation_energy", &calculator_type::formation_energy,
+                    R"pbdoc(
+          libcasm.clexulator.ClusterExpansion : The current state's formation \
+          energy cluster expansion calculator.
+          )pbdoc");
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

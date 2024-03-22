@@ -123,11 +123,8 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
         - checks for completion, and
         - collects results.
     )pbdoc";
-  //  py::module::import("libcasm.clexulator");
-  //  py::module::import("libcasm.composition");
-  //  py::module::import("libcasm.configuration");
   py::module::import("libcasm.monte");
-  //  py::module::import("libcasm.xtal");
+  py::module::import("libcasm.monte.sampling");
 
   py::class_<results_type> pyResults(m, "Results",
                                      R"pbdoc(
@@ -240,7 +237,7 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
               All possible JSON state sampling functions
           analysis_functions: ResultsAnalysisFunctionMap
               Results analysis functions
-          sampling_params: libcasm.monte.sampling.
+          sampling_params: libcasm.monte.sampling.SamplingParams
               Sampling parameters, specifies which sampling functions to call
           completion_check_params: libcasm.monte.sampling.CompletionCheckParams
               Completion check parameters
