@@ -15,8 +15,7 @@ void parse(InputParser<Canonical<EngineType>> &parser,
            std::shared_ptr<EngineType> random_number_engine =
                std::shared_ptr<EngineType>()) {
   // currently no options
-  parser.value =
-      std::make_unique<Canonical<EngineType>>(system, random_number_engine);
+  parser.value = std::make_unique<Canonical<EngineType>>(system);
 }
 
 }  // namespace canonical

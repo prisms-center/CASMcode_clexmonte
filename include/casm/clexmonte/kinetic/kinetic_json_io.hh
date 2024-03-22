@@ -16,9 +16,8 @@ namespace kinetic {
 /// \tparam EngineType
 /// \param parser
 /// \param system
-/// \param random_number_engine
+/// \param random_number_engine (Unused)
 ///
-
 /// Expected format:
 /// \code
 ///   "event_filters": array of <clexmonte::EventFilterGroup>
@@ -60,8 +59,7 @@ void parse(InputParser<Kinetic<EngineType>> &parser,
   }
 
   if (parser.valid()) {
-    parser.value = std::make_unique<Kinetic<EngineType>>(
-        system, random_number_engine, event_filters);
+    parser.value = std::make_unique<Kinetic<EngineType>>(system, event_filters);
   }
 }
 

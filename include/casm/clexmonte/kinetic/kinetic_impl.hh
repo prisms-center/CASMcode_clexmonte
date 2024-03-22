@@ -32,10 +32,8 @@ namespace kinetic {
 /// \brief Implements kinetic Monte Carlo calculations
 template <typename EngineType>
 Kinetic<EngineType>::Kinetic(std::shared_ptr<system_type> _system,
-                             std::shared_ptr<EngineType> _random_number_engine,
                              std::vector<EventFilterGroup> _event_filters)
     : system(_system),
-      random_number_generator(_random_number_engine),
       event_filters(_event_filters),
       event_data(std::make_shared<KineticEventData>(system)),
       state(nullptr),
@@ -80,6 +78,10 @@ void Kinetic<EngineType>::run(state_type &state,
                              this->event_filters);
   }
 
+  // Random number generator
+  monte::RandomNumberGenerator<EngineType> random_number_generator(
+      run_manager.engine);
+
   // Enforce composition -- occ_location is maintained up-to-date
   std::vector<monte::OccSwap> const &semigrand_canonical_swaps =
       get_semigrand_canonical_swaps(*this->system);
@@ -87,7 +89,7 @@ void Kinetic<EngineType>::run(state_type &state,
       get_occupation(state),
       state.conditions.vector_values.at("mol_composition"),
       get_composition_calculator(*system), semigrand_canonical_swaps,
-      occ_location, this->random_number_generator);
+      occ_location, random_number_generator);
 
   // Used to apply selected events: EventID -> monte::OccEvent
   auto get_event_f = [&](EventID const &selected_event_id) {
@@ -100,7 +102,8 @@ void Kinetic<EngineType>::run(state_type &state,
       this->event_data->event_calculator,
       clexmonte::make_complete_event_id_list(n_unitcells,
                                              this->event_data->prim_event_list),
-      this->event_data->event_list.impact_table);
+      this->event_data->event_list.impact_table,
+      std::make_shared<lotto::RandomGenerator>(run_manager.engine));
 
   // Update atom_name_index_list -- These do not change --
   // TODO: KMC with atoms that move to/from resevoir will need to update this
