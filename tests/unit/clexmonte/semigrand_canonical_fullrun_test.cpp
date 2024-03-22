@@ -151,7 +151,11 @@ TEST(semigrand_canonical_fullrun_test, Test1) {
   // ### Construct the semi-grand canonical calculator
   typedef clexmonte::semigrand_canonical::SemiGrandCanonical_mt19937_64
       calculation_type;
+  typedef calculation_type::engine_type engine_type;
   auto calculation = std::make_shared<calculation_type>(system);
+
+  // Make random number engine
+  std::shared_ptr<engine_type> engine = std::make_shared<engine_type>();
 
   // ### Construct sampling functions & analysis functions
   monte::StateSamplingFunctionMap sampling_functions =
@@ -322,8 +326,8 @@ TEST(semigrand_canonical_fullrun_test, Test1) {
       sampling_params, completion_check_params, std::move(results_io),
       method_log);
 
-  clexmonte::run_series(*calculation, state_generator, sampling_fixture_params,
-                        global_cutoff);
+  clexmonte::run_series(*calculation, engine, state_generator,
+                        sampling_fixture_params, global_cutoff);
 
   // check output/ files presence
   std::cout << "output_dir: " << output_dir << std::endl;

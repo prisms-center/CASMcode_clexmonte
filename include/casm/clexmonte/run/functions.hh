@@ -24,7 +24,9 @@ namespace clexmonte {
 /// \brief Perform a series of runs, according to a state_generator
 template <typename CalculationType>
 void run_series(
-    CalculationType &calculation, state_generator_type &state_generator,
+    CalculationType &calculation,
+    std::shared_ptr<typename CalculationType::engine_type> engine,
+    state_generator_type &state_generator,
     std::vector<sampling_fixture_params_type> const &sampling_fixture_params,
     bool global_cutoff = true,
     std::vector<sampling_fixture_params_type> const &before_first_run =
@@ -38,6 +40,7 @@ void run_series(
 ///
 /// \param calculation A calculation instance, such as canonical::Canonical,
 ///     semigrand_canonical::SemiGrandCanonical, or kinetic::Kinetic.
+/// \param engine Random number engine
 /// \param state_generator A StateGenerator, which produces a
 ///     a series of initial states
 /// \param global_cutoff If true, the run is complete if any sampling fixture
@@ -62,14 +65,14 @@ void run_series(
 ///   should be true for KMC, false otherwise
 template <typename CalculationType>
 void run_series(
-    CalculationType &calculation, state_generator_type &state_generator,
+    CalculationType &calculation,
+    std::shared_ptr<typename CalculationType::engine_type> engine,
+    state_generator_type &state_generator,
     std::vector<sampling_fixture_params_type> const &sampling_fixture_params,
     bool global_cutoff,
     std::vector<sampling_fixture_params_type> const &before_first_run,
     std::vector<sampling_fixture_params_type> const &before_each_run) {
   typedef typename CalculationType::engine_type engine_type;
-  std::shared_ptr<engine_type> engine =
-      calculation.random_number_generator.engine;
 
   auto &log = CASM::log();
   log.begin("Monte Carlo calculation series");

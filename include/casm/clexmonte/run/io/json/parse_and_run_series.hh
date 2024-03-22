@@ -105,9 +105,9 @@ void parse_and_run_series(fs::path system_json_file,
   clexmonte::RunParams<engine_type> &run_params = *run_params_parser.value;
 
   clexmonte::run_series(
-      *calculation, *run_params.state_generator, run_params.run_manager_params,
-      run_params.sampling_fixture_params, run_params.before_first_run,
-      run_params.before_each_run);
+      *calculation, run_params.engine, *run_params.state_generator,
+      run_params.run_manager_params, run_params.sampling_fixture_params,
+      run_params.before_first_run, run_params.before_each_run);
 }
 
 }  // namespace clexmonte

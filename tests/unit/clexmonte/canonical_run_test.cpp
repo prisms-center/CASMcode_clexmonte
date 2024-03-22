@@ -49,8 +49,11 @@ TEST(canonical_run_test, Test1) {
 
   // Make calculation object:
   typedef clexmonte::canonical::Canonical_mt19937_64 calculation_type;
+  typedef calculation_type::engine_type engine_type;
   auto calculation = std::make_shared<calculation_type>(system);
-  auto engine = calculation->random_number_generator.engine;
+
+  // Make random number engine
+  std::shared_ptr<engine_type> engine = std::make_shared<engine_type>();
 
   /// Make state sampling & analysis functions
   auto sampling_functions =
@@ -87,7 +90,7 @@ TEST(canonical_run_test, Test1) {
 
   clexmonte::RunParams<std::mt19937_64> &run_params = *run_params_parser.value;
 
-  clexmonte::run_series(*calculation, *run_params.state_generator,
+  clexmonte::run_series(*calculation, engine, *run_params.state_generator,
                         run_params.sampling_fixture_params,
                         run_params.global_cutoff, run_params.before_first_run,
                         run_params.before_each_run);
@@ -167,8 +170,11 @@ TEST(canonical_run_test, Test2) {
 
   // Make calculation object:
   typedef clexmonte::canonical::Canonical_mt19937_64 calculation_type;
+  typedef calculation_type::engine_type engine_type;
   auto calculation = std::make_shared<calculation_type>(system);
-  auto engine = calculation->random_number_generator.engine;
+
+  // Make random number engine
+  std::shared_ptr<engine_type> engine = std::make_shared<engine_type>();
 
   /// Make state sampling & analysis functions
   auto sampling_functions =
@@ -206,7 +212,7 @@ TEST(canonical_run_test, Test2) {
 
   clexmonte::RunParams<std::mt19937_64> &run_params = *run_params_parser.value;
 
-  clexmonte::run_series(*calculation, *run_params.state_generator,
+  clexmonte::run_series(*calculation, engine, *run_params.state_generator,
                         run_params.sampling_fixture_params,
                         run_params.global_cutoff, run_params.before_first_run,
                         run_params.before_each_run);

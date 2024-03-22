@@ -33,12 +33,14 @@ class run_SamplingFixtureTest : public test::ZrOTestSystem {
     json_sampling_functions =
         canonical::Canonical_mt19937_64::standard_json_sampling_functions(
             calculator);
+    engine = std::make_shared<engine_type>();
   }
 
   std::shared_ptr<canonical::Canonical_mt19937_64> calculator;
   StateSamplingFunctionMap sampling_functions;
   jsonStateSamplingFunctionMap json_sampling_functions;
   ResultsAnalysisFunctionMap<config_type, statistics_type> analysis_functions;
+  std::shared_ptr<engine_type> engine;
 };
 
 /// Test state sampling, using canonical Monte Carlo
@@ -120,7 +122,7 @@ TEST_F(run_SamplingFixtureTest, Test1) {
         method_log);
 
     SamplingFixture<config_type, statistics_type, engine_type> sampling_fixture(
-        sampling_fixture_params, calculator->random_number_generator.engine);
+        sampling_fixture_params, engine);
 
     // Main loop
     OccEvent event;
@@ -245,7 +247,7 @@ TEST_F(run_SamplingFixtureTest, Test2) {
         method_log);
 
     SamplingFixture<config_type, statistics_type, engine_type> sampling_fixture(
-        sampling_fixture_params, calculator->random_number_generator.engine);
+        sampling_fixture_params, engine);
 
     // Main loop
     OccEvent event;
