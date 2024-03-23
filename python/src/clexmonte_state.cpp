@@ -164,12 +164,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
 
           Notes
           -----
-          - This function does not convert ConfigDoFValues between prim and standard bases, it reads values as they are.
-          - Conversions, if necessary, must be done after construction using:
-
-              - :func:`~libcasm.clexulator.from_standard_values`: Copy ConfigDoFValues and convert from the standard basis to the prim basis.
-              - :func:`~libcasm.clexulator.to_standard_values`: Copy ConfigDoFValues and convert from the prim basis to the standard basis.
-
+          - ConfigDoFValues must be in the prim basis.
           - For a description of the format, see `ConfigDoF JSON object`_
 
           .. _`ConfigDoF JSON object`: https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/#configdof-json-object
@@ -188,12 +183,9 @@ PYBIND11_MODULE(_clexmonte_state, m) {
 
           Notes
           -----
-          - This function does not convert ConfigDoFValues between prim and standard bases, it writes values as they are.
-          - Conversions, if necessary, must be done beforehand using:
-
-              - :func:`~libcasm.clexulator.from_standard_values`: Copy ConfigDoFValues and convert from the standard basis to the prim basis.
-              - :func:`~libcasm.clexulator.to_standard_values`: Copy ConfigDoFValues and convert from the prim basis to the standard basis.
-
+          - This function does not convert ConfigDoFValues between prim and
+            standard bases, it writes values as they are, which is assumed to
+            be the prim bases.
           - For a description of the format, see `ConfigDoF JSON object`_
 
           .. _`ConfigDoF JSON object`: https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/#configdof-json-object
@@ -316,11 +308,11 @@ PYBIND11_MODULE(_clexmonte_state, m) {
                      R"pbdoc(
          MonteCarloConfiguration: The configuration
           )pbdoc")
-      .def_readwrite("conditions", &clexmonte::state_type::configuration,
+      .def_readwrite("conditions", &clexmonte::state_type::conditions,
                      R"pbdoc(
          libcasm.monte.ValueMap: The thermodynamic conditions
          )pbdoc")
-      .def_readwrite("properties", &clexmonte::state_type::configuration,
+      .def_readwrite("properties", &clexmonte::state_type::properties,
                      R"pbdoc(
          libcasm.monte.ValueMap: Properties of the state, if provided by the \
          Monte Carlo calculation method.
@@ -343,6 +335,14 @@ PYBIND11_MODULE(_clexmonte_state, m) {
           },
           R"pbdoc(
           Construct MonteCarloState from a Python dict
+
+          Notes
+          -----
+          - ConfigDoFValues must be in the prim basis.
+          - For a description of the format, see `ConfigDoF JSON object`_
+
+          .. _`ConfigDoF JSON object`: https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/#configdof-json-object
+
           )pbdoc",
           py::arg("data"))
       .def(
@@ -354,6 +354,16 @@ PYBIND11_MODULE(_clexmonte_state, m) {
           },
           R"pbdoc(
           Represent MonteCarloState as a Python dict
+
+          Notes
+          -----
+          - This function does not convert ConfigDoFValues between prim and
+            standard bases, it writes values as they are, which is assumed to
+            be the prim bases.
+          - For a description of the format, see `ConfigDoF JSON object`_
+
+          .. _`ConfigDoF JSON object`: https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/#configdof-json-object
+
           )pbdoc");
 
 #ifdef VERSION_INFO

@@ -106,6 +106,10 @@ results_type make_results(sampling_fixture_params_type const &params) {
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
+PYBIND11_MAKE_OPAQUE(CASM::monte::SamplerMap);
+PYBIND11_MAKE_OPAQUE(CASM::monte::jsonSamplerMap);
+PYBIND11_MAKE_OPAQUE(CASM::monte::StateSamplingFunctionMap);
+PYBIND11_MAKE_OPAQUE(CASM::monte::jsonStateSamplingFunctionMap);
 PYBIND11_MAKE_OPAQUE(CASMpy::analysis_function_map_type);
 
 PYBIND11_MODULE(_clexmonte_run_management, m) {
@@ -148,8 +152,6 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
               Name of the sampled quantity.
           description : str
               Description of the function.
-          component_index : int
-              Index into the unrolled vector of a sampled quantity.
           shape : List[int]
               Shape of quantity, with column-major unrolling
 

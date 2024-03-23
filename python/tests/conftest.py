@@ -85,3 +85,18 @@ def FCCBinaryVacancy_kmc_System(
         data=FCCBinaryVacancy_kmc_system_data,
         search_path=[str(session_shared_datadir / "FCC_binary_vacancy")],
     )
+
+
+@pytest.fixture
+def Clex_ZrO_Occ_system_data(session_shared_datadir):
+    path = session_shared_datadir / "Clex_ZrO_Occ" / "system.json"
+    with open(path, "r") as f:
+        return json.load(f)
+
+
+@pytest.fixture
+def Clex_ZrO_Occ_System(Clex_ZrO_Occ_system_data, session_shared_datadir):
+    return System.from_dict(
+        data=Clex_ZrO_Occ_system_data,
+        search_path=[str(session_shared_datadir / "Clex_ZrO_Occ")],
+    )

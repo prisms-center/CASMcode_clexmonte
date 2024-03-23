@@ -34,6 +34,8 @@ namespace CASM {
 /// - `dof`: clexulator::ConfigDoFValues
 ///   - Configuration DoF values. Depending on context may be expressed in the
 ///     standard or prim basis.
+/// - `basis`: str
+////  - One of "prim" or "standard"
 ///
 /// ### Examples
 ///
@@ -48,8 +50,8 @@ namespace CASM {
 /// \brief Write clexmonte::Configuration to JSON
 ///
 /// Notes:
-/// - This does not convert the DoF values basis, values are written in the
-///   basis in which they are provided, which is expected to be the prim basis
+/// - This assumes the DoF values basis is "prim", and writes the DoF values
+///   without any conversion
 ///
 /// \ingroup clexmonte_Configuration_JSON
 jsonParser &to_json(clexmonte::Configuration const &configuration,
@@ -89,10 +91,9 @@ void parse(InputParser<clexmonte::Configuration> &parser) {
 /// \brief Read clexmonte::Configuration from JSON
 ///
 /// Notes:
-/// - This does not convert the DoF values basis, values stay in the basis in
-/// which they are provided, which is expected to be the prim basis
+/// - The "basis" must be "prim"
 /// - This does not check the validity of the DoF values dimensions
-///
+////
 /// \ingroup clexmonte_Configuration_JSON
 template <>
 clexmonte::Configuration from_json<clexmonte::Configuration>(
@@ -108,8 +109,7 @@ clexmonte::Configuration from_json<clexmonte::Configuration>(
 /// \brief Read clexmonte::Configuration from JSON
 ///
 /// Notes:
-/// - This does not convert the DoF values basis, values stay in the basis in
-/// which they are provided
+/// - The "basis" must be "prim"
 /// - This does not check the validity of the DoF values dimensions
 ///
 /// \ingroup clexmonte_Configuration_JSON

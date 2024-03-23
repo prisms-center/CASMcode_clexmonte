@@ -36,12 +36,22 @@ typedef sgc::SemiGrandCanonicalPotential potential_type;
 typedef sgc::SemiGrandCanonicalConditions conditions_type;
 typedef clexmonte::config_type config_type;
 typedef clexmonte::state_type state_type;
+typedef clexmonte::statistics_type statistics_type;
 typedef clexmonte::System system_type;
 typedef clexmonte::run_manager_type<engine_type> run_manager_type;
-
+typedef monte::ResultsAnalysisFunction<config_type, statistics_type>
+    analysis_function_type;
+typedef monte::ResultsAnalysisFunctionMap<config_type, statistics_type>
+    analysis_function_map_type;
 }  // namespace CASMpy
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+
+PYBIND11_MAKE_OPAQUE(CASM::monte::SamplerMap);
+PYBIND11_MAKE_OPAQUE(CASM::monte::jsonSamplerMap);
+PYBIND11_MAKE_OPAQUE(CASM::monte::StateSamplingFunctionMap);
+PYBIND11_MAKE_OPAQUE(CASM::monte::jsonStateSamplingFunctionMap);
+PYBIND11_MAKE_OPAQUE(CASMpy::analysis_function_map_type);
 
 PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
   using namespace CASMpy;
@@ -74,6 +84,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
     )pbdoc";
   py::module::import("libcasm.monte");
   py::module::import("libcasm.monte.events");
+  py::module::import("libcasm.monte.sampling");
   py::module::import("libcasm.clexmonte");
 
   // TODO: Document methods
@@ -165,7 +176,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
       .def(
           "run",  //&calculator_type::run,
           [](calculator_type &self, state_type &state,
-             monte::OccLocation *occ_location, run_manager_type &run_manager) {
+             run_manager_type &run_manager, monte::OccLocation *occ_location) {
             if (!occ_location) {
               monte::Conversions const &convert =
                   get_index_conversions(*self.system, state);
@@ -184,7 +195,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
 
           Parameters
           ----------
-          state : libcasm.clexmonte.State
+          state : libcasm.clexmonte.MonteCarloState
               The input state.
           run_manager: libcasm.clexmonte.RunManager
               Specifies sampling and convergence criteria and collects results
@@ -194,7 +205,50 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
               occupation of `state` and it is used and updated during the run.
               If None, a occupant location list is generated for the run.
           )pbdoc",
-          py::arg("state"), py::arg("run_manager"), py::arg("occ_location"))
+          py::arg("state"), py::arg("run_manager"),
+          py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+      .def(
+          "standard_sampling_functions",
+          [](std::shared_ptr<calculator_type> const &self) {
+            return calculator_type::standard_sampling_functions(self);
+          },
+          R"pbdoc(
+          Construct standard semi-grand canonical sampling functions
+
+          Returns
+          -------
+          sampling_functions: libcasm.monte.StateSamplingFunctionMap
+              Standard state sampling functions for semi-grand canonical Monte
+              Carlo calculations.
+          )pbdoc")
+      .def(
+          "standard_json_sampling_functions",
+          [](std::shared_ptr<calculator_type> const &self) {
+            return calculator_type::standard_json_sampling_functions(self);
+          },
+          R"pbdoc(
+          Construct standard semi-grand canonical JSON sampling functions
+
+          Returns
+          -------
+          json_sampling_functions: libcasm.monte.jsonStateSamplingFunctionMap
+              Standard JSON state sampling functions for semi-grand canonical
+              Monte Carlo calculations.
+          )pbdoc")
+      .def(
+          "standard_analysis_functions",
+          [](std::shared_ptr<calculator_type> const &self) {
+            return calculator_type::standard_analysis_functions(self);
+          },
+          R"pbdoc(
+          Construct standard semi-grand canonical results analysis functions
+
+          Returns
+          -------
+          analysis_functions: libcasm.clexmonte.ResultsAnalysisFunctionMap
+              Standard results analysis functions for semi-grand canonical
+              Monte Carlo calculations.
+          )pbdoc")
       .def_readonly("system", &calculator_type::system, R"pbdoc(
           System : System data.
           )pbdoc")

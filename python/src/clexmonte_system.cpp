@@ -514,7 +514,48 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               Relative file paths included in `data` are searched for relative
               to the paths specified by `search_path`.
           )pbdoc",
-          py::arg("data"), py::arg("search_path") = std::vector<std::string>());
+          py::arg("data"), py::arg("search_path") = std::vector<std::string>())
+      .def("make_default_configuration", &clexmonte::make_default_configuration,
+           R"pbdoc(
+          Construct a default MonteCarloConfiguration in a specified supercell
+
+          Parameters
+          ----------
+          transformation_matrix_to_super : array_like, shape=(3,3), dtype=int
+              The transformation matrix, T, relating the superstructure lattice
+              vectors, S, to the unit structure lattice vectors, L, according to
+              ``S = L @ T``, where S and L are shape=(3,3)  matrices with
+              lattice vectors as columns.
+
+          Returns
+          -------
+          default_configuration : MonteCarloConfiguration
+              A configuration in the specified supercell, with DoF values
+              expressed in the prim basis, initialized to default values (0 for
+              occupation indices, 0.0 for all global and local DoF components).
+          )pbdoc",
+           py::arg("transformation_matrix_to_super"))
+      .def("make_default_state", &clexmonte::make_default_state,
+           R"pbdoc(
+          Construct a default MonteCarloState in a specified supercell
+
+          Parameters
+          ----------
+          transformation_matrix_to_super : array_like, shape=(3,3), dtype=int
+              The transformation matrix, T, relating the superstructure lattice
+              vectors, S, to the unit structure lattice vectors, L, according to
+              ``S = L @ T``, where S and L are shape=(3,3)  matrices with
+              lattice vectors as columns.
+
+          Returns
+          -------
+          default_state : MonteCarloState
+              A state in the specified supercell, with a default configuration
+              having DoF values expressed in the prim basis, initialized to
+              default values (0 for occupation indices, 0.0 for all global and
+              local DoF components), and empty conditions.
+          )pbdoc",
+           py::arg("transformation_matrix_to_super"));
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
