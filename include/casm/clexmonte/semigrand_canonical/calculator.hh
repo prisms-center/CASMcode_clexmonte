@@ -64,6 +64,16 @@ struct SemiGrandCanonical {
   ///    when the `run` method is called
   std::shared_ptr<clexulator::ClusterExpansion> formation_energy;
 
+  /// State sampling functions
+  std::map<std::string, state_sampling_function_type> sampling_functions;
+
+  /// JSON State sampling functions
+  std::map<std::string, json_state_sampling_function_type>
+      json_sampling_functions;
+
+  /// Results analysis functions
+  std::map<std::string, results_analysis_function_type> analysis_functions;
+
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
            run_manager_type<EngineType> &run_manager);

@@ -17,6 +17,7 @@
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/run_management/SamplingFixture.hh"
 #include "casm/monte/run_management/io/ResultsIO.hh"
+#include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -34,6 +35,19 @@ void run_series(
     std::vector<sampling_fixture_params_type> const &before_each_run =
         std::vector<sampling_fixture_params_type>({}));
 
+/// \brief Make default SamplingFixtureParams using jsonResultsIO
+sampling_fixture_params_type make_sampling_fixture_params(
+    std::string label, monte::StateSamplingFunctionMap sampling_functions,
+    monte::jsonStateSamplingFunctionMap json_sampling_functions,
+    monte::ResultsAnalysisFunctionMap<config_type, statistics_type>
+        analysis_functions,
+    monte::SamplingParams sampling_params,
+    monte::CompletionCheckParams<statistics_type> completion_check_params,
+    std::vector<std::string> analysis_names, bool write_results,
+    bool write_trajectory, bool write_observations, bool write_status,
+    std::optional<std::string> output_dir, std::optional<std::string> log_file,
+    double log_frequency_in_s);
+
 // --- Implementation ---
 
 /// \brief Perform a series of runs, according to a state_generator
@@ -43,7 +57,8 @@ void run_series(
 /// \param engine Random number engine
 /// \param state_generator A StateGenerator, which produces a
 ///     a series of initial states
-/// \param global_cutoff If true, the run is complete if any sampling fixture
+/// \param global_cutoff If true, the run is complete if any sampling
+/// fixture
 ///     is complete. Otherwise, all sampling fixtures must be
 ///     completed for the run to be completed.
 /// \param sampling_fixture_params Parameters controlling each
@@ -147,6 +162,42 @@ void run_series(
     state_generator.write_completed_runs();
   }
   log.indent() << "Monte Carlo calculation series complete" << std::endl;
+}
+
+/// \brief Make default SamplingFixtureParams using jsonResultsIO
+inline sampling_fixture_params_type make_sampling_fixture_params(
+    std::string label, monte::StateSamplingFunctionMap sampling_functions,
+    monte::jsonStateSamplingFunctionMap json_sampling_functions,
+    monte::ResultsAnalysisFunctionMap<config_type, statistics_type>
+        analysis_functions,
+    monte::SamplingParams sampling_params,
+    monte::CompletionCheckParams<statistics_type> completion_check_params,
+    std::vector<std::string> analysis_names, bool write_results,
+    bool write_trajectory, bool write_observations, bool write_status,
+    std::optional<std::string> output_dir, std::optional<std::string> log_file,
+    double log_frequency_in_s) {
+  if (!output_dir.has_value()) {
+    output_dir = (fs::path("output") / label).string();
+  }
+  if (!log_file.has_value()) {
+    log_file = (fs::path(*output_dir) / "status.json").string();
+  }
+
+  std::unique_ptr<results_io_type> results_io;
+  if (write_results) {
+    results_io = std::make_unique<monte::jsonResultsIO<results_type>>(
+        *output_dir, write_trajectory, write_observations);
+  }
+
+  monte::MethodLog method_log;
+  if (write_status) {
+    method_log.logfile_path = *log_file;
+    method_log.log_frequency = log_frequency_in_s;
+  }
+  return sampling_fixture_params_type(
+      label, sampling_functions, json_sampling_functions, analysis_functions,
+      sampling_params, completion_check_params, analysis_names,
+      write_results ? std::move(results_io) : nullptr, method_log);
 }
 
 }  // namespace clexmonte

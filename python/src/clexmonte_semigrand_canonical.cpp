@@ -38,11 +38,28 @@ typedef clexmonte::config_type config_type;
 typedef clexmonte::state_type state_type;
 typedef clexmonte::statistics_type statistics_type;
 typedef clexmonte::System system_type;
+typedef monte::SamplingFixture<config_type, statistics_type, engine_type>
+    sampling_fixture_type;
+typedef clexmonte::sampling_fixture_params_type sampling_fixture_params_type;
 typedef clexmonte::run_manager_type<engine_type> run_manager_type;
 typedef monte::ResultsAnalysisFunction<config_type, statistics_type>
     analysis_function_type;
 typedef monte::ResultsAnalysisFunctionMap<config_type, statistics_type>
     analysis_function_map_type;
+
+std::shared_ptr<calculator_type> make_calculator(
+    std::shared_ptr<system_type> system) {
+  std::shared_ptr<calculator_type> calculator =
+      std::make_shared<calculator_type>(system);
+  calculator->sampling_functions =
+      calculator_type::standard_sampling_functions(calculator);
+  calculator->json_sampling_functions =
+      calculator_type::standard_json_sampling_functions(calculator);
+  calculator->analysis_functions =
+      calculator_type::standard_analysis_functions(calculator);
+  return calculator;
+}
+
 }  // namespace CASMpy
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
@@ -57,30 +74,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
   using namespace CASMpy;
 
   m.doc() = R"pbdoc(
-        Cluster expansion semi-grand canonical Monte Carlo
-
-        libcasm.clexmonte.semigrand_canonical._clexmonte_semigrand_canonical
-        --------------------------------------------------------------------
-
-        Includes:
-
-        - the :class:`~libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalConditions`
-          class for representing thermodynamic conditions,
-        - the :class:`~libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalEventGenerator`
-          class for proposing events in the semi-grand canonical ensemble,
-        - the :class:`~libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalPotential`
-          class for calculating changes in the semi-grand canonical energy due to the
-          proposed events, and
-        - the :class:`~libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalCalculator`
-          class for sampling microstates in the semi-grand canonical ensemble.
-
-        It also makes use of:
-
-        - :class:`~libcasm.monte.sampling.SamplingFixture` and
-          :class:`~libcasm.monte.sampling.RunManager`, to control sampling, convergence
-          checking, and results output.
-
-
+    Cluster expansion semi-grand canonical Monte Carlo
     )pbdoc";
   py::module::import("libcasm.monte");
   py::module::import("libcasm.monte.events");
@@ -139,6 +133,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
       m, "SemiGrandCanonicalPotential",
       R"pbdoc(
       Semi-grand canonical potential calculator
+
       )pbdoc")
       .def(py::init<std::shared_ptr<system_type>>(),
            R"pbdoc(
@@ -163,7 +158,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
       R"pbdoc(
       Implements semi-grand canonical Monte Carlo calculations
       )pbdoc")
-      .def(py::init<std::shared_ptr<system_type>>(),
+      .def(py::init<>(&make_calculator),
            R"pbdoc(
         .. rubric:: Constructor
 
@@ -173,6 +168,119 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
             Cluster expansion model system data.
         )pbdoc",
            py::arg("system"))
+      .def(
+          "make_sampling_fixture_params",
+          [](std::shared_ptr<calculator_type> &self, std::string label,
+             bool write_results, bool write_trajectory, bool write_observations,
+             bool write_status, std::optional<std::string> output_dir,
+             std::optional<std::string> log_file,
+             double log_frequency_in_s) -> sampling_fixture_params_type {
+            monte::SamplingParams sampling_params;
+            {
+              auto &s = sampling_params;
+              s.sampler_names = {"formation_energy", "potential_energy",
+                                 "mol_composition", "param_composition"};
+              std::string prefix;
+              prefix = "order_parameter_";
+              for (auto const &pair : self->system->dof_spaces) {
+                s.sampler_names.push_back(prefix + pair.first);
+              }
+              prefix = "subspace_order_parameter_";
+              for (auto const &pair : self->system->dof_subspaces) {
+                s.sampler_names.push_back(prefix + pair.first);
+              }
+            }
+
+            monte::CompletionCheckParams<statistics_type>
+                completion_check_params;
+            {
+              auto &c = completion_check_params;
+              c.equilibration_check_f = monte::default_equilibration_check;
+              c.calc_statistics_f =
+                  monte::default_statistics_calculator<statistics_type>();
+            }
+
+            std::vector<std::string> analysis_names = {
+                "heat_capacity", "mol_susc", "param_susc",
+                "mol_thermochem_susc", "param_thermochem_susc"};
+
+            return make_sampling_fixture_params(
+                label, self->sampling_functions, self->json_sampling_functions,
+                self->analysis_functions, sampling_params,
+                completion_check_params, analysis_names, write_results,
+                write_trajectory, write_observations, write_status, output_dir,
+                log_file, log_frequency_in_s);
+          },
+          R"pbdoc(
+          Construct default sampling fixture parameters
+
+          Notes
+          -----
+
+          By default:
+
+          - Sampling occurs linearly, by pass, with period 1, for:
+
+            - "formation_energy",
+            - "mol_composition",
+            - "param_composition",
+            - "potential_energy",
+            - "order_parameter_<key>" (for all DoFSpace key), and
+            - "subspace_order_parameter_<key>" (for all DoFSpace key).
+
+          - Analysis functions are evaluated for:
+
+            - "heat_capacity",
+            - "mol_susc",
+            - "param_susc",
+            - "mol_thermochem_susc", and
+            - "param_thermochem_susc".
+
+          - Convergence of "potential_enthalpy" is set to an
+            absolute precision of 0.001, and "param_composition" to 0.001.
+          - Completion is checked every 100 samples, starting with the 100-th.
+          - No cutoffs are set.
+
+          Parameters
+          ----------
+          label: str
+              Label for the :class:`SamplingFixture`.
+          write_results: bool = True
+              If True, write results to summary file upon completion. If a
+              results summary file already exists, the new results are appended.
+          write_trajectory: bool = False
+              If True, write the trajectory of Monte Carlo states when each
+              sample taken to an output file. May be large.
+          write_observations: bool = False
+              If True, write a file with all individual sample observations.
+              May be large.
+          output_dir: Optional[str] = None
+              Directory in which write results. If None, uses
+              ``"output" / label``.
+          write_status: bool = True
+              If True, write log files with convergence status.
+          log_file: str = Optional[str] = None
+              Path to where a run status log file should be written with run
+              information. If None, uses ``output_dir / "status.json"``.
+          log_frequency_in_s: float = 600.0
+              Minimum time between when the status log should be written, in
+              seconds. The status log is only written after a sample is taken,
+              so if the `sampling_params` are such that the time between
+              samples is longer than `log_frequency_is_s` the status log will
+              be written less frequently.
+
+          Returns
+          -------
+          sampling_fixture_params: libcasm.clexmonte.SamplingFixtureParams
+              Default sampling fixture parameters for a semi-grand canonical
+              Monte Carlo calculation.
+          )pbdoc",
+          py::arg("label"), py::arg("write_results") = true,
+          py::arg("write_trajectory") = false,
+          py::arg("write_observations") = false, py::arg("write_status") = true,
+          py::arg("output_dir") = std::nullopt,
+          py::arg("log_file") = std::nullopt,
+          py::arg("log_frequency_in_s") = 600.0)
       .def(
           "run",  //&calculator_type::run,
           [](calculator_type &self, state_type &state,

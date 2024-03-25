@@ -1,4 +1,5 @@
 #include <pybind11/eigen.h>
+#include <pybind11/functional.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -12,6 +13,7 @@
 #include "pybind11_json/pybind11_json.hpp"
 
 // clexmonte
+#include "casm/clexmonte/run/functions.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
@@ -65,34 +67,6 @@ analysis_function_type make_analysis_function(
     return analysis_function_type(name, description, *component_names, shape,
                                   function);
   }
-}
-
-sampling_fixture_params_type make_sampling_fixture_params(
-    std::string label, monte::StateSamplingFunctionMap sampling_functions,
-    monte::jsonStateSamplingFunctionMap json_sampling_functions,
-    analysis_function_map_type analysis_functions,
-    monte::SamplingParams sampling_params,
-    monte::CompletionCheckParams<statistics_type> completion_check_params,
-    std::optional<std::string> output_dir, bool write_trajectory,
-    bool write_observations, std::optional<std::string> log_file,
-    double log_frequency_in_s) {
-  if (!output_dir.has_value()) {
-    output_dir = (fs::path("output") / label).string();
-  }
-  if (!log_file.has_value()) {
-    log_file = (fs::path(*output_dir) / "status.json").string();
-  }
-
-  std::unique_ptr<results_io_type> results_io =
-      std::make_unique<json_results_io_type>(*output_dir, write_trajectory,
-                                             write_observations);
-  monte::MethodLog method_log;
-  method_log.logfile_path = *log_file;
-  method_log.log_frequency = log_frequency_in_s;
-  return sampling_fixture_params_type(
-      label, sampling_functions, json_sampling_functions, analysis_functions,
-      sampling_params, completion_check_params, std::move(results_io),
-      method_log);
 }
 
 results_type make_results(sampling_fixture_params_type const &params) {
@@ -225,7 +199,7 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
 
       Specifies what to sample, when, and how to check for completion.
       )pbdoc")
-      .def(py::init<>(&make_sampling_fixture_params),
+      .def(py::init<>(&clexmonte::make_sampling_fixture_params),
            R"pbdoc(
           .. rubric:: Constructor
 
@@ -243,15 +217,21 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
               Sampling parameters, specifies which sampling functions to call
           completion_check_params: libcasm.monte.sampling.CompletionCheckParams
               Completion check parameters
-          output_dir: Optional[str] = None
-              Directory in which write results. If None, uses
-              ``"output" / label``.
+          analysis_names: list[str]
+              List of which analysis functions should be evaluated.
+          write_results: bool = True
+              If True, write results to file upon completion.
           write_trajectory: bool = False
               If True, write the trajectory of Monte Carlo states when each
               sample taken.
           write_observations: bool = False
               If True, write all individual sample observations. Otherwise, only
               mean and estimated precision are written.
+          write_status: bool = True
+              If True, write log files with convergence status.
+          output_dir: Optional[str] = None
+              Directory in which write results. If None, uses
+              ``"output" / label``.
           log_file: str = Optional[str] = None
               Path to where a run status log file should be written with run
               information. If None, uses ``output_dir / "status.json"``.
@@ -265,11 +245,60 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
            py::arg("label"), py::arg("sampling_functions"),
            py::arg("json_sampling_functions"), py::arg("analysis_functions"),
            py::arg("sampling_params"), py::arg("completion_check_params"),
-           py::arg("output_dir") = std::nullopt,
-           py::arg("write_trajectory") = false,
+           py::arg("analysis_names") = std::vector<std::string>(),
+           py::arg("write_results") = true, py::arg("write_trajectory") = false,
            py::arg("write_observations") = false,
+           py::arg("write_status") = true, py::arg("output_dir") = std::nullopt,
            py::arg("log_file") = std::nullopt,
            py::arg("log_frequency_in_s") = 600.0)
+      .def_readwrite("label", &sampling_fixture_params_type::label, R"pbdoc(
+          str: Label, to name output and distinguish multiple sampling fixtures
+          )pbdoc")
+      .def_readwrite("sampling_functions",
+                     &sampling_fixture_params_type::sampling_functions,
+                     R"pbdoc(
+          libcasm.monte.sampling.StateSamplingFunctionMap: State sampling \
+          functions
+          )pbdoc")
+      .def_readwrite("json_sampling_functions",
+                     &sampling_fixture_params_type::json_sampling_functions,
+                     R"pbdoc(
+          libcasm.monte.sampling.jsonStateSamplingFunctionMap: JSON state \
+          sampling functions
+          )pbdoc")
+      .def_readwrite("analysis_functions",
+                     &sampling_fixture_params_type::json_sampling_functions,
+                     R"pbdoc(
+          libcasm.monte.sampling.jsonStateSamplingFunctionMap: JSON state \
+          sampling functions
+          )pbdoc")
+      .def_readwrite("analysis_functions",
+                     &sampling_fixture_params_type::json_sampling_functions,
+                     R"pbdoc(
+          libcasm.monte.sampling.jsonStateSamplingFunctionMap: JSON state \
+          sampling functions
+          )pbdoc")
+      .def_readwrite("sampling_params",
+                     &sampling_fixture_params_type::sampling_params,
+                     R"pbdoc(
+          libcasm.monte.sampling.SamplingParams: Sampling parameters
+          )pbdoc")
+      .def_readwrite("completion_check_params",
+                     &sampling_fixture_params_type::completion_check_params,
+                     R"pbdoc(
+          libcasm.monte.sampling.CompletionCheckParams: Completion check parameters
+          )pbdoc")
+      .def_readwrite("completion_check_params",
+                     &sampling_fixture_params_type::completion_check_params,
+                     R"pbdoc(
+          libcasm.monte.sampling.CompletionCheckParams: Completion check parameters
+          )pbdoc")
+      //  /// Results I/O implementation -- May be empty
+      //  notstd::cloneable_ptr<results_io_type> results_io;
+      //
+      //  /// Logging
+      //  monte::MethodLog method_log;
+
       .def_static(
           "from_dict",
           [](const nlohmann::json &data, std::string label,
