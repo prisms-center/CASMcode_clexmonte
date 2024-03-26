@@ -11,11 +11,14 @@
 #include "pybind11_json/pybind11_json.hpp"
 
 // clexmonte/semigrand_canonical
+#include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/semigrand_canonical/calculator_impl.hh"
 #include "casm/clexmonte/semigrand_canonical/conditions.hh"
 #include "casm/clexmonte/semigrand_canonical/json_io.hh"
 #include "casm/clexmonte/semigrand_canonical/potential.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
+#include "casm/monte/run_management/io/json/SamplingFixtureParams_json_io.hh"
+#include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -169,7 +172,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
         )pbdoc",
            py::arg("system"))
       .def(
-          "make_sampling_fixture_params",
+          "make_default_sampling_fixture_params",
           [](std::shared_ptr<calculator_type> &self, std::string label,
              bool write_results, bool write_trajectory, bool write_observations,
              bool write_status, std::optional<std::string> output_dir,
@@ -198,6 +201,10 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
               c.equilibration_check_f = monte::default_equilibration_check;
               c.calc_statistics_f =
                   monte::default_statistics_calculator<statistics_type>();
+
+              converge(self->sampling_functions, completion_check_params)
+                  .set_abs_precision("formation_energy", 0.001)
+                  .set_abs_precision("param_composition", 0.001);
             }
 
             std::vector<std::string> analysis_names = {
@@ -281,6 +288,41 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
           py::arg("output_dir") = std::nullopt,
           py::arg("log_file") = std::nullopt,
           py::arg("log_frequency_in_s") = 600.0)
+      .def(
+          "make_sampling_fixture_params_from_dict",
+          [](std::shared_ptr<calculator_type> &self, const nlohmann::json &data,
+             std::string label) -> sampling_fixture_params_type {
+            jsonParser json{data};
+            bool time_sampling_allowed = false;
+            InputParser<sampling_fixture_params_type> parser(
+                json, label, self->sampling_functions,
+                self->json_sampling_functions, self->analysis_functions,
+                clexmonte::standard_results_io_methods(),
+                time_sampling_allowed);
+            std::runtime_error error_if_invalid{
+                "Error in "
+                "libcasm.clexmonte.semigrand_canonical."
+                "SemiGrandCanonicalCalculator.sampling_fixture_params_from_"
+                "dict"};
+            report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
+            return std::move(*parser.value);
+          },
+          R"pbdoc(
+          Construct sampling fixture parameters from Python dict
+
+          Parameters
+          ----------
+          data: dict
+              Python dict with sampling fixture parameters.
+          label: str
+              Label for the :class:`SamplingFixture`.
+
+          Returns
+          -------
+          sampling_fixture_params: libcasm.clexmonte.SamplingFixtureParams
+              Sampling fixture parameters.
+          )pbdoc",
+          py::arg("data"), py::arg("label"))
       .def(
           "run",  //&calculator_type::run,
           [](calculator_type &self, state_type &state,

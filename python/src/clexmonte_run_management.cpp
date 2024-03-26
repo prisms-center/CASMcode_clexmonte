@@ -21,6 +21,7 @@
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/run_management/io/json/SamplingFixtureParams_json_io.hh"
 #include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
+#include "casm/monte/sampling/Sampler.hh"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -267,16 +268,9 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
           sampling functions
           )pbdoc")
       .def_readwrite("analysis_functions",
-                     &sampling_fixture_params_type::json_sampling_functions,
+                     &sampling_fixture_params_type::analysis_functions,
                      R"pbdoc(
-          libcasm.monte.sampling.jsonStateSamplingFunctionMap: JSON state \
-          sampling functions
-          )pbdoc")
-      .def_readwrite("analysis_functions",
-                     &sampling_fixture_params_type::json_sampling_functions,
-                     R"pbdoc(
-          libcasm.monte.sampling.jsonStateSamplingFunctionMap: JSON state \
-          sampling functions
+          ResultsAnalysisFunctionMap: Results analysis functions
           )pbdoc")
       .def_readwrite("sampling_params",
                      &sampling_fixture_params_type::sampling_params,
@@ -293,12 +287,125 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
                      R"pbdoc(
           libcasm.monte.sampling.CompletionCheckParams: Completion check parameters
           )pbdoc")
-      //  /// Results I/O implementation -- May be empty
-      //  notstd::cloneable_ptr<results_io_type> results_io;
-      //
-      //  /// Logging
-      //  monte::MethodLog method_log;
+      .def_readwrite("completion_check_params",
+                     &sampling_fixture_params_type::completion_check_params,
+                     R"pbdoc(
+          libcasm.monte.sampling.CompletionCheckParams: Completion check parameters
+          )pbdoc")
+      .def(
+          "converge",
+          [](sampling_fixture_params_type &self, std::string quantity,
+             std::optional<double> abs, std::optional<double> rel,
+             std::optional<std::vector<std::string>> component_name,
+             std::optional<std::vector<Index>> component_index) {
+            auto it = self.sampling_functions.find(quantity);
+            if (it == self.sampling_functions.end()) {
+              std::stringstream msg;
+              msg << "Error in SamplingFixtureParams.converge: '" << quantity
+                  << "' is not in sampling_functions";
+              throw std::runtime_error(msg.str());
+            }
+            auto const &f = it->second;
 
+            if (!rel.has_value() && !abs.has_value()) {
+              std::stringstream msg;
+              msg << "Error in SamplingFixtureParams.converge: No abs or rel "
+                     "precision specified";
+              throw std::runtime_error(msg.str());
+            }
+
+            if (!component_index.has_value()) {
+              component_index = std::vector<Index>();
+            }
+
+            if (component_name.has_value()) {
+              auto begin = f.component_names.begin();
+              auto end = f.component_names.end();
+              for (std::string n : component_name.value()) {
+                auto it = std::find(begin, end, n);
+                if (it == end) {
+                  std::stringstream msg;
+                  msg << "Error in SamplingFixtureParams.converge: '" << n
+                      << "' is not a component of '" << quantity << "'";
+                  throw std::runtime_error(msg.str());
+                }
+                component_index->push_back(std::distance(begin, it));
+              }
+            }
+
+            // remove any duplicates and sort
+            std::set<Index> _tmp(component_index->begin(),
+                                 component_index->end());
+            std::vector<Index> indices(_tmp.begin(), _tmp.end());
+
+            // if nothing provided, default is to set all components
+            if (indices.empty()) {
+              for (Index i = 0; i < f.component_names.size(); ++i) {
+                indices.push_back(i);
+              }
+            }
+
+            for (Index i : indices) {
+              monte::SamplerComponent key(quantity, i, f.component_names[i]);
+              if (rel.has_value() && abs.has_value()) {
+                self.completion_check_params.requested_precision[key] =
+                    monte::RequestedPrecision::abs_and_rel(abs.value(),
+                                                           rel.value());
+              } else if (abs.has_value()) {
+                self.completion_check_params.requested_precision[key] =
+                    monte::RequestedPrecision::abs(abs.value());
+              } else if (rel.has_value()) {
+                self.completion_check_params.requested_precision[key] =
+                    monte::RequestedPrecision::rel(rel.value());
+              } else {
+                std::stringstream msg;
+                msg << "Error in SamplingFixtureParams.converge: Invalid "
+                       "request for "
+                       "unknown reason";
+                throw std::runtime_error(msg.str());
+              }
+            }
+
+            return self;
+          },
+          R"pbdoc(
+          Set requested precision level for equilibration and convergence
+
+          Allows setting absolute or relative precision to the specified level for
+          the specified quantities. By default, all components are converged to
+          the same level. If `component_name` or `component_index` are specified,
+          then only the specified components are requested to converge to that level.
+
+          Parameters
+          ----------
+          quantity: str
+              The name of the quantity to be converged. Must match
+              a state sampling function name.
+          abs: Optional[float]=None
+              The requested absolute convergence level
+          rel: Optional[float]=None,
+              The requested relative convergence level
+          component_name: Optional[list[str]]=None
+              The name of components to converge. Must be in the
+              `component_names` of the state sampling function for
+              the named quantity.
+          component_index: Optional[list[int]]=None
+              The indices of components to converge.
+
+
+          Returns
+          -------
+          self: RequestedPrecisionConstructor
+              To allow chaining multiple calls, `self` is returned
+          )pbdoc",
+          py::arg("quantity"), py::arg("abs") = std::nullopt,
+          py::arg("rel") = std::nullopt,
+          py::arg("component_name") = std::nullopt,
+          py::arg("component_index") = std::nullopt)
+      .def_readwrite("method_log", &sampling_fixture_params_type::method_log,
+                     R"pbdoc(
+          libcasm.monte.MethodLog: Handles status file output
+          )pbdoc")
       .def_static(
           "from_dict",
           [](const nlohmann::json &data, std::string label,
@@ -342,7 +449,22 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
           )pbdoc",
           py::arg("data"), py::arg("label"), py::arg("sampling_functions"),
           py::arg("json_sampling_functions"), py::arg("analysis_functions"),
-          py::arg("time_sampling_allowed"));
+          py::arg("time_sampling_allowed"))
+      .def(
+          "to_dict",
+          [](sampling_fixture_params_type const &self) {
+            jsonParser json;
+            to_json(self, json);
+            return static_cast<nlohmann::json>(json);
+          },
+          R"pbdoc(
+          Represent the SamplingFixtureParams as a Python dict.
+
+          Returns
+          -------
+          data : json
+              The SamplingFixtureParams as a Python dict.
+          )pbdoc");
 
   pyResults
       .def(py::init<>(&make_results),
