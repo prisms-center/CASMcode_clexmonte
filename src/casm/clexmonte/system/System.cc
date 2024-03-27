@@ -45,12 +45,11 @@ System::System(std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
       composition_converter(_composition_converter),
       composition_calculator(composition_converter.components(),
                              xtal::allowed_molecule_names(*_shared_prim)),
+      convert(*prim->basicstructure, Eigen::Matrix3l::Identity()),
       occevent_symgroup_rep(occ_events::make_occevent_symgroup_rep(
           prim->sym_info.unitcellcoord_symgroup_rep,
           prim->sym_info.occ_symgroup_rep,
           prim->sym_info.atom_position_symgroup_rep)) {
-  monte::Conversions convert(*prim->basicstructure,
-                             Eigen::Matrix3l::Identity());
   monte::OccCandidateList occ_candidate_list(convert);
   canonical_swaps = monte::make_canonical_swaps(convert, occ_candidate_list);
   semigrand_canonical_swaps =

@@ -101,7 +101,8 @@ It also makes use of:
 
 - ``"config"``: (default=not sampled) - Store a JSON representation of the
   configuration, using
-  :func:`MonteCarloConfiguration.to_dict <libcasm.clexmonte.MonteCarloConfiguration.to_dict>`.
+  :func:`MonteCarloConfiguration.to_dict \
+  <libcasm.clexmonte.MonteCarloConfiguration.to_dict>`.
 
 
 .. rubric:: Standard analysis functions:
@@ -121,14 +122,16 @@ It also makes use of:
   .. math::
 
       \chi_{i,j}=\
-      \frac{\langle x_i x_j \rangle - \langle x_i \rangle \langle x_j \rangle}{k_{B}T}N_{u}
+      \frac{\langle x_i x_j \rangle - \
+      \langle x_i \rangle \langle x_j \rangle}{k_{B}T}N_{u}
 
 - ``"mol_susc"``: (default=included) - Mol chemical susceptibility,
 
   .. math::
 
       \chi^n_{i,j}=\
-      \frac{\langle n_i n_j \rangle - \langle n_i \rangle \langle n_j \rangle}{k_{B}T}N_{u}
+      \frac{\langle n_i n_j \rangle - \
+      \langle n_i \rangle \langle n_j \rangle}{k_{B}T}N_{u}
 
 - ``"param_thermochem_susc"``: (default=included) - Parametric thermochemical
   susceptibility,
@@ -152,6 +155,9 @@ It also makes use of:
 
 """
 
+from ._auto_configuration import (
+    make_initial_state,
+)
 from ._clexmonte_semigrand_canonical import (
     SemiGrandCanonicalCalculator,
     SemiGrandCanonicalConditions,

@@ -118,6 +118,15 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           sublattice compositions from an integer occupation array.
           )pbdoc")
       .def_property_readonly(
+          "species_list",
+          [](clexmonte::System &m) -> std::vector<xtal::Molecule> const & {
+            return m.convert.species_list();
+          },
+          R"pbdoc(
+          list[libcasm.xtal.Occupant]: List of species (including all \
+          orientations) allowed in the system.
+          )pbdoc")
+      .def_property_readonly(
           "prim_neighbor_list",
           [](clexmonte::System &m) -> clexulator::PrimNeighborListWrapper {
             return clexulator::PrimNeighborListWrapper(m.prim_neighbor_list);

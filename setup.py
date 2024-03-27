@@ -6,6 +6,7 @@ setup(
     packages=[
         "libcasm",
         "libcasm.clexmonte",
+        "libcasm.clexmonte.auto_configuration",
         "libcasm.clexmonte.semigrand_canonical",
     ],
     package_dir={"": "python"},

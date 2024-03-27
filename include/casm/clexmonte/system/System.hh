@@ -67,6 +67,9 @@ struct System {
   /// Composition calculation functor
   composition::CompositionCalculator composition_calculator;
 
+  /// Performs index conversions in supercell
+  monte::Conversions convert;
+
   // --- Order parameters
 
   /// DoFSpace that define order parameters

@@ -187,6 +187,9 @@ inline sampling_fixture_params_type make_sampling_fixture_params(
   if (write_results) {
     results_io = std::make_unique<monte::jsonResultsIO<results_type>>(
         *output_dir, write_trajectory, write_observations);
+    if (write_trajectory) {
+      sampling_params.do_sample_trajectory = true;
+    }
   }
 
   monte::MethodLog method_log;

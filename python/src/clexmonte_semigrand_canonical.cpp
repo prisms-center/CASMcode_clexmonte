@@ -103,33 +103,128 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
            py::arg("composition_converter"),
            py::arg("temperature_is_zero_tol") = 1e-10)
       .def_readonly("temperature_is_zero_tol",
-                    &conditions_type::temperature_is_zero_tol)
-      .def_readonly("temperature", &conditions_type::temperature)
-      .def_readonly("beta", &conditions_type::beta)
-      .def("set_temperature",
-           [](conditions_type &self, double temperature) {
-             self.set_temperature(temperature);
-           })
-      .def("set_temperature_from_value_map",
-           [](conditions_type &self, monte::ValueMap const &map) {
-             self.set_temperature(map);
-           })
-      .def("put_temperature", &conditions_type::put_temperature)
+                    &conditions_type::temperature_is_zero_tol, R"pbdoc(
+          float: Tolerance used to check if :math`T=0`, in which case `beta` \
+          is set to infinity.
+          )pbdoc")
+      .def_readonly("temperature", &conditions_type::temperature, R"pbdoc(
+          float: The temperature, :math:`T` (K).
+          )pbdoc")
+      .def_readonly("beta", &conditions_type::beta, R"pbdoc(
+          float: Equal to :math:`1/(k_B T)`.
+          )pbdoc")
+      .def(
+          "set_temperature",
+          [](conditions_type &self, double temperature) {
+            self.set_temperature(temperature);
+          },
+          R"pbdoc(
+          Set temperature and update `beta` to be consistent
+
+          Parameters
+          ----------
+          temperature: float
+              The temperature, :math:`T` (K).
+          )pbdoc",
+          py::arg("temperature"))
+      .def(
+          "set_temperature_from_value_map",
+          [](conditions_type &self, monte::ValueMap const &map) {
+            self.set_temperature(map);
+          },
+          R"pbdoc(
+          Set temperature and update `beta` to be consistent
+
+          Parameters
+          ----------
+          value_map: libcasm.monte.ValueMap
+              Conditions as a :class:`~libcasm.monte.ValueMap` that contains
+              the scalar value ``"temperature"`` in K.
+          )pbdoc",
+          py::arg("value_map"))
+      .def("put_temperature", &conditions_type::put_temperature,
+           R"pbdoc(
+          Put the temperature in a conditions ValueMap
+
+          Parameters
+          ----------
+          value_map: libcasm.monte.ValueMap
+              Conditions as a :class:`~libcasm.monte.ValueMap` that is updated
+              to contain the scalar value ``"temperature"`` in K.
+          )pbdoc",
+           py::arg("value_map"))
       .def_readonly("composition_converter",
-                    &conditions_type::composition_converter)
-      .def_readonly("param_chem_pot", &conditions_type::param_chem_pot)
-      .def_readonly("exchange_chem_pot", &conditions_type::exchange_chem_pot)
-      .def("set_param_chem_pot",
-           [](conditions_type &self, Eigen::VectorXd const &param_chem_pot) {
-             self.set_param_chem_pot(param_chem_pot);
-           })
-      .def("set_param_chem_pot_from_value_map",
-           [](conditions_type &self, monte::ValueMap const &map) {
-             self.set_param_chem_pot(map);
-           })
-      .def("put_param_chem_pot", &conditions_type::put_param_chem_pot)
-      .def("set_all", &conditions_type::set_all)
-      .def("to_value_map", &conditions_type::to_value_map);
+                    &conditions_type::composition_converter, R"pbdoc(
+          libcasm.composition.CompositionConverter: Converter between number \
+          of species per unit cell and parametric composition.
+          )pbdoc")
+      .def_readonly("param_chem_pot", &conditions_type::param_chem_pot, R"pbdoc(
+          np.ndarray: The parametric composition, :math:`\vec{x}`.
+          )pbdoc")
+      .def_readonly("exchange_chem_pot", &conditions_type::exchange_chem_pot,
+                    R"pbdoc(
+          np.ndarray: 2d array, ``M``, with values ``M[i,j] = mu_i - mu_j``.
+
+          The exchange chemical potential for two species, `i` and `j`, which
+          are indices into `composition_converter.components()`.
+          change in potential per supercell due to a change of species, \
+          using indices into :py:attr:`~libcasm.clexmonte.System.species_list`,
+          according to:
+
+          .. code-block:: Python
+
+              delta_potential_energy -= \
+                  conditions.exchange_chem_pot[new_species_index, curr_species_index]
+
+
+          )pbdoc")
+      .def(
+          "set_param_chem_pot",
+          [](conditions_type &self, Eigen::VectorXd const &param_chem_pot) {
+            self.set_param_chem_pot(param_chem_pot);
+          },
+          R"pbdoc(
+          Set the parametric chemical potential and update `exchange_chem_pot`\
+          to be consistent
+
+          Parameters
+          ----------
+          param_chem_pot: np.array
+              The parametric composition, :math:`\vec{x}`.
+          )pbdoc",
+          py::arg("param_chem_pot"))
+      .def(
+          "set_param_chem_pot_from_value_map",
+          [](conditions_type &self, monte::ValueMap const &map) {
+            self.set_param_chem_pot(map);
+          },
+          R"pbdoc(
+          Set the parametric chemical potential and update `exchange_chem_pot`\
+          to be consistent
+
+          Parameters
+          ----------
+          param_chem_pot: np.array
+              Conditions as a :class:`~libcasm.monte.ValueMap` that contains
+              the vector value ``"param_chem_pot"`` with the parametric
+              composition, :math:`\vec{x}`.
+          )pbdoc",
+          py::arg("value_map"))
+      .def("put_param_chem_pot", &conditions_type::put_param_chem_pot,
+           R"pbdoc(
+          Put the parametric chemical potential in a conditions ValueMap
+
+          Parameters
+          ----------
+          value_map: libcasm.monte.ValueMap
+              Conditions as a :class:`~libcasm.monte.ValueMap` that is updated
+              to contain the vector value ``"param_chem_pot"``.
+          )pbdoc",
+           py::arg("value_map"))
+      .def("set_all", &conditions_type::set_all, py::arg("value_map"),
+           py::arg("is_increment"))
+      .def("to_value_map", &conditions_type::to_value_map,
+           py::arg("is_increment"));
 
   // TODO: Document methods
   py::class_<potential_type, std::shared_ptr<potential_type>>(
@@ -148,13 +243,68 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
             System data.
         )pbdoc",
            py::arg("system"))
-      .def("set", &potential_type::set)
-      .def("state", &potential_type::state)
-      .def("conditions", &potential_type::conditions)
-      .def("formation_energy", &potential_type::formation_energy)
-      .def("per_supercell", &potential_type::per_supercell)
-      .def("per_unitcell", &potential_type::per_unitcell)
-      .def("occ_delta_per_supercell", &potential_type::occ_delta_per_supercell);
+      .def("set", &potential_type::set, R"pbdoc(
+          Set the current state being calculated
+
+          Parameters
+          ----------
+          state: libcasm.clexmonte.MonteCarloState
+              The state to be calculated
+          conditions: libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalConditions
+              The semi-grand canonical thermodynamic conditions. They should
+              be equivalent to `state.conditions`, but converted to
+              :class:`~libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalConditions`
+              for efficient evaluation.
+
+          )pbdoc",
+           py::arg("state"), py::arg("conditions"))
+      .def_property_readonly("state", &potential_type::state, R"pbdoc(
+          Optional[libcasm.clexmonte.MonteCarloState]: The current state being \
+          calculated
+          )pbdoc")
+      .def_property_readonly("conditions", &potential_type::conditions, R"pbdoc(
+          libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalConditions: The \
+          semi-grand canonical thermodynamic conditions
+          )pbdoc")
+      .def_property_readonly("formation_energy",
+                             &potential_type::formation_energy, R"pbdoc(
+          libcasm.clexulator.ClusterExpansion: The formation energy cluster \
+          expansion calculator
+          )pbdoc")
+      .def("per_supercell", &potential_type::per_supercell, R"pbdoc(
+          Calculate and return the potential per supercell
+
+          Returns
+          -------
+          value: float
+              The potential per supercell for the current state
+          )pbdoc")
+      .def("per_unitcell", &potential_type::per_unitcell, R"pbdoc(
+          Calculate and return the potential per unit cell
+
+          Returns
+          -------
+          value: float
+              The potential per unit cell for the current state
+          )pbdoc")
+      .def("occ_delta_per_supercell", &potential_type::occ_delta_per_supercell,
+           R"pbdoc(
+          Calculate and return the change in potential per supercell
+
+          Parameters
+          ----------
+          linear_site_index: list[int]
+              The linear site indices of the sites changing occupation
+          new_occ: list[int]
+              The new occupation indices on the sites.
+
+          Returns
+          -------
+          value: float
+              The change in potential per supercell from the current state
+              to the state with the new occupation.
+          )pbdoc",
+           py::arg("linear_site_index"), py::arg("new_occ"));
 
   py::class_<calculator_type, std::shared_ptr<calculator_type>>(
       m, "SemiGrandCanonicalCalculator",
@@ -191,6 +341,9 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
               prefix = "subspace_order_parameter_";
               for (auto const &pair : self->system->dof_subspaces) {
                 s.sampler_names.push_back(prefix + pair.first);
+              }
+              if (write_trajectory) {
+                s.do_sample_trajectory = true;
               }
             }
 
