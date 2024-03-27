@@ -1,4 +1,5 @@
 """Test C++ implemented property ising_cpp with Python implemented Monte Carlo loop"""
+
 import numpy as np
 
 import libcasm.clexmonte as clexmonte
@@ -20,6 +21,86 @@ def test_constructors_1(Clex_ZrO_Occ_System):
 
     mc_calculator = sgc.SemiGrandCanonicalCalculator(system=system)
     assert isinstance(mc_calculator, sgc.SemiGrandCanonicalCalculator)
+
+
+def test_run_fixture_0(Clex_ZrO_Occ_System, tmp_path):
+    system = Clex_ZrO_Occ_System
+    output_dir = tmp_path / "output"
+    summary_file = output_dir / "summary.json"
+
+    # construct a SemiGrandCanonicalCalculator
+    mc_calculator = sgc.SemiGrandCanonicalCalculator(system=system)
+
+    # construct default sampling fixture parameters
+    thermo = mc_calculator.make_default_sampling_fixture_params(
+        label="thermo",
+        output_dir=str(output_dir),
+    )
+
+    # construct the initial state (default configuration)
+    initial_state, motif, motif_id = mc_calculator.make_initial_state(
+        conditions={
+            "temperature": 300.0,
+            "param_chem_pot": [-1.0],
+        },
+        min_volume=1000,
+    )
+
+    # Run
+    sampling_fixture = mc_calculator.run_fixture(
+        state=initial_state,
+        sampling_fixture_params=thermo,
+    )
+    assert isinstance(sampling_fixture, clexmonte.SamplingFixture)
+    assert summary_file.exists() and summary_file.is_file()
+    # with open(summary_file, "r") as f:
+    #     data = json.load(f)
+    # print(xtal.pretty_json(data))
+
+
+def test_run_fixture_1(Clex_ZrO_Occ_System, tmp_path):
+    system = Clex_ZrO_Occ_System
+    output_dir = tmp_path / "output"
+    summary_file = output_dir / "summary.json"
+
+    # construct a SemiGrandCanonicalCalculator
+    mc_calculator = sgc.SemiGrandCanonicalCalculator(system=system)
+
+    # construct default sampling fixture parameters
+    thermo = mc_calculator.make_default_sampling_fixture_params(
+        label="thermo",
+        output_dir=str(output_dir),
+    )
+
+    # set lower convergence level for potential_energy
+    thermo.converge(quantity="potential_energy", abs=2e-3)
+
+    # set lower convergence level for param_composition("a")
+    thermo.converge(quantity="param_composition", abs=2e-3, component_name=["a"])
+
+    # construct the initial state (default configuration)
+    state, motif, motif_id = mc_calculator.make_initial_state(
+        conditions={
+            "temperature": 300.0,
+            "param_chem_pot": [-1.0],
+        },
+        min_volume=1000,
+    )
+
+    # Run several, w/ dependent runs
+    x_list = np.arange(-4.0, 0.01, step=0.5)
+    for x in x_list:
+        state.conditions.vector_values["param_chem_pot"] = [x]
+        sampling_fixture = mc_calculator.run_fixture(
+            state=state,
+            sampling_fixture_params=thermo,
+        )
+        assert isinstance(sampling_fixture, clexmonte.SamplingFixture)
+
+    assert summary_file.exists() and summary_file.is_file()
+    # with open(summary_file, "r") as f:
+    #     data = json.load(f)
+    # print(xtal.pretty_json(data))
 
 
 def test_run_1(Clex_ZrO_Occ_System, tmp_path):
@@ -109,7 +190,7 @@ def test_run_1(Clex_ZrO_Occ_System, tmp_path):
     assert isinstance(run_manager, clexmonte.RunManager)
 
 
-def test_quick_run_1(Clex_ZrO_Occ_System, tmp_path):
+def test_run_2(Clex_ZrO_Occ_System, tmp_path):
     system = Clex_ZrO_Occ_System
 
     # construct a SemiGrandCanonicalCalculator
@@ -153,7 +234,7 @@ def test_quick_run_1(Clex_ZrO_Occ_System, tmp_path):
     assert isinstance(run_manager, clexmonte.RunManager)
 
 
-def test_quick_run_2(Clex_ZrO_Occ_System, tmp_path):
+def test_run_3(Clex_ZrO_Occ_System, tmp_path):
     system = Clex_ZrO_Occ_System
 
     # construct a SemiGrandCanonicalCalculator

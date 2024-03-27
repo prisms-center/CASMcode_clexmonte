@@ -41,18 +41,7 @@ PYBIND11_MODULE(_clexmonte_system, m) {
   using namespace CASMpy;
 
   m.doc() = R"pbdoc(
-        Cluster expansion Monte Carlo classes and methods
-
-        libcasm.clexmonte._system
-        -------------------------
-
-        The System class:
-
-        - stores property calculators,
-        - handle input of data that is used by property calculators, such as
-          parametric composition axes, order parameter definitions, neighbor
-          lists, and cluster expansion basis sets and coefficients.
-
+    Cluster expansion Monte Carlo system
     )pbdoc";
   py::module::import("libcasm.clexulator");
   py::module::import("libcasm.composition");

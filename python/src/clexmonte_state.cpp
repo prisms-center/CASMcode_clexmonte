@@ -12,12 +12,15 @@
 
 // clexmonte
 #include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/state/enforce_composition.hh"
 #include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexmonte/system/io/json/System_json_io.hh"
 #include "casm/configuration/Configuration.hh"
 #include "casm/configuration/SupercellSet.hh"
+#include "casm/monte/RandomNumberGenerator.hh"
+#include "casm/monte/events/OccLocation.hh"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -28,6 +31,7 @@ namespace py = pybind11;
 namespace CASMpy {
 
 using namespace CASM;
+typedef std::mt19937_64 engine_type;
 
 clexmonte::state_type make_state(clexmonte::config_type const &configuration,
                                  std::optional<monte::ValueMap> conditions,
@@ -50,19 +54,8 @@ PYBIND11_MODULE(_clexmonte_state, m) {
   using namespace CASMpy;
 
   m.doc() = R"pbdoc(
-        Cluster expansion Monte Carlo classes and methods
-
-        libcasm.clexmonte._system
-        -------------------------
-
-        The System class:
-
-        - stores property calculators,
-        - handle input of data that is used by property calculators, such as
-          parametric composition axes, order parameter definitions, neighbor
-          lists, and cluster expansion basis sets and coefficients.
-
-    )pbdoc";
+      Cluster expansion Monte Carlo state
+      )pbdoc";
   py::module::import("libcasm.clexulator");
   py::module::import("libcasm.composition");
   py::module::import("libcasm.configuration");

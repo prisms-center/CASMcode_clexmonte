@@ -3,6 +3,9 @@
 from ._clexmonte import (
     placeholder,
 )
+from ._clexmonte_functions import (
+    enforce_composition,
+)
 from ._clexmonte_run_management import (
     Results,
     ResultsAnalysisFunction,
@@ -17,4 +20,14 @@ from ._clexmonte_state import (
 )
 from ._clexmonte_system import (
     System,
+)
+from ._FixedConfigGenerator import (
+    FixedConfigGenerator,
+)
+from ._IncrementalConditionsStateGenerator import (
+    IncrementalConditionsStateGenerator,
+)
+from ._RunData import (
+    RunData,
+    RunDataOutputParams,
 )

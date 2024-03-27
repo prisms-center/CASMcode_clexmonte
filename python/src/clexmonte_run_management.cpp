@@ -91,16 +91,7 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
   using namespace CASMpy;
 
   m.doc() = R"pbdoc(
-        Cluster expansion Monte Carlo classes and methods
-
-        libcasm.clexmonte._clexmonte_run_management
-        -------------------------------------------
-
-        The RunManager class:
-
-        - holds sampling fixtures,
-        - checks for completion, and
-        - collects results.
+    Cluster expansion Monte Carlo run management
     )pbdoc";
   py::module::import("libcasm.monte");
   py::module::import("libcasm.monte.sampling");
@@ -555,8 +546,9 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
           int : Total number of rejections
           )pbdoc");
 
-  py::class_<sampling_fixture_type>(m, "SamplingFixture",
-                                    R"pbdoc(
+  py::class_<sampling_fixture_type, std::shared_ptr<sampling_fixture_type>>(
+      m, "SamplingFixture",
+      R"pbdoc(
       Sampling fixture
 
       A data structure that collects sampled data during a Monte Carlo run and
@@ -575,10 +567,21 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
           engine : libcasm.monte.RandomNumberEngine
               Random number generation engine
           )pbdoc",
-           py::arg("sampling_fixture_params"), py::arg("engine"));
+           py::arg("sampling_fixture_params"), py::arg("engine"))
+      .def_property_readonly("label", &sampling_fixture_type::label, R"pbdoc(
+          str : Label for the SamplingFixture.
+          )pbdoc")
+      .def_property_readonly("params", &sampling_fixture_type::params, R"pbdoc(
+          SamplingFixtureParams : Access sampling fixture parameters.
+          )pbdoc")
+      .def_property_readonly("results", &sampling_fixture_type::results,
+                             R"pbdoc(
+          Results : Access sampling fixture results.
+          )pbdoc");
 
-  py::class_<run_manager_type>(m, "RunManager",
-                               R"pbdoc(
+  py::class_<run_manager_type, std::shared_ptr<run_manager_type>>(m,
+                                                                  "RunManager",
+                                                                  R"pbdoc(
       RunManager is a collection one or more SamplingFixture given to a \
       Monte Carlo run method.
 
@@ -601,7 +604,67 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
               to be completed.
           )pbdoc",
            py::arg("engine"), py::arg("sampling_fixture_params"),
-           py::arg("global_cutoff") = true);
+           py::arg("global_cutoff") = true)
+      .def_readwrite("run_index", &run_manager_type::run_index,
+                     R"pbdoc(
+          int: Current run index
+          )pbdoc")
+      .def_readonly("sampling_fixtures", &run_manager_type::sampling_fixtures,
+                    R"pbdoc(
+          list[SamplingFixture]: List of SamplingFixture being managed.
+          )pbdoc")
+      .def_property_readonly(
+          "sampling_fixture_labels",
+          [](run_manager_type const &self) {
+            std::vector<std::string> labels;
+            for (auto &fixture_ptr : self.sampling_fixtures) {
+              labels.push_back(fixture_ptr->label());
+            }
+            return labels;
+          },
+          R"pbdoc(
+          list[str]: List of labels of SamplingFixture being managed.
+          )pbdoc")
+      .def_readonly("engine", &run_manager_type::engine,
+                    R"pbdoc(
+          libcasm.monte.RandomNumberEngine: Random number engine
+          )pbdoc")
+      .def_readonly("global_cutoff", &run_manager_type::engine,
+                    R"pbdoc(
+          bool: Global run cutoff if any sampling fixture is complete
+
+          If true, the run is complete if any sampling fixture is complete.
+          Otherwise, all sampling fixtures must be completed for the run to be
+          completed.
+          )pbdoc")
+      .def(
+          "sampling_fixture",
+          [](run_manager_type const &self,
+             std::string label) -> std::shared_ptr<sampling_fixture_type> {
+            for (auto &fixture_ptr : self.sampling_fixtures) {
+              if (fixture_ptr->label() == label) {
+                return fixture_ptr;
+              }
+            }
+            std::stringstream msg;
+            msg << "Error in RunManager.sampling_fixture: label=" << label
+                << " does not exist.";
+            throw std::runtime_error(msg.str());
+          },
+          R"pbdoc(
+          Get sampling fixture by label
+
+          Parameters
+          ----------
+          label: str
+              Label of sampling fixture to return.
+
+          Returns
+          -------
+          sampling_fixture: SamplingFixture
+              Sampling fixture with matching label.
+          )pbdoc",
+          py::arg("label"));
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

@@ -155,11 +155,11 @@ It also makes use of:
 
 """
 
-from ._auto_configuration import (
-    make_initial_state,
-)
 from ._clexmonte_semigrand_canonical import (
-    SemiGrandCanonicalCalculator,
     SemiGrandCanonicalConditions,
     SemiGrandCanonicalPotential,
+)
+from ._SemiGrandCanonicalCalculator import (
+    SemiGrandCanonicalCalculator,
+    make_initial_state,
 )

@@ -477,21 +477,87 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
           )pbdoc",
           py::arg("data"), py::arg("label"))
       .def(
-          "run",  //&calculator_type::run,
+          "run_fixture",
           [](calculator_type &self, state_type &state,
-             run_manager_type &run_manager, monte::OccLocation *occ_location) {
+             sampling_fixture_params_type sampling_fixture_params,
+             monte::OccLocation *occ_location,
+             std::optional<std::shared_ptr<engine_type>> engine)
+              -> std::shared_ptr<sampling_fixture_type> {
+            // construct RunManager
+            if (!engine.has_value()) {
+              engine = std::make_shared<engine_type>();
+            }
+            std::vector<sampling_fixture_params_type> _params_list;
+            _params_list.push_back(sampling_fixture_params);
+            bool global_cutoff = true;
+            auto run_manager = std::make_shared<run_manager_type>(
+                engine.value(), _params_list, global_cutoff);
+
+            // construct OccLocation if necessary
+            std::unique_ptr<monte::OccLocation> tmp;
             if (!occ_location) {
               monte::Conversions const &convert =
                   get_index_conversions(*self.system, state);
               monte::OccCandidateList const &occ_candidate_list =
                   get_occ_candidate_list(*self.system, state);
-              monte::OccLocation tmp(convert, occ_candidate_list,
-                                     self.update_species);
-              tmp.initialize(get_occupation(state));
-              self.run(state, tmp, run_manager);
-            } else {
-              self.run(state, *occ_location, run_manager);
+              tmp = std::make_unique<monte::OccLocation>(
+                  convert, occ_candidate_list, self.update_species);
+              tmp->initialize(get_occupation(state));
+              occ_location = tmp.get();
             }
+
+            // run
+            self.run(state, *occ_location, *run_manager);
+            return run_manager->sampling_fixtures[0];
+          },
+          R"pbdoc(
+          Perform a single run, with a single sampling fixture, evolving the \
+          input state
+
+          Parameters
+          ----------
+          state : libcasm.clexmonte.MonteCarloState
+              The input state.
+          sampling_fixture_params: libcasm.clexmonte.SamplingFixtureParams
+              Specifies sampling and convergence criteria and collects results
+          occ_location: Optional[libcasm.monte.events.OccLocation] = None
+              Current occupant location list. If provided, the user is
+              responsible for ensuring it is up-to-date with the current
+              occupation of `state` and it is used and updated during the run.
+              If None, a occupant location list is generated for the run.
+          engine: Optional[libcasm.monte.RandomNumberEngine] = None
+                Optional random number engine to use.
+
+          Returns
+          -------
+          sampling_fixture: libcasm.clexmonte.SamplingFixture
+              A SamplingFixture with collected results.
+          )pbdoc",
+          py::arg("state"), py::arg("sampling_fixture_params"),
+          py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr),
+          py::arg("engine") = std::nullopt)
+      .def(
+          "run",
+          [](calculator_type &self, state_type &state,
+             std::shared_ptr<run_manager_type> run_manager,
+             monte::OccLocation *occ_location)
+              -> std::shared_ptr<run_manager_type> {
+            // construct OccLocation if necessary
+            std::unique_ptr<monte::OccLocation> tmp;
+            if (!occ_location) {
+              monte::Conversions const &convert =
+                  get_index_conversions(*self.system, state);
+              monte::OccCandidateList const &occ_candidate_list =
+                  get_occ_candidate_list(*self.system, state);
+              tmp = std::make_unique<monte::OccLocation>(
+                  convert, occ_candidate_list, self.update_species);
+              tmp->initialize(get_occupation(state));
+              occ_location = tmp.get();
+            }
+
+            // run
+            self.run(state, *occ_location, *run_manager);
+            return run_manager;
           },
           R"pbdoc(
           Perform a single run, evolving the input state
@@ -507,6 +573,11 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
               responsible for ensuring it is up-to-date with the current
               occupation of `state` and it is used and updated during the run.
               If None, a occupant location list is generated for the run.
+
+          Returns
+          -------
+          run_manager: libcasm.clexmonte.RunManager
+              The input `run_manager` with collected results.
           )pbdoc",
           py::arg("state"), py::arg("run_manager"),
           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
