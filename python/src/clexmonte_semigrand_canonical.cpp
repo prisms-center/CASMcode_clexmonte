@@ -356,7 +356,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
                   monte::default_statistics_calculator<statistics_type>();
 
               converge(self->sampling_functions, completion_check_params)
-                  .set_abs_precision("formation_energy", 0.001)
+                  .set_abs_precision("potential_energy", 0.001)
                   .set_abs_precision("param_composition", 0.001);
             }
 
@@ -396,7 +396,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
             - "mol_thermochem_susc", and
             - "param_thermochem_susc".
 
-          - Convergence of "potential_enthalpy" is set to an
+          - Convergence of "potential_energy" is set to an
             absolute precision of 0.001, and "param_composition" to 0.001.
           - Completion is checked every 100 samples, starting with the 100-th.
           - No cutoffs are set.

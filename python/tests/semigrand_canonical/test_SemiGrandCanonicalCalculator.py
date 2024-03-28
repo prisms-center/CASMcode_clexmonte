@@ -1,11 +1,49 @@
 """Test C++ implemented property ising_cpp with Python implemented Monte Carlo loop"""
-
+import json
 import numpy as np
 
 import libcasm.clexmonte as clexmonte
 import libcasm.clexmonte.semigrand_canonical as sgc
 import libcasm.monte as monte
 import libcasm.monte.sampling as monte_sampling
+import libcasm.xtal as xtal
+
+
+def validate_summary_data(subdata: dict, expected_keys: list[str], expected_size: int):
+    for x in expected_keys:
+        assert x in subdata
+        if "component_names" in subdata[x]:
+            # non-scalar analysis functions & conditions
+            for y in subdata[x]["component_names"]:
+                assert len(subdata[x][y]) == expected_size
+        elif "value" in subdata[x]:
+            # scalar analysis functions
+            assert subdata[x]["shape"] == []
+            assert len(subdata[x]["value"]) == expected_size
+        else:
+            # completion_check_params
+            assert len(subdata[x]) == expected_size
+
+
+def validate_statistics_data(
+    subdata: dict,
+    expected_keys: list[str],
+    expected_size: int,
+):
+    for x in expected_keys:
+        assert x in subdata
+        if "component_names" in subdata[x]:
+            for y in subdata[x]["component_names"]:
+                assert y in subdata[x]
+                for z in ["mean", "calculated_precision"]:
+                    assert z in subdata[x][y]
+                    assert len(subdata[x][y][z]) == expected_size
+        else:
+            assert subdata[x]["shape"] == []
+            assert "value" in subdata[x]
+            for z in ["mean", "calculated_precision"]:
+                assert z in subdata[x]["value"]
+                assert len(subdata[x]["value"][z]) == expected_size
 
 
 def test_constructors_1(Clex_ZrO_Occ_System):
@@ -36,6 +74,7 @@ def test_run_fixture_0(Clex_ZrO_Occ_System, tmp_path):
         label="thermo",
         output_dir=str(output_dir),
     )
+    print(xtal.pretty_json(thermo.to_dict()))
 
     # construct the initial state (default configuration)
     initial_state, motif, motif_id = mc_calculator.make_initial_state(
@@ -53,13 +92,74 @@ def test_run_fixture_0(Clex_ZrO_Occ_System, tmp_path):
     )
     assert isinstance(sampling_fixture, clexmonte.SamplingFixture)
     assert summary_file.exists() and summary_file.is_file()
-    # with open(summary_file, "r") as f:
-    #     data = json.load(f)
-    # print(xtal.pretty_json(data))
+    with open(summary_file, "r") as f:
+        data = json.load(f)
+    print(xtal.pretty_json(data))
+
+    expected_size = 1
+    assert "analysis" in data
+    validate_summary_data(
+        subdata=data["analysis"],
+        expected_keys=[
+            "heat_capacity",
+            "mol_susc",
+            "param_susc",
+            "mol_thermochem_susc",
+            "param_thermochem_susc",
+        ],
+        expected_size=expected_size,
+    )
+
+    assert "completion_check_results" in data
+    validate_summary_data(
+        subdata=data["completion_check_results"],
+        expected_keys=[
+            "N_samples",
+            "N_samples_for_all_to_equilibrate",
+            "N_samples_for_statistics",
+            "acceptance_rate",
+            "all_converged",
+            "all_equilibrated",
+            "count",
+            "elapsed_clocktime",
+        ],
+        expected_size=expected_size,
+    )
+
+    assert "conditions" in data
+    validate_summary_data(
+        subdata=data["conditions"],
+        expected_keys=["temperature", "param_chem_pot"],
+        expected_size=expected_size,
+    )
+
+    assert "statistics" in data
+    validate_statistics_data(
+        subdata=data["statistics"],
+        expected_keys=[
+            "formation_energy",
+            "mol_composition",
+            "param_composition",
+            "potential_energy",
+        ],
+        expected_size=expected_size,
+    )
+    assert "is_converged" in data["statistics"]["potential_energy"]["value"]
+    assert "is_converged" in data["statistics"]["param_composition"]["a"]
 
 
 def test_run_fixture_1(Clex_ZrO_Occ_System, tmp_path):
     system = Clex_ZrO_Occ_System
+
+    # path = session_shared_datadir / "Clex_ZrO_Occ" / "system.json"
+    # with open(path, "r") as f:
+    #     Clex_ZrO_Occ_system_data = json.load(f)
+    #
+    # system = System.from_dict(
+    #     data=Clex_ZrO_Occ_system_data,
+    #     search_path=[str(session_shared_datadir / "Clex_ZrO_Occ")],
+    # )
+
     output_dir = tmp_path / "output"
     summary_file = output_dir / "summary.json"
 
@@ -98,9 +198,60 @@ def test_run_fixture_1(Clex_ZrO_Occ_System, tmp_path):
         assert isinstance(sampling_fixture, clexmonte.SamplingFixture)
 
     assert summary_file.exists() and summary_file.is_file()
-    # with open(summary_file, "r") as f:
-    #     data = json.load(f)
-    # print(xtal.pretty_json(data))
+    with open(summary_file, "r") as f:
+        data = json.load(f)
+    print(xtal.pretty_json(data))
+
+    expected_size = len(x_list)
+    assert "analysis" in data
+    validate_summary_data(
+        subdata=data["analysis"],
+        expected_keys=[
+            "heat_capacity",
+            "mol_susc",
+            "param_susc",
+            "mol_thermochem_susc",
+            "param_thermochem_susc",
+        ],
+        expected_size=expected_size,
+    )
+
+    assert "completion_check_results" in data
+    validate_summary_data(
+        subdata=data["completion_check_results"],
+        expected_keys=[
+            "N_samples",
+            "N_samples_for_all_to_equilibrate",
+            "N_samples_for_statistics",
+            "acceptance_rate",
+            "all_converged",
+            "all_equilibrated",
+            "count",
+            "elapsed_clocktime",
+        ],
+        expected_size=expected_size,
+    )
+
+    assert "conditions" in data
+    validate_summary_data(
+        subdata=data["conditions"],
+        expected_keys=["temperature", "param_chem_pot"],
+        expected_size=expected_size,
+    )
+
+    assert "statistics" in data
+    validate_statistics_data(
+        subdata=data["statistics"],
+        expected_keys=[
+            "formation_energy",
+            "mol_composition",
+            "param_composition",
+            "potential_energy",
+        ],
+        expected_size=expected_size,
+    )
+    assert "is_converged" in data["statistics"]["potential_energy"]["value"]
+    assert "is_converged" in data["statistics"]["param_composition"]["a"]
 
 
 def test_run_1(Clex_ZrO_Occ_System, tmp_path):
