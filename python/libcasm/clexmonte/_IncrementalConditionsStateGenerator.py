@@ -2,7 +2,6 @@ import json
 import pathlib
 from typing import Any, Callable
 
-import libcasm.xtal as xtal
 from libcasm.monte import ValueMap
 
 from ._clexmonte_state import (
@@ -23,12 +22,12 @@ class IncrementalConditionsStateGenerator:
     def __init__(
         self,
         output_params: RunDataOutputParams,
-        config_generator: Any,
         initial_conditions: ValueMap,
         conditions_increment: ValueMap,
         n_states: int,
+        config_generator: Any,
         dependent_runs: bool,
-        modifiers: list[Callable[[MonteCarloState], None]],
+        modifiers: list[Callable[[MonteCarloState], None]] = [],
     ):
         """
         .. rubric :: Constructor
@@ -73,10 +72,12 @@ class IncrementalConditionsStateGenerator:
                 "Mismatch between initial conditions and conditions increment."
             )
 
+    @property
     def is_complete(self) -> bool:
         """Check if all requested runs have been completed"""
         return len(self._completed_runs) == self._n_states
 
+    @property
     def next_state(self) -> MonteCarloState:
         """Construct and return the next state
 
@@ -87,8 +88,8 @@ class IncrementalConditionsStateGenerator:
         """
         if (
             self._dependent_runs
-            and self.n_completed_runs()
-            and self.completed_runs()[-1].final_state is None
+            and self.n_completed_runs
+            and self.completed_runs[-1].final_state is None
         ):
             raise Exception(
                 "Error in IncrementalConditionsStateGenerator: "
@@ -99,14 +100,14 @@ class IncrementalConditionsStateGenerator:
         # Make conditions
         conditions = self._initial_conditions.make_incremented_values(
             self._conditions_increment,
-            self.n_completed_runs(),
+            self.n_completed_runs,
         )
 
         # Make configuration
-        if self._dependent_runs and self.n_completed_runs():
-            configuration = self.completed_runs()[-1].final_state.configuration
+        if self._dependent_runs and self.n_completed_runs:
+            configuration = self.completed_runs[-1].final_state.configuration
         else:
-            configuration = self._config_generator(conditions, self.completed_runs())
+            configuration = self._config_generator(conditions, self.completed_runs)
 
         # Make state
         state = MonteCarloState(configuration=configuration, conditions=conditions)
@@ -142,6 +143,7 @@ class IncrementalConditionsStateGenerator:
         """The list of completed runs"""
         return self._completed_runs
 
+    @property
     def n_completed_runs(self) -> int:
         """Return the number of completed runs"""
         return len(self._completed_runs)
@@ -194,4 +196,4 @@ class IncrementalConditionsStateGenerator:
                 )
                 for x in self._completed_runs
             ]
-            f.write(xtal.pretty_json(data))
+            f.write(json.dumps(data))

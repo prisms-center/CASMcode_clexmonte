@@ -27,10 +27,7 @@ class RunData:
 
     def __init__(
         self,
-        transformation_matrix_to_super: np.ndarray[np.int64],
-        n_unitcells: int,
-        conditions: ValueMap,
-        initial_state: Optional[MonteCarloState] = None,
+        initial_state: MonteCarloState,
         final_state: Optional[MonteCarloState] = None,
     ):
         """
@@ -38,18 +35,14 @@ class RunData:
 
         Parameters
         ----------
-        transformation_matrix_to_super:  np.ndarray[np.int64]
-            Monte Carlo supercell
-        n_unitcells: int
-            Monte Carlo supercell volume, as integer multiple of the primitive cell
-        conditions: ValueMap
-            Thermodynamic conditions
-        initial_state: Optional[MonteCarloState] = None
+        initial_state: MonteCarloState
             Initial Monte Carlo state
         final_state: Optional[MonteCarloState] = None
             Final Monte Carlo state
         """
-        self.transformation_matrix_to_super = transformation_matrix_to_super
+        self.transformation_matrix_to_super = (
+            initial_state.configuration.transformation_matrix_to_super
+        )
         """np.ndarray[np.int64]: Monte Carlo supercell
         
         The transformation matrix, T, relating the Monte Carlo supercell lattice
@@ -58,11 +51,13 @@ class RunData:
         lattice vectors as columns.
         """
 
-        self.n_unitcells = n_unitcells
+        self.n_unitcells = int(
+            round(np.linalg.det(self.transformation_matrix_to_super))
+        )
         """int: Monte Carlo supercell volume, as integer multiple of the primitive cell
         """
 
-        self.conditions = conditions
+        self.conditions = initial_state.conditions
         """ValueMap: Thermodynamic conditions"""
 
         self.initial_state = initial_state

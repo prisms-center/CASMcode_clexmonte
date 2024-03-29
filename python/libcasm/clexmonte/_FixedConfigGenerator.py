@@ -1,5 +1,7 @@
 import copy
 
+import libcasm.monte as monte
+
 from ._clexmonte_state import (
     MonteCarloConfiguration,
 )
@@ -35,12 +37,15 @@ class FixedConfigGenerator:
 
     def __call__(
         self,
+        conditions: monte.ValueMap,
         completed_runs: list[RunData],
     ) -> MonteCarloConfiguration:
         """Always returns the same configuration
 
         Parameters
         ----------
+        conditions: libcasm.monte.ValueMap
+            The thermodynamic conditions at which the next state will be run
         completed_runs: list[RunData]
             Ignored, but included for compatibility.
 

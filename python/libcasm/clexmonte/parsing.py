@@ -8,9 +8,9 @@ def to_dict(
     value: typing.Any, data: dict, option: str, write_null: bool = False, **kwargs
 ):
     if value is not None:
-        methods = inspect.getmembers(value.__class__, inspect.isfunction)
-        if "to_dict" in methods:
-            data[option] = value.to_dict(data.get(option), **kwargs)
+        members = [x[0] for x in inspect.getmembers(value.__class__)]
+        if "to_dict" in members:
+            data[option] = value.to_dict(**kwargs)
         else:
             data[option] = value
     elif write_null:
@@ -24,8 +24,8 @@ def required_from_dict(required_type: typing.Any, data: dict, option: str, **kwa
             f"of type '{required_type.__name__}'"
         )
     try:
-        methods = inspect.getmembers(required_type, inspect.isfunction)
-        if "from_dict" in methods:
+        members = [x[0] for x in inspect.getmembers(required_type)]
+        if "from_dict" in members:
             value = required_type.from_dict(data.get(option), **kwargs)
         else:
             value = required_type(data.get(option))
@@ -79,8 +79,8 @@ def optional_from_dict(
 ):
     value = data.get(option)
     if value is not None:
-        methods = inspect.getmembers(required_type, inspect.isfunction)
-        if "from_dict" in methods:
+        members = [x[0] for x in inspect.getmembers(required_type)]
+        if "from_dict" in members:
             return required_type.from_dict(value, **kwargs)
         else:
             return required_type(value)
