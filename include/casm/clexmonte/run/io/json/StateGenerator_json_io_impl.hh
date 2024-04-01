@@ -51,21 +51,22 @@ namespace clexmonte {
 ///        For the "fixed" method, this object has the same format as a
 ///        Configuration. The attributes are:
 ///
-///          transformation_matrix_to_super: 3x3 matrix of int
-///            Matrix, T, specifying the supercell lattice vectors in terms of
-///            the primitive cell vectors, according to `S = P * T`, where the
-///            columns of P are the primitive lattice vectors (a,b,c) and the
-///            columns of S are the supercell lattice vectors.
+///          configuration: object, optional
+///              Initial configuration to use for the Monte Carlo supercell. If
+///              not given, `motif` must be provided.
 ///
-///          dof: ConfigDoFValues object (default=zeros configuration)
-///            Degree of freedom (DoF) values in the supercell defined by
-///            `transformation_matrix_to_super`, and expressed in the *standard
-///            basis*. See the ConfigDoFValues format for details.
+///          transformation_matrix_to_supercell: array, shape=3x3
+///              Supercell, to be filled with `motif`.
 ///
-///            If the value is `null` or not provided, the default
-///            is that all DoF values are set equal to zero. For occupation
-///            DoF, the default value of zero means the first type listed on
-///            the corresponding sublattice in the `"prim"`.
+///          motif: object, optional
+///              Initial Configuration, which will be copied and tiled into
+///              the Monte Carlo supercell. If a perfect tiling can be made
+///              by applying factor group operations, a note is printed
+///              indicating which operation is applied. A warning is printed
+///              if there is no perfect tiling and the `motif` is used
+///              without reorientation to fill the supercell imperfectly. If
+///              `transformation_matrix_to_supercell` is given but no `motif` is
+///              provided, the default configuration is used.
 ///
 ///   initial_conditions: object
 ///     Conditions for the initial state. For canonical Monte Carlo
@@ -119,7 +120,7 @@ namespace clexmonte {
 ///     specified here, even if the increment is zero valued or only a single
 ///     state will be generated.
 ///
-///   n_state: integer (required)
+///   n_states: integer (required)
 ///     Total number of states to generate. Includes the initial state.
 ///
 ///   dependent_runs: bool (optional, default=true)
@@ -229,7 +230,7 @@ void parse(InputParser<IncrementalConditionsStateGenerator> &parser,
 
   if (parser.valid()) {
     parser.value = std::make_unique<IncrementalConditionsStateGenerator>(
-        output_params, std::move(config_generator_subparser->value),
+        system, output_params, std::move(config_generator_subparser->value),
         initial_conditions_subparser->value->to_value_map(false),
         conditions_increment_subparser->value->to_value_map(true), n_states,
         dependent_runs, selected_modifiers);

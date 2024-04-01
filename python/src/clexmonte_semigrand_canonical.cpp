@@ -364,7 +364,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
                 "heat_capacity", "mol_susc", "param_susc",
                 "mol_thermochem_susc", "param_thermochem_susc"};
 
-            return make_sampling_fixture_params(
+            return clexmonte::make_sampling_fixture_params(
                 label, self->sampling_functions, self->json_sampling_functions,
                 self->analysis_functions, sampling_params,
                 completion_check_params, analysis_names, write_results,
@@ -477,7 +477,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
           )pbdoc",
           py::arg("data"), py::arg("label"))
       .def(
-          "run_fixture",
+          "_run_fixture",
           [](calculator_type &self, state_type &state,
              sampling_fixture_params_type sampling_fixture_params,
              monte::OccLocation *occ_location,
@@ -537,7 +537,7 @@ PYBIND11_MODULE(_clexmonte_semigrand_canonical, m) {
           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr),
           py::arg("engine") = std::nullopt)
       .def(
-          "run",
+          "_run",
           [](calculator_type &self, state_type &state,
              std::shared_ptr<run_manager_type> run_manager,
              monte::OccLocation *occ_location)

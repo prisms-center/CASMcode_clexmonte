@@ -5,13 +5,13 @@
 #include "casm/clexmonte/run/functions.hh"
 #include "casm/clexmonte/semigrand_canonical/calculator.hh"
 #include "casm/clexmonte/state/Configuration.hh"
-#include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexulator/Clexulator.hh"
 #include "casm/clexulator/NeighborList.hh"
 #include "casm/clexulator/io/json/SparseCoefficients_json_io.hh"
 #include "casm/composition/CompositionConverter.hh"
+#include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/crystallography/io/BasicStructureIO.hh"
 #include "casm/monte/MethodLog.hh"
 #include "casm/monte/checks/CompletionCheck.hh"
@@ -235,7 +235,7 @@ TEST(semigrand_canonical_fullrun_test, Test1) {
   output_params.do_save_all_final_states = true;
   output_params.output_dir = output_dir;
   clexmonte::IncrementalConditionsStateGenerator state_generator(
-      output_params, std::move(config_generator), initial_conditions,
+      system, output_params, std::move(config_generator), initial_conditions,
       conditions_increment, n_states, dependent_runs, modifiers);
 
   // ### Construct monte::SamplingParams
@@ -273,6 +273,11 @@ TEST(semigrand_canonical_fullrun_test, Test1) {
 
   // - Store configurations at sampling time
   sampling_params.do_sample_trajectory = false;
+
+  // Set analysis names
+  std::vector<std::string> analysis_names = {
+      "heat_capacity", "mol_susc", "param_susc", "mol_thermochem_susc",
+      "param_thermochem_susc"};
 
   // ### Construct monte::CompletionCheckParams
   monte::CompletionCheckParams<clexmonte::statistics_type>
@@ -323,8 +328,8 @@ TEST(semigrand_canonical_fullrun_test, Test1) {
   std::string label = "thermo";
   sampling_fixture_params.emplace_back(
       "thermo", sampling_functions, json_sampling_functions, analysis_functions,
-      sampling_params, completion_check_params, std::move(results_io),
-      method_log);
+      sampling_params, completion_check_params, analysis_names,
+      std::move(results_io), method_log);
 
   clexmonte::run_series(*calculation, engine, state_generator,
                         sampling_fixture_params, global_cutoff);
@@ -335,7 +340,7 @@ TEST(semigrand_canonical_fullrun_test, Test1) {
 
   // check reading output/completed_runs.json
   clexmonte::IncrementalConditionsStateGenerator state_generator_2(
-      output_params, std::move(config_generator), initial_conditions,
+      system, output_params, std::move(config_generator), initial_conditions,
       conditions_increment, n_states, dependent_runs, modifiers);
   state_generator_2.read_completed_runs();
   EXPECT_EQ(state_generator_2.n_completed_runs(), 11);

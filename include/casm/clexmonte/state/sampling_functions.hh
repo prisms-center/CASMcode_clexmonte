@@ -4,12 +4,12 @@
 #include "casm/clexmonte/misc/eigen.hh"
 #include "casm/clexmonte/misc/to_json.hh"
 #include "casm/clexmonte/state/Configuration.hh"
-#include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexulator/Clexulator.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/Correlations.hh"
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"
+#include "casm/configuration/io/json/Configuration_json_io.hh"
 
 // debugging
 #include "casm/casm_io/container/stream_io.hh"

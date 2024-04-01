@@ -29,8 +29,6 @@ for config in enum.by_supercell(
 print(len(configurations))
 # assert len(configurations) == 336  # max=4
 
-f = clexmonte.MonteCarloConfiguration.from_config_with_sym_info
-
 
 def mol_composition(config):
     return system.composition_calculator.mean_num_each_component(config.occupation)

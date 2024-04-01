@@ -25,7 +25,7 @@ def test_make_initial_state_1(Clex_ZrO_Occ_System):
     )
     assert isinstance(initial_state, clexmonte.MonteCarloState)
     assert (
-        initial_state.configuration.transformation_matrix_to_super
+        initial_state.configuration.supercell.transformation_matrix_to_super
         == np.eye(3, dtype="int") * 10
     ).all()
     assert (
@@ -60,11 +60,14 @@ def test_make_initial_state_2a(Clex_ZrO_Occ_System):
         motif=motif_in,
         configurations=None,
     )
-    assert initial_state.configuration.transformation_matrix_to_super.tolist() == [
-        [14, 7, 7],
-        [7, 14, 7],
-        [0, 0, 7],
-    ]
+    assert (
+        initial_state.configuration.supercell.transformation_matrix_to_super.tolist()
+        == [
+            [14, 7, 7],
+            [7, 14, 7],
+            [0, 0, 7],
+        ]
+    )
     assert motif_out is motif_in
     assert id == "motif"
 
@@ -102,11 +105,14 @@ def test_make_initial_state_2b(Clex_ZrO_Occ_System):
         motif=motif_in,
         configurations=None,
     )
-    assert initial_state.configuration.transformation_matrix_to_super.tolist() == [
-        [12, 6, 12],
-        [6, 12, 12],
-        [0, 0, 12],
-    ]
+    assert (
+        initial_state.configuration.supercell.transformation_matrix_to_super.tolist()
+        == [
+            [12, 6, 12],
+            [6, 12, 12],
+            [0, 0, 12],
+        ]
+    )
     assert motif_out is motif_in
     assert id == "motif"
 
@@ -150,7 +156,7 @@ def test_make_initial_state_3(Clex_ZrO_Occ_System):
             id_list.append(id)
 
     T_data = [
-        x.configuration.transformation_matrix_to_super.tolist()
+        x.configuration.supercell.transformation_matrix_to_super.tolist()
         for x in initial_state_list
     ]
     print(T_data)
@@ -248,7 +254,7 @@ def test_make_initial_state_4(Clex_ZrO_Occ_System):
             id_list.append(id)
 
     T_data = [
-        x.configuration.transformation_matrix_to_super.tolist()
+        x.configuration.supercell.transformation_matrix_to_super.tolist()
         for x in initial_state_list
     ]
     assert T_data == [

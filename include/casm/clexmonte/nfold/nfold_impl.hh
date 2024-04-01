@@ -3,6 +3,7 @@
 
 #include "casm/clexmonte/nfold/nfold.hh"
 #include "casm/clexmonte/semigrand_canonical/calculator_impl.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/monte/methods/nfold.hh"
 

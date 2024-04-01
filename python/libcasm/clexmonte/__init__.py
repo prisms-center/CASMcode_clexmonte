@@ -15,7 +15,6 @@ from ._clexmonte_run_management import (
     SamplingFixtureParams,
 )
 from ._clexmonte_state import (
-    MonteCarloConfiguration,
     MonteCarloState,
 )
 from ._clexmonte_system import (

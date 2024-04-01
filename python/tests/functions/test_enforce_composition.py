@@ -1,5 +1,3 @@
-import typing
-
 import numpy as np
 
 import libcasm.clexmonte as clexmonte
@@ -9,7 +7,7 @@ import libcasm.configuration as casmconfig
 
 def mol_composition(
     system: clexmonte.System,
-    config: typing.Union[casmconfig.Configuration, clexmonte.MonteCarloConfiguration],
+    config: casmconfig.Configuration,
 ):
     return system.composition_calculator.mean_num_each_component(
         config.dof_values.occupation()

@@ -3,49 +3,41 @@
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/state/Configuration.hh"
-#include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
+#include "casm/configuration/SupercellSet.hh"
+#include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/monte/io/json/ValueMap_json_io.hh"
 #include "casm/monte/run_management/State.hh"
 
 namespace CASM {
 
 /// \brief Write monte::State<clexmonte::Configuration> to JSON
-///
-/// Notes:
-/// - This does not convert the DoF values basis, values are written in the
-///   basis in which they are provided
 jsonParser &to_json(monte::State<clexmonte::Configuration> const &state,
-                    jsonParser &json) {
-  json["configuration"] = state.configuration;
+                    jsonParser &json, bool write_prim_basis) {
+  to_json(state.configuration, json["configuration"], write_prim_basis);
   json["conditions"] = state.conditions;
   json["properties"] = state.properties;
   return json;
 }
 
-void parse(InputParser<monte::State<clexmonte::Configuration>> &parser) {
-  std::unique_ptr<clexmonte::Configuration> configuration =
-      parser.require<clexmonte::Configuration>("configuration");
-
+void parse(InputParser<monte::State<clexmonte::Configuration>> &parser,
+           config::SupercellSet &supercells) {
+  auto configuration_subparser =
+      parser.subparse<clexmonte::Configuration>("configuration", supercells);
   auto conditions_subparser = parser.subparse<monte::ValueMap>("conditions");
   auto properties_subparser = parser.subparse<monte::ValueMap>("properties");
 
   if (parser.valid()) {
     parser.value = std::make_unique<monte::State<clexmonte::Configuration>>(
-        *configuration, *conditions_subparser->value,
+        *configuration_subparser->value, *conditions_subparser->value,
         *properties_subparser->value);
   }
 }
 
 /// \brief Read monte::State<clexmonte::Configuration> from JSON
-///
-/// Notes:
-/// - This does not convert the DoF values basis, values stay in the basis in
-/// which they are provided
-/// - This does not check the validity of the DoF values dimensions
-template <>
 monte::State<clexmonte::Configuration>
-from_json<monte::State<clexmonte::Configuration>>(jsonParser const &json) {
-  InputParser<monte::State<clexmonte::Configuration>> parser{json};
+jsonConstructor<monte::State<clexmonte::Configuration>>::from_json(
+    jsonParser const &json, config::SupercellSet &supercells) {
+  InputParser<monte::State<clexmonte::Configuration>> parser{json, supercells};
   std::stringstream ss;
   ss << "Error reading monte::State<clexmonte::Configuration> from JSON input";
   report_and_throw_if_invalid(parser, CASM::log(),
@@ -54,14 +46,10 @@ from_json<monte::State<clexmonte::Configuration>>(jsonParser const &json) {
 }
 
 /// \brief Read monte::State<clexmonte::Configuration> from JSON
-///
-/// Notes:
-/// - This does not convert the DoF values basis, values stay in the basis in
-/// which they are provided
-/// - This does not check the validity of the DoF values dimensions
 void from_json(monte::State<clexmonte::Configuration> &state,
-               jsonParser const &json) {
-  state = from_json<monte::State<clexmonte::Configuration>>(json);
+               jsonParser const &json, config::SupercellSet &supercells) {
+  state = jsonConstructor<monte::State<clexmonte::Configuration>>::from_json(
+      json, supercells);
 }
 
 }  // namespace CASM

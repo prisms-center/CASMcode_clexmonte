@@ -116,7 +116,6 @@ def min_potential_configs(
     if transformation_matrix_to_super is not None:
         mc_big_supercell = None
         must_tile = True
-    f = clexmonte.MonteCarloConfiguration.from_config_with_sym_info
 
     for i_config, element in enumerate(configurations):
         if isinstance(element, casmconfig.Configuration):
@@ -137,7 +136,7 @@ def min_potential_configs(
                     prim=config.supercell.prim,
                     transformation_matrix_to_super=transformation_matrix_to_super,
                 )
-            mc_state = clexmonte.MonteCarloState(configuration=f(config))
+            mc_state = clexmonte.MonteCarloState(configuration=config)
 
         if must_tile:
             check = mc_big_supercell.superlattice.is_equivalent_superlattice_of(
@@ -151,7 +150,7 @@ def min_potential_configs(
         if config.supercell == mc_state_supercell:
             mc_state.configuration.dof_values.set(config.dof_values)
         else:
-            mc_state.configuration = f(config)
+            mc_state.configuration = config
             potential.set(
                 state=mc_state,
                 conditions=conditions,
@@ -328,10 +327,9 @@ def make_initial_state(
         motif=motif,
         supercell=supercell,
     )
-    f = clexmonte.MonteCarloConfiguration.from_config_with_sym_info
     return (
         clexmonte.MonteCarloState(
-            configuration=f(config),
+            configuration=config,
             conditions=conditions.to_value_map(is_increment=False),
         ),
         motif,

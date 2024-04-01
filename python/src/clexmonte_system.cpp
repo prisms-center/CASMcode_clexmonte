@@ -515,7 +515,7 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           py::arg("data"), py::arg("search_path") = std::vector<std::string>())
       .def("make_default_configuration", &clexmonte::make_default_configuration,
            R"pbdoc(
-          Construct a default MonteCarloConfiguration in a specified supercell
+          Construct a default configuration in a specified supercell
 
           Parameters
           ----------
@@ -527,7 +527,7 @@ PYBIND11_MODULE(_clexmonte_system, m) {
 
           Returns
           -------
-          default_configuration : MonteCarloConfiguration
+          default_configuration : libcasm.configuration.Configuration
               A configuration in the specified supercell, with DoF values
               expressed in the prim basis, initialized to default values (0 for
               occupation indices, 0.0 for all global and local DoF components).

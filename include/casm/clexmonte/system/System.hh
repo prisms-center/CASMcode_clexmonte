@@ -12,6 +12,7 @@
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/configuration/Prim.hh"
+#include "casm/configuration/SupercellSet.hh"
 #include "casm/configuration/clusterography/IntegralCluster.hh"
 #include "casm/configuration/occ_events/OccEvent.hh"
 #include "casm/configuration/occ_events/OccEventRep.hh"
@@ -29,7 +30,6 @@ struct State;
 
 namespace clexmonte {
 
-struct Configuration;
 struct System;
 struct SupercellSystemData;
 
@@ -173,6 +173,9 @@ struct System {
 
   // --- Supercells
 
+  /// Supercells
+  std::shared_ptr<config::SupercellSet> supercells;
+
   /// Supercell specific formation energy calculation data and methods (using
   /// transformation_matrix_to_super as key).
   std::map<Eigen::Matrix3l, SupercellSystemData, Matrix3lCompare>
@@ -269,6 +272,10 @@ composition::CompositionConverter const &get_composition_converter(
 /// \brief Helper to get composition::CompositionCalculator
 composition::CompositionCalculator const &get_composition_calculator(
     System const &system);
+
+/// \brief Get or make a supercell
+std::shared_ptr<config::Supercell const> get_supercell(
+    System &system, Eigen::Matrix3l const &transformation_matrix_to_super);
 
 /// \brief Helper to make the default configuration in prim basis
 Configuration make_default_configuration(

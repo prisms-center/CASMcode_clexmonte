@@ -1,3 +1,5 @@
+import pytest
+
 import libcasm.clexmonte as clexmonte
 import libcasm.clexmonte.semigrand_canonical as sgc
 import libcasm.monte as monte
@@ -66,8 +68,8 @@ def test_run_series_1(Clex_ZrO_Occ_System, tmp_path):
 
     engine = monte.RandomNumberEngine()
     global_cutoff = True
-    before_first_run = []
-    before_each_run = []
+    # before_first_run = [] // TODO
+    # before_each_run = [] // TODO
     sampling_fixture_params = [thermo]
 
     log = monte.MethodLog()
@@ -77,7 +79,7 @@ def test_run_series_1(Clex_ZrO_Occ_System, tmp_path):
     run_manager = clexmonte.RunManager(
         engine=engine,
         sampling_fixture_params=sampling_fixture_params,
-        global_cutoff=True,
+        global_cutoff=global_cutoff,
     )
 
     log.print("Checking for completed runs...\n")
@@ -109,3 +111,6 @@ def test_run_series_1(Clex_ZrO_Occ_System, tmp_path):
     log.print("Monte Carlo calculation series complete\n")
 
     assert (output_dir / "completed_runs.json").exists()
+    pytest.helpers.validate_summary_file(
+        summary_file=summary_file, expected_size=n_states
+    )

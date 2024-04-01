@@ -49,7 +49,8 @@ System::System(std::shared_ptr<xtal::BasicStructure const> const &_shared_prim,
       occevent_symgroup_rep(occ_events::make_occevent_symgroup_rep(
           prim->sym_info.unitcellcoord_symgroup_rep,
           prim->sym_info.occ_symgroup_rep,
-          prim->sym_info.atom_position_symgroup_rep)) {
+          prim->sym_info.atom_position_symgroup_rep)),
+      supercells(std::make_shared<config::SupercellSet>(prim)) {
   monte::OccCandidateList occ_candidate_list(convert);
   canonical_swaps = monte::make_canonical_swaps(convert, occ_candidate_list);
   semigrand_canonical_swaps =
@@ -185,6 +186,7 @@ SupercellSystemData &get_supercell_data(
     System &system, Eigen::Matrix3l const &transformation_matrix_to_super) {
   auto it = system.supercell_data.find(transformation_matrix_to_super);
   if (it == system.supercell_data.end()) {
+    system.supercells->insert(transformation_matrix_to_super);
     it = system.supercell_data
              .emplace(
                  std::piecewise_construct,
@@ -238,41 +240,48 @@ composition::CompositionCalculator const &get_composition_calculator(
   return system.composition_calculator;
 }
 
+/// \brief Get or make a supercell
+std::shared_ptr<config::Supercell const> get_supercell(
+    System &system, Eigen::Matrix3l const &transformation_matrix_to_super) {
+  return system.supercells->insert(transformation_matrix_to_super)
+      .first->supercell;
+}
+
 /// \brief Helper to make the default configuration in a supercell
 Configuration make_default_configuration(
     System const &system,
     Eigen::Matrix3l const &transformation_matrix_to_super) {
-  return Configuration(
-      transformation_matrix_to_super,
-      clexulator::make_default_config_dof_values(
-          system.prim->basicstructure->basis().size(),
-          transformation_matrix_to_super.determinant(),
-          system.prim->global_dof_info, system.prim->local_dof_info));
+  return Configuration(system.supercells->insert(transformation_matrix_to_super)
+                           .first->supercell);
 }
 
 /// \brief Convert configuration from standard basis to prim basis
 Configuration from_standard_values(
     System const &system,
     Configuration const &configuration_in_standard_basis) {
+  auto supercell = configuration_in_standard_basis.supercell;
   Eigen::Matrix3l const &T =
-      configuration_in_standard_basis.transformation_matrix_to_super;
+      supercell->superlattice.transformation_matrix_to_super();
   return Configuration(
-      T, clexulator::from_standard_values(
-             configuration_in_standard_basis.dof_values,
-             system.prim->basicstructure->basis().size(), T.determinant(),
-             system.prim->global_dof_info, system.prim->local_dof_info));
+      supercell,
+      clexulator::from_standard_values(
+          configuration_in_standard_basis.dof_values,
+          system.prim->basicstructure->basis().size(), T.determinant(),
+          system.prim->global_dof_info, system.prim->local_dof_info));
 }
 
 /// \brief Convert configuration from prim basis to standard basis
 Configuration to_standard_values(
     System const &system, Configuration const &configuration_in_prim_basis) {
+  auto supercell = configuration_in_prim_basis.supercell;
   Eigen::Matrix3l const &T =
-      configuration_in_prim_basis.transformation_matrix_to_super;
+      supercell->superlattice.transformation_matrix_to_super();
   return Configuration(
-      T, clexulator::to_standard_values(
-             configuration_in_prim_basis.dof_values,
-             system.prim->basicstructure->basis().size(), T.determinant(),
-             system.prim->global_dof_info, system.prim->local_dof_info));
+      supercell,
+      clexulator::to_standard_values(
+          configuration_in_prim_basis.dof_values,
+          system.prim->basicstructure->basis().size(), T.determinant(),
+          system.prim->global_dof_info, system.prim->local_dof_info));
 }
 
 /// \brief Helper to make the default configuration in prim basis

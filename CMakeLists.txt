@@ -173,7 +173,6 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/Configuration.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/CorrMatchingPotential.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/enforce_composition.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/io/json/Configuration_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/io/json/CorrMatchingPotential_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/io/json/State_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/io/json/parse_conditions.hh
@@ -210,7 +209,6 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semigrand_canonical/potential.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/Conditions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/CorrMatchingPotential.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/io/json/Configuration_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/io/json/CorrMatchingPotential_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/io/json/State_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/io/json/parse_conditions.cc

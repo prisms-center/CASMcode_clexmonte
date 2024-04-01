@@ -9,6 +9,7 @@
 #include "casm/clexmonte/run/RunData.hh"
 #include "casm/clexmonte/run/StateGenerator.hh"
 #include "casm/clexmonte/run/StateModifyingFunction.hh"
+#include "casm/clexmonte/system/System.hh"
 #include "casm/monte/run_management/State.hh"
 
 // io - completed_runs.json
@@ -73,13 +74,14 @@ class IncrementalConditionsStateGenerator : public StateGenerator {
   ///     configuration so that it doesn't have to be pre-determined by
   ///     the user.
   IncrementalConditionsStateGenerator(
-      RunDataOutputParams output_params,
+      std::shared_ptr<system_type> system, RunDataOutputParams output_params,
       std::unique_ptr<ConfigGenerator> _config_generator,
       monte::ValueMap const &_initial_conditions,
       monte::ValueMap const &_conditions_increment, Index _n_states,
       bool _dependent_runs,
       std::vector<StateModifyingFunction> const &_modifiers = {})
-      : m_output_params(output_params),
+      : m_system(system),
+        m_output_params(output_params),
         m_config_generator(std::move(_config_generator)),
         m_initial_conditions(_initial_conditions),
         m_conditions_increment(_conditions_increment),
@@ -163,8 +165,8 @@ class IncrementalConditionsStateGenerator : public StateGenerator {
 
     jsonParser json(completed_runs_path);
     ParentInputParser parser{json};
-    auto subparser =
-        parser.parse_as_with<std::vector<RunData>>(parse_array<RunData>);
+    auto subparser = parser.parse_as_with<std::vector<RunData>>(
+        parse_array<RunData, config::SupercellSet &>, *m_system->supercells);
 
     std::stringstream ss;
     ss << "Error in IncrementalConditionsStateGenerator: failed to read "
@@ -193,6 +195,9 @@ class IncrementalConditionsStateGenerator : public StateGenerator {
   }
 
  private:
+  /// System data
+  std::shared_ptr<system_type> m_system;
+
   RunDataOutputParams m_output_params;
   std::vector<RunData> m_completed_runs;
   std::unique_ptr<ConfigGenerator> m_config_generator;

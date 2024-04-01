@@ -14,15 +14,19 @@ class CompositionCalculator;
 class CompositionConverter;
 }  // namespace composition
 
-namespace clexmonte {
+namespace config {
 struct Configuration;
+}
+
+namespace clexmonte {
+typedef config::Configuration Configuration;
 struct System;
 }  // namespace clexmonte
 
 namespace clexmonte {
 
 typedef System system_type;
-typedef Configuration config_type;
+typedef config::Configuration config_type;
 typedef monte::BasicStatistics statistics_type;
 typedef monte::State<config_type> state_type;
 struct Conditions;

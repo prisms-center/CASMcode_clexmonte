@@ -100,3 +100,100 @@ def Clex_ZrO_Occ_System(Clex_ZrO_Occ_system_data, session_shared_datadir):
         data=Clex_ZrO_Occ_system_data,
         search_path=[str(session_shared_datadir / "Clex_ZrO_Occ")],
     )
+
+
+@pytest.helpers.register
+def validate_summary_data(subdata: dict, expected_keys: list[str], expected_size: int):
+    for x in expected_keys:
+        assert x in subdata
+        if "component_names" in subdata[x]:
+            # non-scalar analysis functions & conditions
+            for y in subdata[x]["component_names"]:
+                assert len(subdata[x][y]) == expected_size
+        elif "value" in subdata[x]:
+            # scalar analysis functions
+            assert subdata[x]["shape"] == []
+            assert len(subdata[x]["value"]) == expected_size
+        else:
+            # completion_check_params
+            assert len(subdata[x]) == expected_size
+
+
+@pytest.helpers.register
+def validate_statistics_data(
+    subdata: dict,
+    expected_keys: list[str],
+    expected_size: int,
+):
+    for x in expected_keys:
+        assert x in subdata
+        if "component_names" in subdata[x]:
+            for y in subdata[x]["component_names"]:
+                assert y in subdata[x]
+                for z in ["mean", "calculated_precision"]:
+                    assert z in subdata[x][y]
+                    assert len(subdata[x][y][z]) == expected_size
+        else:
+            assert subdata[x]["shape"] == []
+            assert "value" in subdata[x]
+            for z in ["mean", "calculated_precision"]:
+                assert z in subdata[x]["value"]
+                assert len(subdata[x]["value"][z]) == expected_size
+
+
+@pytest.helpers.register
+def validate_summary_file(summary_file: pathlib.Path, expected_size: int):
+    assert summary_file.exists() and summary_file.is_file()
+    with open(summary_file, "r") as f:
+        data = json.load(f)
+    print(xtal.pretty_json(data))
+
+    assert "analysis" in data
+    validate_summary_data(
+        subdata=data["analysis"],
+        expected_keys=[
+            "heat_capacity",
+            "mol_susc",
+            "param_susc",
+            "mol_thermochem_susc",
+            "param_thermochem_susc",
+        ],
+        expected_size=expected_size,
+    )
+
+    assert "completion_check_results" in data
+    validate_summary_data(
+        subdata=data["completion_check_results"],
+        expected_keys=[
+            "N_samples",
+            "N_samples_for_all_to_equilibrate",
+            "N_samples_for_statistics",
+            "acceptance_rate",
+            "all_converged",
+            "all_equilibrated",
+            "count",
+            "elapsed_clocktime",
+        ],
+        expected_size=expected_size,
+    )
+
+    assert "conditions" in data
+    validate_summary_data(
+        subdata=data["conditions"],
+        expected_keys=["temperature", "param_chem_pot"],
+        expected_size=expected_size,
+    )
+
+    assert "statistics" in data
+    validate_statistics_data(
+        subdata=data["statistics"],
+        expected_keys=[
+            "formation_energy",
+            "mol_composition",
+            "param_composition",
+            "potential_energy",
+        ],
+        expected_size=expected_size,
+    )
+    assert "is_converged" in data["statistics"]["potential_energy"]["value"]
+    assert "is_converged" in data["statistics"]["param_composition"]["a"]

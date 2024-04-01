@@ -16,8 +16,8 @@
 #include "casm/clexmonte/run/functions.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
-#include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
+#include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/run_management/io/json/SamplingFixtureParams_json_io.hh"
 #include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
@@ -529,8 +529,8 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
           )pbdoc")
       .def_readwrite("sample_trajectory", &results_type::sample_trajectory,
                      R"pbdoc(
-          list[MonteCarloConfiguration] : Configuration when a sample occurred \
-          (if requested, may be empty).
+          list[ libcasm.configuration.Configuration] : Configuration when a \
+          sample occurred (if requested, may be empty).
           )pbdoc")
       .def_readwrite("completion_check_results",
                      &results_type::completion_check_results,

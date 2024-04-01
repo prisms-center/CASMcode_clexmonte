@@ -2,6 +2,9 @@ from typing import Optional
 
 import numpy as np
 
+from libcasm.configuration import (
+    SupercellSet,
+)
 from libcasm.monte import ValueMap
 
 from ._clexmonte_state import MonteCarloState
@@ -41,7 +44,7 @@ class RunData:
             Final Monte Carlo state
         """
         self.transformation_matrix_to_super = (
-            initial_state.configuration.transformation_matrix_to_super
+            initial_state.configuration.supercell.transformation_matrix_to_super
         )
         """np.ndarray[np.int64]: Monte Carlo supercell
         
@@ -70,6 +73,7 @@ class RunData:
         self,
         do_write_initial_states: bool = False,
         do_write_final_states: bool = False,
+        write_prim_basis: bool = False,
     ):
         """Convert RunData to a Python dict
 
@@ -79,6 +83,9 @@ class RunData:
             If True, write initial_state.
         do_write_final_states: bool = False
             If True, write final_state.
+        write_prim_basis: bool = False
+            If True, write state configuration degrees of freedom (DoF) using prim
+            basis. Default is to use the standard basis.
 
         Returns
         -------
@@ -95,14 +102,25 @@ class RunData:
         to_dict(self.n_unitcells, data, "n_unitcells")
         to_dict(self.conditions, data, "conditions")
         if do_write_initial_states:
-            to_dict(self.initial_state, data, "initial_state")
+            to_dict(
+                self.initial_state,
+                data,
+                "initial_state",
+                write_prim_basis=write_prim_basis,
+            )
         if do_write_final_states:
-            to_dict(self.final_state, data, "final_state")
+            to_dict(
+                self.final_state,
+                data,
+                "final_state",
+                write_prim_basis=write_prim_basis,
+            )
         return data
 
     @staticmethod
     def from_dict(
         data: dict,
+        supercells: SupercellSet,
     ):
         """Construct RunData from a Python dict"""
         return RunData(
@@ -111,8 +129,12 @@ class RunData:
             ),
             n_unitcells=required_from_dict(int, data, "n_unitcells"),
             conditions=required_from_dict(ValueMap, data, "conditions"),
-            initial_state=optional_from_dict(MonteCarloState, data, "initial_state"),
-            final_state=optional_from_dict(MonteCarloState, data, "final_state"),
+            initial_state=optional_from_dict(
+                MonteCarloState, data, "initial_state", supercells=supercells
+            ),
+            final_state=optional_from_dict(
+                MonteCarloState, data, "final_state", supercells=supercells
+            ),
         )
 
 
@@ -129,6 +151,7 @@ class RunDataOutputParams:
         do_save_last_final_state: bool = True,
         do_write_initial_states: bool = False,
         do_write_final_states: bool = False,
+        do_write_prim_basis: bool = False,
         output_dir: Optional[str] = None,
     ):
         """
@@ -146,6 +169,9 @@ class RunDataOutputParams:
             Write saved initial states to completed_runs.json
         do_write_final_states: bool = False
             Write saved final states to completed_runs.json
+        do_write_prim_basis: bool = False
+            Write saved state degrees of freedom (DoF) values using the prim basis.
+            Default (False) is to use the standard basis.
         output_dir: Optional[str] = None
             Location to save completed_runs.json if not None
         """
@@ -164,6 +190,10 @@ class RunDataOutputParams:
         self.do_write_final_states = do_write_final_states
         """bool: Write saved final states to completed_runs.json"""
 
+        self.do_write_prim_basis = do_write_prim_basis
+        """bool: Write saved states degrees of freedom (DoF) values using the prim \
+        basis."""
+
         self.output_dir = output_dir
         """Optional[str]: Location to save completed_runs.json if not None"""
 
@@ -179,6 +209,7 @@ class RunDataOutputParams:
         to_dict(self.do_save_last_final_state, data, "save_last_final_state")
         to_dict(self.do_write_initial_states, data, "write_initial_states")
         to_dict(self.do_write_final_states, data, "write_final_states")
+        to_dict(self.do_write_prim_basis, data, "write_prim_basis")
         to_dict(self.output_dir, data, "output_dir")
         return data
 
@@ -202,6 +233,9 @@ class RunDataOutputParams:
             ),
             do_write_final_states=optional_from_dict(
                 bool, data, "write_final_states", default_value=False
+            ),
+            do_write_prim_basis=optional_from_dict(
+                bool, data, "write_prim_basis", default_value=False
             ),
             output_dir=optional_from_dict(str, data, "output_dir", default_value=None),
         )

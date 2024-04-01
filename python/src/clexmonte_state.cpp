@@ -13,12 +13,12 @@
 // clexmonte
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/enforce_composition.hh"
-#include "casm/clexmonte/state/io/json/Configuration_json_io.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/clexmonte/system/io/json/System_json_io.hh"
 #include "casm/configuration/Configuration.hh"
 #include "casm/configuration/SupercellSet.hh"
+#include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 #include "casm/monte/events/OccLocation.hh"
 
@@ -62,203 +62,6 @@ PYBIND11_MODULE(_clexmonte_state, m) {
   py::module::import("libcasm.monte");
   py::module::import("libcasm.xtal");
 
-  py::class_<clexmonte::config_type>(m, "MonteCarloConfiguration",
-                                     R"pbdoc(
-      Cluster expansion model configuration for Monte Carlo simulations
-
-      The MonteCarloConfiguration class holds the representation of the
-      current microstate. It is similar to the
-      :class:`libcasm.configuration.Configuration` data structure, but does not
-      include supercell symmetry data.
-
-      Note that this class provides direct access to
-      :class:`~libcasm.clexulator.ConfigDoFValues`, which must be used
-      carefully. For use with cluster expansion and order parameter calculators,
-      DoF values should be in the prim basis and the dimensions of its arrays
-      must remain consistent with the prim and supercell transformation matrix.
-
-      Default DoF values can be constructed using:
-
-      - :func:`~libcasm.clexulator.make_default_config_dof_values`: For ConfigDoFValues in the prim basis.
-      - :func:`~libcasm.clexulator.make_default_standard_config_dof_values`: For ConfigDoFValues in the standard basis.
-
-      Conversions of DoF values between prim and standard bases, if necessary,
-      can be done using:
-
-      - :func:`~libcasm.clexulator.from_standard_values`: Copy ConfigDoFValues and convert from the standard basis to the prim basis.
-      - :func:`~libcasm.clexulator.to_standard_values`: Copy ConfigDoFValues and convert from the prim basis to the standard basis.
-
-
-      .. rubric:: Special Methods
-
-      - MonteCarloConfiguration may be copied with `copy.copy` or `copy.deepcopy`.
-
-
-      )pbdoc")
-      .def(py::init<Eigen::Matrix3l const &,
-                    clexulator::ConfigDoFValues const &>(),
-           R"pbdoc(
-          .. rubric:: Constructor
-
-          Parameters
-          ----------
-          transformation_matrix_to_super : array_like, shape=(3,3), dtype=int
-              The transformation matrix, T, relating the superstructure lattice
-              vectors, S, to the unit structure lattice vectors, L, according to
-              ``S = L @ T``, where S and L are shape=(3,3)  matrices with
-              lattice vectors as columns.
-          dof_values : libcasm.clexulator.ConfigDoFValues
-              The initial occupation, local, and global degree of freedom (DoF)
-              values. The dimensions of `dof_values` must be consistent with
-              `transformation_matrix_to_super` and the prim. For use with
-              cluster expansion and order parameter calculators, DoF values
-              should be in the prim basis.
-          )pbdoc",
-           py::arg("transformation_matrix_to_super"), py::arg("dof_values"))
-      .def_readwrite("transformation_matrix_to_super",
-                     &clexmonte::config_type::transformation_matrix_to_super,
-                     R"pbdoc(
-          numpy.ndarray[numpy.int64[3, 3]]: The supercell transformation matrix
-
-          The transformation matrix, T, relating the superstructure lattice
-          vectors, S, to the unit structure lattice vectors, L, according to
-          ``S = L @ T``, where S and L are shape=(3,3)  matrices with
-          lattice vectors as columns.
-          )pbdoc")
-      .def_readwrite("dof_values", &clexmonte::config_type::dof_values,
-                     R"pbdoc(
-          libcasm.clexulator.ConfigDoFValues: The degree of freedom (DoF) \
-          values.
-
-          Note that the dimensions of `dof_values` must remain consistent with
-          `transformation_matrix_to_super`. For use with cluster expansion and
-          order parameter calculators, DoF values should be in the prim basis.
-          )pbdoc")
-      .def("__copy__",
-           [](clexmonte::config_type const &self) {
-             return clexmonte::config_type(self);
-           })
-      .def("__deepcopy__",
-           [](clexmonte::config_type const &self, py::dict) {
-             return clexmonte::config_type(self);
-           })
-      .def_static(
-          "from_dict",
-          [](const nlohmann::json &data) {
-            jsonParser json{data};
-            InputParser<clexmonte::config_type> parser(json);
-            std::runtime_error error_if_invalid{
-                "Error in libcasm.clexmonte.MonteCarloConfiguration.from_dict"};
-            report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
-            return std::move(*parser.value);
-          },
-          R"pbdoc(
-          Construct MonteCarloConfiguration from a Python dict
-
-          Notes
-          -----
-          - ConfigDoFValues must be in the prim basis.
-          - For a description of the format, see `ConfigDoF JSON object`_
-
-          .. _`ConfigDoF JSON object`: https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/#configdof-json-object
-
-          )pbdoc",
-          py::arg("data"))
-      .def(
-          "to_dict",
-          [](clexmonte::config_type const &self) {
-            jsonParser json;
-            to_json(self, json);
-            return static_cast<nlohmann::json>(json);
-          },
-          R"pbdoc(
-          Represent MonteCarloConfiguration as a Python dict
-
-          Notes
-          -----
-          - This function does not convert ConfigDoFValues between prim and
-            standard bases, it writes values as they are, which is assumed to
-            be the prim bases.
-          - For a description of the format, see `ConfigDoF JSON object`_
-
-          .. _`ConfigDoF JSON object`: https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/#configdof-json-object
-
-          )pbdoc")
-      .def_static(
-          "from_config_with_sym_info",
-          [](config::Configuration const &config) -> clexmonte::config_type {
-            return clexmonte::config_type(
-                config.supercell->superlattice.transformation_matrix_to_super(),
-                config.dof_values);
-          },
-          R"pbdoc(
-          Construct from a :class:`libcasm.configuration.Configuration`
-
-          This is equivalent to:
-
-          .. code-block:: Python
-
-              # config: libcasm.configuration.Configuration
-              mc_config = clexmonte.Configuration(
-                  transformation_matrix_to_super=config.supercell().transformation_matrix_to_super(),
-                  dof_values=config.dof_values(),
-              )
-
-          Parameters
-          ----------
-          config : libcasm.configuration.Configuration
-              A :class:`libcasm.configuration.Configuration` instance.
-          )pbdoc",
-          py::arg("config"))
-      .def(
-          "to_config_with_sym_info",
-          [](clexmonte::config_type const &self,
-             std::optional<std::shared_ptr<config::Prim const>> prim,
-             std::optional<std::shared_ptr<config::SupercellSet>> supercells)
-              -> config::Configuration {
-            if (supercells.has_value() && supercells.value()) {
-              config::SupercellSet &supercell_set = *supercells.value();
-              std::shared_ptr<config::Supercell const> supercell =
-                  supercell_set.insert(self.transformation_matrix_to_super)
-                      .first->supercell;
-              return config::Configuration(supercell, self.dof_values);
-            } else if (prim.has_value() && prim.value()) {
-              std::shared_ptr<config::Supercell const> supercell =
-                  std::make_shared<config::Supercell>(
-                      prim.value(), self.transformation_matrix_to_super);
-              return config::Configuration(supercell, self.dof_values);
-            } else {
-              throw std::runtime_error(
-                  "Error in "
-                  "libcasm.clexmonte.MonteCarloConfiguration.to_config_with_"
-                  "sym_info: "
-                  "One of `prim` or `supercells` must be provided.");
-            }
-          },
-          R"pbdoc(
-          Convert to a :class:`libcasm.configuration.Configuration`
-
-          This is equivalent to:
-
-          .. code-block:: Python
-
-              # config: libcasm.configuration.Configuration
-              mc_config = clexmonte.Configuration(
-                  transformation_matrix_to_super=config.supercell().transformation_matrix_to_super(),
-                  dof_values=config.dof_values(),
-              )
-
-          Parameters
-          ----------
-          prim : Optional[libcasm.configuration.Prim] = None
-              A :class:`libcasm.configuration.Prim` instance. Only onee of
-              `prim` or `supercells` must be provided.
-          supercells : Optional[libcasm.configuration.SupercellSet] = None
-              A :class:`~libcasm.configuration.SupercellSet`, which holds shared
-              supercells in order to avoid duplicates.
-          )pbdoc",
-          py::arg("prim") = std::nullopt, py::arg("supercells") = std::nullopt);
-
   py::class_<clexmonte::state_type>(m, "MonteCarloState",
                                     R"pbdoc(
       Cluster expansion model state for Monte Carlo simulations
@@ -281,7 +84,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
 
           Parameters
           ----------
-          configuration : MonteCarloConfiguration
+          configuration : libcasm.configuration.Configuration
               The initial configuration (microstate).
           conditions : Optional[libcasm.monte.ValueMap] = None
               The thermodynamic conditions, as a ValueMap. The accepted
@@ -299,7 +102,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
            py::arg("properties") = std::nullopt)
       .def_readwrite("configuration", &clexmonte::state_type::configuration,
                      R"pbdoc(
-         MonteCarloConfiguration: The configuration
+          libcasm.configuration.Configuration: The configuration
           )pbdoc")
       .def_readwrite("conditions", &clexmonte::state_type::conditions,
                      R"pbdoc(
@@ -318,9 +121,10 @@ PYBIND11_MODULE(_clexmonte_state, m) {
                               py::dict) { return clexmonte::state_type(self); })
       .def_static(
           "from_dict",
-          [](const nlohmann::json &data) {
+          [](const nlohmann::json &data,
+             std::shared_ptr<config::SupercellSet> supercells) {
             jsonParser json{data};
-            InputParser<clexmonte::state_type> parser(json);
+            InputParser<clexmonte::state_type> parser(json, *supercells);
             std::runtime_error error_if_invalid{
                 "Error in libcasm.clexmonte.MonteCarloState.from_dict"};
             report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
@@ -331,18 +135,31 @@ PYBIND11_MODULE(_clexmonte_state, m) {
 
           Notes
           -----
-          - ConfigDoFValues must be in the prim basis.
-          - For a description of the format, see `ConfigDoF JSON object`_
+          - For a description of the format, see `MonteCarloState JSON object (TODO)`_
 
-          .. _`ConfigDoF JSON object`: https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/#configdof-json-object
+          .. _`MonteCarloState JSON object (TODO)`: https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/#configdof-json-object
+
+          Parameters
+          ----------
+          data : dict
+            A :class:`~libcasm.clexmonte.MonteCarloState` as a dict.
+          supercells : libcasm.configuration.SupercellSet
+              A :class:`~libcasm.configuration.SupercellSet`, which holds shared
+              supercells in order to avoid duplicates.
+
+          Returns
+          -------
+          state : libcasm.clexmonte.MonteCarloState
+              The :class:`~libcasm.clexmonte.MonteCarloState` constructed from the dict.
+
 
           )pbdoc",
-          py::arg("data"))
+          py::arg("data"), py::arg("supercells"))
       .def(
           "to_dict",
-          [](clexmonte::state_type const &self) {
+          [](clexmonte::state_type const &self, bool write_prim_basis) {
             jsonParser json;
-            to_json(self, json);
+            to_json(self, json, write_prim_basis);
             return static_cast<nlohmann::json>(json);
           },
           R"pbdoc(
@@ -350,14 +167,22 @@ PYBIND11_MODULE(_clexmonte_state, m) {
 
           Notes
           -----
-          - This function does not convert ConfigDoFValues between prim and
-            standard bases, it writes values as they are, which is assumed to
-            be the prim bases.
-          - For a description of the format, see `ConfigDoF JSON object`_
+          - For a description of the format, see `MonteCarloState JSON object (TODO)`_
 
-          .. _`ConfigDoF JSON object`: https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/#configdof-json-object
+          .. _`MonteCarloState JSON object (TODO)`: https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/#configdof-json-object
 
-          )pbdoc");
+          Parameters
+          ----------
+          write_prim_basis : bool, default=False
+              If True, write DoF values using the prim basis. Default (False)
+              is to write DoF values in the standard basis.
+
+          Returns
+          -------
+          data : json
+              The `MonteCarloState reference (TODO) <https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/>`_ documents the expected format for MonteCarloState."
+          )pbdoc",
+          py::arg("write_prim_basis") = false);
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

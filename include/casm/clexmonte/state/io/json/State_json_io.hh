@@ -5,26 +5,35 @@
 
 namespace CASM {
 
+namespace config {
+class SupercellSet;
+}
+
 class jsonParser;
 template <typename T>
 class InputParser;
 template <typename T>
 T from_json(jsonParser const &);
+template <typename T>
+struct jsonConstructor;
 
 /// \brief Write monte::State<clexmonte::Configuration> to JSON
 jsonParser &to_json(monte::State<clexmonte::Configuration> const &state,
-                    jsonParser &json);
+                    jsonParser &json, bool write_prim_basis = false);
 
-void parse(InputParser<monte::State<clexmonte::Configuration>> &parser);
+void parse(InputParser<monte::State<clexmonte::Configuration>> &parser,
+           config::SupercellSet &supercells);
 
 /// \brief Read monte::State<clexmonte::Configuration> from JSON
 template <>
-monte::State<clexmonte::Configuration>
-from_json<monte::State<clexmonte::Configuration>>(jsonParser const &json);
+struct jsonConstructor<monte::State<clexmonte::Configuration>> {
+  static monte::State<clexmonte::Configuration> from_json(
+      jsonParser const &json, config::SupercellSet &supercells);
+};
 
 /// \brief Read monte::State<clexmonte::Configuration> from JSON
 void from_json(monte::State<clexmonte::Configuration> &state,
-               jsonParser const &json);
+               jsonParser const &json, config::SupercellSet &supercells);
 
 }  // namespace CASM
 

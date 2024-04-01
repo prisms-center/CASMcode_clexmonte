@@ -53,7 +53,7 @@ TEST_F(run_IncrementalConditionsStateGeneratorTest, Test1) {
   RunDataOutputParams output_params;
   output_params.output_dir = test_dir / "output";
   incremental_state_generator_type state_generator(
-      output_params, std::move(config_generator), init_conditions,
+      system, output_params, std::move(config_generator), init_conditions,
       conditions_increment, n_states, dependent_runs, modifiers);
 
   while (!state_generator.is_complete()) {
@@ -77,7 +77,7 @@ TEST_F(run_IncrementalConditionsStateGeneratorTest, Test1) {
   {
     // test `read_completed_runs()`
     incremental_state_generator_type state_generator_read_test(
-        output_params,
+        system, output_params,
         notstd::make_unique<fixed_config_generator_type>(init_config),
         init_conditions, conditions_increment, n_states, dependent_runs,
         modifiers);
@@ -122,7 +122,7 @@ TEST_F(run_IncrementalConditionsStateGeneratorTest, Test2) {
 
   RunDataOutputParams output_params;
   incremental_state_generator_type state_generator(
-      output_params, std::move(config_generator), init_conditions,
+      system, output_params, std::move(config_generator), init_conditions,
       conditions_increment, n_states, dependent_runs, modifiers);
 
   while (!state_generator.is_complete()) {

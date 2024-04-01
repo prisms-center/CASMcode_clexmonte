@@ -5,26 +5,30 @@
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/ConfigDoFValues.hh"
 #include "casm/clexulator/LocalClusterExpansion.hh"
+#include "casm/configuration/Configuration.hh"
 #include "casm/monte/run_management/State.hh"
 
 namespace CASM {
 namespace clexmonte {
 
-struct Configuration {
-  Configuration(Eigen::Matrix3l const &_transformation_matrix_to_super,
-                clexulator::ConfigDoFValues const &_dof_values)
-      : transformation_matrix_to_super(_transformation_matrix_to_super),
-        dof_values(_dof_values) {}
+typedef config::Configuration Configuration;
 
-  Eigen::Matrix3l transformation_matrix_to_super;
-  clexulator::ConfigDoFValues dof_values;
-};
+// struct Configuration {
+//   Configuration(Eigen::Matrix3l const &_transformation_matrix_to_super,
+//                 clexulator::ConfigDoFValues const &_dof_values)
+//       : transformation_matrix_to_super(_transformation_matrix_to_super),
+//         dof_values(_dof_values) {}
+//
+//   Eigen::Matrix3l transformation_matrix_to_super;
+//   clexulator::ConfigDoFValues dof_values;
+// };
 
 // --- The following are used to interface with CASM::monte methods ---
 
 inline Eigen::Matrix3l const &get_transformation_matrix_to_super(
     state_type const &state) {
-  return state.configuration.transformation_matrix_to_super;
+  return state.configuration.supercell->superlattice
+      .transformation_matrix_to_super();
 }
 
 inline Eigen::VectorXi &get_occupation(state_type &state) {
@@ -69,6 +73,11 @@ inline void set(clexulator::MultiLocalClusterExpansion &calculator,
 }
 
 }  // namespace clexmonte
+
+namespace monte {
+using clexmonte::get_occupation;
+using clexmonte::get_transformation_matrix_to_super;
+}  // namespace monte
 }  // namespace CASM
 
 #endif

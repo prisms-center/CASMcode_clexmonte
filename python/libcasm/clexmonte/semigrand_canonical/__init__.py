@@ -101,8 +101,8 @@ It also makes use of:
 
 - ``"config"``: (default=not sampled) - Store a JSON representation of the
   configuration, using
-  :func:`MonteCarloConfiguration.to_dict \
-  <libcasm.clexmonte.MonteCarloConfiguration.to_dict>`.
+  :func:`Configuration.to_dict \
+  <libcasm.configuration.Configuration.to_dict>`.
 
 
 .. rubric:: Standard analysis functions:

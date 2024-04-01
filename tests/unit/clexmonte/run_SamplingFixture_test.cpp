@@ -104,6 +104,11 @@ TEST_F(run_SamplingFixtureTest, Test1) {
     sampling_params.sampler_names.push_back("formation_energy_corr");
     sampling_params.sampler_names.push_back("formation_energy");
 
+    // Set analysis names
+    std::vector<std::string> analysis_names = {
+        "heat_capacity", "mol_susc", "param_susc", "mol_thermochem_susc",
+        "param_thermochem_susc"};
+
     // Set completion check params
     CompletionCheckParams<statistics_type> completion_check_params;
     completion_check_params.equilibration_check_f = default_equilibration_check;
@@ -118,8 +123,8 @@ TEST_F(run_SamplingFixtureTest, Test1) {
 
     SamplingFixtureParams<config_type, statistics_type> sampling_fixture_params(
         label, sampling_functions, json_sampling_functions, analysis_functions,
-        sampling_params, completion_check_params, std::move(results_io),
-        method_log);
+        sampling_params, completion_check_params, analysis_names,
+        std::move(results_io), method_log);
 
     SamplingFixture<config_type, statistics_type, engine_type> sampling_fixture(
         sampling_fixture_params, engine);
@@ -228,6 +233,11 @@ TEST_F(run_SamplingFixtureTest, Test2) {
     sampling_params.sampler_names.push_back("formation_energy_corr");
     sampling_params.sampler_names.push_back("formation_energy");
 
+    // Set analysis names
+    std::vector<std::string> analysis_names = {
+        "heat_capacity", "mol_susc", "param_susc", "mol_thermochem_susc",
+        "param_thermochem_susc"};
+
     // Set completion check params
     CompletionCheckParams<statistics_type> completion_check_params;
     completion_check_params.cutoff_params.max_count = 100;
@@ -243,8 +253,8 @@ TEST_F(run_SamplingFixtureTest, Test2) {
 
     SamplingFixtureParams<config_type, statistics_type> sampling_fixture_params(
         label, sampling_functions, json_sampling_functions, analysis_functions,
-        sampling_params, completion_check_params, std::move(results_io),
-        method_log);
+        sampling_params, completion_check_params, analysis_names,
+        std::move(results_io), method_log);
 
     SamplingFixture<config_type, statistics_type, engine_type> sampling_fixture(
         sampling_fixture_params, engine);

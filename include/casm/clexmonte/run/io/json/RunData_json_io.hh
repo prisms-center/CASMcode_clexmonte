@@ -26,26 +26,28 @@ inline jsonParser &to_json(clexmonte::RunData const &run_data, jsonParser &json,
   return json;
 }
 
-inline void from_json(clexmonte::RunData &run_data, jsonParser const &json) {
-  InputParser<clexmonte::RunData> parser{json};
+inline void parse(InputParser<clexmonte::RunData> &parser,
+                  config::SupercellSet &supercells) {
+  parser.value = std::make_unique<clexmonte::RunData>();
+
+  clexmonte::RunData &run_data = *parser.value;
+  parser.optional(run_data.initial_state, "initial_state", supercells);
+  parser.optional(run_data.final_state, "final_state", supercells);
+  parser.require(run_data.conditions, "conditions");
+  parser.require(run_data.transformation_matrix_to_super,
+                 "transformation_matrix_to_supercell");
+  parser.require(run_data.n_unitcells, "n_unitcells");
+}
+
+inline void from_json(clexmonte::RunData &run_data, jsonParser const &json,
+                      config::SupercellSet &supercells) {
+  InputParser<clexmonte::RunData> parser{json, supercells};
 
   std::runtime_error error_if_invalid{
       "Error reading clexmonte::RunData from JSON"};
   report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
 
   run_data = *parser.value;
-}
-
-inline void parse(InputParser<clexmonte::RunData> &parser) {
-  parser.value = std::make_unique<clexmonte::RunData>();
-
-  clexmonte::RunData &run_data = *parser.value;
-  parser.optional(run_data.initial_state, "initial_state");
-  parser.optional(run_data.final_state, "final_state");
-  parser.require(run_data.conditions, "conditions");
-  parser.require(run_data.transformation_matrix_to_super,
-                 "transformation_matrix_to_supercell");
-  parser.require(run_data.n_unitcells, "n_unitcells");
 }
 
 inline jsonParser &to_json(clexmonte::RunDataOutputParams &output_params,
