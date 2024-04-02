@@ -71,17 +71,17 @@ class RunData:
 
     def to_dict(
         self,
-        do_write_initial_states: bool = False,
-        do_write_final_states: bool = False,
+        write_initial_states: bool = False,
+        write_final_states: bool = False,
         write_prim_basis: bool = False,
     ):
         """Convert RunData to a Python dict
 
         Parameters
         ----------
-        do_write_initial_states: bool = False
+        write_initial_states: bool = False
             If True, write initial_state.
-        do_write_final_states: bool = False
+        write_final_states: bool = False
             If True, write final_state.
         write_prim_basis: bool = False
             If True, write state configuration degrees of freedom (DoF) using prim
@@ -101,14 +101,14 @@ class RunData:
         )
         to_dict(self.n_unitcells, data, "n_unitcells")
         to_dict(self.conditions, data, "conditions")
-        if do_write_initial_states:
+        if write_initial_states:
             to_dict(
                 self.initial_state,
                 data,
                 "initial_state",
                 write_prim_basis=write_prim_basis,
             )
-        if do_write_final_states:
+        if write_final_states:
             to_dict(
                 self.final_state,
                 data,
@@ -149,9 +149,9 @@ class RunDataOutputParams:
         do_save_all_initial_states: bool = False,
         do_save_all_final_states: bool = False,
         do_save_last_final_state: bool = True,
-        do_write_initial_states: bool = False,
-        do_write_final_states: bool = False,
-        do_write_prim_basis: bool = False,
+        write_initial_states: bool = False,
+        write_final_states: bool = False,
+        write_prim_basis: bool = False,
         output_dir: Optional[str] = None,
     ):
         """
@@ -165,11 +165,11 @@ class RunDataOutputParams:
             Save all final states in completed_runs.json
         do_save_last_final_state: bool = True
             Save last final state in completed_runs.json to enable restarts
-        do_write_initial_states: bool = False
+        write_initial_states: bool = False
             Write saved initial states to completed_runs.json
-        do_write_final_states: bool = False
+        write_final_states: bool = False
             Write saved final states to completed_runs.json
-        do_write_prim_basis: bool = False
+        write_prim_basis: bool = False
             Write saved state degrees of freedom (DoF) values using the prim basis.
             Default (False) is to use the standard basis.
         output_dir: Optional[str] = None
@@ -184,13 +184,13 @@ class RunDataOutputParams:
         self.do_save_last_final_state = do_save_last_final_state
         """bool: Save last final_state in completed_runs.json to enable restarts"""
 
-        self.do_write_initial_states = do_write_initial_states
+        self.write_initial_states = write_initial_states
         """bool: Write saved initial states to completed_runs.json"""
 
-        self.do_write_final_states = do_write_final_states
+        self.write_final_states = write_final_states
         """bool: Write saved final states to completed_runs.json"""
 
-        self.do_write_prim_basis = do_write_prim_basis
+        self.write_prim_basis = write_prim_basis
         """bool: Write saved states degrees of freedom (DoF) values using the prim \
         basis."""
 
@@ -199,17 +199,17 @@ class RunDataOutputParams:
 
     def to_dict(
         self,
-        do_write_initial_states: bool = False,
-        do_write_final_states: bool = False,
+        write_initial_states: bool = False,
+        write_final_states: bool = False,
     ):
         """Convert RunDataOutputParams to a Python dict"""
         data = {}
         to_dict(self.do_save_all_initial_states, data, "save_all_initial_states")
         to_dict(self.do_save_all_final_states, data, "save_all_final_states")
         to_dict(self.do_save_last_final_state, data, "save_last_final_state")
-        to_dict(self.do_write_initial_states, data, "write_initial_states")
-        to_dict(self.do_write_final_states, data, "write_final_states")
-        to_dict(self.do_write_prim_basis, data, "write_prim_basis")
+        to_dict(self.write_initial_states, data, "write_initial_states")
+        to_dict(self.write_final_states, data, "write_final_states")
+        to_dict(self.write_prim_basis, data, "write_prim_basis")
         to_dict(self.output_dir, data, "output_dir")
         return data
 
@@ -228,13 +228,13 @@ class RunDataOutputParams:
             do_save_last_final_state=optional_from_dict(
                 bool, data, "save_last_final_state", default_value=True
             ),
-            do_write_initial_states=optional_from_dict(
+            write_initial_states=optional_from_dict(
                 bool, data, "write_initial_states", default_value=False
             ),
-            do_write_final_states=optional_from_dict(
+            write_final_states=optional_from_dict(
                 bool, data, "write_final_states", default_value=False
             ),
-            do_write_prim_basis=optional_from_dict(
+            write_prim_basis=optional_from_dict(
                 bool, data, "write_prim_basis", default_value=False
             ),
             output_dir=optional_from_dict(str, data, "output_dir", default_value=None),

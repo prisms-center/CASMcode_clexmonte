@@ -11,12 +11,11 @@
 namespace CASM {
 
 inline jsonParser &to_json(clexmonte::RunData const &run_data, jsonParser &json,
-                           bool do_write_initial_states,
-                           bool do_write_final_states) {
-  if (do_write_initial_states) {
+                           bool write_initial_states, bool write_final_states) {
+  if (write_initial_states) {
     json["initial_state"] = run_data.initial_state;
   }
-  if (do_write_final_states) {
+  if (write_final_states) {
     json["final_state"] = run_data.final_state;
   }
   json["conditions"] = run_data.conditions;
@@ -55,8 +54,8 @@ inline jsonParser &to_json(clexmonte::RunDataOutputParams &output_params,
   json["save_all_initial_states"] = output_params.do_save_all_initial_states;
   json["save_all_final_states"] = output_params.do_save_all_final_states;
   json["save_last_final_state"] = output_params.do_save_last_final_state;
-  json["write_initial_states"] = output_params.do_write_initial_states;
-  json["write_final_states"] = output_params.do_write_final_states;
+  json["write_initial_states"] = output_params.write_initial_states;
+  json["write_final_states"] = output_params.write_final_states;
   if (!output_params.output_dir.empty()) {
     json["output_dir"] = output_params.output_dir.string();
   }
@@ -84,10 +83,10 @@ inline void parse(InputParser<clexmonte::RunDataOutputParams> &parser) {
                        "save_all_final_states", false);
   parser.optional_else(output_params.do_save_last_final_state,
                        "save_last_final_state", true);
-  parser.optional_else(output_params.do_write_initial_states,
+  parser.optional_else(output_params.write_initial_states,
                        "write_initial_states", false);
-  parser.optional_else(output_params.do_write_final_states,
-                       "write_final_states", false);
+  parser.optional_else(output_params.write_final_states, "write_final_states",
+                       false);
   std::string output_dir;
   parser.optional(output_dir, "output_dir");
   output_params.output_dir = fs::path(output_dir);

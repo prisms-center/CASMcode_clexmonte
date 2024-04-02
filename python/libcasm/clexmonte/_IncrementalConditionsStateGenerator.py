@@ -46,9 +46,9 @@ class IncrementalConditionsStateGenerator:
         output_params: RunDataOutputParams
             Controls saving and writing completed run data. At least the final
             state must be saved to enable restarts and dependent runs.
-        initial_conditions: libcasm.monte.ValueMap
+        initial_conditions: Union[libcasm.monte.ValueMap, dict]
             The thermodynamic conditions for the initial run in the series
-        conditions_increment: libcasm.monte.ValueMap
+        conditions_increment: Union[libcasm.monte.ValueMap, dict]
             The change in thermodynamic conditions for each subsequent run
         n_states: int
             The number of states to generate / number of Monte Carlo runs in the series
@@ -69,8 +69,8 @@ class IncrementalConditionsStateGenerator:
         self._completed_runs = []
         self._output_params = output_params
         self._config_generator = config_generator
-        self._initial_conditions = initial_conditions
-        self._conditions_increment = conditions_increment
+        self._initial_conditions = ValueMap(initial_conditions)
+        self._conditions_increment = ValueMap(conditions_increment)
         self._n_states = n_states
         self._dependent_runs = dependent_runs
         self._modifiers = modifiers
@@ -200,9 +200,9 @@ class IncrementalConditionsStateGenerator:
         with open(completed_runs_path, "w") as f:
             data = [
                 x.to_dict(
-                    do_write_initial_states=self._output_params.do_write_initial_states,
-                    do_write_final_states=self._output_params.do_write_final_states,
-                    do_write_prim_basis=self._output_params.do_write_prim_basis,
+                    write_initial_states=self._output_params.write_initial_states,
+                    write_final_states=self._output_params.write_final_states,
+                    write_prim_basis=self._output_params.write_prim_basis,
                 )
                 for x in self._completed_runs
             ]

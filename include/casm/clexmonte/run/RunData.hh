@@ -30,10 +30,10 @@ struct RunDataOutputParams {
   bool do_save_last_final_state = true;
 
   /// \brief Write saved initial_state to completed_runs.json
-  bool do_write_initial_states = false;
+  bool write_initial_states = false;
 
   /// \brief Write saved final_state to completed_runs.json
-  bool do_write_final_states = false;
+  bool write_final_states = false;
 
   /// \brief Location to save completed_runs.json if not empty
   fs::path output_dir;

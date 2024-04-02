@@ -136,7 +136,8 @@ def test_run_fixture_1(Clex_ZrO_Occ_System, tmp_path):
     print(xtal.pretty_json(thermo.to_dict()))
 
     # construct the initial state (default configuration)
-    initial_state, motif, motif_id = mc_calculator.make_initial_state(
+    initial_state, motif, motif_id = sgc.make_initial_state(
+        system=system,
         conditions={
             "temperature": 300.0,
             "param_chem_pot": [-1.0],
@@ -177,7 +178,8 @@ def test_run_fixture_2(Clex_ZrO_Occ_System, tmp_path):
     thermo.converge(quantity="param_composition", abs=2e-3, component_name=["a"])
 
     # construct the initial state (default configuration)
-    state, motif, motif_id = mc_calculator.make_initial_state(
+    state, motif, motif_id = sgc.make_initial_state(
+        system=system,
         conditions={
             "temperature": 300.0,
             "param_chem_pot": [-1.0],
@@ -224,7 +226,8 @@ def test_run_1(Clex_ZrO_Occ_System, tmp_path):
     )
 
     # construct the initial state (default configuration)
-    state, motif, motif_id = mc_calculator.make_initial_state(
+    state, motif, motif_id = sgc.make_initial_state(
+        system=system,
         conditions={
             "temperature": 300.0,
             "param_chem_pot": [-1.0],

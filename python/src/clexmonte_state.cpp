@@ -21,6 +21,7 @@
 #include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 #include "casm/monte/events/OccLocation.hh"
+#include "casm/monte/io/json/ValueMap_json_io.hh"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -33,17 +34,28 @@ namespace CASMpy {
 using namespace CASM;
 typedef std::mt19937_64 engine_type;
 
-clexmonte::state_type make_state(clexmonte::config_type const &configuration,
-                                 std::optional<monte::ValueMap> conditions,
-                                 std::optional<monte::ValueMap> properties) {
-  if (!conditions.has_value()) {
-    conditions = monte::ValueMap();
+monte::ValueMap from_variant_type(
+    std::variant<monte::ValueMap, nlohmann::json, py::none> const &x) {
+  if (x.index() == 0) {
+    return std::get<0>(x);
+  } else if (x.index() == 1) {
+    jsonParser json{static_cast<const nlohmann::json &>(std::get<1>(x))};
+    monte::ValueMap values;
+    from_json(values, json);
+    return values;
+  } else if (x.index() == 2) {
+    return monte::ValueMap{};
+  } else {
+    throw std::runtime_error("Unknown error converting to monte::ValueMap");
   }
-  if (!properties.has_value()) {
-    properties = monte::ValueMap();
-  }
-  return clexmonte::state_type(configuration, conditions.value(),
-                               properties.value());
+}
+
+clexmonte::state_type make_state(
+    clexmonte::config_type const &configuration,
+    std::variant<monte::ValueMap, nlohmann::json, py::none> const &conditions,
+    std::variant<monte::ValueMap, nlohmann::json, py::none> const &properties) {
+  return clexmonte::state_type(configuration, from_variant_type(conditions),
+                               from_variant_type(properties));
 }
 
 }  // namespace CASMpy
@@ -86,14 +98,14 @@ PYBIND11_MODULE(_clexmonte_state, m) {
           ----------
           configuration : libcasm.configuration.Configuration
               The initial configuration (microstate).
-          conditions : Optional[libcasm.monte.ValueMap] = None
+          conditions : Union[libcasm.monte.ValueMap, dict, None] = None
               The thermodynamic conditions, as a ValueMap. The accepted
               keys and types depend on the Monte Carlo calculation method and
               are documented with the
               :func:`~libcasm.clexmonte.make_conditions_from_value_map`
               function. If None provided, an empty
               :class:`~libcasm.monte.ValueMap` is used.
-          properties : Optional[libcasm.monte.ValueMap] = None
+          properties : Union[libcasm.monte.ValueMap, dict, None] = None
               Current properties of the state, if provided by the Monte Carlo
               calculation method. If None provided, an empty
               :class:`~libcasm.monte.ValueMap` is used.

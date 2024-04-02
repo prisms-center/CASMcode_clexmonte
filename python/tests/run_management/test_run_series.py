@@ -22,24 +22,21 @@ def test_run_series_1(Clex_ZrO_Occ_System, tmp_path):
     )
     print(xtal.pretty_json(thermo.to_dict()))
 
-    initial_conditions = monte.ValueMap.from_dict(
-        {
-            "temperature": 300.0,
-            "param_chem_pot": [-4.0],
-        }
-    )
+    initial_conditions = {
+        "temperature": 300.0,
+        "param_chem_pot": [-4.0],
+    }
 
-    conditions_increment = monte.ValueMap.from_dict(
-        {
-            "temperature": 0.0,
-            "param_chem_pot": [0.5],
-        }
-    )
+    conditions_increment = {
+        "temperature": 0.0,
+        "param_chem_pot": [0.5],
+    }
 
     n_states = 9
 
     # construct the initial state (default configuration)
-    initial_state, motif, motif_id = mc_calculator.make_initial_state(
+    initial_state, motif, motif_id = sgc.make_initial_state(
+        system=system,
         conditions=initial_conditions,
         min_volume=1000,
     )
@@ -47,8 +44,8 @@ def test_run_series_1(Clex_ZrO_Occ_System, tmp_path):
     output_params = clexmonte.RunDataOutputParams(
         do_save_all_initial_states=True,
         do_save_all_final_states=True,
-        do_write_initial_states=True,
-        do_write_final_states=True,
+        write_initial_states=True,
+        write_final_states=True,
         output_dir=output_dir,
     )
     config_generator = clexmonte.FixedConfigGenerator(

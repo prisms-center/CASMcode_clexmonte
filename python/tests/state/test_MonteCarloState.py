@@ -26,12 +26,10 @@ def test_MonteCarloState_constructor_2(
 ):
     mc_state = MonteCarloState(
         configuration=FCCBinaryVacancy_prim_config,
-        conditions=monte.ValueMap.from_dict(
-            {  # TODO
-                "temperature": 300.0,
-                "param_chem_pot": [-1.0],
-            }
-        ),
+        conditions={
+            "temperature": 300.0,
+            "param_chem_pot": [-1.0],
+        },
     )
     assert isinstance(mc_state, MonteCarloState)
     assert isinstance(mc_state.configuration, casmconfig.Configuration)
@@ -44,12 +42,10 @@ def test_MonteCarloState_copy_1(
 ):
     mc_state = MonteCarloState(
         configuration=FCCBinaryVacancy_prim_config,
-        conditions=monte.ValueMap.from_dict(
-            {  # TODO
-                "temperature": 300.0,
-                "param_chem_pot": [-1.0],
-            }
-        ),
+        conditions={
+            "temperature": 300.0,
+            "param_chem_pot": [-1.0],
+        },
     )
     assert isinstance(mc_state, MonteCarloState)
     assert isinstance(mc_state.configuration, casmconfig.Configuration)
@@ -81,12 +77,10 @@ def test_MonteCarloState_to_from_dict(
     ).supercell
     mc_state = MonteCarloState(
         configuration=casmconfig.Configuration(supercell=supercell),
-        conditions=monte.ValueMap.from_dict(
-            {  # TODO
-                "temperature": 300.0,
-                "param_chem_pot": [-1.0],
-            }
-        ),
+        conditions={
+            "temperature": 300.0,
+            "param_chem_pot": [-1.0],
+        },
     )
     mc_state.configuration.set_occ(0, 1)
 

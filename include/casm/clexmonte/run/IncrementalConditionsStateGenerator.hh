@@ -188,8 +188,8 @@ class IncrementalConditionsStateGenerator : public StateGenerator {
     SafeOfstream file;
     file.open(completed_runs_path);
     jsonParser json;
-    to_json(m_completed_runs, json, m_output_params.do_write_initial_states,
-            m_output_params.do_write_final_states);
+    to_json(m_completed_runs, json, m_output_params.write_initial_states,
+            m_output_params.write_final_states);
     json.print(file.ofstream(), -1);
     file.close();
   }
