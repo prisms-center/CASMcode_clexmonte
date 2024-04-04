@@ -307,6 +307,9 @@ Configuration from_standard_values(
 Configuration to_standard_values(
     System const &system, Configuration const &configuration_in_prim_basis);
 
+/// \brief Check for DoFSpace
+bool is_dof_space(System const &system, std::string const &key);
+
 /// \brief Check for basis set (Clexulator)
 bool is_basis_set(System const &system, std::string const &key);
 
@@ -421,6 +424,11 @@ std::shared_ptr<clexulator::LocalClusterExpansion> get_local_clex(
 ///     particular state's supercell, constructing as necessary
 std::shared_ptr<clexulator::MultiLocalClusterExpansion> get_local_multiclex(
     System &system, state_type const &state, std::string const &key);
+
+/// \brief Helper to get the supercell neighbor list for a
+///     particular state's supercell, constructing as necessary
+std::shared_ptr<clexulator::SuperNeighborList> get_supercell_neighbor_list(
+    System &system, state_type const &state);
 
 /// \brief Helper to get the correct order parameter calculators for a
 ///     particular state's supercell, constructing as necessary

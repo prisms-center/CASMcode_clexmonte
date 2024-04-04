@@ -142,6 +142,11 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/parse_array.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/subparse_from_file.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/to_json.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/BaseMonteCalculator.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/MonteCalculator.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/StateData.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/analysis_functions.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/sampling_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_events.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_impl.hh
@@ -199,6 +204,12 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/io/stream/EventState_stream_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/kinetic.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/kinetic_events.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/BaseMonteCalculator.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/MonteCalculator.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/SemiGrandCanonicalCalculator.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/StateData.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/analysis_functions.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/sampling_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold_events.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/convariance_functions.cc
