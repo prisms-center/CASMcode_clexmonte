@@ -277,7 +277,7 @@ state_sampling_function_type make_potential_energy_f(
       label, desc, {},  // scalar
       [calculation]() {
         Eigen::VectorXd value(1);
-        value(0) = calculation->potential()->per_unitcell();
+        value(0) = calculation->potential().per_unitcell();
         return value;
       });
 }

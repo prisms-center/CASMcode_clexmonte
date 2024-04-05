@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import libcasm.clexmonte as clexmonte
-import libcasm.clexmonte.semigrand_canonical as sgc
 import libcasm.monte.sampling as monte_sampling
 
 
@@ -10,10 +9,12 @@ import libcasm.monte.sampling as monte_sampling
 def Clex_ZrO_Occ_thermo(Clex_ZrO_Occ_System, tmp_path):
     system = Clex_ZrO_Occ_System
 
-    # construct a SemiGrandCanonicalCalculator
-    mc_calculator = sgc.SemiGrandCanonicalCalculator(system=system)
+    # construct a semi-grand canonical MonteCalculator
+    mc_calculator = clexmonte.MonteCalculator(
+        method="semigrand_canonical", system=system
+    )
 
-    assert isinstance(mc_calculator, sgc.SemiGrandCanonicalCalculator)
+    assert isinstance(mc_calculator, clexmonte.MonteCalculator)
 
     # construct sampling functions
     sampling_functions = mc_calculator.standard_sampling_functions()

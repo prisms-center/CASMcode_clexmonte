@@ -19,10 +19,10 @@ StateData::StateData(std::shared_ptr<system_type> _system, bool _update_species,
   if (state == nullptr) {
     throw std::runtime_error("Error constructing StateData: state==nullptr");
   }
-  if (occ_location == nullptr) {
-    throw std::runtime_error(
-        "Error constructing StateData: occ_location==nullptr");
-  }
+  //  if (occ_location == nullptr) {
+  //    throw std::runtime_error(
+  //        "Error constructing StateData: occ_location==nullptr");
+  //  }
 
   transformation_matrix_to_super = get_transformation_matrix_to_super(*state);
   n_unitcells = transformation_matrix_to_super.determinant();

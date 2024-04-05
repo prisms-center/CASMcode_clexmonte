@@ -69,9 +69,6 @@ ext_modules_params = {
 
 ext_modules = [
     Pybind11Extension(
-        "libcasm.clexmonte._clexmonte", ["src/clexmonte.cpp"], **ext_modules_params
-    ),
-    Pybind11Extension(
         "libcasm.clexmonte._clexmonte_system",
         ["src/clexmonte_system.cpp"],
         **ext_modules_params,
@@ -87,13 +84,13 @@ ext_modules = [
         **ext_modules_params,
     ),
     Pybind11Extension(
-        "libcasm.clexmonte.semigrand_canonical._clexmonte_semigrand_canonical",
-        ["src/clexmonte_semigrand_canonical.cpp"],
+        "libcasm.clexmonte._clexmonte_run_management",
+        ["src/clexmonte_run_management.cpp"],
         **ext_modules_params,
     ),
     Pybind11Extension(
-        "libcasm.clexmonte._clexmonte_run_management",
-        ["src/clexmonte_run_management.cpp"],
+        "libcasm.clexmonte._clexmonte_monte_calculator",
+        ["src/clexmonte_monte_calculator.cpp"],
         **ext_modules_params,
     ),
 ]
@@ -103,8 +100,6 @@ setup(
     packages=[
         "libcasm",
         "libcasm.clexmonte",
-        "libcasm.clexmonte.auto_configuration",
-        "libcasm.clexmonte.semigrand_canonical",
     ],
     install_requires=[
         "pybind11",

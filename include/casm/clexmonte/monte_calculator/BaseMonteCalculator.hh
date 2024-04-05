@@ -81,7 +81,7 @@ class BaseMonteCalculator {
   /// Method allows time-based sampling?
   bool time_sampling_allowed;
 
-  // --- Set via `set` method: ---
+  // --- Set via `reset` method: ---
 
   /// Calculator method parameters
   jsonParser params;
@@ -130,17 +130,24 @@ class BaseMonteCalculator {
       bool write_status, std::optional<std::string> output_dir,
       std::optional<std::string> log_file, double log_frequency_in_s) const = 0;
 
-  // --- Set when `run` is called: ---
+  // --- Set when `set_state_and_potential` is called: ---
 
   /// State data for sampling functions, for the current state
   std::shared_ptr<StateData> state_data;
 
-  /// KMC data for sampling functions, for the current state (if applicable)
-  std::shared_ptr<kmc_data_type> kmc_data;
-
   /// The current state's potential calculator, set
   ///    when the `run` method is called
   std::shared_ptr<BaseMontePotential> potential;
+
+  /// \brief Validate and set the current state, construct state_data, construct
+  ///     potential
+  virtual void set_state_and_potential(state_type &state,
+                                       monte::OccLocation *occ_location) = 0;
+
+  // --- Set when `run` is called: ---
+
+  /// KMC data for sampling functions, for the current state (if applicable)
+  std::shared_ptr<kmc_data_type> kmc_data;
 
   // --- Run method: ---
 

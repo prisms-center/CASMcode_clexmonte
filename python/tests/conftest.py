@@ -188,7 +188,7 @@ def validate_summary_file(summary_file: pathlib.Path, expected_size: int):
     validate_statistics_data(
         subdata=data["statistics"],
         expected_keys=[
-            "formation_energy",
+            "clex.formation_energy",
             "mol_composition",
             "param_composition",
             "potential_energy",

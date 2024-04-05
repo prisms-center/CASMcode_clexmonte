@@ -6,6 +6,39 @@
 namespace CASM {
 namespace clexmonte {
 
+/// \brief Implements a potential
+class MontePotential {
+ public:
+  MontePotential(std::shared_ptr<BaseMontePotential> _pot,
+                 std::shared_ptr<RuntimeLibrary> _lib)
+      : m_pot(_pot), m_lib(_lib) {}
+
+  ~MontePotential() {
+    // ensure BaseMontePotential is deleted before library
+    m_pot.reset();
+  }
+
+  /// State data for sampling functions, for the current state
+  std::shared_ptr<StateData> state_data() { return m_pot->state_data; }
+
+  /// \brief Calculate (per_supercell) potential value
+  double per_supercell() { return m_pot->per_supercell(); }
+
+  /// \brief Calculate (per_unitcell) potential value
+  double per_unitcell() { return m_pot->per_unitcell(); }
+
+  /// \brief Calculate change in (per_supercell) semi-grand potential value due
+  ///     to a series of occupation changes
+  double occ_delta_per_supercell(std::vector<Index> const &linear_site_index,
+                                 std::vector<int> const &new_occ) {
+    return m_pot->occ_delta_per_supercell(linear_site_index, new_occ);
+  }
+
+ private:
+  std::shared_ptr<BaseMontePotential> m_pot;
+  std::shared_ptr<RuntimeLibrary> m_lib;
+};
+
 /// \brief Wrapper for Monte Carlo calculations implementations
 class MonteCalculator {
  public:
@@ -70,16 +103,48 @@ class MonteCalculator {
   /// State modifying functions
   StateModifyingFunctionMap modifying_functions;
 
-  // --- Set when `run` is called: ---
+  // --- Set when `set_state_and_potential` or `run` is called: ---
 
   /// State data for sampling functions, for the current state
-  std::shared_ptr<StateData> state_data() { return m_calc->state_data; }
-
-  /// KMC data for sampling functions, for the current state (if applicable)
-  std::shared_ptr<kmc_data_type> kmc_data() { return m_calc->kmc_data; }
+  std::shared_ptr<StateData> state_data() {
+    if (m_calc->state_data == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::state_data: State data is not "
+          "yet constructed. To use outside of the `run` method, call "
+          "`set_state_and_potential` first.");
+    }
+    return m_calc->state_data;
+  }
 
   /// \brief Potential calculator
-  std::shared_ptr<BaseMontePotential> potential() { return m_calc->potential; }
+  MontePotential potential() {
+    if (m_calc->potential == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::potential: Potential calculator is not "
+          "yet constructed. To use outside of the `run` method, call "
+          "`set_state_and_potential` first.");
+    }
+    return MontePotential(m_calc->potential, m_lib);
+  }
+
+  /// \brief Validate and set the current state, construct state_data, construct
+  ///     potential
+  void set_state_and_potential(state_type &state,
+                               monte::OccLocation *occ_location) {
+    return m_calc->set_state_and_potential(state, occ_location);
+  }
+
+  // --- Set when `run` is called: ---
+
+  /// KMC data for sampling functions, for the current state (if applicable)
+  std::shared_ptr<kmc_data_type> kmc_data() {
+    if (m_calc->kmc_data == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::kmc_data: KMC data is not "
+          "yet constructed.");
+    }
+    return m_calc->kmc_data;
+  }
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
@@ -144,12 +209,12 @@ class MonteCalculator {
 
   /// \brief State data for sampling functions, for specified state
   std::shared_ptr<StateData> multistate_state_data(int state_index) {
-    return m_calc->multistate_data[state_index];
+    return m_calc->multistate_data.at(state_index);
   }
 
   /// \brief Potential calculator, for specified state
-  std::shared_ptr<BaseMontePotential> multistate_potential(int state_index) {
-    return m_calc->multistate_potential[state_index];
+  MontePotential multistate_potential(int state_index) {
+    return MontePotential(m_calc->multistate_potential.at(state_index), m_lib);
   }
 
   /// \brief Perform a single run, evolving one or more states

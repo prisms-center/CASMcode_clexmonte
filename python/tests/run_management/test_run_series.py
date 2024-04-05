@@ -1,7 +1,6 @@
 import pytest
 
 import libcasm.clexmonte as clexmonte
-import libcasm.clexmonte.semigrand_canonical as sgc
 import libcasm.monte as monte
 import libcasm.xtal as xtal
 
@@ -12,8 +11,10 @@ def test_run_series_1(Clex_ZrO_Occ_System, tmp_path):
     output_dir = tmp_path / "output"
     summary_file = output_dir / "summary.json"
 
-    # construct a SemiGrandCanonicalCalculator
-    mc_calculator = sgc.SemiGrandCanonicalCalculator(system=system)
+    # construct a semi-grand canonical MonteCalculator
+    mc_calculator = clexmonte.MonteCalculator(
+        method="semigrand_canonical", system=system
+    )
 
     # construct default sampling fixture parameters
     thermo = mc_calculator.make_default_sampling_fixture_params(
@@ -35,8 +36,8 @@ def test_run_series_1(Clex_ZrO_Occ_System, tmp_path):
     n_states = 9
 
     # construct the initial state (default configuration)
-    initial_state, motif, motif_id = sgc.make_initial_state(
-        system=system,
+    initial_state, motif, motif_id = clexmonte.make_initial_state(
+        calculator=mc_calculator,
         conditions=initial_conditions,
         min_volume=1000,
     )

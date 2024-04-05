@@ -3,7 +3,6 @@ import copy
 import numpy as np
 
 import libcasm.clexmonte as clexmonte
-import libcasm.clexmonte.semigrand_canonical as sgc
 import libcasm.configuration as casmconfig
 import libcasm.enumerate as casmenum
 
@@ -12,8 +11,12 @@ def test_make_initial_state_1(Clex_ZrO_Occ_System):
     """Test default motif"""
     system = Clex_ZrO_Occ_System
 
-    initial_state, motif, id = sgc.make_initial_state(
+    calculator = clexmonte.MonteCalculator(
+        method="semigrand_canonical",
         system=system,
+    )
+    initial_state, motif, id = clexmonte.make_initial_state(
+        calculator=calculator,
         conditions={
             "temperature": 300.0,
             "param_chem_pot": [0.0],
@@ -49,8 +52,12 @@ def test_make_initial_state_2a(Clex_ZrO_Occ_System):
         supercells=supercells,
     )
 
-    initial_state, motif_out, id = sgc.make_initial_state(
+    calculator = clexmonte.MonteCalculator(
+        method="semigrand_canonical",
         system=system,
+    )
+    initial_state, motif_out, id = clexmonte.make_initial_state(
+        calculator=calculator,
         conditions={
             "temperature": 300.0,
             "param_chem_pot": [-1.0],
@@ -86,8 +93,12 @@ def test_make_initial_state_2b(Clex_ZrO_Occ_System):
         supercells=supercells,
     )
 
-    initial_state, motif_out, id = sgc.make_initial_state(
+    calculator = clexmonte.MonteCalculator(
+        method="semigrand_canonical",
         system=system,
+    )
+    initial_state, motif_out, id = clexmonte.make_initial_state(
+        calculator=calculator,
         conditions={
             "temperature": 300.0,
             "param_chem_pot": [-1.0],
@@ -121,6 +132,11 @@ def test_make_initial_state_3(Clex_ZrO_Occ_System):
     """Test configurations=ConfigurationSet"""
     system = Clex_ZrO_Occ_System
 
+    calculator = clexmonte.MonteCalculator(
+        method="semigrand_canonical",
+        system=system,
+    )
+
     ###
     supercells = casmconfig.SupercellSet(prim=system.prim)
     configurations = casmconfig.ConfigurationSet()
@@ -139,8 +155,8 @@ def test_make_initial_state_3(Clex_ZrO_Occ_System):
 
     x_range = np.arange(-4.0, 0.01, step=0.1)
     for x in x_range:
-        initial_state, motif, id = sgc.make_initial_state(
-            system=system,
+        initial_state, motif, id = clexmonte.make_initial_state(
+            calculator=calculator,
             conditions={
                 "temperature": 300.0,
                 "param_chem_pot": [x],
@@ -217,6 +233,10 @@ def test_make_initial_state_3(Clex_ZrO_Occ_System):
 def test_make_initial_state_4(Clex_ZrO_Occ_System):
     """Test configurations=ConfigurationSet"""
     system = Clex_ZrO_Occ_System
+    calculator = clexmonte.MonteCalculator(
+        method="semigrand_canonical",
+        system=system,
+    )
 
     ###
     supercells = casmconfig.SupercellSet(prim=system.prim)
@@ -237,8 +257,8 @@ def test_make_initial_state_4(Clex_ZrO_Occ_System):
 
     x_range = np.arange(-4.0, 0.01, step=0.1)
     for x in x_range:
-        initial_state, motif, id = sgc.make_initial_state(
-            system=system,
+        initial_state, motif, id = clexmonte.make_initial_state(
+            calculator=calculator,
             conditions={
                 "temperature": 300.0,
                 "param_chem_pot": [x],

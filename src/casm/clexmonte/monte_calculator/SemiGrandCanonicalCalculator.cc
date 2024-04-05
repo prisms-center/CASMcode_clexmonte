@@ -7,6 +7,7 @@
 #include "casm/clexmonte/monte_calculator/analysis_functions.hh"
 #include "casm/clexmonte/monte_calculator/sampling_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
+#include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
 
@@ -218,9 +219,8 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
       std::shared_ptr<MonteCalculator> const &calculation) const override {
     std::vector<state_sampling_function_type> functions =
         monte_calculator::common_sampling_functions(
-            calculation, "semigrand_canonical_energy",
-            "Semi-grand canonical enthalpy of the state (normalized per "
-            "primitive cell)");
+            calculation, "potential_energy",
+            "Potential energy of the state (normalized per primitive cell)");
 
     // Specific to semi-grand canonical
     functions.push_back(monte_calculator::make_param_chem_pot_f(calculation));
@@ -282,7 +282,7 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
     monte::SamplingParams sampling_params;
     {
       auto &s = sampling_params;
-      s.sampler_names = {"formation_energy", "potential_energy",
+      s.sampler_names = {"clex.formation_energy", "potential_energy",
                          "mol_composition", "param_composition"};
       std::string prefix;
       prefix = "order_parameter_";
@@ -322,9 +322,10 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
         log_file, log_frequency_in_s);
   }
 
-  /// \brief Perform a single run, evolving current state
-  void run(state_type &state, monte::OccLocation &occ_location,
-           run_manager_type<engine_type> &run_manager) override {
+  /// \brief Validate and set the current state, construct state_data, construct
+  ///     potential
+  void set_state_and_potential(state_type &state,
+                               monte::OccLocation *occ_location) override {
     // validate system
     if (this->system == nullptr) {
       throw std::runtime_error(
@@ -338,16 +339,22 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
     validate_keys(conditions.vector_values, {"param_chem_pot"} /*required*/,
                   {} /*optional*/, "vector", "condition");
 
-    // Get temperature
-    double temperature = conditions.scalar_values.at("temperature");
-
     // Make state data
     this->state_data = std::make_shared<StateData>(
-        this->system, false /*update_species*/, &state, &occ_location);
+        this->system, false /*update_species*/, &state, occ_location);
 
     // Make potential calculator
     this->potential =
         std::make_shared<SemiGrandCanonicalPotential>(this->state_data);
+  }
+
+  /// \brief Perform a single run, evolving current state
+  void run(state_type &state, monte::OccLocation &occ_location,
+           run_manager_type<engine_type> &run_manager) override {
+    this->set_state_and_potential(state, &occ_location);
+
+    // Get temperature
+    double temperature = state.conditions.scalar_values.at("temperature");
 
     auto potential_occ_delta_per_supercell_f =
         [=](monte::OccEvent const &event) {

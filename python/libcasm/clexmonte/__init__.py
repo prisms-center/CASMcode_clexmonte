@@ -1,10 +1,16 @@
 """CASM cluster expansion Monte Carlo"""
 
-from ._clexmonte import (
-    placeholder,
+from ._auto_configuration import (
+    make_initial_state,
+    min_potential_configs,
+    scale_supercell,
 )
 from ._clexmonte_functions import (
     enforce_composition,
+)
+from ._clexmonte_monte_calculator import (
+    MontePotential,
+    StateData,
 )
 from ._clexmonte_run_management import (
     Results,
@@ -25,6 +31,9 @@ from ._FixedConfigGenerator import (
 )
 from ._IncrementalConditionsStateGenerator import (
     IncrementalConditionsStateGenerator,
+)
+from ._MonteCalculator import (
+    MonteCalculator,
 )
 from ._RunData import (
     RunData,

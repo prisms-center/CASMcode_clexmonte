@@ -146,6 +146,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/MonteCalculator.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/StateData.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/analysis_functions.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/sampling_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_events.hh
@@ -209,6 +210,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/SemiGrandCanonicalCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/StateData.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/analysis_functions.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/sampling_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold_events.cc
@@ -338,27 +340,6 @@ if(DEFINED SKBUILD)
   # - the casm_monte library
   # They can be found by setting a relative rpath
 
-  ### libcasm.clexmonte._clexmonte ###
-  pybind11_add_module(_clexmonte MODULE
-                      "${PROJECT_SOURCE_DIR}/python/src/clexmonte.cpp")
-  target_link_libraries(_clexmonte PRIVATE
-    CASM::casm_global
-    CASM::casm_crystallography
-    CASM::casm_composition
-    CASM::casm_clexulator
-    CASM::casm_configuration
-    CASM::casm_monte
-    casm_clexmonte
-  )
-  install(TARGETS _clexmonte DESTINATION clexmonte)
-  if(APPLE)
-    set_target_properties(
-      _clexmonte PROPERTIES INSTALL_RPATH "@loader_path/../lib")
-  else()
-    set_target_properties(
-      _clexmonte PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
-  endif()
-
   ### libcasm.clexmonte._clexmonte_system ###
   pybind11_add_module(_clexmonte_system MODULE
                       "${PROJECT_SOURCE_DIR}/python/src/clexmonte_system.cpp")
@@ -443,10 +424,10 @@ if(DEFINED SKBUILD)
       _clexmonte_functions PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
   endif()
 
-  ### libcasm.clexmonte.semigrand_canonical._clexmonte_semigrand_canonical ###
-  pybind11_add_module(_clexmonte_semigrand_canonical MODULE
-                      "${PROJECT_SOURCE_DIR}/python/src/clexmonte_semigrand_canonical.cpp")
-  target_link_libraries(_clexmonte_semigrand_canonical PRIVATE
+  ### libcasm.clexmonte._clexmonte_monte_calculator ###
+  pybind11_add_module(_clexmonte_monte_calculator MODULE
+                      "${PROJECT_SOURCE_DIR}/python/src/clexmonte_monte_calculator.cpp")
+  target_link_libraries(_clexmonte_monte_calculator PRIVATE
     CASM::casm_global
     CASM::casm_crystallography
     CASM::casm_composition
@@ -455,12 +436,12 @@ if(DEFINED SKBUILD)
     CASM::casm_monte
     casm_clexmonte
   )
-  install(TARGETS _clexmonte_semigrand_canonical DESTINATION clexmonte/semigrand_canonical)
+  install(TARGETS _clexmonte_monte_calculator DESTINATION clexmonte)
   if(APPLE)
     set_target_properties(
-      _clexmonte_semigrand_canonical PROPERTIES INSTALL_RPATH "@loader_path/../lib")
+      _clexmonte_monte_calculator PROPERTIES INSTALL_RPATH "@loader_path/../lib")
   else()
     set_target_properties(
-      _clexmonte_semigrand_canonical PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
+      _clexmonte_monte_calculator PROPERTIES INSTALL_RPATH "$ORIGIN/../lib")
   endif()
 endif()

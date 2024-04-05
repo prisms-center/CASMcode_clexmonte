@@ -1,7 +1,6 @@
 import numpy as np
 
 import libcasm.clexmonte as clexmonte
-import libcasm.clexmonte.semigrand_canonical as sgc
 import libcasm.configuration as casmconfig
 
 
@@ -30,8 +29,12 @@ def test_enforce_composition_1(Clex_ZrO_Occ_System):
         supercells=supercells,
     )
 
-    initial_state, motif, id = sgc.make_initial_state(
+    calculator = clexmonte.MonteCalculator(
+        method="semigrand_canonical",
         system=system,
+    )
+    initial_state, motif, id = clexmonte.make_initial_state(
+        calculator=calculator,
         conditions={
             "temperature": 300.0,
             "param_chem_pot": [0.0],

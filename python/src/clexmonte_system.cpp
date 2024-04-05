@@ -33,6 +33,15 @@ std::shared_ptr<clexmonte::System> make_system(
       _shared_prim, _composition_converter, _n_dimensions);
 }
 
+template <typename T>
+std::vector<std::string> get_keys(std::map<std::string, T> map) {
+  std::vector<std::string> keys;
+  for (auto const &pair : map) {
+    keys.emplace_back(pair.first);
+  }
+  return keys;
+}
+
 }  // namespace CASMpy
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
@@ -124,6 +133,19 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           libcasm.clexulator.PrimNeighborList: Neighbor list used for cluster \
           expansions.
           )pbdoc")
+      .def_property_readonly(
+          "basis_set_keys",
+          [](clexmonte::System &m) -> std::vector<std::string> {
+            return get_keys(m.basis_sets);
+          },
+          R"pbdoc(
+          Get a list of basis set keys
+
+          Returns
+          -------
+          keys : list[str]
+              A list of basis set keys.
+          )pbdoc")
       .def(
           "is_basis_set",
           [](clexmonte::System &m, std::string key) -> bool {
@@ -143,6 +165,19 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               True if basis set calculator exists for `key`.
           )pbdoc",
           py::arg("key"))
+      .def_property_readonly(
+          "local_basis_set_keys",
+          [](clexmonte::System &m) -> std::vector<std::string> {
+            return get_keys(m.local_basis_sets);
+          },
+          R"pbdoc(
+          Get a list of local basis set keys
+
+          Returns
+          -------
+          keys : list[str]
+              A list of local basis set keys.
+          )pbdoc")
       .def(
           "is_local_basis_set",
           [](clexmonte::System &m, std::string key) -> bool {
@@ -204,6 +239,19 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           )pbdoc",
           py::arg("key"))
       //
+      .def_property_readonly(
+          "clex_keys",
+          [](clexmonte::System &m) -> std::vector<std::string> {
+            return get_keys(m.clex_data);
+          },
+          R"pbdoc(
+          Get a list of cluster expansion keys
+
+          Returns
+          -------
+          keys : list[str]
+              A list of cluster expansion keys.
+          )pbdoc")
       .def(
           "is_clex",
           [](clexmonte::System &m, std::string key) -> bool {
@@ -223,6 +271,19 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               True if cluster expansion exists for `key`.
           )pbdoc",
           py::arg("key"))
+      .def_property_readonly(
+          "multiclex_keys",
+          [](clexmonte::System &m) -> std::vector<std::string> {
+            return get_keys(m.multiclex_data);
+          },
+          R"pbdoc(
+          Get a list of multi-cluster expansion keys
+
+          Returns
+          -------
+          keys : list[str]
+              A list of multi-cluster expansion keys.
+          )pbdoc")
       .def(
           "is_multiclex",
           [](clexmonte::System &m, std::string key) -> bool {
@@ -242,6 +303,19 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               True if multi-cluster expansion exists for `key`.
           )pbdoc",
           py::arg("key"))
+      .def_property_readonly(
+          "local_clex_keys",
+          [](clexmonte::System &m) -> std::vector<std::string> {
+            return get_keys(m.local_clex_data);
+          },
+          R"pbdoc(
+          Get a list of local cluster expansion keys
+
+          Returns
+          -------
+          keys : list[str]
+              A list of local cluster expansion keys.
+          )pbdoc")
       .def(
           "is_local_clex",
           [](clexmonte::System &m, std::string key) -> bool {
@@ -261,6 +335,19 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               True if local cluster expansion exists for `key`.
           )pbdoc",
           py::arg("key"))
+      .def_property_readonly(
+          "local_multiclex_keys",
+          [](clexmonte::System &m) -> std::vector<std::string> {
+            return get_keys(m.local_multiclex_data);
+          },
+          R"pbdoc(
+          Get a list of local multi-cluster expansion keys
+
+          Returns
+          -------
+          keys : list[str]
+              A list of local multi-cluster expansion keys.
+          )pbdoc")
       .def(
           "is_local_multiclex",
           [](clexmonte::System &m, std::string key) -> bool {
@@ -377,6 +464,19 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           )pbdoc",
           py::arg("state"), py::arg("key"))
       //
+      .def_property_readonly(
+          "dof_space_keys",
+          [](clexmonte::System &m) -> std::vector<std::string> {
+            return get_keys(m.dof_spaces);
+          },
+          R"pbdoc(
+          Get a list of DoFSpace / OrderParameter keys
+
+          Returns
+          -------
+          keys : list[str]
+              A list of DoFSpace / OrderParameter keys.
+          )pbdoc")
       .def(
           "dof_space",
           [](clexmonte::System &m,
@@ -420,6 +520,21 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               `state`.
           )pbdoc",
           py::arg("state"), py::arg("key"))
+      .def_property_readonly(
+          "dof_subspace_keys",
+          [](clexmonte::System &m) -> std::vector<std::string> {
+            return get_keys(m.dof_subspaces);
+          },
+          R"pbdoc(
+          Get a list of keys for DoFSpace / OrderParameter with defined
+          subspaces
+
+          Returns
+          -------
+          keys : list[str]
+              A list of keys for DoFSpace / OrderParameter with defined
+              subspaces
+          )pbdoc")
       .def(
           "order_parameter_subspaces",
           [](clexmonte::System &m,
@@ -544,6 +659,8 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               vectors, S, to the unit structure lattice vectors, L, according to
               ``S = L @ T``, where S and L are shape=(3,3)  matrices with
               lattice vectors as columns.
+          conditions :
+
 
           Returns
           -------

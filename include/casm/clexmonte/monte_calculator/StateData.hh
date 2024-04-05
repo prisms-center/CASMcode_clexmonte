@@ -24,7 +24,7 @@ struct StateData {
   /// Current state (not null)
   state_type const *state;
 
-  /// Occupant tracker (not null)
+  /// Occupant tracker (may be null)
   monte::OccLocation const *occ_location;
 
   /// Current supercell, depends on current state

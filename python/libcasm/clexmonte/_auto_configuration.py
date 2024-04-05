@@ -1,12 +1,17 @@
 """Find minimum potential configurations"""
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 
 import libcasm.casmglobal as casmglobal
-import libcasm.clexmonte as clexmonte
 import libcasm.configuration as casmconfig
+import libcasm.monte as monte
+
+from ._clexmonte_state import (
+    MonteCarloState,
+)
+from ._MonteCalculator import MonteCalculator
 
 
 def scale_supercell(
@@ -55,8 +60,8 @@ def min_potential_configs(
     configurations: Union[
         Iterable[casmconfig.Configuration], casmconfig.ConfigurationSet
     ],
-    potential: Any,
-    conditions: Any,
+    calculator: MonteCalculator,
+    conditions: monte.ValueMap,
     transformation_matrix_to_super: Optional[np.ndarray] = None,
     tol: float = casmglobal.TOL,
 ):
@@ -72,17 +77,15 @@ def min_potential_configs(
 
     Parameters
     ----------
-    configurations: Union[Iterable[casmconfig.Configuration], \
-    casmconfig.ConfigurationSet]
+    configurations: Union[Iterable[libcasm.configuration.Configuration], \
+    libcasm.configuration.ConfigurationSet]
         The candidate configurations. Must be a
         :class:`~libcasm.configuration.ConfigurationSet` or an iterable of
         :class:`~libcasm.configuration.Configuration`.
-    potential: Any
-        A potential calculator, such as
-        :class:`~libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalPotential`.
-    conditions: Any
-        A conditions instance accepted by potential, such as
-        :class:`~libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalConditions`.
+    calculator: libcasm.clexmonte.MonteCalculator
+        A Monte Carlo calculator, to provide access to the potential calculator.
+    conditions: Union[dict, libcasm.monte.ValueMap]
+        Thermodynamics conditions to calculate the potential at.
     transformation_matrix_to_super: Optional[np.ndarray] = None
         If provided, only configurations that tile the corresponding supercell will
         be considered.
@@ -106,18 +109,33 @@ def min_potential_configs(
             The potential per unit cell for the minimum potential configurations.
 
     """
+
+    # Where we'll store the keep the results as we find them
     min_potential = None
     min_config = []
     min_config_id = []
     min_potential_values = []
+
+    # The MonteCarloState will be set with a configuration when it is checked in
+    # order to calculate the potential
     mc_state = None
-    mc_state_supercell = None
+
+    # We'll need the prim
+    prim = calculator.system.prim
+
+    # If transformation_matrix_to_super: config must tile into mc_big_supercell, but
+    # we'll still calculate the potential in config's supercell
     must_tile = False
     if transformation_matrix_to_super is not None:
-        mc_big_supercell = None
+        mc_big_supercell = casmconfig.Supercell(
+            prim=prim,
+            transformation_matrix_to_super=transformation_matrix_to_super,
+        )
         must_tile = True
 
+    # Loop over candidates
     for i_config, element in enumerate(configurations):
+        # 1) check element type, set id and config
         if isinstance(element, casmconfig.Configuration):
             id = i_config
             config = element
@@ -130,34 +148,37 @@ def min_potential_configs(
                 "Iterable[Configuration] or a ConfigurationSet"
             )
 
+        # 2) First time through, set mc_state
         if mc_state is None:
-            if must_tile and mc_big_supercell is None:
-                mc_big_supercell = casmconfig.Supercell(
-                    prim=config.supercell.prim,
-                    transformation_matrix_to_super=transformation_matrix_to_super,
-                )
-            mc_state = clexmonte.MonteCarloState(configuration=config)
+            mc_state = MonteCarloState(
+                configuration=config,
+                conditions=conditions,
+            )
+            calculator.set_state_and_potential(state=mc_state)
 
+        # 3) If applicable, skip configs that don't tile into mc_big_supercell
         if must_tile:
             check = mc_big_supercell.superlattice.is_equivalent_superlattice_of(
                 config.supercell.superlattice,
-                mc_big_supercell.prim.factor_group.elements,
+                prim.factor_group.elements,
             )
             does_tile, T, fg_index = check
             if not does_tile:
                 continue
 
-        if config.supercell == mc_state_supercell:
+        # 4) Set the state's configuration
+        if config.supercell == mc_state.configuration.supercell:
+            # if current config's supercell is the same as the last
+            # one we checked, then we don't need to reset the potential calculator,
+            # we just copy config DoF values
             mc_state.configuration.dof_values.set(config.dof_values)
         else:
+            # otherwise, we need to set the state's configuration
+            # and then reset the potential calculator
             mc_state.configuration = config
-            potential.set(
-                state=mc_state,
-                conditions=conditions,
-            )
-            mc_state_supercell = config.supercell
+            calculator.set_state_and_potential(state=mc_state)
 
-        value = potential.per_unitcell()
+        value = calculator.potential.per_unitcell()
         if min_potential is None or value < min_potential - tol:
             min_potential = value
             min_config = [config]
@@ -175,9 +196,8 @@ def min_potential_configs(
 
 
 def make_initial_state(
-    system: clexmonte.System,
-    potential: Any,
-    conditions: Any,
+    calculator: MonteCalculator,
+    conditions: Union[dict, monte.ValueMap],
     dirs: str = "abc",
     min_volume: int = 1000,
     transformation_matrix_to_super: Optional[np.ndarray] = None,
@@ -191,14 +211,10 @@ def make_initial_state(
 
     Parameters
     ----------
-    system: libcasm.clexmonte.System
-        System data.
-    potential: Any
-        A potential calculator, such as
-        :class:`~libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalPotential`.
-    conditions: Any
-        A conditions instance accepted by potential, such as
-        :class:`~libcasm.clexmonte.semigrand_canonical.SemiGrandCanonicalConditions`.
+    calculator: libcasm.clexmonte.MonteCalculator
+        A Monte Carlo calculator, to provide access to the potential calculator.
+    conditions: Union[dict, libcasm.monte.ValueMap]
+        Thermodynamics conditions to calculate the potential at.
     dirs: str = "abc"
         The directions along which the initial supercell can be expanded ("a"
         corresponds to first supercell lattice vector, "b" the seoncd, and "c" the
@@ -210,11 +226,11 @@ def make_initial_state(
         If provided, force the supercell of the result to be a supercell of
         `transformation_matrix_to_supercell`, and only consider motif that tile into
         `transformation_matrix_to_supercell`.
-    motif: Optional[casmconfig.Configuration] = None
+    motif: Optional[libcasm.configuration.Configuration] = None
         If not None, use the provided motif configuration as the initial state rather
         than finding the minimum potential configuration.
-    configurations: Union[Iterable[casmconfig.Configuration], \
-    casmconfig.ConfigurationSet, None] = None
+    configurations: Union[Iterable[libcasm.configuration.Configuration], \
+    libcasm.configuration.ConfigurationSet, None] = None
         The candidate motif configurations. Must be a
         :class:`~libcasm.configuration.ConfigurationSet`, an iterable of
         :class:`~libcasm.configuration.Configuration`, or None. If None, the
@@ -229,18 +245,18 @@ def make_initial_state(
         initial_state: clexmonte.MonteCarloState
             Initial Monte Carlo state according to the specified parameters.
         id: Union[str, int]
-            ID of the configuration chosen to fill `initial_state`. May by "motif", if
-            a motif was provided, "default" if no motif or configurations were provided,
-            a `configuration_name` string if a ConfigurationSet was provided, or
-            an integer index into the sequence of configuration if an iterable of
-            Configuration was provided.
+            ID of the configuration chosen to fill `initial_state`. May be ``"motif"``,
+            if a motif was provided, ``"default"`` if no motif or configurations were
+            provided, a `configuration_name` string if a ConfigurationSet was provided,
+            or an integer index into the sequence if an iterable of Configuration was
+            provided.
     """
     if motif is None:
         add_default = False
         if configurations is None:
             add_default = True
             supercell = casmconfig.Supercell(
-                prim=system.prim,
+                prim=calculator.system.prim,
                 transformation_matrix_to_super=np.eye(3, dtype="int"),
             )
             default_configuration = casmconfig.Configuration(
@@ -250,7 +266,7 @@ def make_initial_state(
 
         configs, ids, values = min_potential_configs(
             configurations=configurations,
-            potential=potential,
+            calculator=calculator,
             conditions=conditions,
             transformation_matrix_to_super=transformation_matrix_to_super,
             tol=tol,
@@ -328,9 +344,9 @@ def make_initial_state(
         supercell=supercell,
     )
     return (
-        clexmonte.MonteCarloState(
+        MonteCarloState(
             configuration=config,
-            conditions=conditions.to_value_map(is_increment=False),
+            conditions=conditions,
         ),
         motif,
         id,
