@@ -17,14 +17,17 @@ def Clex_ZrO_Occ_thermo(Clex_ZrO_Occ_System, tmp_path):
     assert isinstance(mc_calculator, clexmonte.MonteCalculator)
 
     # construct sampling functions
-    sampling_functions = mc_calculator.standard_sampling_functions()
-    json_sampling_functions = mc_calculator.standard_json_sampling_functions()
-    analysis_functions = mc_calculator.standard_analysis_functions()
+    sampling_functions = mc_calculator.sampling_functions
+    json_sampling_functions = mc_calculator.json_sampling_functions
+    analysis_functions = mc_calculator.analysis_functions
+    modifying_functions = mc_calculator.modifying_functions
 
     assert isinstance(sampling_functions, monte_sampling.StateSamplingFunctionMap)
     assert isinstance(
         json_sampling_functions, monte_sampling.jsonStateSamplingFunctionMap
     )
+    assert isinstance(analysis_functions, clexmonte.ResultsAnalysisFunctionMap)
+    assert isinstance(modifying_functions, clexmonte.StateModifyingFunctionMap)
 
     # construct the initial state
     initial_state = system.make_default_state(

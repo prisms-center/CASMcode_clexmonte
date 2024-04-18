@@ -23,8 +23,7 @@ def test_make_initial_state_1(Clex_ZrO_Occ_System):
         },
         dirs="abc",
         min_volume=1000,
-        motif=None,
-        configurations=None,
+        motifs=None,
     )
     assert isinstance(initial_state, clexmonte.MonteCarloState)
     assert (
@@ -64,8 +63,7 @@ def test_make_initial_state_2a(Clex_ZrO_Occ_System):
         },
         dirs="abc",
         min_volume=1000,
-        motif=motif_in,
-        configurations=None,
+        motifs=[motif_in],
     )
     assert (
         initial_state.configuration.supercell.transformation_matrix_to_super.tolist()
@@ -75,8 +73,8 @@ def test_make_initial_state_2a(Clex_ZrO_Occ_System):
             [0, 0, 7],
         ]
     )
-    assert motif_out is motif_in
-    assert id == "motif"
+    assert motif_out == motif_in
+    assert id == 0
 
 
 def test_make_initial_state_2b(Clex_ZrO_Occ_System):
@@ -113,8 +111,7 @@ def test_make_initial_state_2b(Clex_ZrO_Occ_System):
             ],
             dtype="int",
         ),
-        motif=motif_in,
-        configurations=None,
+        motifs=[motif_in],
     )
     assert (
         initial_state.configuration.supercell.transformation_matrix_to_super.tolist()
@@ -124,12 +121,12 @@ def test_make_initial_state_2b(Clex_ZrO_Occ_System):
             [0, 0, 12],
         ]
     )
-    assert motif_out is motif_in
-    assert id == "motif"
+    assert motif_out == motif_in
+    assert id == 0
 
 
 def test_make_initial_state_3(Clex_ZrO_Occ_System):
-    """Test configurations=ConfigurationSet"""
+    """Test motifs=ConfigurationSet"""
     system = Clex_ZrO_Occ_System
 
     calculator = clexmonte.MonteCalculator(
@@ -163,8 +160,7 @@ def test_make_initial_state_3(Clex_ZrO_Occ_System):
             },
             dirs="abc",
             min_volume=1000,
-            motif=None,
-            configurations=configurations,
+            motifs=configurations,
         )
         if id not in id_list:
             initial_state_list.append(initial_state)
@@ -231,7 +227,7 @@ def test_make_initial_state_3(Clex_ZrO_Occ_System):
 
 
 def test_make_initial_state_4(Clex_ZrO_Occ_System):
-    """Test configurations=ConfigurationSet"""
+    """Test motifs=ConfigurationSet"""
     system = Clex_ZrO_Occ_System
     calculator = clexmonte.MonteCalculator(
         method="semigrand_canonical",
@@ -265,8 +261,7 @@ def test_make_initial_state_4(Clex_ZrO_Occ_System):
             },
             dirs="abc",
             min_volume=1000,
-            motif=None,
-            configurations=configuration_list,
+            motifs=configuration_list,
         )
         if id not in id_list:
             initial_state_list.append(initial_state)

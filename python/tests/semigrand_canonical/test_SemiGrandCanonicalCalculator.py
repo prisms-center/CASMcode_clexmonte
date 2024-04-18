@@ -36,7 +36,6 @@ def test_constructors_1(Clex_ZrO_Occ_System):
         system=system,
         state=state,
         occ_location=None,
-        update_species=False,
     )
     assert isinstance(state_data, clexmonte.StateData)
 

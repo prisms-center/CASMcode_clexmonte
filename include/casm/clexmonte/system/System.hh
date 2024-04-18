@@ -443,6 +443,12 @@ monte::Conversions const &get_index_conversions(System &system,
 monte::OccCandidateList const &get_occ_candidate_list(System &system,
                                                       state_type const &state);
 
+/// \brief Make temporary monte::OccLocation if necessary
+void make_temporary_if_necessary(state_type const &state,
+                                 monte::OccLocation *&occ_location,
+                                 std::unique_ptr<monte::OccLocation> &tmp,
+                                 System &system, bool update_species);
+
 }  // namespace clexmonte
 }  // namespace CASM
 

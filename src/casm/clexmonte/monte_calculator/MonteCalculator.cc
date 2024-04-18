@@ -186,5 +186,31 @@ state_type const &get_state(
   return *calculation->state_data()->state;
 }
 
+/// \brief Make temporary monte::OccLocation if necessary
+///
+/// \param occ_location Reference-to-pointer. Use the pointed to OccLocation if
+///     not nullptr. If nullptr, construct a temporary monte::OccLocation and
+///     set `occ_location` to point at it.
+/// \param tmp Where to construct temporary monte::OccLocation if
+///     `occ_location` is nullptr.
+/// \param calculation Where to get data needed to
+///     construct temporary monte::OccLocation
+void make_temporary_if_necessary(state_type const &state,
+                                 monte::OccLocation *&occ_location,
+                                 std::unique_ptr<monte::OccLocation> &tmp,
+                                 MonteCalculator const &calculation) {
+  if (!occ_location) {
+    auto const &system_ptr = calculation.system();
+    if (!system_ptr) {
+      throw std::runtime_error(
+          "Error checking if a temporary OccLocation is necessary: "
+          "occ_location is null and system is null");
+    }
+    auto &system = *system_ptr;
+    make_temporary_if_necessary(state, occ_location, tmp, system,
+                                calculation.update_species());
+  }
+}
+
 }  // namespace clexmonte
 }  // namespace CASM

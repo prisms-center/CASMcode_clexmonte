@@ -4,8 +4,10 @@
 #include <vector>
 
 #include "casm/composition/CompositionCalculator.hh"
+#include "casm/composition/CompositionConverter.hh"
 #include "casm/external/MersenneTwister/MersenneTwister.h"
 #include "casm/global/eigen.hh"
+#include "casm/misc/Validator.hh"
 #include "casm/misc/algorithm.hh"
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/events/OccCandidate.hh"
@@ -33,6 +35,18 @@ void enforce_composition(
     std::vector<monte::OccSwap> const &semigrand_canonical_swaps,
     monte::OccLocation &occ_location, GeneratorType &random_number_generator);
 
+/// \brief Enforce composition conditions consistency
+void enforce_composition_consistency(
+    state_type &state,
+    composition::CompositionConverter const &composition_converter,
+    double mol_composition_tol);
+
+/// \brief Validate composition conditions consistency
+Validator validate_composition_consistency(
+    state_type &state,
+    composition::CompositionConverter const &composition_converter,
+    double mol_composition_tol);
+
 // --- Implementation ---
 
 namespace enforce_composition_impl {
@@ -58,7 +72,8 @@ std::vector<monte::OccSwap>::const_iterator find_semigrand_canonical_swap(
   double dn = 1. / volume;
   double tol = dn * 1e-3;
 
-  // store <distance_to_target_mol_composition>:{swap_iterator, number of swaps}
+  // store <distance_to_target_mol_composition>:{swap_iterator, number of
+  // swaps}
   typedef std::vector<monte::OccSwap>::const_iterator iterator_type;
   typedef std::pair<iterator_type, Index> cand_and_count_pair;
   std::vector<cand_and_count_pair> choices;
@@ -181,6 +196,101 @@ void enforce_composition(
     monte::propose_semigrand_canonical_event_from_swap(event, occ_location, *it,
                                                        random_number_generator);
     occ_location.apply(event, occupation);
+  }
+}
+
+/// \brief Enforce composition conditions consistency
+///
+/// - If both present and not consistent, set param_composition to be
+///   consistent with mol_composition and print warning
+/// - If only one set, set the other to be consistent
+inline void enforce_composition_consistency(
+    state_type &state,
+    composition::CompositionConverter const &composition_converter,
+    double mol_composition_tol) {
+  monte::ValueMap const &conditions = state.conditions;
+  if (conditions.vector_values.count("mol_composition") &&
+      conditions.vector_values.count("param_composition")) {
+    Eigen::VectorXd mol_composition =
+        conditions.vector_values.at("mol_composition");
+    Eigen::VectorXd param_composition =
+        conditions.vector_values.at("param_composition");
+    Eigen::VectorXd equiv_mol_composition =
+        composition_converter.mol_composition(param_composition);
+    if (!CASM::almost_equal(mol_composition, equiv_mol_composition,
+                            mol_composition_tol)) {
+      auto &log = CASM::log();
+      log.warning<Log::quiet>("Composition conditions mismatch");
+      log.indent() << "mol_composition conditions are not consistent with "
+                      "param_composition conditions!"
+                   << std::endl;
+      log.indent() << "mol_composition: " << mol_composition.transpose()
+                   << std::endl;
+      log.indent() << "param_composition: " << param_composition.transpose()
+                   << std::endl;
+      log.indent() << "equivalent mol_composition: "
+                   << equiv_mol_composition.transpose() << std::endl;
+      log.indent() << "Will proceed using mol_composition" << std::endl
+                   << std::endl;
+    }
+  } else if (conditions.vector_values.count("mol_composition")) {
+    Eigen::VectorXd mol_composition =
+        conditions.vector_values.at("mol_composition");
+    Eigen::VectorXd equiv_param_composition =
+        composition_converter.param_composition(mol_composition);
+    state.conditions.vector_values["param_composition"] =
+        equiv_param_composition;
+  } else if (conditions.vector_values.count("param_composition")) {
+    Eigen::VectorXd param_composition =
+        conditions.vector_values.at("param_composition");
+    Eigen::VectorXd equiv_mol_composition =
+        composition_converter.mol_composition(param_composition);
+    state.conditions.vector_values["mol_composition"] = equiv_mol_composition;
+  } else {
+    throw std::runtime_error(
+        "Error in enforce_composition_consistency: Conditions must include "
+        "`mol_composition` or `param_composition` (or both).");
+  }
+}
+
+/// \brief Validate composition conditions consistency
+inline Validator validate_composition_consistency(
+    state_type &state,
+    composition::CompositionConverter const &composition_converter,
+    double mol_composition_tol) {
+  Validator validator;
+  monte::ValueMap const &conditions = state.conditions;
+  if (conditions.vector_values.count("mol_composition") &&
+      conditions.vector_values.count("param_composition")) {
+    Eigen::VectorXd mol_composition =
+        conditions.vector_values.at("mol_composition");
+    Eigen::VectorXd param_composition =
+        conditions.vector_values.at("param_composition");
+    Eigen::VectorXd equiv_mol_composition =
+        composition_converter.mol_composition(param_composition);
+    if (!CASM::almost_equal(mol_composition, equiv_mol_composition,
+                            mol_composition_tol)) {
+      auto &log = CASM::log();
+      std::stringstream msg;
+      msg << "mol_composition conditions are not consistent with "
+             "param_composition conditions."
+          << " mol_composition: " << mol_composition.transpose() << ";"
+          << " param_composition: " << param_composition.transpose() << ";"
+          << " equivalent mol_composition: "
+          << equiv_mol_composition.transpose();
+
+      validator.error.insert(msg.str());
+    }
+    return validator;
+  } else if (conditions.vector_values.count("mol_composition")) {
+    return validator;
+  } else if (conditions.vector_values.count("param_composition")) {
+    return validator;
+  } else {
+    std::stringstream msg;
+    msg << "Neither `mol_composition` nor `param_composition` is included.";
+    validator.error.insert(msg.str());
+    return validator;
   }
 }
 

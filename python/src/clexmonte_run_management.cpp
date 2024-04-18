@@ -172,7 +172,7 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
           R"pbdoc(
           Evaluates the function
 
-          Equivalent to calling :py::attr:`~libcasm.monte.ResultsAnalysisFunction.function`.
+          Equivalent to calling :py::attr:`~libcasm.clexmonte.ResultsAnalysisFunction.function`.
           )pbdoc");
 
   py::bind_map<analysis_function_map_type>(m, "ResultsAnalysisFunctionMap",
@@ -181,7 +181,7 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
 
     Notes
     -----
-    ResultsAnalysisFunctionMap is a Dict[str, :class:`~libcasm.clexmonteResultsAnalysisFunction`]-like object.
+    ResultsAnalysisFunctionMap is a Dict[str, :class:`~libcasm.clexmonte.ResultsAnalysisFunction`]-like object.
     )pbdoc",
                                            py::module_local(false));
 

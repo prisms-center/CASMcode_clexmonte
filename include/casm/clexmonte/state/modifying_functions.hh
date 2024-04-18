@@ -51,7 +51,7 @@ StateModifyingFunction make_set_mol_composition_f(
       "set_mol_composition",
       "Set `mol_composition` conditions equal to the mol composition of the "
       "state",
-      [calculation](state_type &state) {
+      [calculation](state_type &state, monte::OccLocation *occ_location) {
         Eigen::VectorXi const &occupation = get_occupation(state);
         state.conditions.vector_values["mol_composition"] =
             get_composition_calculator(*calculation->system)

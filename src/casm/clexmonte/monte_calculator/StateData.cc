@@ -6,13 +6,10 @@
 namespace CASM {
 namespace clexmonte {
 
-StateData::StateData(std::shared_ptr<system_type> _system, bool _update_species,
+StateData::StateData(std::shared_ptr<system_type> _system,
                      state_type const *_state,
                      monte::OccLocation const *_occ_location)
-    : system(_system),
-      update_species(_update_species),
-      state(_state),
-      occ_location(_occ_location) {
+    : system(_system), state(_state), occ_location(_occ_location) {
   if (system == nullptr) {
     throw std::runtime_error("Error constructing StateData: system==nullptr");
   }

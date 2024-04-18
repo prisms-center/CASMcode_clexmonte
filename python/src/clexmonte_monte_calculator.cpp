@@ -13,6 +13,7 @@
 // clexmonte/semigrand_canonical
 #include "casm/clexmonte/monte_calculator/MonteCalculator.hh"
 #include "casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.hh"
+#include "casm/clexmonte/run/StateModifyingFunction.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 #include "casm/monte/run_management/RunManager.hh"
@@ -24,16 +25,14 @@
 
 namespace py = pybind11;
 
-// namespace CASM {
-// namespace clexmonte {
-// class SemiGrandCanonicalCalculator;
-// }  // namespace clexmonte
-// }  // namespace CASM
-
 extern "C" {
 /// \brief Returns a clexmonte::BaseMonteCalculator* owning a
 /// SemiGrandCanonicalCalculator
 CASM::clexmonte::BaseMonteCalculator *make_SemiGrandCanonicalCalculator();
+
+/// \brief Returns a clexmonte::BaseMonteCalculator* owning a
+/// CanonicalCalculator
+CASM::clexmonte::BaseMonteCalculator *make_CanonicalCalculator();
 }
 
 /// CASM - Python binding code
@@ -77,11 +76,20 @@ make_shared_SemiGrandCanonicalCalculator(jsonParser const &params,
       lib);
 }
 
+std::shared_ptr<clexmonte::MonteCalculator> make_shared_CanonicalCalculator(
+    jsonParser const &params, std::shared_ptr<system_type> system) {
+  std::shared_ptr<RuntimeLibrary> lib = nullptr;
+  return clexmonte::make_monte_calculator(
+      params, system,
+      std::unique_ptr<clexmonte::BaseMonteCalculator>(
+          make_CanonicalCalculator()),
+      lib);
+}
+
 std::shared_ptr<clexmonte::StateData> make_state_data(
     std::shared_ptr<system_type> system, state_type &state,
-    monte::OccLocation *occ_location, bool update_species) {
-  return std::make_shared<clexmonte::StateData>(system, update_species, &state,
-                                                occ_location);
+    monte::OccLocation *occ_location) {
+  return std::make_shared<clexmonte::StateData>(system, &state, occ_location);
 }
 
 std::shared_ptr<clexmonte::MonteCalculator> make_monte_calculator(
@@ -95,6 +103,8 @@ std::shared_ptr<clexmonte::MonteCalculator> make_monte_calculator(
 
   if (method == "semigrand_canonical") {
     return make_shared_SemiGrandCanonicalCalculator(_params, system);
+  } else if (method == "canonical") {
+    return make_shared_CanonicalCalculator(_params, system);
   } else {
     std::stringstream msg;
     msg << "Error in make_monte_calculator: method='" << method
@@ -141,6 +151,39 @@ std::shared_ptr<clexmonte::MonteCalculator> make_custom_monte_calculator(
   return *parser.value;
 }
 
+std::shared_ptr<run_manager_type> monte_calculator_run(
+    calculator_type &self, state_type &state,
+    std::shared_ptr<run_manager_type> run_manager,
+    monte::OccLocation *occ_location) {
+  // Need to check for an OccLocation
+  std::unique_ptr<monte::OccLocation> tmp;
+  make_temporary_if_necessary(state, occ_location, tmp, self);
+
+  // run
+  self.run(state, *occ_location, *run_manager);
+  return run_manager;
+}
+
+std::shared_ptr<sampling_fixture_type> monte_calculator_run_fixture(
+    calculator_type &self, state_type &state,
+    sampling_fixture_params_type &sampling_fixture_params,
+    std::shared_ptr<engine_type> engine, monte::OccLocation *occ_location) {
+  if (!engine) {
+    engine = std::make_shared<engine_type>();
+    std::random_device device;
+    engine->seed(device());
+  }
+  std::vector<sampling_fixture_params_type> _sampling_fixture_params;
+  _sampling_fixture_params.push_back(sampling_fixture_params);
+  bool global_cutoff = true;
+  std::shared_ptr<run_manager_type> run_manager =
+      std::make_shared<run_manager_type>(engine, _sampling_fixture_params,
+                                         global_cutoff);
+  // run
+  monte_calculator_run(self, state, run_manager, occ_location);
+  return run_manager->sampling_fixtures.at(0);
+}
+
 }  // namespace CASMpy
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
@@ -150,6 +193,7 @@ PYBIND11_MAKE_OPAQUE(CASM::monte::jsonSamplerMap);
 PYBIND11_MAKE_OPAQUE(CASM::monte::StateSamplingFunctionMap);
 PYBIND11_MAKE_OPAQUE(CASM::monte::jsonStateSamplingFunctionMap);
 PYBIND11_MAKE_OPAQUE(CASMpy::analysis_function_map_type);
+PYBIND11_MAKE_OPAQUE(CASM::clexmonte::StateModifyingFunctionMap);
 
 PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
   using namespace CASMpy;
@@ -160,7 +204,9 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
   py::module::import("libcasm.monte");
   py::module::import("libcasm.monte.events");
   py::module::import("libcasm.monte.sampling");
-  py::module::import("libcasm.clexmonte");
+  py::module::import("libcasm.clexmonte._clexmonte_system");
+  py::module::import("libcasm.clexmonte._clexmonte_state");
+  py::module::import("libcasm.clexmonte._clexmonte_run_management");
 
   py::class_<clexmonte::StateData, std::shared_ptr<clexmonte::StateData>>(
       m, "StateData",
@@ -184,20 +230,11 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               occupation of `state` and it is used and updated during the run.
               If None, no occupant location list is stored. The occupant
               location list is not required for evaluating the potential.
-        update_species : bool
-            Use `True` in kinetic Monte Carlo calculations to track species
-            location changes. Otherwise use `False`.
         )pbdoc",
            py::arg("system"), py::arg("state"),
-           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr),
-           py::arg("update_species"))
+           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
       .def_readonly("system", &clexmonte::StateData::system, R"pbdoc(
           System : System data.
-          )pbdoc")
-      .def_readonly("update_species", &clexmonte::StateData::update_species,
-                    R"pbdoc(
-          bool : True if this type of calculation tracks species location \
-          changes; False otherwise.
           )pbdoc")
       .def_readonly("state", &clexmonte::StateData::state, R"pbdoc(
           Optional[MonteCarloState] : The current state.
@@ -367,6 +404,12 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc",
           py::arg("key"));
 
+  py::class_<calculator_type, std::shared_ptr<calculator_type>>
+      pyMonteCalculator(m, "MonteCalculator",
+                        R"pbdoc(
+      Interface for running Monte Carlo calculations
+      )pbdoc");
+
   py::class_<potential_type>(m, "MontePotential",
                              R"pbdoc(
       Interface to potential calculators
@@ -423,11 +466,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc",
            py::arg("linear_site_index"), py::arg("new_occ"));
 
-  py::class_<calculator_type, std::shared_ptr<calculator_type>>(
-      m, "MonteCalculator",
-      R"pbdoc(
-      Interface for running Monte Carlo calculations
-      )pbdoc")
+  pyMonteCalculator
       .def(py::init<>(&make_monte_calculator),
            R"pbdoc(
           .. rubric:: Constructor
@@ -438,9 +477,9 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               Monte Carlo method name. The options are:
 
               - "semigrand_canonical": `Semi-grand canonical ensemble <todo>`_
+              - "canonical": `Canonical ensemble <todo>`_
               - TODO "lte": `Low-temperature expansion <todo>`_, for the
                 semi-grand canonical ensemble
-              - TODO "canonical": `Canonical ensemble <todo>`_
               - TODO "kinetic": `Kinetic Monte Carlo <todo>`_
               - TODO "flex": Allows a range of custom potentials, including
                 composition and order parameter variance-constrained potentials,
@@ -496,13 +535,14 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           - Analysis functions are evaluated for:
 
             - "heat_capacity",
-            - "mol_susc",
-            - "param_susc",
-            - "mol_thermochem_susc", and
-            - "param_thermochem_susc".
+            - "mol_susc" (excluding "canonical", "kinetic"),
+            - "param_susc" (excluding "canonical", "kinetic"),
+            - "mol_thermochem_susc" (excluding "canonical", "kinetic"), and
+            - "param_thermochem_susc" (excluding "canonical", "kinetic").
 
           - Convergence of "potential_energy" is set to an
-            absolute precision of 0.001, and "param_composition" to 0.001.
+            absolute precision of 0.001, and "param_composition" to 0.001
+            (excluding "canonical", "kinetic").
           - Completion is checked every 100 samples, starting with the 100-th.
           - No cutoffs are set.
 
@@ -620,31 +660,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc",
            py::arg("state"),
            py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
-      .def(
-          "_run",
-          [](calculator_type &self, state_type &state,
-             std::shared_ptr<run_manager_type> run_manager,
-             monte::OccLocation *occ_location)
-              -> std::shared_ptr<run_manager_type> {
-            // construct OccLocation if necessary
-            std::unique_ptr<monte::OccLocation> tmp;
-            if (!occ_location) {
-              monte::Conversions const &convert =
-                  get_index_conversions(*self.system(), state);
-              monte::OccCandidateList const &occ_candidate_list =
-                  get_occ_candidate_list(*self.system(), state);
-              tmp = std::make_unique<monte::OccLocation>(
-                  convert, occ_candidate_list,
-                  self.state_data()->update_species);
-              tmp->initialize(get_occupation(state));
-              occ_location = tmp.get();
-            }
-
-            // run
-            self.run(state, *occ_location, *run_manager);
-            return run_manager;
-          },
-          R"pbdoc(
+      .def("run", &monte_calculator_run,
+           R"pbdoc(
           Perform a single run, evolving the input state
 
           Parameters
@@ -664,49 +681,53 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           run_manager: libcasm.clexmonte.RunManager
               The input `run_manager` with collected results.
           )pbdoc",
-          py::arg("state"), py::arg("run_manager"),
-          py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
-      .def(
-          "standard_sampling_functions",
-          [](std::shared_ptr<calculator_type> const &self) {
-            return self->standard_sampling_functions(self);
-          },
-          R"pbdoc(
-          Construct standard semi-grand canonical sampling functions
+           py::arg("state"), py::arg("run_manager"),
+           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+      .def("run_fixture", &monte_calculator_run_fixture,
+           R"pbdoc(
+          Perform a single run, evolving the input state
+
+          Parameters
+          ----------
+          state : libcasm.clexmonte.MonteCarloState
+            The input state.
+          sampling_fixture_params: libcasm.clexmonte.SamplingFixtureParams
+              Specifies sampling and convergence criteria and collects results.
+          engine: Optional[libcasm.monte.RandomNumberEngine] = None
+              Optional random number engine to use. If None, one is constructed and
+              seeded from std::random_device.
+          occ_location: Optional[libcasm.monte.events.OccLocation] = None
+              Current occupant location list. If provided, the user is
+              responsible for ensuring it is up-to-date with the current
+              occupation of `state`. It is used and updated during the run.
+              If None, an occupant location list is generated for the run.
 
           Returns
           -------
-          sampling_functions: libcasm.monte.StateSamplingFunctionMap
-              Standard state sampling functions for semi-grand canonical Monte
-              Carlo calculations.
+          sampling_fixture: libcasm.clexmonte.SamplingFixture
+              A SamplingFixture with collected results.
+
+          )pbdoc",
+           py::arg("state"), py::arg("sampling_fixture_params"),
+           py::arg("engine") = nullptr,
+           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+      .def_readwrite("sampling_functions", &calculator_type::sampling_functions,
+                     R"pbdoc(
+          libcasm.monte.StateSamplingFunctionMap: Sampling functions
           )pbdoc")
-      .def(
-          "standard_json_sampling_functions",
-          [](std::shared_ptr<calculator_type> const &self) {
-            return self->standard_json_sampling_functions(self);
-          },
-          R"pbdoc(
-          Construct standard semi-grand canonical JSON sampling functions
-
-          Returns
-          -------
-          json_sampling_functions: libcasm.monte.jsonStateSamplingFunctionMap
-              Standard JSON state sampling functions for semi-grand canonical
-              Monte Carlo calculations.
+      .def_readwrite("json_sampling_functions",
+                     &calculator_type::json_sampling_functions,
+                     R"pbdoc(
+          libcasm.monte.jsonStateSamplingFunctionMap: JSON sampling functions
           )pbdoc")
-      .def(
-          "standard_analysis_functions",
-          [](std::shared_ptr<calculator_type> const &self) {
-            return self->standard_analysis_functions(self);
-          },
-          R"pbdoc(
-          Construct standard semi-grand canonical results analysis functions
-
-          Returns
-          -------
-          analysis_functions: libcasm.clexmonte.ResultsAnalysisFunctionMap
-              Standard results analysis functions for semi-grand canonical
-              Monte Carlo calculations.
+      .def_readwrite("analysis_functions", &calculator_type::analysis_functions,
+                     R"pbdoc(
+          libcasm.clexmonte.ResultsAnalysisFunctionMap: Results analysis functions
+          )pbdoc")
+      .def_readwrite("modifying_functions",
+                     &calculator_type::modifying_functions,
+                     R"pbdoc(
+          libcasm.clexmonte.StateModifyingFunctionMap: State modifying functions
           )pbdoc")
       .def_property_readonly("name", &calculator_type::calculator_name,
                              R"pbdoc(

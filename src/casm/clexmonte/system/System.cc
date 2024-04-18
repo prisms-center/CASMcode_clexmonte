@@ -3,6 +3,7 @@
 #include "casm/clexmonte/state/Conditions.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexulator/ConfigDoFValuesTools_impl.hh"
+#include "casm/monte/events/OccLocation.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -632,6 +633,34 @@ monte::Conversions const &get_index_conversions(System &system,
 monte::OccCandidateList const &get_occ_candidate_list(System &system,
                                                       state_type const &state) {
   return get_supercell_data(system, state).occ_candidate_list;
+}
+
+/// \brief Make temporary monte::OccLocation if necessary
+///
+/// \param occ_location Reference-to-pointer. Use the pointed to OccLocation if
+///     not nullptr. If nullptr, construct a temporary monte::OccLocation and
+///     set `occ_location` to point at it.
+/// \param tmp Where to construct temporary monte::OccLocation if
+///     `occ_location` is nullptr.
+/// \param calculation Where to get data needed to
+///     construct temporary monte::OccLocation
+/// \param update_species If True, construct OccLocation to track species
+///     movement. If False, do not.
+void make_temporary_if_necessary(state_type const &state,
+                                 monte::OccLocation *&occ_location,
+                                 std::unique_ptr<monte::OccLocation> &tmp,
+                                 System &system, bool update_species) {
+  if (!occ_location) {
+    monte::Conversions const &convert = get_index_conversions(system, state);
+    monte::OccCandidateList const &occ_candidate_list =
+        get_occ_candidate_list(system, state);
+
+    bool update_species = false;
+    tmp = std::make_unique<monte::OccLocation>(convert, occ_candidate_list,
+                                               update_species);
+    tmp->initialize(get_occupation(state));
+    occ_location = tmp.get();
+  }
 }
 
 }  // namespace clexmonte

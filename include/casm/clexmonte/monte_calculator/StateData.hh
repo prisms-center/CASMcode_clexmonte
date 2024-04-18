@@ -12,14 +12,11 @@ namespace CASM {
 namespace clexmonte {
 
 struct StateData {
-  StateData(std::shared_ptr<system_type> _system, bool _update_species,
-            state_type const *_state, monte::OccLocation const *_occ_location);
+  StateData(std::shared_ptr<system_type> _system, state_type const *_state,
+            monte::OccLocation const *_occ_location);
 
   /// System data (not null)
   std::shared_ptr<system_type> system;
-
-  /// Update species in monte::OccLocation tracker?
-  bool update_species;
 
   /// Current state (not null)
   state_type const *state;

@@ -41,7 +41,7 @@ def test_enforce_composition_1(Clex_ZrO_Occ_System):
         },
         dirs="abc",
         min_volume=1000,
-        motif=motif,
+        motifs=[motif],
     )
 
     # n = [n_Zr, n_Va, n_O]

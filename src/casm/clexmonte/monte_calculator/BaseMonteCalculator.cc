@@ -14,7 +14,7 @@ BaseMonteCalculator::BaseMonteCalculator(
     std::set<std::string> _required_dof_spaces,
     std::set<std::string> _required_params,
     std::set<std::string> _optional_params, bool _time_sampling_allowed,
-    bool _is_multistate_method)
+    bool _update_species, bool _is_multistate_method)
     : calculator_name(_calculator_name),
       required_basis_set(_required_basis_set),
       required_local_basis_set(_required_local_basis_set),
@@ -26,6 +26,7 @@ BaseMonteCalculator::BaseMonteCalculator(
       required_params(_required_params),
       optional_params(_optional_params),
       time_sampling_allowed(_time_sampling_allowed),
+      update_species(_update_species),
       is_multistate_method(_is_multistate_method) {}
 
 BaseMonteCalculator::~BaseMonteCalculator() {}

@@ -124,7 +124,7 @@ class IncrementalConditionsStateGenerator : public StateGenerator {
 
     // Apply custom modifiers
     for (auto const &f : m_modifiers) {
-      f(state);
+      f(state, static_cast<monte::OccLocation *>(nullptr));
     }
 
     // Finished

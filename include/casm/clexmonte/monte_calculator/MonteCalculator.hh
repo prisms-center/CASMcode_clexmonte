@@ -74,6 +74,9 @@ class MonteCalculator {
   /// Method allows time-based sampling?
   bool time_sampling_allowed() const { return m_calc->time_sampling_allowed; }
 
+  /// Method tracks species locations? (like in KMC)
+  bool update_species() const { return m_calc->update_species; }
+
   // --- Set at `reset`: ---
 
   /// \brief Set parameters, check for required system data, and reset derived
@@ -86,7 +89,7 @@ class MonteCalculator {
   jsonParser const &params() const { return m_calc->params; }
 
   /// System data
-  std::shared_ptr<system_type> system() { return m_calc->system; }
+  std::shared_ptr<system_type> system() const { return m_calc->system; }
 
   // --- Set by user after `reset`, before `run`: ---
 
@@ -125,6 +128,21 @@ class MonteCalculator {
           "`set_state_and_potential` first.");
     }
     return MontePotential(m_calc->potential, m_lib);
+  }
+
+  /// \brief Validate the state's configuration
+  Validator validate_configuration(state_type &state) const {
+    return m_calc->validate_configuration(state);
+  }
+
+  /// \brief Validate the state's conditions
+  Validator validate_conditions(state_type &state) const {
+    return m_calc->validate_conditions(state);
+  }
+
+  /// \brief Validate the state
+  Validator validate_state(state_type &state) const {
+    return m_calc->validate_state(state);
   }
 
   /// \brief Validate and set the current state, construct state_data, construct
@@ -255,6 +273,12 @@ system_type const &get_system(
 
 state_type const &get_state(
     std::shared_ptr<MonteCalculator> const &calculation);
+
+/// \brief Make temporary monte::OccLocation if necessary
+void make_temporary_if_necessary(state_type const &state,
+                                 monte::OccLocation *&occ_location,
+                                 std::unique_ptr<monte::OccLocation> &tmp,
+                                 MonteCalculator const &calculation);
 
 }  // namespace clexmonte
 }  // namespace CASM

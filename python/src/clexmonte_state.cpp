@@ -1,7 +1,9 @@
 #include <pybind11/eigen.h>
+#include <pybind11/functional.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 
 // nlohmann::json binding
 #define JSON_USE_IMPLICIT_CONVERSIONS 0
@@ -11,6 +13,7 @@
 #include "pybind11_json/pybind11_json.hpp"
 
 // clexmonte
+#include "casm/clexmonte/run/StateModifyingFunction.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/state/enforce_composition.hh"
 #include "casm/clexmonte/state/io/json/State_json_io.hh"
@@ -58,9 +61,22 @@ clexmonte::state_type make_state(
                                from_variant_type(properties));
 }
 
+clexmonte::StateModifyingFunction make_modifying_function(
+    std::string name, std::string description,
+    std::function<void(clexmonte::state_type &, monte::OccLocation *)>
+        function) {
+  if (function == nullptr) {
+    throw std::runtime_error(
+        "Error constructing StateModifyingFunction: function == nullptr");
+  }
+  return clexmonte::StateModifyingFunction(name, description, function);
+}
+
 }  // namespace CASMpy
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+
+PYBIND11_MAKE_OPAQUE(CASM::clexmonte::StateModifyingFunctionMap);
 
 PYBIND11_MODULE(_clexmonte_state, m) {
   using namespace CASMpy;
@@ -72,6 +88,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
   py::module::import("libcasm.composition");
   py::module::import("libcasm.configuration");
   py::module::import("libcasm.monte");
+  py::module::import("libcasm.monte.events");
   py::module::import("libcasm.xtal");
 
   py::class_<clexmonte::state_type>(m, "MonteCarloState",
@@ -195,6 +212,117 @@ PYBIND11_MODULE(_clexmonte_state, m) {
               The `MonteCarloState reference (TODO) <https://prisms-center.github.io/CASMcode_docs/formats/casm/clex/Configuration/>`_ documents the expected format for MonteCarloState."
           )pbdoc",
           py::arg("write_prim_basis") = false);
+
+  py::class_<clexmonte::StateModifyingFunction>(m, "StateModifyingFunction",
+                                                R"pbdoc(
+        Functions that can modify a :class:`~libcasm.clexmonte.MonteCarloState`.
+
+        .. rubric:: Special Methods
+
+        A call operator allows running the function to modify a MonteCarloState.
+        Typical usage involves getting a StateModifyingFunction from a
+        MonteCalculator and then using it to modify a function.
+
+        .. code-block:: Python
+
+            # calculator: MonteCalculator
+            # state: MonteCarloState
+            funcname = "enforce.composition"
+            enforce_composition_f = calculator.modifying_functions[funcname]
+            enforce_composition_f(state)
+
+        )pbdoc")
+      .def(py::init<>(&make_modifying_function),
+           R"pbdoc(
+
+          .. rubric:: Constructor
+
+          Parameters
+          ----------
+          name : str
+              Name of the function
+          description : str
+              Description of the function.
+          function : function
+              A function that modifies a
+              :class:`~libcasm.clexmonte.MonteCarloState` with signature:
+
+              .. code-block:: Python
+
+                  def func(
+                      state: libcasm.clexmonte.MonteCarloState,
+                      occ_location: Optional[libcasm.monte.events.OccLocation],
+                  ):
+                      # function body
+
+              The `state` parameter is the state to be modified and the
+              optional `occ_location` parameter allows support for updating an
+              :class:`libcasm.monte.events.OccLocation` occupation location
+              tracker if the function modifies the state's configuration.
+
+          )pbdoc",
+           py::arg("name"), py::arg("description"), py::arg("function"))
+      .def_readwrite("name", &clexmonte::StateModifyingFunction::name,
+                     R"pbdoc(
+          str : Name of the analysis function.
+          )pbdoc")
+      .def_readwrite("description",
+                     &clexmonte::StateModifyingFunction::description,
+                     R"pbdoc(
+          str : Description of the function.
+          )pbdoc")
+      .def_readwrite("function", &clexmonte::StateModifyingFunction::function,
+                     R"pbdoc(
+          function : The state modifying function.
+
+          A function that modifies a
+          :class:`~libcasm.clexmonte.MonteCarloState` with signature:
+
+          .. code-block:: Python
+
+              def func(
+                  state: libcasm.clexmonte.MonteCarloState,
+                  occ_location: Optional[libcasm.monte.events.OccLocation],
+              ):
+                  # function body
+
+          The `state` parameter is the state to be modified and the
+          optional `occ_location` parameter allows support for updating an
+          :class:`libcasm.monte.events.OccLocation` occupation location
+          tracker if the function modifies the state's configuration.
+          )pbdoc")
+      .def(
+          "__call__",
+          [](clexmonte::StateModifyingFunction const &f,
+             clexmonte::state_type &state,
+             monte::OccLocation *occ_location) { f(state, occ_location); },
+          R"pbdoc(
+          Runs the state modifying function
+
+          Equivalent to calling
+          :py::attr:`~libcasm.clexmonte.StateModifyingFunction.function`.
+
+          Parameters
+          ----------
+          state: libcasm.clexmonte.MonteCarloState
+              The state to be modified
+          occ_location: Optional[libcasm.monte.events.OccLocation] = None
+              Occupation location tracker, that will be updated if the state's
+              configuration is modified, if supported.
+          )pbdoc",
+          py::arg("state"),
+          py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr));
+
+  py::bind_map<clexmonte::StateModifyingFunctionMap>(
+      m, "StateModifyingFunctionMap",
+      R"pbdoc(
+    StateModifyingFunctionMaP stores :class:`~libcasm.clexmonte.StateModifyingFunction` by name.
+
+    Notes
+    -----
+    StateModifyingFunctionMap is a Dict[str, :class:`~libcasm.clexmonte.StateModifyingFunction`]-like object.
+    )pbdoc",
+      py::module_local(false));
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

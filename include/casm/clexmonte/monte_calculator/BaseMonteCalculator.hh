@@ -7,6 +7,7 @@
 #include "casm/clexmonte/monte_calculator/StateData.hh"
 #include "casm/clexmonte/run/StateModifyingFunction.hh"
 #include "casm/clexmonte/system/System.hh"
+#include "casm/misc/Validator.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 #include "casm/monte/ValueMap.hh"
 #include "casm/monte/methods/kinetic_monte_carlo.hh"
@@ -57,6 +58,7 @@ class BaseMonteCalculator {
                                std::set<std::string> _required_params,
                                std::set<std::string> _optional_params,
                                bool _time_sampling_allowed,
+                               bool _update_species,
                                bool _is_multistate_method);
 
   virtual ~BaseMonteCalculator();
@@ -80,6 +82,9 @@ class BaseMonteCalculator {
 
   /// Method allows time-based sampling?
   bool time_sampling_allowed;
+
+  /// Method tracks species locations? (like in KMC)
+  bool update_species;
 
   // --- Set via `reset` method: ---
 
@@ -129,6 +134,15 @@ class BaseMonteCalculator {
       bool write_results, bool write_trajectory, bool write_observations,
       bool write_status, std::optional<std::string> output_dir,
       std::optional<std::string> log_file, double log_frequency_in_s) const = 0;
+
+  /// \brief Validate the state's configuration
+  virtual Validator validate_configuration(state_type &state) const = 0;
+
+  /// \brief Validate the state's conditions
+  virtual Validator validate_conditions(state_type &state) const = 0;
+
+  /// \brief Validate the state
+  virtual Validator validate_state(state_type &state) const = 0;
 
   // --- Set when `set_state_and_potential` is called: ---
 
@@ -193,10 +207,13 @@ class BaseMonteCalculator {
 
 /// \brief Validate input parameters (for key existence only)
 template <typename T>
-void validate_keys(std::map<std::string, T> const &map,
-                   std::set<std::string> required,
-                   std::set<std::string> optional, std::string which_type,
-                   std::string kind);
+Validator validate_keys(std::map<std::string, T> const &map,
+                        std::set<std::string> required,
+                        std::set<std::string> optional, std::string which_type,
+                        std::string kind, bool throw_if_invalid = true);
+
+/// \brief Print validation results
+void print(Log &log, Validator const &validator);
 
 // ~~~ Implementations ---
 
@@ -214,16 +231,21 @@ void validate_keys(std::map<std::string, T> const &map,
 /// \param which_type One of "bool", "float", "vector", "matrix", "str"
 /// \param kind One of "parameter", "condition", etc.
 template <typename T>
-void validate_keys(std::map<std::string, T> const &map,
-                   std::set<std::string> required,
-                   std::set<std::string> optional, std::string which_type,
-                   std::string kind) {
+Validator validate_keys(std::map<std::string, T> const &map,
+                        std::set<std::string> required,
+                        std::set<std::string> optional, std::string which_type,
+                        std::string kind, bool throw_if_invalid) {
+  Validator validator;
   for (auto key : required) {
     if (!map.count(key)) {
       std::stringstream msg;
       msg << "Error: Missing required " << which_type << " " << kind << " '"
           << key << "'.";
-      throw std::runtime_error(msg.str());
+      if (throw_if_invalid) {
+        throw std::runtime_error(msg.str());
+      } else {
+        validator.error.insert(msg.str());
+      }
     }
   }
 
@@ -233,15 +255,43 @@ void validate_keys(std::map<std::string, T> const &map,
     if (key.empty()) {
       std::stringstream msg;
       msg << "Error: Empty " << which_type << " " << kind << " value.";
-      throw std::runtime_error(msg.str());
+      if (throw_if_invalid) {
+        throw std::runtime_error(msg.str());
+      } else {
+        validator.error.insert(msg.str());
+      }
     }
     if (key[0] == '_') {
       continue;
     }
     if (!required.count(key) && !optional.count(key)) {
-      log.indent() << "Warning: Unknown " << which_type << " " << kind << " '"
-                   << key << "'." << std::endl;
+      std::stringstream msg;
+      msg << "Warning: Unknown " << which_type << " " << kind << " '" << key
+          << "'.";
+      if (throw_if_invalid) {
+        log.indent() << msg.str() << std::endl;
+      } else {
+        validator.warning.insert(msg.str());
+      }
     }
+  }
+  return validator;
+}
+
+inline void print(Log &log, Validator const &validator) {
+  if (!validator.valid()) {
+    log.custom("Errors");
+    for (auto const &msg : validator.error) {
+      log.indent() << "- " << msg << std::endl;
+    }
+    log << std::endl;
+  }
+  if (validator.warning.size()) {
+    log.custom("Warnings");
+    for (auto const &msg : validator.warning) {
+      log.indent() << "- " << msg << std::endl;
+    }
+    log << std::endl;
   }
 }
 

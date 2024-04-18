@@ -206,6 +206,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/kinetic.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/kinetic_events.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/BaseMonteCalculator.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/CanonicalCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/MonteCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/SemiGrandCanonicalCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/StateData.cc

@@ -1,9 +1,12 @@
+#include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/methods/occupation_metropolis.hh"
 #include "casm/clexmonte/monte_calculator/BaseMonteCalculator.hh"
 #include "casm/clexmonte/monte_calculator/MonteCalculator.hh"
 #include "casm/clexmonte/monte_calculator/analysis_functions.hh"
+#include "casm/clexmonte/monte_calculator/modifying_functions.hh"
 #include "casm/clexmonte/monte_calculator/sampling_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
+#include "casm/clexmonte/state/enforce_composition.hh"
 #include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
@@ -11,45 +14,25 @@
 namespace CASM {
 namespace clexmonte {
 
-/// \brief Propose and apply semi-grand canonical events
-class SemiGrandCanonicalEventGenerator {
+/// \brief Propose and apply canonical events
+class CanonicalEventGenerator {
  public:
   typedef BaseMonteCalculator::engine_type engine_type;
 
   /// \brief Constructor
   ///
   /// Notes:
-  /// - One and only one of `_semigrand_canonical_swaps` and
-  /// `_semigrand_canonical_multiswaps` should have size != 0
+  /// - `_canonical_swaps` should have size != 0
   ///
-  /// \param _semigrand_canonical_swaps Single site swap types for semi-grand
-  ///     canonical Monte Carlo events. If size > 0, only these events are
-  ///     proposed.
-  /// \param _semigrand_canonical_multiswaps Multiple site swap types for
-  ///     semi-grand canonical Monte Carlo events, such as charge neutral
-  ///     events. These events are only proposed if no single swaps are
-  ///     provided.
-  SemiGrandCanonicalEventGenerator(
-      std::vector<monte::OccSwap> const &_semigrand_canonical_swaps,
-      std::vector<monte::MultiOccSwap> const &_semigrand_canonical_multiswaps)
+  /// \param _canonical_swaps Site swap types for canonical Monte Carlo events.
+  ///     If size > 0, only these events are proposed.
+  CanonicalEventGenerator(std::vector<monte::OccSwap> const &_canonical_swaps)
       : state(nullptr),
         occ_location(nullptr),
-        semigrand_canonical_swaps(_semigrand_canonical_swaps),
-        semigrand_canonical_multiswaps(_semigrand_canonical_multiswaps),
-        use_multiswaps(semigrand_canonical_swaps.size() == 0) {
-    if (semigrand_canonical_swaps.size() == 0 &&
-        semigrand_canonical_multiswaps.size() == 0) {
+        canonical_swaps(_canonical_swaps) {
+    if (canonical_swaps.size() == 0) {
       throw std::runtime_error(
-          "Error in SemiGrandCanonicalEventGenerator: "
-          "semigrand_canonical_swaps.size() == 0 && "
-          "semigrand_canonical_multiswaps.size() == 0");
-    }
-    if (semigrand_canonical_swaps.size() != 0 &&
-        semigrand_canonical_multiswaps.size() != 0) {
-      throw std::runtime_error(
-          "Error in SemiGrandCanonicalEventGenerator: "
-          "semigrand_canonical_swaps.size() != 0 && "
-          "semigrand_canonical_multiswaps.size() != 0");
+          "Error in CanonicalEventGenerator: canonical_swaps.size() == 0");
     }
   }
 
@@ -60,15 +43,8 @@ class SemiGrandCanonicalEventGenerator {
   /// Occupant tracker
   monte::OccLocation *occ_location;
 
-  /// \brief Single swap types for semi-grand canonical Monte Carlo events
-  std::vector<monte::OccSwap> semigrand_canonical_swaps;
-
-  /// \brief Multiple swap types for semi-grand canonical Monte Carlo events
-  std::vector<monte::MultiOccSwap> semigrand_canonical_multiswaps;
-
-  /// \brief If true, propose events from multiswaps, else propose events from
-  /// single swaps
-  bool use_multiswaps;
+  /// \brief Swap types for canonical Monte Carlo events
+  std::vector<monte::OccSwap> canonical_swaps;
 
   /// \brief The current proposed event
   monte::OccEvent occ_event;
@@ -85,14 +61,12 @@ class SemiGrandCanonicalEventGenerator {
   ///     event proposal. It must already be initialized with the input state.
   ///     Throws if nullptr.
   void set(state_type *_state, monte::OccLocation *_occ_location) {
-    this->state =
-        throw_if_null(_state,
-                      "Error in SemiGrandCanonicalEventGenerator::set: "
-                      "_state==nullptr");
-    this->occ_location =
-        throw_if_null(_occ_location,
-                      "Error in SemiGrandCanonicalEventGenerator::set: "
-                      "_occ_location==nullptr");
+    this->state = throw_if_null(_state,
+                                "Error in CanonicalEventGenerator::set: "
+                                "_state==nullptr");
+    this->occ_location = throw_if_null(_occ_location,
+                                       "Error in CanonicalEventGenerator::set: "
+                                       "_occ_location==nullptr");
   }
 
   /// \brief Propose a Monte Carlo occupation event, returning a reference
@@ -103,15 +77,9 @@ class SemiGrandCanonicalEventGenerator {
   /// \param random_number_generator A random number generator
   monte::OccEvent const &propose(
       monte::RandomNumberGenerator<engine_type> &random_number_generator) {
-    if (this->use_multiswaps) {
-      return monte::propose_semigrand_canonical_multiswap_event(
-          this->occ_event, *this->occ_location,
-          this->semigrand_canonical_multiswaps, random_number_generator);
-    } else {
-      return monte::propose_semigrand_canonical_event(
-          this->occ_event, *this->occ_location, this->semigrand_canonical_swaps,
-          random_number_generator);
-    }
+    return monte::propose_canonical_event(this->occ_event, *this->occ_location,
+                                          this->canonical_swaps,
+                                          random_number_generator);
   }
 
   /// \brief Update the occupation of the current state using the provided event
@@ -120,9 +88,9 @@ class SemiGrandCanonicalEventGenerator {
   }
 };
 
-class SemiGrandCanonicalPotential : public BaseMontePotential {
+class CanonicalPotential : public BaseMontePotential {
  public:
-  SemiGrandCanonicalPotential(std::shared_ptr<StateData> _state_data)
+  CanonicalPotential(std::shared_ptr<StateData> _state_data)
       : BaseMontePotential(_state_data),
         state(*state_data->state),
         n_unitcells(state_data->n_unitcells),
@@ -132,17 +100,15 @@ class SemiGrandCanonicalPotential : public BaseMontePotential {
             get_composition_calculator(*this->state_data->system)),
         composition_converter(
             get_composition_converter(*this->state_data->system)),
-        param_chem_pot(state.conditions.vector_values.at("param_chem_pot")),
+        param_composition(
+            state.conditions.vector_values.at("param_composition")),
         formation_energy_clex(
             get_clex(*state_data->system, state, "formation_energy")) {
-    if (param_chem_pot.size() !=
+    if (param_composition.size() !=
         composition_converter.independent_compositions()) {
       throw std::runtime_error(
-          "Error in SemiGrandCanonicalPotential: param_chem_pot size error");
+          "Error in CanonicalPotential: param_composition size error");
     }
-
-    exchange_chem_pot =
-        make_exchange_chemical_potential(param_chem_pot, composition_converter);
   }
 
   // --- Data used in the potential calculation: ---
@@ -153,61 +119,45 @@ class SemiGrandCanonicalPotential : public BaseMontePotential {
   monte::Conversions const &convert;
   composition::CompositionCalculator const &composition_calculator;
   composition::CompositionConverter const &composition_converter;
-  Eigen::VectorXd param_chem_pot;
+  Eigen::VectorXd param_composition;
   std::shared_ptr<clexulator::ClusterExpansion> formation_energy_clex;
-  Eigen::MatrixXd exchange_chem_pot;
 
   /// \brief Calculate (per_supercell) potential value
   double per_supercell() override {
-    Eigen::VectorXd mol_composition =
-        composition_calculator.mean_num_each_component(occupation);
-    Eigen::VectorXd param_composition =
-        composition_converter.param_composition(mol_composition);
-
-    return formation_energy_clex->per_supercell() -
-           n_unitcells * param_chem_pot.dot(param_composition);
+    return formation_energy_clex->per_supercell();
   }
 
   /// \brief Calculate (per_unitcell) potential value
-  double per_unitcell() override { return this->per_supercell() / n_unitcells; }
+  double per_unitcell() override {
+    return formation_energy_clex->per_unitcell();
+  }
 
-  /// \brief Calculate change in (per_supercell) semi-grand potential value due
+  /// \brief Calculate change in (per_supercell) potential value due
   ///     to a series of occupation changes
   double occ_delta_per_supercell(std::vector<Index> const &linear_site_index,
                                  std::vector<int> const &new_occ) override {
-    double delta_formation_energy =
-        formation_energy_clex->occ_delta_value(linear_site_index, new_occ);
-    double delta_potential_energy = delta_formation_energy;
-    for (Index i = 0; i < linear_site_index.size(); ++i) {
-      Index l = linear_site_index[i];
-      Index asym = convert.l_to_asym(l);
-      Index curr_species = convert.species_index(asym, occupation(l));
-      Index new_species = convert.species_index(asym, new_occ[i]);
-      delta_potential_energy -= exchange_chem_pot(new_species, curr_species);
-    }
-
-    return delta_potential_energy;
+    return formation_energy_clex->occ_delta_value(linear_site_index, new_occ);
   }
 };
 
-class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
+class CanonicalCalculator : public BaseMonteCalculator {
  public:
   using BaseMonteCalculator::engine_type;
 
-  SemiGrandCanonicalCalculator()
-      : BaseMonteCalculator("SemiGrandCanonicalCalculator",  // calculator_name
-                            {},                    // required_basis_set,
-                            {},                    // required_local_basis_set,
-                            {"formation_energy"},  // required_clex,
-                            {},                    // required_multiclex,
-                            {},                    // required_local_clex,
-                            {},                    // required_local_multiclex,
-                            {},                    // required_dof_spaces,
-                            {},                    // required_params,
-                            {},                    // optional_params,
-                            false,                 // time_sampling_allowed,
-                            false,                 // update_species,
-                            false                  // is_multistate_method,
+  CanonicalCalculator()
+      : BaseMonteCalculator("CanonicalCalculator",  // calculator_name
+                            {},                     // required_basis_set,
+                            {},                     // required_local_basis_set,
+                            {"formation_energy"},   // required_clex,
+                            {},                     // required_multiclex,
+                            {},                     // required_local_clex,
+                            {},                     // required_local_multiclex,
+                            {},                     // required_dof_spaces,
+                            {},                     // required_params,
+                            {},                     // optional_params,
+                            false,                  // time_sampling_allowed,
+                            false,                  // update_species,
+                            false                   // is_multistate_method,
         ) {}
 
   /// \brief Construct functions that may be used to sample various quantities
@@ -220,8 +170,8 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
             calculation, "potential_energy",
             "Potential energy of the state (normalized per primitive cell)");
 
-    // Specific to semi-grand canonical
-    functions.push_back(monte_calculator::make_param_chem_pot_f(calculation));
+    // Specific to canonical
+    // (none)
 
     std::map<std::string, state_sampling_function_type> function_map;
     for (auto const &f : functions) {
@@ -251,11 +201,7 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
   standard_analysis_functions(
       std::shared_ptr<MonteCalculator> const &calculation) const override {
     std::vector<results_analysis_function_type> functions = {
-        monte_calculator::make_heat_capacity_f(calculation),
-        monte_calculator::make_mol_susc_f(calculation),
-        monte_calculator::make_param_susc_f(calculation),
-        monte_calculator::make_mol_thermochem_susc_f(calculation),
-        monte_calculator::make_param_thermochem_susc_f(calculation)};
+        monte_calculator::make_heat_capacity_f(calculation)};
 
     std::map<std::string, results_analysis_function_type> function_map;
     for (auto const &f : functions) {
@@ -267,7 +213,15 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
   /// \brief Construct functions that may be used to modify states
   StateModifyingFunctionMap standard_modifying_functions(
       std::shared_ptr<MonteCalculator> const &calculation) const override {
-    return StateModifyingFunctionMap();
+    std::vector<StateModifyingFunction> functions = {
+        monte_calculator::make_match_composition_f(calculation),
+        monte_calculator::make_enforce_composition_f(calculation)};
+
+    StateModifyingFunctionMap function_map;
+    for (auto const &f : functions) {
+      function_map.emplace(f.name, f);
+    }
+    return function_map;
   }
 
   /// \brief Construct default SamplingFixtureParams
@@ -304,13 +258,10 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
           monte::default_statistics_calculator<statistics_type>();
 
       converge(calculation->sampling_functions, completion_check_params)
-          .set_abs_precision("potential_energy", 0.001)
-          .set_abs_precision("param_composition", 0.001);
+          .set_abs_precision("potential_energy", 0.001);
     }
 
-    std::vector<std::string> analysis_names = {
-        "heat_capacity", "mol_susc", "param_susc", "mol_thermochem_susc",
-        "param_thermochem_susc"};
+    std::vector<std::string> analysis_names = {"heat_capacity"};
 
     return clexmonte::make_sampling_fixture_params(
         label, calculation->sampling_functions,
@@ -320,7 +271,11 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
         log_file, log_frequency_in_s);
   }
 
-  /// \brief Validate the state's configuration (all are valid)
+  /// \brief Validate the state's configuration
+  ///
+  /// Notes:
+  /// - All configurations are valid (validate_state checks for consistency
+  ///   with the composition conditions)
   Validator validate_configuration(state_type &state) const override {
     return Validator{};
   }
@@ -332,16 +287,25 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
   /// - requires vector param_chem_pot
   /// - warnings if other conditions are present
   Validator validate_conditions(state_type &state) const override {
+    // Validate system
+    if (this->system == nullptr) {
+      throw std::runtime_error(
+          "Error in CanonicalCalculator::validate_conditions: system==nullptr");
+    }
+
     // validate state.conditions
     monte::ValueMap const &conditions = state.conditions;
     Validator v;
     v.insert(validate_keys(conditions.scalar_values,
                            {"temperature"} /*required*/, {} /*optional*/,
                            "scalar", "condition", false /*throw_if_invalid*/));
-    v.insert(validate_keys(conditions.vector_values,
-                           {"param_chem_pot"} /*required*/, {} /*optional*/,
-                           "vector", "condition", false /*throw_if_invalid*/));
-
+    v.insert(
+        validate_keys(conditions.vector_values, {} /*required*/,
+                      {"param_composition", "mol_composition"} /*optional*/,
+                      "vector", "condition", false /*throw_if_invalid*/));
+    v.insert(validate_composition_consistency(
+        state, get_composition_converter(*this->system),
+        this->mol_composition_tol));
     return v;
   }
 
@@ -350,17 +314,61 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
     Validator v;
     v.insert(this->validate_configuration(state));
     v.insert(this->validate_conditions(state));
+
+    // check if configuration is consistent with conditions
+    auto const &composition_calculator =
+        get_composition_calculator(*this->system);
+    auto const &composition_converter =
+        get_composition_converter(*this->system);
+
+    Eigen::VectorXd mol_composition =
+        composition_calculator.mean_num_each_component(get_occupation(state));
+    Eigen::VectorXd param_composition =
+        composition_converter.param_composition(mol_composition);
+
+    Eigen::VectorXd target_mol_composition =
+        state.conditions.vector_values.at("mol_composition");
+    Eigen::VectorXd target_param_composition =
+        composition_converter.param_composition(target_mol_composition);
+
+    if (!CASM::almost_equal(mol_composition, target_mol_composition,
+                            this->mol_composition_tol)) {
+      std::stringstream msg;
+      msg << "***" << std::endl;
+      msg << "Calculated composition is not consistent with conditions "
+             "composition."
+          << std::endl;
+      msg << "Calculated composition:" << std::endl;
+      msg << "- mol_composition: " << mol_composition.transpose() << std::endl;
+      msg << "- param_composition: " << param_composition.transpose()
+          << std::endl;
+      msg << "Conditions:" << std::endl;
+      msg << "- mol_composition: " << target_mol_composition.transpose()
+          << std::endl;
+      msg << "- param_composition: " << target_param_composition.transpose()
+          << std::endl;
+      msg << "***" << std::endl;
+      v.error.insert(msg.str());
+    }
     return v;
   }
 
   /// \brief Validate and set the current state, construct state_data, construct
   ///     potential
+  ///
+  /// \param state Conditions is required to have `mol_composition` or
+  ///     `param_composition`. If both are present, they are checked for
+  ///     consistency. If not consistent, a warning is printed and
+  ///     param_composition is modified to match mol_composition.
+  ///     If both are not present, one is set from the other.
+  /// \param occ_location Optional occupation location tracking. Not required
+  ///     for potential evaluation. Required for a Monte Carlo run.
   void set_state_and_potential(state_type &state,
                                monte::OccLocation *occ_location) override {
     // Validate system
     if (this->system == nullptr) {
       throw std::runtime_error(
-          "Error in SemiGrandCanonicalCalculator::run: system==nullptr");
+          "Error in CanonicalCalculator::run: system==nullptr");
     }
 
     // Validate state
@@ -368,7 +376,7 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
     print(CASM::log(), v);
     if (!v.valid()) {
       throw std::runtime_error(
-          "Error in SemiGrandCanonicalCalculator::run: Invalid initial state");
+          "Error in CanonicalCalculator::run: Invalid initial state");
     }
 
     // Make state data
@@ -376,40 +384,46 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
         std::make_shared<StateData>(this->system, &state, occ_location);
 
     // Make potential calculator
-    this->potential =
-        std::make_shared<SemiGrandCanonicalPotential>(this->state_data);
+    this->potential = std::make_shared<CanonicalPotential>(this->state_data);
   }
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
            run_manager_type<engine_type> &run_manager) override {
+    // Set state data and construct potential calculator
     this->set_state_and_potential(state, &occ_location);
+
+    // Random number generator
+    monte::RandomNumberGenerator<engine_type> random_number_generator(
+        run_manager.engine);
+
+    //    // Enforce composition
+    //    this->enforce_composition(state, occ_location,
+    //    random_number_generator);
 
     // Get temperature
     double temperature = state.conditions.scalar_values.at("temperature");
 
+    // Make delta potential function
     auto potential_occ_delta_per_supercell_f =
         [=](monte::OccEvent const &event) {
           return this->potential->occ_delta_per_supercell(
               event.linear_site_index, event.new_occ);
         };
 
-    // Random number generator
-    monte::RandomNumberGenerator<engine_type> random_number_generator(
-        run_manager.engine);
-
     // Make event generator
-    auto event_generator = std::make_shared<SemiGrandCanonicalEventGenerator>(
-        get_semigrand_canonical_swaps(*this->system),
-        get_semigrand_canonical_multiswaps(*this->system));
+    auto event_generator = std::make_shared<CanonicalEventGenerator>(
+        get_canonical_swaps(*this->system));
     event_generator->set(&state, &occ_location);
 
+    // Make event proposal function
     auto propose_event_f =
         [=](monte::RandomNumberGenerator<engine_type> &random_number_generator)
         -> monte::OccEvent const & {
       return event_generator->propose(random_number_generator);
     };
 
+    // Make event application function
     auto apply_event_f = [=](monte::OccEvent const &occ_event) -> void {
       return event_generator->apply(occ_event);
     };
@@ -425,16 +439,16 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
            std::vector<monte::OccLocation> &occ_locations,
            run_manager_type<engine_type> &run_manager) override {
     throw std::runtime_error(
-        "Error: SemiGrandCanonicalCalculator does not allow multi-state runs");
+        "Error: CanonicalCalculator does not allow multi-state runs");
   }
 
   // --- Parameters ---
   int verbosity_level = 10;
+  double mol_composition_tol = CASM::TOL;
 
   /// \brief Reset the derived Monte Carlo calculator
   ///
   /// Parameters:
-  ///
   ///   verbosity: str or int, default=10
   ///       If integer, the allowed range is `[0,100]`. If string, then:
   ///       - "none" is equivalent to integer value 0
@@ -449,10 +463,14 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
     this->verbosity_level = parse_verbosity(parser);
     CASM::log().set_verbosity(this->verbosity_level);
 
+    // "mol_composition_tol": float, default=CASM::TOL
+    this->mol_composition_tol = CASM::TOL;
+    parser.optional(this->mol_composition_tol, "mol_composition_tol");
+
     // TODO: enumeration
 
     std::stringstream ss;
-    ss << "Error in SemiGrandCanonicalCalculator: error reading calculation "
+    ss << "Error in CanonicalCalculator: error reading calculation "
           "parameters.";
     std::runtime_error error_if_invalid{ss.str()};
     report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
@@ -460,9 +478,72 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
     return;
   }
 
-  /// \brief Clone the SemiGrandCanonicalCalculator
-  SemiGrandCanonicalCalculator *_clone() const override {
-    return new SemiGrandCanonicalCalculator(*this);
+  /// \brief Clone the CanonicalCalculator
+  CanonicalCalculator *_clone() const override {
+    return new CanonicalCalculator(*this);
+  }
+
+  /// \brief Enforce composition conditions consistency
+  ///
+  /// - If both present and not consistent, set param_composition to be
+  ///   consistent with mol_composition and print warning
+  /// - If only one set, set the other to be consistent
+  void enforce_conditions_consistency(state_type &state) {
+    enforce_composition_consistency(state,
+                                    get_composition_converter(*this->system),
+                                    this->mol_composition_tol);
+  }
+
+  /// \brief Enforce composition conditions
+  void enforce_composition(
+      state_type &state, monte::OccLocation &occ_location,
+      monte::RandomNumberGenerator<engine_type> &random_number_generator) {
+    auto const &composition_calculator =
+        get_composition_calculator(*this->system);
+    auto const &composition_converter =
+        get_composition_converter(*this->system);
+
+    Eigen::VectorXd mol_composition =
+        composition_calculator.mean_num_each_component(get_occupation(state));
+    Eigen::VectorXd param_composition =
+        composition_converter.param_composition(mol_composition);
+
+    Eigen::VectorXd target_mol_composition =
+        state.conditions.vector_values.at("mol_composition");
+    Eigen::VectorXd target_param_composition =
+        composition_converter.param_composition(target_mol_composition);
+
+    auto &log = CASM::log();
+    log.begin<Log::quiet>("Enforcing mol_composition conditions");
+    log.indent() << "calculated:" << std::endl;
+    log.indent() << "- mol_composition: " << mol_composition.transpose()
+                 << std::endl;
+    log.indent() << "- param_composition: " << param_composition.transpose()
+                 << std::endl;
+    log.indent() << "target: " << std::endl;
+    log.indent() << "- mol_composition: " << target_mol_composition.transpose()
+                 << std::endl;
+    log.indent() << "- param_composition: "
+                 << target_param_composition.transpose() << std::endl;
+
+    log.indent() << "enforcing composition..." << std::endl;
+    clexmonte::enforce_composition(get_occupation(state),
+                                   target_mol_composition,
+                                   get_composition_calculator(*this->system),
+                                   get_semigrand_canonical_swaps(*this->system),
+                                   occ_location, random_number_generator);
+    log.indent() << "DONE" << std::endl;
+
+    mol_composition =
+        composition_calculator.mean_num_each_component(get_occupation(state));
+    param_composition =
+        composition_converter.param_composition(mol_composition);
+    log.indent() << "calculated:" << std::endl;
+    log.indent() << "- mol_composition: " << mol_composition.transpose()
+                 << std::endl;
+    log.indent() << "- param_composition: " << param_composition.transpose()
+                 << std::endl
+                 << std::endl;
   }
 };
 
@@ -471,8 +552,8 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
 
 extern "C" {
 /// \brief Returns a clexmonte::BaseMonteCalculator* owning a
-/// SemiGrandCanonicalCalculator
-CASM::clexmonte::BaseMonteCalculator *make_SemiGrandCanonicalCalculator() {
-  return new CASM::clexmonte::SemiGrandCanonicalCalculator();
+/// CanonicalCalculator
+CASM::clexmonte::BaseMonteCalculator *make_CanonicalCalculator() {
+  return new CASM::clexmonte::CanonicalCalculator();
 }
 }

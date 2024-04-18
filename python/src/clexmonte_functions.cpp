@@ -41,6 +41,7 @@ PYBIND11_MODULE(_clexmonte_functions, m) {
   py::module::import("libcasm.composition");
   py::module::import("libcasm.monte");
   py::module::import("libcasm.monte.events");
+  py::module::import("libcasm.clexmonte._clexmonte_system");
 
   m.def(
       "enforce_composition",
@@ -62,24 +63,20 @@ PYBIND11_MODULE(_clexmonte_functions, m) {
           engine = _engine.value();
         }
 
-        std::unique_ptr<monte::OccLocation> _occ_location;
+        // Need an OccLocation, will set occ_location
+        std::unique_ptr<monte::OccLocation> tmp;
         if (!occ_location) {
           if (!system) {
             throw std::runtime_error(
                 "Error in enforce_composition: "
-                "occ_location is None and system is None");
+                "composition_calculator is None and system is None");
           }
-          monte::Conversions const &convert =
-              get_index_conversions(*system, state);
-          monte::OccCandidateList const &occ_candidate_list =
-              get_occ_candidate_list(*system, state);
           bool update_species = false;
-          _occ_location = std::make_unique<monte::OccLocation>(
-              convert, occ_candidate_list, update_species);
-          _occ_location->initialize(clexmonte::get_occupation(state));
-          occ_location = _occ_location.get();
+          make_temporary_if_necessary(state, occ_location, tmp, *system,
+                                      update_species);
         }
 
+        // Need a composition calculator
         auto pick_cc = [=]() -> composition::CompositionCalculator const & {
           if (composition_calculator.has_value()) {
             return *composition_calculator;
@@ -92,8 +89,9 @@ PYBIND11_MODULE(_clexmonte_functions, m) {
             return system->composition_calculator;
           }
         };
-
         composition::CompositionCalculator const &cc = pick_cc();
+
+        // Validate target_mol_composition against composition calculator
         if (target_mol_composition.size() != cc.components().size()) {
           std::stringstream msg;
           msg << "Error in enforce_composition: mismatch ";
@@ -103,6 +101,8 @@ PYBIND11_MODULE(_clexmonte_functions, m) {
           throw std::runtime_error(msg.str());
         }
 
+        // Get the semi-grand canonical swaps that will be used to enforce the
+        // target compsition
         auto pick_swaps = [=]() -> std::vector<monte::OccSwap> const & {
           if (semigrand_canonical_swaps.has_value()) {
             return *semigrand_canonical_swaps;
@@ -115,13 +115,14 @@ PYBIND11_MODULE(_clexmonte_functions, m) {
             return system->semigrand_canonical_swaps;
           }
         };
+        auto const &swaps = pick_swaps();
 
         monte::RandomNumberGenerator<engine_type> random_number_generator(
             engine);
 
-        clexmonte::enforce_composition(
-            get_occupation(state), target_mol_composition, pick_cc(),
-            pick_swaps(), *occ_location, random_number_generator);
+        clexmonte::enforce_composition(get_occupation(state),
+                                       target_mol_composition, cc, swaps,
+                                       *occ_location, random_number_generator);
       },
       R"pbdoc(
             Apply grand canonical swaps to enforce a target composition
