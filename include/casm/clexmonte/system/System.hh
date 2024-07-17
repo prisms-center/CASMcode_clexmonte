@@ -19,6 +19,7 @@
 #include "casm/configuration/occ_events/OccSystem.hh"
 #include "casm/crystallography/BasicStructure.hh"
 #include "casm/monte/Conversions.hh"
+#include "casm/monte/ValueMap.hh"
 #include "casm/monte/events/OccCandidate.hh"
 
 namespace CASM {
@@ -272,6 +273,16 @@ composition::CompositionConverter const &get_composition_converter(
 /// \brief Helper to get composition::CompositionCalculator
 composition::CompositionCalculator const &get_composition_calculator(
     System const &system);
+
+/// \brief Get the mol_composition from the conditions, assuming valid and
+/// consistent conditions
+Eigen::VectorXd get_mol_composition(System const &system,
+                                    monte::ValueMap const &conditions);
+
+/// \brief Get the param_composition from the conditions, assuming valid and
+/// consistent conditions
+Eigen::VectorXd get_param_composition(System const &system,
+                                      monte::ValueMap const &conditions);
 
 /// \brief Get or make a supercell
 std::shared_ptr<config::Supercell const> get_supercell(

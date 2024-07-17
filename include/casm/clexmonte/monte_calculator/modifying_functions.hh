@@ -3,6 +3,7 @@
 
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/state/enforce_composition.hh"
+#include "casm/clexmonte/system/System.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -79,11 +80,11 @@ inline StateModifyingFunction make_enforce_composition_f(
         /// - If both present and not consistent, set param_composition to be
         ///   consistent with mol_composition and print warning
         /// - If only one set, set the other to be consistent
-        validate_composition_consistency(
+        enforce_composition_consistency(
             state, get_composition_converter(system), mol_composition_tol);
 
         Eigen::VectorXd target_mol_composition =
-            state.conditions.vector_values.at("mol_composition");
+            get_mol_composition(system, state.conditions);
         // Random number generator (seed from random_device)
         /// TODO: get random engine from somewhere?
         monte::RandomNumberGenerator<BaseMonteCalculator::engine_type>

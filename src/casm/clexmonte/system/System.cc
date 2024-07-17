@@ -241,6 +241,40 @@ composition::CompositionCalculator const &get_composition_calculator(
   return system.composition_calculator;
 }
 
+/// \brief Get the mol_composition from the conditions, assuming valid and
+/// consistent conditions
+Eigen::VectorXd get_mol_composition(System const &system,
+                                    monte::ValueMap const &conditions) {
+  if (conditions.vector_values.count("mol_composition")) {
+    return conditions.vector_values.at("mol_composition");
+  } else if (conditions.vector_values.count("param_composition")) {
+    return get_composition_converter(system).mol_composition(
+        conditions.vector_values.at("param_composition"));
+  } else {
+    throw std::runtime_error(
+        "Error in get_mol_composition: "
+        "conditions must have either \"mol_composition\" or "
+        "\"param_composition\"");
+  }
+}
+
+/// \brief Get the param_composition from the conditions, assuming valid and
+/// consistent conditions
+Eigen::VectorXd get_param_composition(System const &system,
+                                      monte::ValueMap const &conditions) {
+  if (conditions.vector_values.count("param_composition")) {
+    return conditions.vector_values.at("param_composition");
+  } else if (conditions.vector_values.count("mol_composition")) {
+    return get_composition_converter(system).param_composition(
+        conditions.vector_values.at("mol_composition"));
+  } else {
+    throw std::runtime_error(
+        "Error in get_param_composition: "
+        "conditions must have either \"mol_composition\" or "
+        "\"param_composition\"");
+  }
+}
+
 /// \brief Get or make a supercell
 std::shared_ptr<config::Supercell const> get_supercell(
     System &system, Eigen::Matrix3l const &transformation_matrix_to_super) {

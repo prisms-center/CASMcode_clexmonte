@@ -476,8 +476,12 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           method : str
               Monte Carlo method name. The options are:
 
-              - "semigrand_canonical": `Semi-grand canonical ensemble <todo>`_
-              - "canonical": `Canonical ensemble <todo>`_
+              - "semigrand_canonical": `Semi-grand canonical ensemble <todo>`_.
+                Input states require `"temperature"` and `"param_chem_pot"`
+                conditions.
+              - "canonical": `Canonical ensemble <todo>`_.
+                Input states require `"temperature"` and one of
+                `"param_composition"` or `"mol_composition"` conditions.
               - TODO "lte": `Low-temperature expansion <todo>`_, for the
                 semi-grand canonical ensemble
               - TODO "kinetic": `Kinetic Monte Carlo <todo>`_

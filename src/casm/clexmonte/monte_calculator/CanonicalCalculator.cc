@@ -101,7 +101,7 @@ class CanonicalPotential : public BaseMontePotential {
         composition_converter(
             get_composition_converter(*this->state_data->system)),
         param_composition(
-            state.conditions.vector_values.at("param_composition")),
+            get_param_composition(*this->state_data->system, state.conditions)),
         formation_energy_clex(
             get_clex(*state_data->system, state, "formation_energy")) {
     if (param_composition.size() !=
@@ -314,6 +314,9 @@ class CanonicalCalculator : public BaseMonteCalculator {
     Validator v;
     v.insert(this->validate_configuration(state));
     v.insert(this->validate_conditions(state));
+    if (!v.valid()) {
+      return v;
+    }
 
     // check if configuration is consistent with conditions
     auto const &composition_calculator =
@@ -327,7 +330,7 @@ class CanonicalCalculator : public BaseMonteCalculator {
         composition_converter.param_composition(mol_composition);
 
     Eigen::VectorXd target_mol_composition =
-        state.conditions.vector_values.at("mol_composition");
+        get_mol_composition(*this->system, state.conditions);
     Eigen::VectorXd target_param_composition =
         composition_converter.param_composition(target_mol_composition);
 
@@ -509,7 +512,7 @@ class CanonicalCalculator : public BaseMonteCalculator {
         composition_converter.param_composition(mol_composition);
 
     Eigen::VectorXd target_mol_composition =
-        state.conditions.vector_values.at("mol_composition");
+        get_mol_composition(*this->system, state.conditions);
     Eigen::VectorXd target_param_composition =
         composition_converter.param_composition(target_mol_composition);
 

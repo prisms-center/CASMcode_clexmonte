@@ -19,7 +19,8 @@ from .parsing import (
 class RunData:
     """Data structure to store data for each run in a series
 
-    RunData is used for:
+    RunData is used by :class:`~libcasm.clexmonte.IncrementalConditionsStateGenerator`
+    for:
 
     - storing a summary of the runs in a series,
     - determining the next run in the series, including its initial state in the
@@ -141,7 +142,14 @@ class RunData:
 class RunDataOutputParams:
     """Parameters controlling saving and write run data for a series of runs
 
-    The data saved and output affects if restarts are possible.
+    RunDataOutputParams is used by
+    :class:`~libcasm.clexmonte.IncrementalConditionsStateGenerator` to control:
+
+    - storing a summary of the runs in a series,
+    - determining the next run in the series, including its initial state in the
+      case of dependent runs, and
+    - enabling restarts.
+
     """
 
     def __init__(
@@ -160,11 +168,13 @@ class RunDataOutputParams:
         Parameters
         ----------
         do_save_all_initial_states: bool = False
-            Save all initial states in completed_runs.json
+            Save all initial states in the state generator's completed runs list
         do_save_all_final_states: bool = False
-            Save all final states in completed_runs.json
+            Save all final states in the state generator's completed runs list
         do_save_last_final_state: bool = True
-            Save last final state in completed_runs.json to enable restarts
+            Save the last final state in the state generator's completed runs list (to
+            enable restarts), and if `write_final_states` is False, delete previous
+            saved final states to reduce memory usage and file size.
         write_initial_states: bool = False
             Write saved initial states to completed_runs.json
         write_final_states: bool = False
@@ -176,13 +186,15 @@ class RunDataOutputParams:
             Location to save completed_runs.json if not None
         """
         self.do_save_all_initial_states = do_save_all_initial_states
-        """bool: Save all initial_state in completed_runs.json"""
+        """bool: Save all initial states in the state generator's completed runs list"""
 
         self.do_save_all_final_states = do_save_all_final_states
-        """bool: Save all final_state in completed_runs.json"""
+        """bool: Save all final states in the state generator's completed runs list"""
 
         self.do_save_last_final_state = do_save_last_final_state
-        """bool: Save last final_state in completed_runs.json to enable restarts"""
+        """bool: Save the last final state in the state generator's completed runs list 
+        (to enable restarts), and if `write_final_states` is False, delete previous
+        saved final states to reduce memory usage and file size."""
 
         self.write_initial_states = write_initial_states
         """bool: Write saved initial states to completed_runs.json"""

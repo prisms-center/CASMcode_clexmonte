@@ -94,6 +94,9 @@ def Clex_ZrO_Occ_system_data(session_shared_datadir):
         return json.load(f)
 
 
+# function to add two numbers
+
+
 @pytest.fixture
 def Clex_ZrO_Occ_System(Clex_ZrO_Occ_system_data, session_shared_datadir):
     return System.from_dict(
@@ -142,22 +145,37 @@ def validate_statistics_data(
 
 
 @pytest.helpers.register
-def validate_summary_file(summary_file: pathlib.Path, expected_size: int):
+def validate_summary_file(
+    summary_file: pathlib.Path,
+    expected_size: int,
+    is_canonical: bool = False,
+):
     assert summary_file.exists() and summary_file.is_file()
     with open(summary_file, "r") as f:
         data = json.load(f)
     print(xtal.pretty_json(data))
 
-    assert "analysis" in data
-    validate_summary_data(
-        subdata=data["analysis"],
-        expected_keys=[
+    if is_canonical is False:
+        expected_conditions_keys = ["temperature", "param_chem_pot"]
+        expected_analysis_keys = [
             "heat_capacity",
             "mol_susc",
             "param_susc",
             "mol_thermochem_susc",
             "param_thermochem_susc",
-        ],
+        ]
+    else:
+        expected_conditions_keys = [
+            "temperature",
+            "param_composition",
+            "mol_composition",
+        ]
+        expected_analysis_keys = ["heat_capacity"]
+
+    assert "analysis" in data
+    validate_summary_data(
+        subdata=data["analysis"],
+        expected_keys=expected_analysis_keys,
         expected_size=expected_size,
     )
 
@@ -180,7 +198,7 @@ def validate_summary_file(summary_file: pathlib.Path, expected_size: int):
     assert "conditions" in data
     validate_summary_data(
         subdata=data["conditions"],
-        expected_keys=["temperature", "param_chem_pot"],
+        expected_keys=expected_conditions_keys,
         expected_size=expected_size,
     )
 
@@ -195,5 +213,9 @@ def validate_summary_file(summary_file: pathlib.Path, expected_size: int):
         ],
         expected_size=expected_size,
     )
-    assert "is_converged" in data["statistics"]["potential_energy"]["value"]
-    assert "is_converged" in data["statistics"]["param_composition"]["a"]
+
+    if is_canonical is False:
+        assert "is_converged" in data["statistics"]["potential_energy"]["value"]
+        assert "is_converged" in data["statistics"]["param_composition"]["a"]
+    else:
+        assert "is_converged" in data["statistics"]["potential_energy"]["value"]

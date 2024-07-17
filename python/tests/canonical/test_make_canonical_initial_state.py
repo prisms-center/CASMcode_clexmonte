@@ -8,6 +8,15 @@ def test_make_canonical_initial_state_1(Clex_ZrO_Occ_System):
     """Test default motif"""
     system = Clex_ZrO_Occ_System
 
+    # The mol composition element meaning is determined by the
+    # order of components in the composition calculator
+    assert system.composition_calculator.components() == ["Zr", "Va", "O"]
+
+    # The param_composition meaning is determined by the origin and end member
+    # mol compositions
+    assert np.allclose(system.composition_converter.origin(), [2.0, 2.0, 0.0])
+    assert np.allclose(system.composition_converter.end_member(0), [2.0, 0.0, 2.0])
+
     supercells = casmconfig.SupercellSet(prim=system.prim)
     motif_in = casmconfig.Configuration.from_dict(
         data={
@@ -53,6 +62,15 @@ def test_make_canonical_initial_state_1(Clex_ZrO_Occ_System):
 def test_make_canonical_initial_state_2(Clex_ZrO_Occ_System):
     """Test default motif"""
     system = Clex_ZrO_Occ_System
+
+    # The mol composition element meaning is determined by the
+    # order of components in the composition calculator
+    assert system.composition_calculator.components() == ["Zr", "Va", "O"]
+
+    # The param_composition meaning is determined by the origin and end member
+    # mol compositions
+    assert np.allclose(system.composition_converter.origin(), [2.0, 2.0, 0.0])
+    assert np.allclose(system.composition_converter.end_member(0), [2.0, 0.0, 2.0])
 
     supercells = casmconfig.SupercellSet(prim=system.prim)
     motif_in = casmconfig.Configuration.from_dict(
