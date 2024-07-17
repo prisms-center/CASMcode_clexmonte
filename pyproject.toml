@@ -63,6 +63,9 @@ build = "cp39-* cp310-* cp311-* cp312-*"
 # Build for cpython only
 skip =  "pp*"
 
+# Checkout submodules
+before-all = "git submodule update --init --recursive"
+
 # Need libcasm dependencies at wheel repair stage
 before-build = "pip install -r build_requirements.txt"
 

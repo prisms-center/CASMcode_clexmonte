@@ -21,6 +21,7 @@ jobs:
           brew update
           brew install cmake
           pip install --upgrade pip wheel build
+          git submodule update --init --recursive
           pip install -r test_requirements.txt
 
       - name: make

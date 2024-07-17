@@ -28,6 +28,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install build-essential cmake
           pip install --upgrade pip wheel build
+          git submodule update --init --recursive
           echo "SKBUILD_BUILD_OPTIONS=${{ env.SKBUILD_BUILD_OPTIONS }}" >> "$GITHUB_ENV"
 
       ### libcasm-global ###
