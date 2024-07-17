@@ -73,6 +73,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install build-essential cmake
           pip install --upgrade pip wheel build
+          git submodule update --init --recursive
 
       - name: make
         shell: bash

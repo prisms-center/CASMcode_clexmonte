@@ -90,6 +90,8 @@ jobs:
           pip install -r build_requirements.txt
           pip install -r test_requirements.txt
           echo "CASM_PREFIX=$(python -m libcasm.casmglobal --prefix)" >> "$GITHUB_ENV"
+          CASM_SOFLAGS="-shared -Wl,--no-as-needed"
+          echo "CASM_SOFLAGS=${CASM_SOFLAGS}" >> "$GITHUB_ENV"
 
       - name: make
         shell: bash
