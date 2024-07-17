@@ -1,0 +1,87 @@
+name: Build wheels
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 12 * * 0'
+
+jobs:
+  build_wheels_linux_x86_64:
+    name: Build x86_64 wheels on ubuntu-22.04
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.19.2
+        env:
+          CIBW_ARCHS_LINUX: x86_64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist_linux
+          path: ./wheelhouse/*.whl
+
+  build_wheels_macos12_x86_64:
+    name: Build x86_64 wheels on macos-12
+    runs-on: macos-12
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.19.2
+        env:
+          CIBW_ARCHS_MACOS: x86_64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist_macos12_x86_64
+          path: ./wheelhouse/*.whl
+
+  build_wheels_macos14_arm64:
+    name: Build arm64 wheels on macos-14
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.19.2
+        env:
+          CIBW_ARCHS_MACOS: arm64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist_macos14_arm64
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up requirements and configuration variables
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential cmake
+          pip install --upgrade pip wheel build
+
+      - name: make
+        shell: bash
+        run: |
+          python -m build
+
+      - name: upload sdist
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist_sdist
+          path: dist/*.tar.gz

@@ -6,12 +6,12 @@ requires = [
     "cmake>=3.20",
     "ninja",
     "pybind11>=2.8.0",
-    "libcasm-global>=2.0.2",
-    "libcasm-xtal>=2.0a2",
-    "libcasm-composition>=2.0a1",
-    "libcasm-clexulator>=2.0a3",
-    "libcasm-configuration>=2.0a2",
-    "libcasm-monte>=2.0a1",
+    "libcasm-global>=2.0.5",
+    "libcasm-xtal>=2.0a10",
+    "libcasm-composition>=2.0a3",
+    "libcasm-clexulator>=2.0a5",
+    "libcasm-configuration>=2.0a4",
+    "libcasm-monte>=2.0a2",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -33,12 +33,12 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "libcasm-global>=2.0.2",
-    "libcasm-xtal>=2.0a2",
-    "libcasm-composition>=2.0a1",
-    "libcasm-clexulator>=2.0a3",
-    "libcasm-configuration>=2.0a2",
-    "libcasm-monte>=2.0a1",
+    "libcasm-global>=2.0.5",
+    "libcasm-xtal>=2.0a10",
+    "libcasm-composition>=2.0a3",
+    "libcasm-clexulator>=2.0a5",
+    "libcasm-configuration>=2.0a4",
+    "libcasm-monte>=2.0a2",
     "numpy",
 ]
 
@@ -47,13 +47,13 @@ Homepage = "https://prisms-center.github.io/CASMcode_docs/"
 Repository = "https://github.com/prisms-center/CASMcode_clexmonte"
 
 
-[tool.ruff]
-select = ["E", "F", "I"]
+[tool.ruff.lint]
+select = ["NPY201", "E", "F", "I"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["libcasm", "casm"]
 
 

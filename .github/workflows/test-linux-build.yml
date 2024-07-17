@@ -1,0 +1,106 @@
+name: Testing build on ubuntu-latest
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 12 * * 0'
+
+env:
+  SKBUILD_BUILD_OPTIONS: --verbose
+
+jobs:
+  build-depends:
+    uses: ./.github/workflows/test-linux-dependencies.yml
+
+  build:
+    needs: build-depends
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up requirements & configuration variables
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential cmake
+          pip install --upgrade pip wheel build
+          echo "SKBUILD_BUILD_OPTIONS=${{ env.SKBUILD_BUILD_OPTIONS }}" >> "$GITHUB_ENV"
+
+      ### libcasm-global ###
+      - name: restore libcasm-global cache
+        id: cache-libcasm-global-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_global/dist
+          key: ${{ runner.os }}-libcasm-global-v2-0-5
+
+      ### libcasm-composition ###
+      - name: restore libcasm-composition cache
+        id: cache-libcasm-composition-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_composition/dist
+          key: ${{ runner.os }}-libcasm-composition-v2-0a3
+
+      ### libcasm-xtal ###
+      - name: restore libcasm-xtal cache
+        id: cache-libcasm-xtal-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_crystallography/dist
+          key: ${{ runner.os }}-libcasm-xtal-v2-0a10
+
+      ### libcasm-clexulator ###
+      - name: restore libcasm-clexulator cache
+        id: cache-libcasm-clexulator-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_clexulator/dist
+          key: ${{ runner.os }}-libcasm-clexulator-v2-0a5
+
+      ### libcasm-configuration ###
+      - name: restore libcasm-configuration cache
+        id: cache-libcasm-configuration-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_configuration/dist
+          key: ${{ runner.os }}-libcasm-configuration-v2-0a4
+
+      ### libcasm-monte ###
+      - name: restore libcasm-monte cache
+        id: cache-libcasm-monte-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_monte/dist
+          key: ${{ runner.os }}-libcasm-monte-v2-0a2
+
+      - name: Install CASM dependencies
+        run: |
+          pip install CASMcode_global/dist/*.whl
+          pip install CASMcode_composition/dist/*.whl
+          pip install CASMcode_crystallography/dist/*.whl
+          pip install CASMcode_clexulator/dist/*.whl
+          pip install CASMcode_configuration/dist/*.whl
+          pip install CASMcode_monte/dist/*.whl
+          pip install -r build_requirements.txt
+          pip install -r test_requirements.txt
+          echo "CASM_PREFIX=$(python -m libcasm.casmglobal --prefix)" >> "$GITHUB_ENV"
+
+      - name: make
+        shell: bash
+        run: |
+          python -m build
+
+      - name: make install
+        shell: bash
+        run: |
+          pip install dist/*.whl
+
+      - name: make test
+        shell: bash
+        run: |
+          python -m pytest -rsap python/tests
