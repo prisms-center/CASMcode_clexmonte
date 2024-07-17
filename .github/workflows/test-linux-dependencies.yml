@@ -118,6 +118,47 @@ jobs:
           path: CASMcode_crystallography/dist
           key: ${{ steps.cache-libcasm-xtal-restore.outputs.cache-primary-key }}
 
+      ### environment ###
+      - name: set environment
+        shell: bash
+        run: |
+          echo "CASM_PREFIX=$(python -m libcasm.casmglobal --prefix)" >> "$GITHUB_ENV"
+          CASM_SOFLAGS="-shared -Wl,--no-as-needed"
+          echo "CASM_SOFLAGS=${CASM_SOFLAGS}" >> "$GITHUB_ENV"
+
+      ### libcasm-mapping ###
+      - name: restore libcasm-mapping cache
+        id: cache-libcasm-mapping-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_mapping/dist
+          key: ${{ runner.os }}-libcasm-mapping-v2-0a4
+
+      - name: checkout libcasm-mapping
+        if: steps.cache-libcasm-mapping-restore.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: prisms-center/CASMcode_mapping
+          path: CASMcode_mapping
+          ref: v2.0a4
+
+      - name: make mapping
+        if: steps.cache-libcasm-mapping-restore.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd CASMcode_mapping
+          python -m build
+          pip install dist/*.whl
+          pip install -r test_requirements.txt
+          python -m pytest -rsap python/tests
+
+      - name: save libcasm-mapping cache
+        id: cache-libcasm-mapping-save
+        uses: actions/cache/save@v4
+        with:
+          path: CASMcode_mapping/dist
+          key: ${{ steps.cache-libcasm-mapping-restore.outputs.cache-primary-key }}
+
       ### libcasm-clexulator ###
       - name: restore libcasm-clexulator cache
         id: cache-libcasm-clexulator-restore
@@ -141,22 +182,7 @@ jobs:
           cd CASMcode_clexulator
           python -m build
           pip install dist/*.whl
-
-      - name: install clexulator test requirements
-        if: steps.cache-libcasm-clexulator-restore.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          cd CASMcode_clexulator
           pip install -r test_requirements.txt
-          echo "CASM_PREFIX=$(python -m libcasm.casmglobal --prefix)" >> "$GITHUB_ENV"
-          CASM_SOFLAGS="-shared -Wl,--no-as-needed"
-          echo "CASM_SOFLAGS=${CASM_SOFLAGS}" >> "$GITHUB_ENV"
-
-      - name: test clexulator
-        if: steps.cache-libcasm-clexulator-restore.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          cd CASMcode_clexulator
           python -m pytest -rsap python/tests
 
       - name: save libcasm-clexulator cache
@@ -190,9 +216,6 @@ jobs:
           python -m build
           pip install dist/*.whl
           pip install -r test_requirements.txt
-          echo "CASM_PREFIX=$(python -m libcasm.casmglobal --prefix)" >> "$GITHUB_ENV"
-          CASM_SOFLAGS="-shared -Wl,--no-as-needed"
-          echo "CASM_SOFLAGS=${CASM_SOFLAGS}" >> "$GITHUB_ENV"
           python -m pytest -rsap python/tests
 
       - name: save libcasm-configuration cache
