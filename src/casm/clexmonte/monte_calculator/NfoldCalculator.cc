@@ -7,6 +7,7 @@
 #include "casm/clexmonte/monte_calculator/analysis_functions.hh"
 #include "casm/clexmonte/monte_calculator/sampling_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
+#include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/configuration/occ_events/orbits.hh"
 #include "casm/monte/methods/nfold.hh"
 #include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
