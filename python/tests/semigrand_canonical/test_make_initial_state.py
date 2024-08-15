@@ -139,7 +139,7 @@ def test_make_initial_state_3(Clex_ZrO_Occ_System):
     configurations = casmconfig.ConfigurationSet()
     enum = casmenum.ConfigEnumAllOccupations(prim=system.prim, supercell_set=supercells)
     for config in enum.by_supercell(
-        supercells={"max": 6},
+        max=6,
         skip_non_canonical=True,
         skip_non_primitive=True,
     ):
@@ -198,21 +198,25 @@ def test_make_initial_state_3(Clex_ZrO_Occ_System):
     motif_data = [x.to_dict() for x in motif_list]
     assert motif_data == [
         {
+            "basis": "standard",
             "dof": {"occ": [0, 0, 0, 0]},
             "supercell_name": "SCEL1_1_1_1_0_0_0",
             "transformation_matrix_to_supercell": [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
         },
         {
+            "basis": "standard",
             "dof": {"occ": [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]},
             "supercell_name": "SCEL3_3_1_1_0_2_2",
             "transformation_matrix_to_supercell": [[2, 1, 1], [1, 2, 1], [0, 0, 1]],
         },
         {
+            "basis": "standard",
             "dof": {"occ": [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0]},
             "supercell_name": "SCEL3_3_1_1_0_2_2",
             "transformation_matrix_to_supercell": [[2, 1, 1], [1, 2, 1], [0, 0, 1]],
         },
         {
+            "basis": "standard",
             "dof": {"occ": [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1]},
             "supercell_name": "SCEL3_3_1_1_0_0_2",
             "transformation_matrix_to_supercell": [[0, 2, -1], [0, 1, 1], [1, 0, 0]],
@@ -239,7 +243,7 @@ def test_make_initial_state_4(Clex_ZrO_Occ_System):
     configuration_list = []
     enum = casmenum.ConfigEnumAllOccupations(prim=system.prim, supercell_set=supercells)
     for config in enum.by_supercell(
-        supercells={"max": 4},
+        max=4,
         skip_non_canonical=False,
         skip_non_primitive=False,
     ):
@@ -298,21 +302,25 @@ def test_make_initial_state_4(Clex_ZrO_Occ_System):
     motif_data = [x.to_dict() for x in motif_list]
     assert motif_data == [
         {
+            "basis": "standard",
             "dof": {"occ": [0, 0, 0, 0]},
             "supercell_name": "SCEL1_1_1_1_0_0_0",
             "transformation_matrix_to_supercell": [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
         },
         {
+            "basis": "standard",
             "dof": {"occ": [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]},
             "supercell_name": "SCEL3_3_1_1_0_2_2",
             "transformation_matrix_to_supercell": [[2, 1, 1], [1, 2, 1], [0, 0, 1]],
         },
         {
+            "basis": "standard",
             "dof": {"occ": [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]},
             "supercell_name": "SCEL3_3_1_1_0_2_2",
             "transformation_matrix_to_supercell": [[2, 1, 1], [1, 2, 1], [0, 0, 1]],
         },
         {
+            "basis": "standard",
             "dof": {"occ": [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0]},
             "supercell_name": "SCEL3_3_1_1_0_0_2",
             "transformation_matrix_to_supercell": [[0, 2, -1], [0, 1, 1], [1, 0, 0]],

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.0a2] - 2024-07-17
+
+### Fixed
+
+- Updated for compatibility with libcasm-configuration 2.0a5
+
+
 ## [2.0a1] - 2024-07-17
 
 This release creates the libcasm-clexmonte cluster expansion based Monte Carlo module. It includes:
