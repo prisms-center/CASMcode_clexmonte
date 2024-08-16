@@ -147,6 +147,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/StateData.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/analysis_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/modifying_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/sampling_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_events.hh
@@ -208,6 +209,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/BaseMonteCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/CanonicalCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/MonteCalculator.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/NfoldCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/SemiGrandCanonicalCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/StateData.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/analysis_functions.cc
