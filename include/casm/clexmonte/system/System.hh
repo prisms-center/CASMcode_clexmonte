@@ -458,7 +458,8 @@ monte::OccCandidateList const &get_occ_candidate_list(System &system,
 void make_temporary_if_necessary(state_type const &state,
                                  monte::OccLocation *&occ_location,
                                  std::unique_ptr<monte::OccLocation> &tmp,
-                                 System &system, bool update_species);
+                                 System &system, bool update_atoms,
+                                 bool save_atom_info);
 
 }  // namespace clexmonte
 }  // namespace CASM

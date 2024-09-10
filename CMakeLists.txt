@@ -135,6 +135,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/kinetic/kinetic_events.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/kinetic/kinetic_impl.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/kinetic/kinetic_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/methods/kinetic_monte_carlo.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/methods/occupation_metropolis.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/Matrix3lCompare.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/diffusion_calculations.hh
@@ -147,6 +148,8 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/StateData.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/analysis_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/kinetic_sampling_functions.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/modifying_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/sampling_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_events.hh
@@ -207,6 +210,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/kinetic_events.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/BaseMonteCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/CanonicalCalculator.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/KineticCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/MonteCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/SemiGrandCanonicalCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/StateData.cc

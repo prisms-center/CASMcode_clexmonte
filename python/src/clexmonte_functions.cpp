@@ -71,9 +71,10 @@ PYBIND11_MODULE(_clexmonte_functions, m) {
                 "Error in enforce_composition: "
                 "composition_calculator is None and system is None");
           }
-          bool update_species = false;
+          bool update_atoms = false;
+          bool save_atom_info = false;
           make_temporary_if_necessary(state, occ_location, tmp, *system,
-                                      update_species);
+                                      update_atoms, save_atom_info);
         }
 
         // Need a composition calculator

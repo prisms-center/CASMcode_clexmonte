@@ -119,6 +119,17 @@ struct CompleteEventCalculator {
   double calculate_rate(EventID const &id);
 };
 
+/// \brief Data for kinetic Monte Carlo events
+///
+/// Includes:
+/// - prim event list
+/// - prim impact info
+/// - event state calculators: one per prim event, given a state pointer and
+///   can then calculate event energies, attempt frequency, and rate for the
+///   for the current state on request
+/// - complete event list
+/// - CompleteEventCalculator: uses event state calculator and complete event
+///   list to calculate a rate given an event ID
 struct KineticEventData {
   KineticEventData(std::shared_ptr<system_type> _system);
 

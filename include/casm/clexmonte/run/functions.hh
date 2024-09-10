@@ -76,7 +76,7 @@ sampling_fixture_params_type make_sampling_fixture_params(
 ///   with system info
 /// - CalculationType::run(...): Method to run a single calculation, see
 ///   canonical::Canonical<EngineType>::run for an example
-/// - bool CalculationType::update_species: For occupant tracking,
+/// - bool CalculationType::update_atoms: For occupant tracking,
 ///   should be true for KMC, false otherwise
 template <typename CalculationType>
 void run_series(
@@ -117,7 +117,7 @@ void run_series(
     monte::OccCandidateList const &occ_candidate_list =
         get_occ_candidate_list(*calculation.system, state);
     monte::OccLocation occ_location(convert, occ_candidate_list,
-                                    calculation.update_species);
+                                    calculation.update_atoms);
     occ_location.initialize(get_occupation(state));
 
     // Optional, before first run:

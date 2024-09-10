@@ -678,20 +678,23 @@ monte::OccCandidateList const &get_occ_candidate_list(System &system,
 ///     `occ_location` is nullptr.
 /// \param calculation Where to get data needed to
 ///     construct temporary monte::OccLocation
-/// \param update_species If True, construct OccLocation to track species
+/// \param update_atoms If True, construct OccLocation to track atom
 ///     movement. If False, do not.
+/// \param save_atom_info If True, construct OccLocation to save atom initial
+///     / final info. If False, do not.
 void make_temporary_if_necessary(state_type const &state,
                                  monte::OccLocation *&occ_location,
                                  std::unique_ptr<monte::OccLocation> &tmp,
-                                 System &system, bool update_species) {
+                                 System &system, bool update_atoms,
+                                 bool save_atom_info) {
   if (!occ_location) {
     monte::Conversions const &convert = get_index_conversions(system, state);
     monte::OccCandidateList const &occ_candidate_list =
         get_occ_candidate_list(system, state);
 
-    bool update_species = false;
+    bool update_atoms = false;
     tmp = std::make_unique<monte::OccLocation>(convert, occ_candidate_list,
-                                               update_species);
+                                               update_atoms, save_atom_info);
     tmp->initialize(get_occupation(state));
     occ_location = tmp.get();
   }

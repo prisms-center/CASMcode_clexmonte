@@ -141,8 +141,11 @@ class SemiGrandCanonicalPotential : public BaseMontePotential {
           "Error in SemiGrandCanonicalPotential: param_chem_pot size error");
     }
 
-    exchange_chem_pot =
-        make_exchange_chemical_potential(param_chem_pot, composition_converter);
+    //    exchange_chem_pot =
+    //        make_exchange_chemical_potential(param_chem_pot,
+    //        composition_converter);
+
+    delta_N.resize(composition_converter.components().size());
   }
 
   // --- Data used in the potential calculation: ---
@@ -153,9 +156,18 @@ class SemiGrandCanonicalPotential : public BaseMontePotential {
   monte::Conversions const &convert;
   composition::CompositionCalculator const &composition_calculator;
   composition::CompositionConverter const &composition_converter;
-  Eigen::VectorXd param_chem_pot;
   std::shared_ptr<clexulator::ClusterExpansion> formation_energy_clex;
-  Eigen::MatrixXd exchange_chem_pot;
+
+  Eigen::VectorXd const &param_chem_pot;
+
+  // :math:`R^{\mathsf{T}}`, where
+  //
+  //     \vec{x} = R^{\mathsf{T}} ( \vec{n} - \vec{n}_0 )
+  //
+  Eigen::MatrixXd matrix_R_transpose;
+
+  // :math:`\vec{N}`, the change in number of each component per supercell
+  Eigen::VectorXd delta_N;
 
   /// \brief Calculate (per_supercell) potential value
   double per_supercell() override {
@@ -175,18 +187,31 @@ class SemiGrandCanonicalPotential : public BaseMontePotential {
   ///     to a series of occupation changes
   double occ_delta_per_supercell(std::vector<Index> const &linear_site_index,
                                  std::vector<int> const &new_occ) override {
+    // Epot = (E - N_unit mu_x.T x)
+    // dEpot = (E_f - N_unit * mu_x.T * x_f) - (E_i - N * mu_x.T * x_i)
+    //      = (E_f - E_i) - N_unit * mu_x.T * (x_f - x_i)
+    //      = dE - N * mu_x.T * dx
+    //
+    // x = R.T * (n - n_0)
+    // dx = R.T * dn
+    //
+    // dEpot = dE - mu_x.T * R.T * dN
+
     double delta_formation_energy =
         formation_energy_clex->occ_delta_value(linear_site_index, new_occ);
-    double delta_potential_energy = delta_formation_energy;
+
+    delta_N.setZero();
     for (Index i = 0; i < linear_site_index.size(); ++i) {
       Index l = linear_site_index[i];
       Index asym = convert.l_to_asym(l);
       Index curr_species = convert.species_index(asym, occupation(l));
       Index new_species = convert.species_index(asym, new_occ[i]);
-      delta_potential_energy -= exchange_chem_pot(new_species, curr_species);
+      delta_N[curr_species] += -1.0;
+      delta_N[new_species] += 1.0;
     }
 
-    return delta_potential_energy;
+    return delta_formation_energy -
+           param_chem_pot.dot(matrix_R_transpose * delta_N);
   }
 };
 
@@ -206,7 +231,8 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
                             {},                    // required_params,
                             {},                    // optional_params,
                             false,                 // time_sampling_allowed,
-                            false,                 // update_species,
+                            false,                 // update_atoms,
+                            false,                 // save_atom_info,
                             false                  // is_multistate_method,
         ) {}
 

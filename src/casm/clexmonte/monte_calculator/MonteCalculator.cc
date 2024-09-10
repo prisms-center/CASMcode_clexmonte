@@ -208,7 +208,8 @@ void make_temporary_if_necessary(state_type const &state,
     }
     auto &system = *system_ptr;
     make_temporary_if_necessary(state, occ_location, tmp, system,
-                                calculation.update_species());
+                                calculation.update_atoms(),
+                                calculation.save_atom_info());
   }
 }
 

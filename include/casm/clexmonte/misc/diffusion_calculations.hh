@@ -186,7 +186,7 @@ static std::vector<std::string> make_component_names(
 /// - The unrolled values order should be:
 ///     (00, 01, 02, ..., 10, ..., nn, ...)
 ///
-Eigen::VectorXd mean_R_squared_collective_isotropic(
+inline Eigen::VectorXd mean_R_squared_collective_isotropic(
     std::vector<std::string> atom_name_list,
     std::vector<Index> atom_name_index_list, Eigen::MatrixXd const &delta_R) {
   std::vector<Eigen::Vector3d> sumR(atom_name_list.size(),
@@ -205,11 +205,10 @@ Eigen::VectorXd mean_R_squared_collective_isotropic(
   return to_VectorXd(v);
 }
 
-Eigen::VectorXd L_isotropic_sample(std::vector<std::string> atom_name_list,
-                                   std::vector<Index> atom_name_index_list,
-                                   Eigen::MatrixXd const &delta_R, double dim,
-                                   double delta_time, double volume,
-                                   double temperature) {
+inline Eigen::VectorXd L_isotropic_sample(
+    std::vector<std::string> atom_name_list,
+    std::vector<Index> atom_name_index_list, Eigen::MatrixXd const &delta_R,
+    double dim, double delta_time, double volume, double temperature) {
   // double n_unitcells =
   // get_transformation_matrix_to_super(state).determinant(); double volume
   // = n_unitcells * get_prim_basicstructure(system)->lattice().volume();
@@ -238,7 +237,7 @@ Eigen::VectorXd L_isotropic_sample(std::vector<std::string> atom_name_list,
 ///     (00xx, 00yy, 00zz, 00yz, 00xz, 00yx, 01xx, ..., 02xx, ..., 10xx, ...,
 ///     nnxx, ...)
 ///
-Eigen::VectorXd mean_R_squared_collective_anisotropic(
+inline Eigen::VectorXd mean_R_squared_collective_anisotropic(
     std::vector<std::string> atom_name_list,
     std::vector<Index> atom_name_index_list, Eigen::MatrixXd const &delta_R) {
   std::vector<Eigen::Vector3d> sumR(atom_name_list.size(),
@@ -258,11 +257,10 @@ Eigen::VectorXd mean_R_squared_collective_anisotropic(
   return to_VectorXd(v);
 }
 
-Eigen::VectorXd L_anisotropic_sample(std::vector<std::string> atom_name_list,
-                                     std::vector<Index> atom_name_index_list,
-                                     Eigen::MatrixXd const &delta_R,
-                                     double delta_time, double volume,
-                                     double temperature) {
+inline Eigen::VectorXd L_anisotropic_sample(
+    std::vector<std::string> atom_name_list,
+    std::vector<Index> atom_name_index_list, Eigen::MatrixXd const &delta_R,
+    double delta_time, double volume, double temperature) {
   // double n_unitcells =
   // get_transformation_matrix_to_super(state).determinant(); double volume
   // = n_unitcells * get_prim_basicstructure(system)->lattice().volume();
@@ -289,7 +287,7 @@ Eigen::VectorXd L_anisotropic_sample(std::vector<std::string> atom_name_list,
 /// - The unrolled values order should be:
 ///     (0xx, 0yy, 0zz, 0yz, 0xz, 0yx, 1xx, ..., 2xx, ..., ...)
 ///
-Eigen::VectorXd mean_R_squared_individual_isotropic(
+inline Eigen::VectorXd mean_R_squared_individual_isotropic(
     std::vector<std::string> atom_name_list,
     std::vector<Index> atom_name_index_list, Eigen::MatrixXd const &delta_R) {
   std::vector<double> sumRR(atom_name_list.size(), 0.0);
@@ -309,7 +307,7 @@ Eigen::VectorXd mean_R_squared_individual_isotropic(
   return to_VectorXd(v);
 }
 
-Eigen::VectorXd D_tracer_isotropic_sample(
+inline Eigen::VectorXd D_tracer_isotropic_sample(
     std::vector<std::string> atom_name_list,
     std::vector<Index> atom_name_index_list, Eigen::MatrixXd const &delta_R,
     double dim, double delta_time) {
@@ -336,7 +334,7 @@ Eigen::VectorXd D_tracer_isotropic_sample(
 /// - The unrolled values order should be:
 ///     (0xx, 0yy, 0zz, 0yz, 0xz, 0yx, 1xx, ..., 2xx, ..., ...)
 ///
-Eigen::VectorXd mean_R_squared_individual_anisotropic(
+inline Eigen::VectorXd mean_R_squared_individual_anisotropic(
     std::vector<std::string> atom_name_list,
     std::vector<Index> atom_name_index_list, Eigen::MatrixXd const &delta_R) {
   std::vector<Eigen::Matrix3d> sumRR(atom_name_list.size(),
@@ -357,7 +355,7 @@ Eigen::VectorXd mean_R_squared_individual_anisotropic(
   return to_VectorXd(v);
 }
 
-Eigen::VectorXd D_tracer_anisotropic_sample(
+inline Eigen::VectorXd D_tracer_anisotropic_sample(
     std::vector<std::string> atom_name_list,
     std::vector<Index> atom_name_index_list, Eigen::MatrixXd const &delta_R,
     double delta_time) {

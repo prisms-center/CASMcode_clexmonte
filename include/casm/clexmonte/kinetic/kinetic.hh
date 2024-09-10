@@ -28,7 +28,7 @@ struct Kinetic {
   std::vector<EventFilterGroup> event_filters;
 
   /// Update species in monte::OccLocation tracker
-  bool update_species = true;
+  bool update_atoms = true;
 
   /// Method allows time-based sampling
   bool time_sampling_allowed = true;

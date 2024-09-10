@@ -74,8 +74,11 @@ class MonteCalculator {
   /// Method allows time-based sampling?
   bool time_sampling_allowed() const { return m_calc->time_sampling_allowed; }
 
-  /// Method tracks species locations? (like in KMC)
-  bool update_species() const { return m_calc->update_species; }
+  /// Method tracks atom locations? (like in KMC)
+  bool update_atoms() const { return m_calc->update_atoms; }
+
+  /// Method saves atom initial / final info? (like in KMC)
+  bool save_atom_info() const { return m_calc->save_atom_info; }
 
   // --- Set at `reset`: ---
 

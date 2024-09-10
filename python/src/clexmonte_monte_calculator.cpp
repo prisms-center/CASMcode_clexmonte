@@ -33,6 +33,10 @@ CASM::clexmonte::BaseMonteCalculator *make_SemiGrandCanonicalCalculator();
 /// \brief Returns a clexmonte::BaseMonteCalculator* owning a
 /// CanonicalCalculator
 CASM::clexmonte::BaseMonteCalculator *make_CanonicalCalculator();
+
+/// \brief Returns a clexmonte::BaseMonteCalculator* owning a
+/// KineticCalculator
+CASM::clexmonte::BaseMonteCalculator *make_KineticCalculator();
 }
 
 /// CASM - Python binding code
@@ -86,6 +90,15 @@ std::shared_ptr<clexmonte::MonteCalculator> make_shared_CanonicalCalculator(
       lib);
 }
 
+std::shared_ptr<clexmonte::MonteCalculator> make_shared_KineticCalculator(
+    jsonParser const &params, std::shared_ptr<system_type> system) {
+  std::shared_ptr<RuntimeLibrary> lib = nullptr;
+  return clexmonte::make_monte_calculator(
+      params, system,
+      std::unique_ptr<clexmonte::BaseMonteCalculator>(make_KineticCalculator()),
+      lib);
+}
+
 std::shared_ptr<clexmonte::StateData> make_state_data(
     std::shared_ptr<system_type> system, state_type &state,
     monte::OccLocation *occ_location) {
@@ -105,6 +118,8 @@ std::shared_ptr<clexmonte::MonteCalculator> make_monte_calculator(
     return make_shared_SemiGrandCanonicalCalculator(_params, system);
   } else if (method == "canonical") {
     return make_shared_CanonicalCalculator(_params, system);
+  } else if (method == "kinetics") {
+    return make_shared_KineticCalculator(_params, system);
   } else {
     std::stringstream msg;
     msg << "Error in make_monte_calculator: method='" << method
@@ -255,7 +270,14 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           Optional[libcasm.monte.events.OccLocation] : The current state's occupant \
           location list. May be None.
           )pbdoc")
-      // TODO: MonteConversions access
+      .def_property_readonly(
+          "convert",
+          [](clexmonte::StateData &m) -> monte::Conversions const & {
+            return *m.convert;
+          },
+          R"pbdoc(
+          libcasm.monte.Conversions : Index conversions for the current state.
+          )pbdoc")
       .def(
           "corr",
           [](clexmonte::StateData &m,
@@ -404,6 +426,19 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc",
           py::arg("key"));
 
+  py::class_<clexmonte::BaseMonteCalculator::kmc_data_type,
+             std::shared_ptr<clexmonte::BaseMonteCalculator::kmc_data_type>>(
+      m, "KineticsData",
+      R"pbdoc(
+      Access kinetics data used in a Monte Carlo method
+
+      )pbdoc")
+      .def(py::init<>(),
+           R"pbdoc(
+        .. rubric:: Constructor
+
+        )pbdoc");
+
   py::class_<calculator_type, std::shared_ptr<calculator_type>>
       pyMonteCalculator(m, "MonteCalculator",
                         R"pbdoc(
@@ -432,7 +467,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           state being calculated
           )pbdoc")
       .def("per_supercell", &potential_type::per_supercell, R"pbdoc(
-          Calculate and return the potential per supercell
+          Calculate and return the potential per supercell, using current state data
 
           Returns
           -------
@@ -440,7 +475,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               The potential per supercell for the current state
           )pbdoc")
       .def("per_unitcell", &potential_type::per_unitcell, R"pbdoc(
-          Calculate and return the potential per unit cell
+          Calculate and return the potential per unit cell, using current state data
 
           Returns
           -------
@@ -449,7 +484,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def("occ_delta_per_supercell", &potential_type::occ_delta_per_supercell,
            R"pbdoc(
-          Calculate and return the change in potential per supercell
+          Calculate and return the change in potential per supercell, using current
+          state data
 
           Parameters
           ----------
@@ -484,7 +520,9 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                 `"param_composition"` or `"mol_composition"` conditions.
               - TODO "lte": `Low-temperature expansion <todo>`_, for the
                 semi-grand canonical ensemble
-              - TODO "kinetic": `Kinetic Monte Carlo <todo>`_
+              - "kinetic": `Kinetic Monte Carlo <todo>`_. Input states require
+                `"temperature"` and one of `"param_composition"` or
+                `"mol_composition"` conditions.
               - TODO "flex": Allows a range of custom potentials, including
                 composition and order parameter variance-constrained potentials,
                 and correlation-matching potentials
@@ -751,6 +789,10 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def_property_readonly("potential", &calculator_type::potential, R"pbdoc(
           MontePotential : The potential calculator for the current state.
+          )pbdoc")
+      .def_property_readonly("kinetics_data", &calculator_type::kmc_data,
+                             R"pbdoc(
+          KineticsData : The current kinetics data.
           )pbdoc");
 
   m.def("make_custom_monte_calculator", &make_custom_monte_calculator, R"pbdoc(

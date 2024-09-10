@@ -10,6 +10,7 @@ from ._clexmonte_functions import (
     enforce_composition,
 )
 from ._clexmonte_monte_calculator import (
+    KineticsData,
     MonteCalculator,
     MontePotential,
     StateData,

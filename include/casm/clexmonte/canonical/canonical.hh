@@ -83,7 +83,7 @@ struct Canonical {
   std::shared_ptr<system_type> system;
 
   /// Update species in monte::OccLocation tracker?
-  bool update_species = false;
+  bool update_atoms = false;
 
   /// Method does not allow time-based sampling
   bool time_sampling_allowed = false;

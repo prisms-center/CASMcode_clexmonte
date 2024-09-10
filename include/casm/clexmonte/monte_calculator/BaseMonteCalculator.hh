@@ -57,8 +57,8 @@ class BaseMonteCalculator {
                                std::set<std::string> _required_dof_spaces,
                                std::set<std::string> _required_params,
                                std::set<std::string> _optional_params,
-                               bool _time_sampling_allowed,
-                               bool _update_species,
+                               bool _time_sampling_allowed, bool _update_atoms,
+                               bool _save_atom_info,
                                bool _is_multistate_method);
 
   virtual ~BaseMonteCalculator();
@@ -84,7 +84,10 @@ class BaseMonteCalculator {
   bool time_sampling_allowed;
 
   /// Method tracks species locations? (like in KMC)
-  bool update_species;
+  bool update_atoms;
+
+  /// Method saves atom initial / final info? (like in KMC)
+  bool save_atom_info;
 
   // --- Set via `reset` method: ---
 
@@ -101,6 +104,7 @@ class BaseMonteCalculator {
     this->system = _system;
     this->_check_system();
     this->_check_params();
+    this->_reset();
   }
 
   // --- Use after `set` and before `run` is called: ---

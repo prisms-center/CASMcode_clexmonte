@@ -156,7 +156,8 @@ class CanonicalCalculator : public BaseMonteCalculator {
                             {},                     // required_params,
                             {},                     // optional_params,
                             false,                  // time_sampling_allowed,
-                            false,                  // update_species,
+                            false,                  // update_atoms,
+                            false,                  // save_atom_info,
                             false                   // is_multistate_method,
         ) {}
 
@@ -284,7 +285,7 @@ class CanonicalCalculator : public BaseMonteCalculator {
   ///
   /// Notes:
   /// - requires scalar temperature
-  /// - requires vector param_chem_pot
+  /// - validate composition consistency
   /// - warnings if other conditions are present
   Validator validate_conditions(state_type &state) const override {
     // Validate system

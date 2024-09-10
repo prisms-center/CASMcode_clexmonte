@@ -9,7 +9,7 @@
 #         system: System,
 #         state: MonteCarloState,
 #         occ_location: Optional[OccLocation] = None,
-#         update_species: bool = False,
+#         update_atoms: bool = False,
 #     ):
 #         """
 #
@@ -27,7 +27,7 @@
 #               occupation of `state` and it is used and updated during the run.
 #               If None, no occupant location list is stored. The occupant
 #               location list is not required for evaluating the potential.
-#         update_species : bool = False
+#         update_atoms : bool = False
 #             Use `True` in kinetic Monte Carlo calculations to track species
 #             location changes. Otherwise use `False`.
 #         """
@@ -35,7 +35,7 @@
 #             system=system,
 #             state=state,
 #             occ_location=occ_location,
-#             update_species=update_species,
+#             update_atoms=update_atoms,
 #         )
 
 
