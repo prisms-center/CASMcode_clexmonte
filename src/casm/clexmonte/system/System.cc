@@ -692,7 +692,6 @@ void make_temporary_if_necessary(state_type const &state,
     monte::OccCandidateList const &occ_candidate_list =
         get_occ_candidate_list(system, state);
 
-    bool update_atoms = false;
     tmp = std::make_unique<monte::OccLocation>(convert, occ_candidate_list,
                                                update_atoms, save_atom_info);
     tmp->initialize(get_occupation(state));
