@@ -118,7 +118,7 @@ std::shared_ptr<clexmonte::MonteCalculator> make_monte_calculator(
     return make_shared_SemiGrandCanonicalCalculator(_params, system);
   } else if (method == "canonical") {
     return make_shared_CanonicalCalculator(_params, system);
-  } else if (method == "kinetics") {
+  } else if (method == "kinetic") {
     return make_shared_KineticCalculator(_params, system);
   } else {
     std::stringstream msg;

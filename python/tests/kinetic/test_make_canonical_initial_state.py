@@ -16,7 +16,7 @@ def test_make_canonical_initial_state_1(FCCBinaryVacancy_kmc_System):
     # mol compositions
     assert np.allclose(system.composition_converter.origin(), [1.0, 0.0, 0.0])
     assert np.allclose(system.composition_converter.end_member(0), [0.0, 1.0, 0.0])
-    assert np.allclose(system.composition_converter.end_member(0), [0.0, 0.0, 1.0])
+    assert np.allclose(system.composition_converter.end_member(1), [0.0, 0.0, 1.0])
 
     supercells = casmconfig.SupercellSet(prim=system.prim)
     motif_in = casmconfig.Configuration.from_dict(

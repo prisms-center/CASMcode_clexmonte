@@ -10,6 +10,12 @@ namespace clexmonte {
 
 /// \brief Expand a required_update_neighborhood based on
 ///     BasisSetClusterInfo and SparseCoefficients
+///
+/// Notes:
+/// - This method is used to expand the required_update_neighborhood including
+///   only the sites of point functions that impact the phenomenal cluster
+///   sites. This reduces the resulting required_update_neighborhood compared
+///   to using all the sites in the Clexulator::site_neighborhood.
 void expand(clust::IntegralCluster const &phenom,
             std::set<xtal::UnitCellCoord> &required_update_neighborhood,
             BasisSetClusterInfo const &cluster_info,
