@@ -149,6 +149,7 @@ def validate_summary_file(
     summary_file: pathlib.Path,
     expected_size: int,
     is_canonical: bool = False,
+    is_requested_convergence: bool = True,
 ):
     assert summary_file.exists() and summary_file.is_file()
     with open(summary_file, "r") as f:
@@ -180,18 +181,22 @@ def validate_summary_file(
     )
 
     assert "completion_check_results" in data
-    validate_summary_data(
-        subdata=data["completion_check_results"],
-        expected_keys=[
-            "N_samples",
+    expected_completion_check_results_keys = [
+        "N_samples",
+        "N_samples_for_statistics",
+        "acceptance_rate",
+        "count",
+        "elapsed_clocktime",
+    ]
+    if is_requested_convergence is True:
+        expected_completion_check_results_keys += [
             "N_samples_for_all_to_equilibrate",
-            "N_samples_for_statistics",
-            "acceptance_rate",
             "all_converged",
             "all_equilibrated",
-            "count",
-            "elapsed_clocktime",
-        ],
+        ]
+    validate_summary_data(
+        subdata=data["completion_check_results"],
+        expected_keys=expected_completion_check_results_keys,
         expected_size=expected_size,
     )
 
@@ -214,8 +219,9 @@ def validate_summary_file(
         expected_size=expected_size,
     )
 
-    if is_canonical is False:
-        assert "is_converged" in data["statistics"]["potential_energy"]["value"]
-        assert "is_converged" in data["statistics"]["param_composition"]["a"]
-    else:
-        assert "is_converged" in data["statistics"]["potential_energy"]["value"]
+    if is_requested_convergence is True:
+        if is_canonical is False:
+            assert "is_converged" in data["statistics"]["potential_energy"]["value"]
+            assert "is_converged" in data["statistics"]["param_composition"]["a"]
+        else:
+            assert "is_converged" in data["statistics"]["potential_energy"]["value"]
