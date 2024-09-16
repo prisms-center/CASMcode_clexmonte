@@ -5,6 +5,7 @@
 
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/monte_calculator/StateData.hh"
+#include "casm/clexmonte/monte_calculator/kinetic_events.hh"
 #include "casm/clexmonte/run/StateModifyingFunction.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/misc/Validator.hh"
@@ -161,6 +162,15 @@ class BaseMonteCalculator {
   ///     potential
   virtual void set_state_and_potential(state_type &state,
                                        monte::OccLocation *occ_location) = 0;
+
+  // --- Set when `set_event_data` is called: ---
+
+  /// Event data (if applicable)
+  std::shared_ptr<BaseMonteEventData> event_data;
+
+  /// \brief Set event data (includes calculating all rates), using current
+  /// state data
+  virtual void set_event_data(std::shared_ptr<engine_type> engine) = 0;
 
   // --- Set when `run` is called: ---
 

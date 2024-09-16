@@ -406,6 +406,13 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
         std::make_shared<SemiGrandCanonicalPotential>(this->state_data);
   }
 
+  /// \brief Set event data (includes calculating all rates), using current
+  /// state data
+  void set_event_data(std::shared_ptr<engine_type> engine) override {
+    throw std::runtime_error(
+        "Error in SemiGrandCanonicalCalculator::set_event_data: not valid");
+  }
+
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
            run_manager_type<engine_type> &run_manager) override {

@@ -69,6 +69,14 @@ clexmonte::MontePotential make_potential(
   return calculator->potential();
 }
 
+clexmonte::MonteEventData make_event_data(
+    std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type &state,
+    std::shared_ptr<engine_type> engine, monte::OccLocation *occ_location) {
+  calculator->set_state_and_potential(state, occ_location);
+  calculator->set_event_data(engine);
+  return calculator->event_data();
+}
+
 std::shared_ptr<clexmonte::MonteCalculator>
 make_shared_SemiGrandCanonicalCalculator(jsonParser const &params,
                                          std::shared_ptr<system_type> system) {
@@ -437,7 +445,111 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
            R"pbdoc(
         .. rubric:: Constructor
 
-        )pbdoc");
+        )pbdoc")
+      .def_readonly("sampling_fixture_label",
+                    &clexmonte::BaseMonteCalculator::kmc_data_type::
+                        sampling_fixture_label,
+                    R"pbdoc(
+          str: The current sampling fixture label.
+
+          This will be set to the current sampling fixture label at sampling time.
+          )pbdoc")
+      .def_property_readonly(
+          "sampling_fixture",
+          [](clexmonte::BaseMonteCalculator::kmc_data_type &self)
+              -> sampling_fixture_type const & {
+            if (self.sampling_fixture == nullptr) {
+              throw std::runtime_error(
+                  "Error in KineticsData.sampling_fixture: "
+                  "This is not set until just before the first sample.");
+            }
+            return *self.sampling_fixture;
+          },
+          R"pbdoc(
+          libcasm.clexmonte.run_management.SamplingFixture: A reference to the
+          current sampling fixture.
+
+          This will be set to the current sampling fixture at sampling time.
+          )pbdoc")
+      .def_readonly("total_rate",
+                    &clexmonte::BaseMonteCalculator::kmc_data_type::total_rate,
+                    R"pbdoc(
+          float: This will be set to the total event rate at sampling time.
+          )pbdoc")
+      .def_readonly("time",
+                    &clexmonte::BaseMonteCalculator::kmc_data_type::time,
+                    R"pbdoc(
+          float: Current simulation time when sampling occurs.
+
+          For time-based sampling this will be equal to the sampling time
+          and not determined by the time any event occurred.
+          For count-based sampling, this will be equal to the time the n-th
+          (by step or pass) event occurred, where n is the step or pass when
+          sampling is due.
+          )pbdoc")
+      .def_readonly("prev_time",
+                    &clexmonte::BaseMonteCalculator::kmc_data_type::prev_time,
+                    R"pbdoc(
+          dict[str, float]: Simulation time at last sample, by sampling fixture label.
+
+          This will be set to store the time when the last sample
+          was taken, with key equal to sampling fixture label. This is set to
+          0.0 when the run begins.
+          )pbdoc")
+      .def_readonly(
+          "unique_atom_id",
+          &clexmonte::BaseMonteCalculator::kmc_data_type::unique_atom_id,
+          R"pbdoc(
+          list[int]: Unique atom ID for each atom currently in the system.
+
+          The ID ``unique_atom_id[l]`` is the unique atom ID for the atom at the
+          position given by ``atom_positions_cart[:,l]``.
+          )pbdoc")
+      .def_readonly(
+          "prev_unique_atom_id",
+          &clexmonte::BaseMonteCalculator::kmc_data_type::prev_unique_atom_id,
+          R"pbdoc(
+          dict[str, list[int]]: Unique atom ID for each atom at last sample, by
+          sampling fixture label.
+
+          The ID ``prev_unique_atom_id[label][l]`` is the unique atom ID for the
+          atom at the position given by ``prev_atom_positions_cart[label][:,l]``.
+          )pbdoc")
+      .def_readonly(
+          "atom_name_index_list",
+          &clexmonte::BaseMonteCalculator::kmc_data_type::atom_name_index_list,
+          R"pbdoc(
+          list[int]: Set this to hold atom name indices for each column of the
+          atom position matrices.
+
+          When sampling, this will hold the atom name index for each column of
+          the atom position matrices. The atom name index is an index into
+          :func:`OccSystem.atom_name_list <libcasm.occ_events.OccSystem.atom_name_list>`.
+          )pbdoc")
+      .def_readonly(
+          "atom_positions_cart",
+          &clexmonte::BaseMonteCalculator::kmc_data_type::atom_positions_cart,
+          R"pbdoc(
+          np.ndarray[np.float[3,n_atoms]]: Current atom positions, as columns in
+          Cartesian coordinates.
+
+          Before a sample is taken, this will be updated to contain the current
+          atom positions in Cartesian coordinates, with shape=(3, n_atoms).
+          Sampling functions can use this and `prev_atom_positions_cart` to
+          calculate displacements.
+          )pbdoc")
+      .def_readonly("prev_atom_positions_cart",
+                    &clexmonte::BaseMonteCalculator::kmc_data_type::
+                        prev_atom_positions_cart,
+                    R"pbdoc(
+          dict[str, np.ndarray[np.float[3,n_atoms]]]: Atom positions at last
+          sample, as columns in Cartesian coordinates, by sampling fixture label.
+
+          Before a sample is taken, this will be updated to contain the current
+          atom positions in Cartesian coordinates, with shape=(3, n_atoms).
+          Sampling functions can use this and `prev_atom_positions_cart` to
+          calculate displacements.
+          )pbdoc");
 
   py::class_<calculator_type, std::shared_ptr<calculator_type>>
       pyMonteCalculator(m, "MonteCalculator",
@@ -501,6 +613,35 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               to the state with the new occupation.
           )pbdoc",
            py::arg("linear_site_index"), py::arg("new_occ"));
+
+  py::class_<clexmonte::MonteEventData>(m, "MonteEventData",
+                                        R"pbdoc(
+      Interface to event data
+
+      )pbdoc")
+      .def(
+          py::init<>(&make_event_data),
+          R"pbdoc(
+          .. rubric:: Constructor
+
+          Parameters
+          ----------
+          calculator : libcasm.clexmonte.MonteCalculator
+              Monte Carlo calculator which constructs events.
+          state : libcasm.clexmonte.MonteCarloState
+              The state events are constructed for.
+          engine: Optional[libcasm.monte.RandomNumberEngine] = None
+              Optional random number engine to use. If None, one is constructed and
+              seeded from std::random_device.
+          occ_location: Optional[libcasm.monte.events.OccLocation] = None
+              Current occupant location list. If provided, the user is
+              responsible for ensuring it is up-to-date with the current
+              occupation of `state` and it is used and updated during the run.
+              If None, a occupant location list is generated for the run.
+
+          )pbdoc",
+          py::arg("calculator"), py::arg("state"), py::arg("engine") = nullptr,
+          py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr));
 
   pyMonteCalculator
       .def(py::init<>(&make_monte_calculator),
@@ -702,6 +843,20 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc",
            py::arg("state"),
            py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+      .def("set_event_data", &calculator_type::set_event_data,
+           R"pbdoc(
+          Set event data (includes calculating all rates), using current state data
+
+          Parameters
+          ----------
+          engine : Optional[:class:`~libcasm.monte.RandomNumberEngine`]
+              A :class:`~libcasm.monte.RandomNumberEngine` to use for generating
+              random numbers to select events and timesteps. If provided, the
+              engine will be shared. If None, then a new
+              :class:`~libcasm.monte.RandomNumberEngine` will be constructed and
+              seeded using std::random_device.
+          )pbdoc",
+           py::arg("engine") = std::shared_ptr<engine_type>())
       .def("run", &monte_calculator_run,
            R"pbdoc(
           Perform a single run, evolving the input state
@@ -789,6 +944,10 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def_property_readonly("potential", &calculator_type::potential, R"pbdoc(
           MontePotential : The potential calculator for the current state.
+          )pbdoc")
+      .def_property_readonly("event_data", &calculator_type::event_data,
+                             R"pbdoc(
+          MonteEventData : The current event data.
           )pbdoc")
       .def_property_readonly("kinetics_data", &calculator_type::kmc_data,
                              R"pbdoc(

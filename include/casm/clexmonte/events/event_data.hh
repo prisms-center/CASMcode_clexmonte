@@ -13,16 +13,19 @@
 namespace CASM {
 namespace clexmonte {
 
-// /// \brief Data calculated for a single event in a single state
-// struct EventState {
-//   bool is_allowed;      ///< Is allowed given current configuration
-//   bool is_normal;       ///< Is "normal" (dEa > 0.0) && (dEa > dEf)
-//   double dE_final;      ///< Final state energy, relative to initial state
-//   double Ekra;          ///< KRA energy
-//   double dE_activated;  ///< Activation energy, relative to initial state
-//   double freq;          ///< Attempt frequency
-//   double rate;          ///< Occurance rate
-// };
+/// \brief Data calculated for a single event in a single state
+struct EventState {
+  bool is_allowed;  ///< Is allowed given current configuration
+  Eigen::VectorXd const *
+      formation_energy_delta_corr;  ///< Change in formation energy correlations
+  Eigen::VectorXd const *local_corr;  ///< Local correlations
+  bool is_normal;       ///< Is "normal" (dEa > 0.0) && (dEa > dEf)
+  double dE_final;      ///< Final state energy, relative to initial state
+  double Ekra;          ///< KRA energy
+  double dE_activated;  ///< Activation energy, relative to initial state
+  double freq;          ///< Attempt frequency
+  double rate;          ///< Occurance rate
+};
 
 /// \brief Data particular to a single translationally distinct event
 struct EventData {

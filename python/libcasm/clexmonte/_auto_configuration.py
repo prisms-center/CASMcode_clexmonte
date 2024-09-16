@@ -608,7 +608,6 @@ def make_canonical_initial_state(
         configuration=mc_state_2.configuration,
         conditions=conditions,
     )
-    print(mc_state_3.conditions.to_dict())
     enforce_composition_f(mc_state_3)
     match_composition_f(mc_state_3)
 

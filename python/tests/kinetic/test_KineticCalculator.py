@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 import libcasm.clexmonte as clexmonte
+import libcasm.monte.sampling as sampling
 import libcasm.xtal as xtal
 
 
@@ -82,11 +83,50 @@ def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
         system=system,
     )
 
+    def print_step_f():
+        step = calculator.kinetics_data.sampling_fixture.step
+        # print("step:", step)
+        return np.array([step])
+
+    print_step_sampling_f = sampling.StateSamplingFunction(
+        name="print_step",
+        description="test",
+        shape=[],
+        function=print_step_f,
+        component_names=["step"],
+    )
+
+    def json_step_f():
+        json_step = {"step": calculator.kinetics_data.sampling_fixture.step}
+        # print("json_step:", json_step)
+        return json_step
+
+    json_step_sampling_f = sampling.jsonStateSamplingFunction(
+        name="json_step",
+        description="test",
+        function=json_step_f,
+    )
+
     # construct default sampling fixture parameters
     kinetics = calculator.make_default_sampling_fixture_params(
         label="kinetics",
         output_dir=str(output_dir),
+        write_observations=True,
     )
+    kinetics.add_sampling_function(print_step_sampling_f)
+    kinetics.add_json_sampling_function(json_step_sampling_f)
+    kinetics.sample_by_step()
+    kinetics.sample("print_step")
+    kinetics.sample("json_step")
+    kinetics.do_not_sample("clex.formation_energy")
+    kinetics.sample("clex.formation_energy")
+
+    kinetics.clear_cutoffs()
+    kinetics.set_min_count(1000)
+
+    kinetics.converge("clex.formation_energy", abs=1e-3)
+    # kinetics.do_not_converge("clex.formation_energy")
+
     print(xtal.pretty_json(kinetics.to_dict()))
 
     # construct the initial state:
@@ -95,7 +135,7 @@ def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
     initial_state, motif = clexmonte.make_canonical_initial_state(
         calculator=calculator,
         conditions={
-            "temperature": 300.0,
+            "temperature": 1200.0,
             # one of param/mol composition is needed
             # "param_composition": [0.0, 0.0],
             "mol_composition": [0.899, 0.1, 0.001],
@@ -125,10 +165,13 @@ def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
     )
     assert isinstance(sampling_fixture, clexmonte.SamplingFixture)
 
+    # print(sampling_fixture.results.json_samplers["json_step"].values())
+
     pytest.helpers.validate_summary_file(
         summary_file=summary_file,
         expected_size=1,
         is_canonical=True,
         is_requested_convergence=False,
     )
+
     assert False

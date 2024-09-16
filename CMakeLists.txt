@@ -120,6 +120,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/json/EventFilterGroup_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/json/EventState_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/json/PrimEventData_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/stream/EventState_stream_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/lotto.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/lotto/event_rate_tree.hpp
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/lotto/event_rate_tree_impl.hpp
@@ -144,10 +145,14 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/subparse_from_file.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/to_json.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/BaseMonteCalculator.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/BaseMonteEventData.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/KineticCalculator.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/MonteCalculator.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/MonteEventData.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/StateData.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/analysis_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/kinetic_events.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/kinetic_sampling_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/modifying_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/sampling_functions.hh
@@ -204,6 +209,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/EventFilterGroup_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/EventState_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/PrimEventData_json_io.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/stream/EventState_stream_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/io/json/EventState_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/io/stream/EventState_stream_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/kinetic.cc
@@ -216,6 +222,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/StateData.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/analysis_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/kinetic_events.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/sampling_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold_events.cc

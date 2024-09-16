@@ -2,6 +2,7 @@
 #define CASM_clexmonte_MonteCalculator
 
 #include "casm/clexmonte/monte_calculator/BaseMonteCalculator.hh"
+#include "casm/clexmonte/monte_calculator/MonteEventData.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -45,6 +46,7 @@ class MonteCalculator {
   typedef std::mt19937_64 engine_type;
   typedef monte::KMCData<config_type, statistics_type, engine_type>
       kmc_data_type;
+  typedef kinetic_2::KineticEventData event_data_type;
 
   /// \brief Constructor.
   ///
@@ -153,6 +155,25 @@ class MonteCalculator {
   void set_state_and_potential(state_type &state,
                                monte::OccLocation *occ_location) {
     return m_calc->set_state_and_potential(state, occ_location);
+  }
+
+  // --- Set when `set_event_data` or `run` is called: ---
+
+  /// Event data access (if applicable)
+  MonteEventData event_data() {
+    if (m_calc->event_data == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::event_data: Event data is not "
+          "yet constructed. To use outside of the `run` method, call "
+          "`set_state_and_potential` first.");
+    }
+    return MonteEventData(m_calc->event_data, m_lib);
+  }
+
+  /// \brief Set event data (includes calculating all rates), using current
+  /// state data
+  void set_event_data(std::shared_ptr<engine_type> engine) {
+    m_calc->set_event_data(engine);
   }
 
   // --- Set when `run` is called: ---
