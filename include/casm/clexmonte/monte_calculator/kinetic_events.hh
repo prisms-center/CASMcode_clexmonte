@@ -140,28 +140,10 @@ class KineticEventData : public BaseMonteEventData {
                                             engine_type>
       event_selector_type;
 
-  KineticEventData(std::shared_ptr<system_type> _system);
+  KineticEventData(std::shared_ptr<system_type> _system,
+                   std::optional<std::vector<EventFilterGroup>> _event_filters);
 
-  /// \brief Update for given state, conditions, and occupants
-  void update(state_type const &state, monte::OccLocation const &occ_location,
-              std::vector<EventFilterGroup> const &event_filters);
-
-  /// All supercell events, and which events must be updated
-  /// when one occurs
-  clexmonte::CompleteEventList event_list;
-
-  /// Functions for calculating event states, one for each prim event.
-  /// This is supercell-specific, even though it is one per prim event,
-  /// because it depends on supercell-specific clexulators
-  std::vector<EventStateCalculator> prim_event_calculators;
-
-  /// Calculator for KMC event selection
-  std::shared_ptr<CompleteEventCalculator> event_calculator;
-
-  /// Event selector
-  std::shared_ptr<event_selector_type> event_selector;
-
-  // --- BaseMonteEventData interface ---
+  // --- BaseMonteEventData data ---
 
   /// The system
   // std::shared_ptr<system_type> system;
@@ -175,6 +157,36 @@ class KineticEventData : public BaseMonteEventData {
   /// Information about what sites may impact each prim event
   // std::vector<clexmonte::EventImpactInfo> prim_impact_info_list;
   using BaseMonteEventData::prim_impact_info_list;
+
+  // -- Data - set when `update` is called --
+
+  /// Functions for calculating event states, one for each prim event.
+  /// This is supercell-specific, even though it is one per prim event,
+  /// because it depends on supercell-specific clexulators
+  std::vector<EventStateCalculator> prim_event_calculators;
+
+  /// Current supercell
+  Eigen::Matrix3l transformation_matrix_to_super;
+
+  /// Selectively allow events by unit cell
+  std::vector<EventFilterGroup> event_filters;
+
+  /// All supercell events, and which events must be updated
+  /// when one occurs
+  clexmonte::CompleteEventList event_list;
+
+  /// Calculator for KMC event selection
+  std::shared_ptr<CompleteEventCalculator> event_calculator;
+
+  /// Event selector
+  std::shared_ptr<event_selector_type> event_selector;
+
+  /// \brief Update for given state, conditions, occupants, event filters
+  void update(state_type const &state, monte::OccLocation const &occ_location,
+              std::optional<std::vector<EventFilterGroup>> _event_filters,
+              std::shared_ptr<engine_type> engine);
+
+  // --- BaseMonteEventData interface ---
 
   /// Get the formation energy coefficients
   clexulator::SparseCoefficients const &formation_energy_coefficients()
@@ -190,12 +202,32 @@ class KineticEventData : public BaseMonteEventData {
   /// Get the attempt frequency coefficients for a specific event
   clexulator::SparseCoefficients const &freq_coefficients(
       Index prim_event_index) const override {
+    if (prim_event_calculators.size() == 0) {
+      throw std::runtime_error(
+          "KineticEventData::kra_coefficients: "
+          "prim_event_calculators.size() == 0");
+    }
+    if (prim_event_index >= prim_event_calculators.size()) {
+      throw std::runtime_error(
+          "KineticEventData::kra_coefficients: "
+          "prim_event_index >= prim_event_calculators.size()");
+    }
     return prim_event_calculators.at(prim_event_index).freq_coefficients();
   }
 
   /// Get the KRA coefficients for a specific event
   clexulator::SparseCoefficients const &kra_coefficients(
       Index prim_event_index) const override {
+    if (prim_event_calculators.size() == 0) {
+      throw std::runtime_error(
+          "KineticEventData::kra_coefficients: "
+          "prim_event_calculators.size() == 0");
+    }
+    if (prim_event_index >= prim_event_calculators.size()) {
+      throw std::runtime_error(
+          "KineticEventData::kra_coefficients: "
+          "prim_event_index >= prim_event_calculators.size()");
+    }
     return prim_event_calculators.at(prim_event_index).kra_coefficients();
   }
 
@@ -205,7 +237,13 @@ class KineticEventData : public BaseMonteEventData {
   Index n_events() const override { return event_list.events.size(); }
 
   /// Return the current total event rate
-  double total_rate() const override { return event_selector->total_rate(); }
+  double total_rate() const override {
+    if (event_selector == nullptr) {
+      throw std::runtime_error(
+          "KineticEventData::total_rate: Events have not been calculated");
+    }
+    return event_selector->total_rate();
+  }
 
   // -- Event list iteration --
 
@@ -213,7 +251,13 @@ class KineticEventData : public BaseMonteEventData {
   void rewind() override { m_it = event_list.events.begin(); }
 
   /// Advance internal iterator by one event
-  void advance() override { ++m_it; }
+  void advance() override {
+    if (is_end()) {
+      throw std::runtime_error(
+          "KineticEventData::advance: Cannot advance past end of event list");
+    }
+    ++m_it;
+  }
 
   /// Check if internal iterator is at the end of the event list
   bool is_end() const override { return m_it == event_list.events.end(); }
@@ -228,6 +272,10 @@ class KineticEventData : public BaseMonteEventData {
 
   /// Return the current rate for a specific event
   double event_rate(EventID const &id) const override {
+    if (event_selector == nullptr) {
+      throw std::runtime_error(
+          "KineticEventData::total_rate: Events have not been calculated");
+    }
     return event_selector->get_rate(id);
   }
 
@@ -237,7 +285,12 @@ class KineticEventData : public BaseMonteEventData {
   /// - Event state is only valid for event `id` until the next call to this
   ///   method
   EventState const &event_state(EventID const &id) const override {
-    EventData const &_event_data = event_list.events.at(id);
+    auto it = event_list.events.find(id);
+    if (it == event_list.events.end()) {
+      throw std::runtime_error(
+          "KineticEventData::event_state: Event not found in event list");
+    }
+    EventData const &_event_data = it->second;
     PrimEventData const &_prim_event_data =
         prim_event_list.at(id.prim_event_index);
     prim_event_calculators.at(id.prim_event_index)
@@ -247,7 +300,12 @@ class KineticEventData : public BaseMonteEventData {
 
   /// The events that must be updated if the specified event occurs
   std::vector<EventID> const &impact(EventID const &id) const override {
-    return event_list.impact_table.at(id);
+    auto it = event_list.impact_table.find(id);
+    if (it == event_list.impact_table.end()) {
+      throw std::runtime_error(
+          "KineticEventData::impact: Event not found in impact table");
+    }
+    return it->second;
   }
 
  private:

@@ -154,7 +154,36 @@ class MonteCalculator {
   ///     potential
   void set_state_and_potential(state_type &state,
                                monte::OccLocation *occ_location) {
-    return m_calc->set_state_and_potential(state, occ_location);
+    m_calc->set_state_and_potential(state, occ_location);
+  }
+
+  /// \brief Construct and initialize a new occupant location list for the
+  ///     current state
+  std::shared_ptr<monte::OccLocation> make_occ_location() {
+    if (m_calc->state_data == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::make_occ_location: State data is not "
+          "yet constructed. To make an occupant location list, call "
+          "`set_state_and_potential` first.");
+    }
+    auto const &state = *m_calc->state_data->state;
+
+    monte::Conversions const &convert =
+        get_index_conversions(*m_calc->system, state);
+    monte::OccCandidateList const &occ_candidate_list =
+        get_occ_candidate_list(*m_calc->system, state);
+
+    auto occ_location = std::make_shared<monte::OccLocation>(
+        convert, occ_candidate_list, m_calc->update_atoms,
+        m_calc->save_atom_info);
+
+    double time = 0.0;
+    occ_location->initialize(get_occupation(state), time);
+
+    m_calc->state_data->owned_occ_location = occ_location;
+    m_calc->state_data->occ_location = occ_location.get();
+
+    return occ_location;
   }
 
   // --- Set when `set_event_data` or `run` is called: ---
@@ -173,6 +202,19 @@ class MonteCalculator {
   /// \brief Set event data (includes calculating all rates), using current
   /// state data
   void set_event_data(std::shared_ptr<engine_type> engine) {
+    if (m_calc->state_data == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::set_event_data: State data is not "
+          "yet constructed. To construct event data, call "
+          "`set_state_and_potential` with an occupant location list first.");
+    }
+    if (m_calc->state_data->occ_location == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::set_event_data: State data is "
+          "constructed, but there is no occupant location list. To construct "
+          "event data, call `set_state_and_potential` with an occupant "
+          "location list first.");
+    }
     m_calc->set_event_data(engine);
   }
 

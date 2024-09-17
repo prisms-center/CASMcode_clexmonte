@@ -1,4 +1,5 @@
 #include <pybind11/eigen.h>
+#include <pybind11/iostream.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -64,6 +65,8 @@ typedef monte::ResultsAnalysisFunctionMap<config_type, statistics_type>
 
 clexmonte::MontePotential make_potential(
     std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type &state) {
+  // print errors and warnings to sys.stdout
+  py::scoped_ostream_redirect redirect;
   monte::OccLocation *occ_location = nullptr;
   calculator->set_state_and_potential(state, nullptr);
   return calculator->potential();
@@ -72,7 +75,13 @@ clexmonte::MontePotential make_potential(
 clexmonte::MonteEventData make_event_data(
     std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type &state,
     std::shared_ptr<engine_type> engine, monte::OccLocation *occ_location) {
+  // print errors and warnings to sys.stdout
+  py::scoped_ostream_redirect redirect;
   calculator->set_state_and_potential(state, occ_location);
+  if (occ_location == nullptr) {
+    calculator->state_data()->owned_occ_location =
+        calculator->make_occ_location();
+  }
   calculator->set_event_data(engine);
   return calculator->event_data();
 }
@@ -116,6 +125,8 @@ std::shared_ptr<clexmonte::StateData> make_state_data(
 std::shared_ptr<clexmonte::MonteCalculator> make_monte_calculator(
     std::string method, std::shared_ptr<system_type> system,
     std::optional<nlohmann::json> params) {
+  // print errors and warnings to sys.stdout
+  py::scoped_ostream_redirect redirect;
   jsonParser _params = jsonParser::object();
   if (params.has_value()) {
     jsonParser json{static_cast<nlohmann::json const &>(params.value())};
@@ -142,6 +153,8 @@ std::shared_ptr<clexmonte::MonteCalculator> make_custom_monte_calculator(
     std::optional<std::string> compile_options,
     std::optional<std::string> so_options,
     std::optional<std::vector<std::string>> search_path) {
+  // print errors and warnings to sys.stdout
+  py::scoped_ostream_redirect redirect;
   // fs::path dirpath, std::string calculator_name
 
   jsonParser _params = jsonParser::object();
@@ -178,6 +191,8 @@ std::shared_ptr<run_manager_type> monte_calculator_run(
     calculator_type &self, state_type &state,
     std::shared_ptr<run_manager_type> run_manager,
     monte::OccLocation *occ_location) {
+  // print errors and warnings to sys.stdout
+  py::scoped_ostream_redirect redirect;
   // Need to check for an OccLocation
   std::unique_ptr<monte::OccLocation> tmp;
   make_temporary_if_necessary(state, occ_location, tmp, self);
@@ -191,6 +206,8 @@ std::shared_ptr<sampling_fixture_type> monte_calculator_run_fixture(
     calculator_type &self, state_type &state,
     sampling_fixture_params_type &sampling_fixture_params,
     std::shared_ptr<engine_type> engine, monte::OccLocation *occ_location) {
+  // print errors and warnings to sys.stdout
+  py::scoped_ostream_redirect redirect;
   if (!engine) {
     engine = std::make_shared<engine_type>();
     std::random_device device;
@@ -624,20 +641,30 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           R"pbdoc(
           .. rubric:: Constructor
 
+          Notes
+          -----
+
+          - After calling, it is necessary to first set the state and potential,
+            using :func:`~libcasm.clexmonte.MonteCalculator.set_state_and_potential`.
+          - After calling, the calculator's state data will be updated with a
+            pointer to the resulting occupant location list.
+
           Parameters
           ----------
           calculator : libcasm.clexmonte.MonteCalculator
               Monte Carlo calculator which constructs events.
           state : libcasm.clexmonte.MonteCarloState
-              The state events are constructed for.
+              The state events are constructed for. The calculator's state data
+              and potential will be set to point to this state.
           engine: Optional[libcasm.monte.RandomNumberEngine] = None
               Optional random number engine to use. If None, one is constructed and
               seeded from std::random_device.
           occ_location: Optional[libcasm.monte.events.OccLocation] = None
               Current occupant location list. If provided, the user is
               responsible for ensuring it is up-to-date with the current
-              occupation of `state` and it is used and updated during the run.
-              If None, a occupant location list is generated for the run.
+              occupation of `state`. If None, an occupant location list owned by
+              the calculator is constructed and initialized. The calculator's
+              state data will be set to point to this occupant location list.
 
           )pbdoc",
           py::arg("calculator"), py::arg("state"), py::arg("engine") = nullptr,
@@ -837,15 +864,44 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               Current occupant location list. If provided, the user is
               responsible for ensuring it is up-to-date with the current
               occupation of `state` and it is used and updated during the run.
-              If None, no occupant location list is stored. The occupant
-              location list is not required for evaluating the potential.
+              The calculator's state data will be set to point to this occupant
+              location list. If None, no occupant location list is stored. The
+              occupant location list is not required for evaluating the potential.
 
           )pbdoc",
            py::arg("state"),
            py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+      .def("make_occ_location", &calculator_type::make_occ_location,
+           R"pbdoc(
+          Make and initialize an occupant location list for the current state
+
+          Notes
+          -----
+
+          - Before calling, it is necessary to first set the state and potential,
+            using :func:`~libcasm.clexmonte.MonteCalculator.set_state_and_potential`.
+          - After calling, the calculator's state data will be updated with a
+            pointer to the resulting occupant location list.
+
+          Returns
+          -------
+          occ_location: libcasm.monte.events.OccLocation
+              A current occupant location list initialized with the current
+              state's occupation.
+
+          )pbdoc")
       .def("set_event_data", &calculator_type::set_event_data,
            R"pbdoc(
           Set event data (includes calculating all rates), using current state data
+
+          Notes
+          -----
+
+          - Before calling, it is necessary to first set the state and potential,
+            using :func:`~libcasm.clexmonte.MonteCalculator.set_state_and_potential`,
+            and make and set an occupant location list using
+            :func:`~libcasm.clexmonte.MonteCalculator.make_occ_location`.
+
 
           Parameters
           ----------

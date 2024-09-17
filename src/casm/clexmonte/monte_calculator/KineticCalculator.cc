@@ -54,8 +54,7 @@ KineticCalculator::KineticCalculator()
                           true,                  // update_atoms,
                           false,                 // save_atom_info,
                           false                  // is_multistate_method,
-                          ),
-      transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)) {}
+      ) {}
 
 /// \brief Construct functions that may be used to sample various quantities
 ///     of the Monte Carlo calculation as it runs
@@ -279,6 +278,9 @@ Validator KineticCalculator::validate_state(state_type &state) const {
 
 /// \brief Validate and set the current state, construct state_data, construct
 ///     potential
+///
+/// \param state State to set
+/// \param occ_location Pointer to OccLocation to use, or may be nullptr
 void KineticCalculator::set_state_and_potential(
     state_type &state, monte::OccLocation *occ_location) {
   // Validate system
@@ -306,6 +308,10 @@ void KineticCalculator::set_state_and_potential(
 /// \brief Set event data (includes calculating all rates), using current
 /// state data
 ///
+/// Notes:
+/// - Validates this->state_data is not null
+/// - Validates this->state_data->occ_location is not null
+///
 /// \param engine The random number generator engine used to select events
 ///     and timesteps. If nullptr, a new engine is constructed,
 ///     seeded by std::random_device
@@ -324,28 +330,9 @@ void KineticCalculator::set_event_data(std::shared_ptr<engine_type> engine) {
   state_type const &state = *this->state_data->state;
   monte::OccLocation const &occ_location = *this->state_data->occ_location;
 
-  // if same supercell
-  // -> just re-set state & avoid re-constructing event list
-  if (this->transformation_matrix_to_super ==
-      this->state_data->transformation_matrix_to_super) {
-    for (auto &event_state_calculator : _event_data().prim_event_calculators) {
-      event_state_calculator.set(&state);
-    }
-  } else {
-    this->transformation_matrix_to_super =
-        this->state_data->transformation_matrix_to_super;
-    _event_data().update(state, occ_location, this->event_filters);
-  }
-
-  // Make event selector
-  // - This calculates all rates at construction
-  _event_data().event_selector =
-      std::make_shared<KineticEventData::event_selector_type>(
-          _event_data().event_calculator,
-          clexmonte::make_complete_event_id_list(this->state_data->n_unitcells,
-                                                 _event_data().prim_event_list),
-          _event_data().event_list.impact_table,
-          std::make_shared<lotto::RandomGenerator>(engine));
+  // Currently, event_filters are only set at _reset() by reading from params
+  std::optional<std::vector<EventFilterGroup>> event_filters = std::nullopt;
+  _event_data().update(state, occ_location, event_filters, engine);
 }
 
 /// \brief Perform a single run, evolving current state
@@ -424,10 +411,12 @@ void KineticCalculator::_reset() {
   std::runtime_error error_if_invalid{ss.str()};
   report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
 
-  // Make event data  TODO: provide access to event data?
-  this->event_data = std::make_shared<KineticEventData>(system);
+  // TODO: Read event_filters from params
+  std::optional<std::vector<EventFilterGroup>> event_filters = std::nullopt;
 
-  // TODO: Read event filters from params
+  // Make event data
+  this->event_data =
+      std::make_shared<kinetic_2::KineticEventData>(system, event_filters);
 
   return;
 }

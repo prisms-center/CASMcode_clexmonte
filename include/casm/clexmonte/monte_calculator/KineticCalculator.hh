@@ -35,12 +35,6 @@ class KineticCalculator : public BaseMonteCalculator {
  public:
   using BaseMonteCalculator::engine_type;
 
-  /// Selectively allow events by unit cell
-  std::vector<EventFilterGroup> event_filters;
-
-  /// Current supercell
-  Eigen::Matrix3l transformation_matrix_to_super;
-
   KineticCalculator();
 
   /// \brief Construct functions that may be used to sample various quantities

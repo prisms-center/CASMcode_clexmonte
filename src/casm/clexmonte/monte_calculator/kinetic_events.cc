@@ -4,6 +4,7 @@
 #include "casm/casm_io/container/stream_io.hh"
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
+#include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/configuration/Configuration.hh"
 #include "casm/monte/run_management/State.hh"
@@ -146,7 +147,10 @@ double CompleteEventCalculator::calculate_rate(EventID const &id) {
   return event_state.rate;
 }
 
-KineticEventData::KineticEventData(std::shared_ptr<system_type> _system) {
+KineticEventData::KineticEventData(
+    std::shared_ptr<system_type> _system,
+    std::optional<std::vector<EventFilterGroup>> _event_filters)
+    : transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)) {
   system = _system;
   if (!is_clex_data(*system, "formation_energy")) {
     throw std::runtime_error(
@@ -156,28 +160,68 @@ KineticEventData::KineticEventData(std::shared_ptr<system_type> _system) {
   prim_event_list = clexmonte::make_prim_event_list(*system);
   prim_impact_info_list = clexmonte::make_prim_impact_info_list(
       *system, prim_event_list, {"formation_energy"});
+
+  if (_event_filters.has_value()) {
+    event_filters = _event_filters.value();
+  }
 }
 
-/// \brief Update for given state, conditions, and occupants
+/// \brief Update for given state, conditions, occupants, event filters
+///
+/// Notes:
+/// - This constructs the complete event list and impact table, and constructs
+///   the event selector, which calculates all event rates.
+/// - If there are no event filters and the supercell remains unchanged from the
+///   previous update, then the event list and impact table are not
+///   re-constructed, but the event rates are still re-calculated.
 void KineticEventData::update(
     state_type const &state, monte::OccLocation const &occ_location,
-    std::vector<EventFilterGroup> const &event_filters) {
-  // These are constructed/re-constructed so cluster expansions point
-  // at the current state
-  prim_event_calculators.clear();
-  for (auto const &prim_event_data : prim_event_list) {
-    prim_event_calculators.emplace_back(system,
-                                        prim_event_data.event_type_name);
-    prim_event_calculators.back().set(&state);
+    std::optional<std::vector<EventFilterGroup>> _event_filters,
+    std::shared_ptr<engine_type> engine) {
+  // if same supercell && no event filters
+  // -> just re-set state & avoid re-constructing event list
+  if (this->transformation_matrix_to_super ==
+          get_transformation_matrix_to_super(state) &&
+      !_event_filters.has_value()) {
+    for (auto &event_state_calculator : prim_event_calculators) {
+      event_state_calculator.set(&state);
+    }
+  } else {
+    if (_event_filters.has_value()) {
+      event_filters = _event_filters.value();
+    }
+
+    // These are constructed/re-constructed so cluster expansions point
+    // at the current state
+    prim_event_calculators.clear();
+    for (auto const &prim_event_data : prim_event_list) {
+      prim_event_calculators.emplace_back(system,
+                                          prim_event_data.event_type_name);
+      prim_event_calculators.back().set(&state);
+    }
+
+    // TODO: rejection-clexmonte option does not require impact table
+    event_list = clexmonte::make_complete_event_list(
+        prim_event_list, prim_impact_info_list, occ_location, event_filters);
+
+    // Construct CompleteEventCalculator
+    event_calculator = std::make_shared<CompleteEventCalculator>(
+        prim_event_list, prim_event_calculators, event_list.events);
+
+    transformation_matrix_to_super = get_transformation_matrix_to_super(state);
   }
 
-  // TODO: rejection-clexmonte option does not require impact table
-  event_list = clexmonte::make_complete_event_list(
-      prim_event_list, prim_impact_info_list, occ_location, event_filters);
+  Index n_unitcells = transformation_matrix_to_super.determinant();
 
-  // Construct CompleteEventCalculator
-  event_calculator = std::make_shared<CompleteEventCalculator>(
-      prim_event_list, prim_event_calculators, event_list.events);
+  // Make event selector
+  // - This calculates all rates at construction
+  event_selector = std::make_shared<KineticEventData::event_selector_type>(
+      event_calculator,
+      clexmonte::make_complete_event_id_list(n_unitcells, prim_event_list),
+      event_list.impact_table,
+      std::make_shared<lotto::RandomGenerator>(engine));
+
+  rewind();
 }
 
 }  // namespace kinetic_2

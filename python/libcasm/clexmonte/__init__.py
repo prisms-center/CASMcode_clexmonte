@@ -12,6 +12,7 @@ from ._clexmonte_functions import (
 from ._clexmonte_monte_calculator import (
     KineticsData,
     MonteCalculator,
+    MonteEventData,
     MontePotential,
     StateData,
 )

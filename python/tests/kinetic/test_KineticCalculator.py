@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 import libcasm.clexmonte as clexmonte
+import libcasm.monte.events as monte_events
 import libcasm.monte.sampling as sampling
 import libcasm.xtal as xtal
 
@@ -28,6 +29,7 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
         assert isinstance(calculator.potential, clexmonte.MontePotential)
     with pytest.raises(Exception):
         assert isinstance(calculator.state_data, clexmonte.StateData)
+    assert isinstance(calculator.event_data, clexmonte.MonteEventData)
 
     # default configuration is occupied by A: [1.0, 0.0, 0.0], which corresponds
     # to the origin composition as defined in the system's composition axes
@@ -56,10 +58,13 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
         param_composition, state.conditions.vector_values["param_composition"]
     )
 
+    ## Set state data and potential
     calculator.set_state_and_potential(state=state)
     assert isinstance(calculator.potential, clexmonte.MontePotential)
     assert isinstance(calculator.state_data, clexmonte.StateData)
+    assert isinstance(calculator.event_data, clexmonte.MonteEventData)
 
+    ## StateData constructor
     state_data = clexmonte.StateData(
         system=system,
         state=state,
@@ -67,8 +72,22 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
     )
     assert isinstance(state_data, clexmonte.StateData)
 
+    ## MontePotential constructor
     potential = clexmonte.MontePotential(calculator=calculator, state=state)
     assert isinstance(potential, clexmonte.MontePotential)
+
+    # ## Set event data
+    with pytest.raises(Exception):
+        # no occ_location set
+        calculator.set_event_data()
+
+    occ_location = calculator.make_occ_location()
+    assert isinstance(occ_location, monte_events.OccLocation)
+    assert isinstance(calculator.event_data, clexmonte.MonteEventData)
+
+    ## MonteEventData constructor
+    event_data = clexmonte.MonteEventData(calculator=calculator, state=state)
+    assert isinstance(event_data, clexmonte.MonteEventData)
 
 
 def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
@@ -122,10 +141,11 @@ def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
     kinetics.sample("clex.formation_energy")
 
     kinetics.clear_cutoffs()
-    kinetics.set_min_count(1000)
+    # kinetics.set_min_count(1000)
+    kinetics.set_max_count(1000)
 
     kinetics.converge("clex.formation_energy", abs=1e-3)
-    # kinetics.do_not_converge("clex.formation_energy")
+    kinetics.do_not_converge("clex.formation_energy")
 
     print(xtal.pretty_json(kinetics.to_dict()))
 
@@ -173,5 +193,3 @@ def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
         is_canonical=True,
         is_requested_convergence=False,
     )
-
-    assert False

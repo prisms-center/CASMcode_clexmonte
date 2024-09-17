@@ -22,7 +22,15 @@ struct StateData {
   state_type const *state;
 
   /// Occupant tracker (may be null)
+  ///
+  /// - This should be the OccLocation being used by the MonteCalculator
+  /// - Allows pointing to an OccLocation owned elsewhere
   monte::OccLocation const *occ_location;
+
+  /// Occupant tracker (may be null)
+  ///
+  /// - Allows constructing a new occupant tracker
+  std::shared_ptr<monte::OccLocation> owned_occ_location;
 
   /// Current supercell, depends on current state
   Eigen::Matrix3l transformation_matrix_to_super;
