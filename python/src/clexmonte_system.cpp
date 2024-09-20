@@ -1,4 +1,5 @@
 #include <pybind11/eigen.h>
+#include <pybind11/iostream.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -53,9 +54,11 @@ PYBIND11_MODULE(_clexmonte_system, m) {
     Cluster expansion Monte Carlo system
     )pbdoc";
   py::module::import("libcasm.clexulator");
+  py::module::import("libcasm.clusterography");
   py::module::import("libcasm.composition");
   py::module::import("libcasm.configuration");
   py::module::import("libcasm.monte.events");
+  py::module::import("libcasm.occ_events");
   py::module::import("libcasm.xtal");
 
   py::class_<clexmonte::System, std::shared_ptr<clexmonte::System>>(m, "System",
@@ -218,6 +221,47 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           )pbdoc",
           py::arg("key"))
       .def(
+          "basis_set_cluster_info",
+          [](clexmonte::System &m, std::string key) -> py::tuple {
+            // print errors and warnings to sys.stdout
+            py::scoped_ostream_redirect redirect;
+
+            auto it = m.basis_set_cluster_info.find(key);
+            if (it == m.basis_set_cluster_info.end()) {
+              throw std::runtime_error("Basis set cluster info not found: " +
+                                       key);
+            }
+            auto const &cluster_info = it->second;
+            std::vector<std::vector<clust::IntegralCluster>> orbits;
+            for (auto const &orbit : cluster_info->orbits) {
+              orbits.emplace_back(orbit.begin(), orbit.end());
+            }
+            return py::make_tuple(orbits,
+                                  cluster_info->function_to_orbit_index);
+          },
+          R"pbdoc(
+          Get basis set cluster info
+
+          Parameters
+          ----------
+          key : str
+              Basis set name
+
+          Returns
+          -------
+          orbits : list[list[libcasm.clusterography.Cluster]]
+              The orbits of clusters used to generate the basis set, where
+              `orbits[i][j]` is the `j`-th cluster in the `i`-th orbit of
+              equivalent clusters. Returned as a copy.
+
+          function_to_orbit_index : list[int]
+              The value `i = function_to_orbit_index[j]` specifies that the
+              `j`-th function in the basis set involves DoF on the `i`-th orbit
+              of clusters. Returned as a copy.
+
+          )pbdoc",
+          py::arg("key"))
+      .def(
           "local_basis_set",
           [](clexmonte::System &m, std::string key)
               -> std::shared_ptr<clexulator::LocalClexulatorWrapper> {
@@ -236,6 +280,52 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           -------
           local_clexulator : libcasm.clexulator.LocalClexulator
               The local cluster expansion basis set calculator.
+          )pbdoc",
+          py::arg("key"))
+      .def(
+          "local_basis_set_cluster_info",
+          [](clexmonte::System &m, std::string key) -> py::tuple {
+            // print errors and warnings to sys.stdout
+            py::scoped_ostream_redirect redirect;
+            auto it = m.local_basis_set_cluster_info.find(key);
+            if (it == m.local_basis_set_cluster_info.end()) {
+              throw std::runtime_error(
+                  "Local basis set cluster info not found: " + key);
+            }
+            auto const &cluster_info = it->second;
+            std::vector<std::vector<std::vector<clust::IntegralCluster>>>
+                orbits;
+            for (auto const &equiv_orbits : cluster_info->orbits) {
+              std::vector<std::vector<clust::IntegralCluster>> _equiv_orbits;
+              for (auto const &orbit : equiv_orbits) {
+                _equiv_orbits.emplace_back(orbit.begin(), orbit.end());
+              }
+              orbits.emplace_back(std::move(_equiv_orbits));
+            }
+            return py::make_tuple(orbits,
+                                  cluster_info->function_to_orbit_index);
+          },
+          R"pbdoc(
+          Get local basis set cluster info
+
+          Parameters
+          ----------
+          key : str
+              Local basis set name
+
+          Returns
+          -------
+          local_orbits : list[list[list[libcasm.clusterography.IntegralCluster]]]
+              The orbits of local-clusters used to generate the basis set, where
+              `orbits[e][i][j]` is the `j`-th cluster in the `i`-th orbit of
+              equivalent clusters around the `e`-th equivalent phenomenal
+              cluster. Returned as a copy.
+
+          function_to_orbit_index : list[int]
+              The value `i = function_to_orbit_index[j]` specifies that the
+              `j`-th function in the basis set involves DoF on the `i`-th orbit
+              of clusters. Returned as a copy.
+
           )pbdoc",
           py::arg("key"))
       //
@@ -599,6 +689,85 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           semigrand_canonical_multiswaps : list[libcasm.monte.OccSwap]
               The multi-site swap types for semi-grand canonical Monte Carlo
               events. May be empty.
+          )pbdoc")
+      // KMC events
+      .def_readonly("event_system", &clexmonte::System::event_system, R"pbdoc(
+          libcasm.occ_events.OccSystem: Index conversion tables used for KMC events.
+          )pbdoc")
+      .def(
+          "equivalents_info",
+          [](clexmonte::System const &self, std::string key) {
+            auto const &info = self.equivalents_info.at(key);
+            return py::make_tuple(info.phenomenal_clusters,
+                                  info.equivalent_generating_op_indices,
+                                  info.translations);
+          },
+          R"pbdoc(
+          Get the "equivalents_info" for a local cluster expansion basis set
+
+          Parameters
+          ----------
+          key : str
+              The local basis set name
+
+          Returns
+          -------
+          phenomenal_clusters : list[Cluster]
+              The phenomenal clusters of the local basis sets
+
+          equivalent_generating_op_indices : list[int]
+              Indices of the factor group operations that
+              generate the phenomenal clusters from the
+              prototype.
+
+          translations: list[np.ndarray]
+              The translations, applied after the equivalent generating factor
+              group operations, that result in the equivalent phenomenal clusters.
+
+          )pbdoc",
+          py::arg("key"))
+      .def(
+          "occevent_symgroup_rep",
+          [](clexmonte::System const &self) {
+            return self.occevent_symgroup_rep;
+          },
+          R"pbdoc(
+          Get the group representation for transforming OccEvent
+
+          Returns
+          -------
+          occevent_symgroup_rep : list[libcasm.occ_events.OccEventRep]
+              Group representation for transforming OccEvent.
+          )pbdoc")
+      .def_property_readonly(
+          "event_type_names",
+          [](clexmonte::System const &self) {
+            return get_keys(self.event_type_data);
+          },
+          R"pbdoc(
+          list[str]: The list of event type names
+          )pbdoc")
+      .def(
+          "events",
+          [](clexmonte::System const &self, std::string event_type_name) {
+            return self.event_type_data.at(event_type_name).events;
+          },
+          R"pbdoc(
+          Get a list of the equivalent OccEvent for a particular event type
+
+          Parameters
+          ----------
+          event_type_name: str
+              The name of the event type
+
+          Returns
+          -------
+          events : list[libcasm.occ_events.OccEvent]
+              A list of the equivalent OccEvent for the specified event type. The
+              events are ordered consistently with the local cluster expansion given by
+              `events_local_multiclex_name`. This means that `events[equivalent_index]`
+              is the phenomenal event for the `equivalent_index`-th local cluster basis
+              set.
           )pbdoc")
       //
       .def_static(

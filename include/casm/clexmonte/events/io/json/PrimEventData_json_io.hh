@@ -11,10 +11,12 @@ namespace clexmonte {
 struct PrimEventData;
 }  // namespace clexmonte
 
-jsonParser &to_json(clexmonte::PrimEventData const &filter, jsonParser &json,
-                    occ_events::OccSystem const &event_system,
-                    occ_events::OccEventOutputOptions const &options =
-                        occ_events::OccEventOutputOptions());
+jsonParser &to_json(
+    clexmonte::PrimEventData const &data, jsonParser &json,
+    std::optional<std::reference_wrapper<occ_events::OccSystem const>>
+        event_system,
+    occ_events::OccEventOutputOptions const &options =
+        occ_events::OccEventOutputOptions());
 
 }  // namespace CASM
 

@@ -47,30 +47,39 @@ class BaseMonteEventData {
 
   // -- Event list iteration --
 
-  /// Move internal iterator back to beginning of event list
-  virtual void rewind() = 0;
+  /// Construct new internal iterator and return its index
+  virtual Index new_iterator(bool is_end) = 0;
+
+  /// Copy internal iterator and return the new iterator index
+  virtual Index copy_iterator(Index i) = 0;
+
+  /// Erase internal iterator
+  virtual void erase_iterator(Index i) = 0;
+
+  /// Check if two internal iterators are equal
+  virtual bool equal_iterator(Index i, Index j) = 0;
 
   /// Advance internal iterator by one event
-  virtual void advance() = 0;
-
-  /// Check if internal iterator is at the end of the event list
-  virtual bool is_end() const = 0;
+  virtual void advance_iterator(Index i) = 0;
 
   /// The event ID for the current state of the internal iterator
-  virtual EventID const &event_id() const = 0;
-
-  /// The event data for the current state of the internal iterator
-  virtual EventData const &event_data() const = 0;
+  virtual EventID const &event_id(Index i) const = 0;
 
   // -- Event info (accessed by EventID) --
+
+  /// The monte::OccEvent that can apply the specified event. Reference is
+  /// valid until the next call to this method.
+  virtual monte::OccEvent const &event_to_apply(EventID const &id) const = 0;
 
   /// Return the current rate for a specific event
   virtual double event_rate(EventID const &id) const = 0;
 
-  /// Calculate event state data
+  /// Calculate event state data. Reference is valid until the next call to this
+  /// method.
   virtual EventState const &event_state(EventID const &id) const = 0;
 
-  /// The events that must be updated if the specified event occurs
+  /// The events that must be updated if the specified event occurs. Reference
+  /// is valid until the next call to this method.
   virtual std::vector<EventID> const &impact(EventID const &id) const = 0;
 };
 

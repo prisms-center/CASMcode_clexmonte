@@ -3,6 +3,7 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 
 // nlohmann::json binding
 #define JSON_USE_IMPLICIT_CONVERSIONS 0
@@ -12,10 +13,13 @@
 #include "pybind11_json/pybind11_json.hpp"
 
 // clexmonte/semigrand_canonical
+#include "casm/clexmonte/events/io/json/EventState_json_io.hh"
+#include "casm/clexmonte/events/io/json/PrimEventData_json_io.hh"
 #include "casm/clexmonte/monte_calculator/MonteCalculator.hh"
 #include "casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.hh"
 #include "casm/clexmonte/run/StateModifyingFunction.hh"
 #include "casm/clexmonte/run/io/json/RunParams_json_io.hh"
+#include "casm/configuration/occ_events/io/json/OccEvent_json_io.hh"
 #include "casm/monte/RandomNumberGenerator.hh"
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/run_management/io/json/SamplingFixtureParams_json_io.hh"
@@ -234,6 +238,7 @@ PYBIND11_MAKE_OPAQUE(CASM::monte::StateSamplingFunctionMap);
 PYBIND11_MAKE_OPAQUE(CASM::monte::jsonStateSamplingFunctionMap);
 PYBIND11_MAKE_OPAQUE(CASMpy::analysis_function_map_type);
 PYBIND11_MAKE_OPAQUE(CASM::clexmonte::StateModifyingFunctionMap);
+PYBIND11_MAKE_OPAQUE(std::vector<CASM::clexmonte::PrimEventData>);
 
 PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
   using namespace CASMpy;
@@ -631,20 +636,349 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc",
            py::arg("linear_site_index"), py::arg("new_occ"));
 
+  py::class_<clexmonte::PrimEventData>(m, "PrimEventData",
+                                       R"pbdoc(
+      Data common to all translationally equivalent events
+      )pbdoc")
+      .def_readonly("event_type_name",
+                    &clexmonte::PrimEventData::event_type_name,
+                    R"pbdoc(
+          str: Event type name.
+          )pbdoc")
+      .def_readonly("equivalent_index",
+                    &clexmonte::PrimEventData::equivalent_index,
+                    R"pbdoc(
+          int: Equivalent event index.
+          )pbdoc")
+      .def_readonly("is_forward", &clexmonte::PrimEventData::is_forward,
+                    R"pbdoc(
+          bool: Is forward trajectory (else reverse).
+          )pbdoc")
+      .def_readonly("prim_event_index",
+                    &clexmonte::PrimEventData::prim_event_index,
+                    R"pbdoc(
+          int: Linear index for this prim event
+          )pbdoc")
+      .def_readonly("event", &clexmonte::PrimEventData::event,
+                    R"pbdoc(
+          libcasm.occ_events.OccEvent: Event definition
+          )pbdoc")
+      .def(
+          "sites", [](clexmonte::PrimEventData &self) { return self.sites; },
+          R"pbdoc(
+          list[:class:`~libcasm.xtal.IntegralSiteCoordinate`]: Event sites,
+          relative to origin unit cell
+          )pbdoc")
+      .def(
+          "occ_init",
+          [](clexmonte::PrimEventData &self) { return self.occ_init; },
+          R"pbdoc(
+          list[int]: Initial site occupation
+          )pbdoc")
+      .def(
+          "occ_final",
+          [](clexmonte::PrimEventData &self) { return self.occ_final; },
+          R"pbdoc(
+          list[int]: final site occupation
+          )pbdoc")
+      .def(
+          "to_dict",
+          [](clexmonte::PrimEventData &self,
+             std::optional<std::reference_wrapper<occ_events::OccSystem const>>
+                 system,
+             bool include_cluster, bool include_cluster_occupation,
+             bool include_event_invariants) -> nlohmann::json {
+            jsonParser json;
+            occ_events::OccEventOutputOptions opt;
+            opt.include_cluster = include_cluster;
+            opt.include_cluster_occupation = include_cluster_occupation;
+            opt.include_event_invariants = include_event_invariants;
+            to_json(self, json, system, opt);
+            return static_cast<nlohmann::json>(json);
+          },
+          R"pbdoc(
+          Represent the PrimEventData as a Python dict
+
+          Parameters
+          ----------
+          event_system : Optional[libcasm.occ_events.OccSystem] = None
+              A :class:`~libcasm.occ_events.OccSystem`. Providing `event_system`
+              allows output of more event information, including occupant and
+              atom names, cluster information, and symmetry information.
+
+          include_cluster: bool = True
+              If True, also include the cluster sites
+
+          include_cluster_occupation: bool = True
+              If True, also include the initial and final cluster occupation
+
+          include_event_invariants: bool = True
+              If True, also include event invariants: number of trajectories,
+              number of each occupant type, and site distances
+
+          Returns
+          -------
+          data : dict
+              The PrimEventData as a Python dict
+          )pbdoc",
+          py::arg("event_system") = std::nullopt,
+          py::arg("include_cluster") = true,
+          py::arg("include_cluster_occupation") = true,
+          py::arg("include_event_invariants") = true)
+      .def("__repr__", [](clexmonte::PrimEventData &self) -> nlohmann::json {
+        std::stringstream ss;
+        jsonParser json;
+        occ_events::OccEventOutputOptions opt;
+        to_json(self, json, std::nullopt, opt);
+        ss << json;
+        return ss.str();
+      });
+
+  py::bind_vector<std::vector<clexmonte::PrimEventData>>(m, "PrimEventList",
+                                                         R"pbdoc(
+      PrimEventList is a list[:class:`PrimEventData`]-like object.
+      )pbdoc");
+
+  py::class_<clexmonte::EventID>(m, "EventID",
+                                 R"pbdoc(
+      Identifies an event via linear unit cell index in some supercell
+
+      .. rubric:: Special Methods
+
+      - Sort EventID using ``<``, ``<=``, ``>``, ``>=``, and compare
+        using ``==`` and ``!=``
+      - EventID may be copied with
+        :func:`EventID.copy <libcasm.clexmonte.EventID.copy>`,
+        `copy.copy`, or `copy.deepcopy`.
+      - EventID is hashable and may be used as a key in a dict.
+
+      )pbdoc")
+      .def(py::init<Index, Index>(),
+           R"pbdoc(
+          .. rubric:: Constructor
+
+          Parameters
+          ----------
+          prim_event_index: int
+              Index specifying an event in
+              :py:attr:`MonteEventData.prim_event_list <libcasm.clexmonte.MonteEventData.prim_event_list>`.
+          unitcell_index: int:
+              Linear unit cell index into a supercell, as determined by
+              :class:`~libcasm.xtal.UnitCellIndexConverter`.
+          )pbdoc",
+           py::arg("prim_event_index"), py::arg("unitcell_index"))
+      .def_readonly("prim_event_index", &clexmonte::EventID::prim_event_index,
+                    R"pbdoc(
+          int: Index specifying an event in
+          :py:attr:`MonteEventData.prim_event_list <libcasm.clexmonte.MonteEventData.prim_event_list>`.
+          )pbdoc")
+      .def_readonly("unitcell_index", &clexmonte::EventID::unitcell_index,
+                    R"pbdoc(
+          int: Linear unit cell index into a supercell, as determined by
+          :class:`~libcasm.xtal.UnitCellIndexConverter`.
+          )pbdoc")
+      .def(py::self < py::self, "Sorts EventID.")
+      .def(py::self <= py::self, "Sorts EventID.")
+      .def(py::self > py::self, "Sorts EventID.")
+      .def(py::self >= py::self, "Sorts EventID.")
+      .def(py::self == py::self, "Compare EventID.")
+      .def(py::self != py::self, "Compare EventID.")
+      .def("__hash__",
+           [](clexmonte::EventID const &self) {
+             return py::hash(
+                 py::make_tuple(self.prim_event_index, self.unitcell_index));
+           })
+      .def(
+          "copy",
+          [](clexmonte::EventID const &self) {
+            return clexmonte::EventID(self);
+          },
+          "Represent the EventID as a Python dict.")
+      .def("__copy__",
+           [](clexmonte::EventID const &self) {
+             return clexmonte::EventID(self);
+           })
+      .def("__deepcopy__", [](clexmonte::EventID const &self,
+                              py::dict) { return clexmonte::EventID(self); })
+      .def(
+          "to_dict",
+          [](clexmonte::EventID const &self) {
+            jsonParser json;
+            to_json(self, json);
+            return static_cast<nlohmann::json>(json);
+          },
+          "Represent the EventID as a Python dict.")
+      .def("__repr__",
+           [](clexmonte::EventID const &self) {
+             std::stringstream ss;
+             jsonParser json;
+             to_json(self, json);
+             ss << json;
+             return ss.str();
+           })
+      .def_static(
+          "from_dict",
+          [](nlohmann::json const &data) {
+            // print errors and warnings to sys.stdout
+            py::scoped_ostream_redirect redirect;
+            jsonParser json{data};
+            InputParser<clexmonte::EventID> event_id_parser(json);
+            std::runtime_error error_if_invalid{
+                "Error in libcasm.clexmonte.EventID.from_dict"};
+            report_and_throw_if_invalid(event_id_parser, CASM::log(),
+                                        error_if_invalid);
+            return (*event_id_parser.value);
+          },
+          "Construct an EventID from a Python dict.");
+
+  py::class_<clexmonte::EventData>(m, "EventData",
+                                   R"pbdoc(
+      Data particular to a single translationally distinct event
+
+      Notes
+      -----
+
+      - EventData is obtained from
+        :py:attr:`MonteEventData.event_data <libcasm.clexmonte.MonteEventData.event_data>`.
+      - No constructor is provided
+
+      )pbdoc")
+      .def_readonly("event", &clexmonte::EventData::event,
+                    R"pbdoc(
+          libcasm.monte.events.OccEvent: Used to apply event and track occupants
+          when the event is selected.
+          )pbdoc")
+      .def_readonly("unitcell_index", &clexmonte::EventData::unitcell_index,
+                    R"pbdoc(
+          int: Linear unit cell index into a supercell, as determined by
+          :class:`~libcasm.xtal.UnitCellIndexConverter`.
+          )pbdoc")
+      .def(
+          "to_dict",
+          [](clexmonte::EventData const &self) {
+            jsonParser json;
+            to_json(self, json);
+            return static_cast<nlohmann::json>(json);
+          },
+          "Represent the EventData as a Python dict.")
+      .def("__repr__", [](clexmonte::EventData const &self) {
+        std::stringstream ss;
+        jsonParser json;
+        to_json(self, json);
+        ss << json;
+        return ss.str();
+      });
+
+  py::class_<clexmonte::EventState>(m, "EventState",
+                                    R"pbdoc(
+      Data calculated for a single event in a single state
+      )pbdoc")
+      .def_readonly("is_allowed", &clexmonte::EventState::is_allowed,
+                    R"pbdoc(
+          bool: True if event is allowed given current configuration; False otherwise.
+          )pbdoc")
+      .def_property_readonly(
+          "formation_energy_delta_corr",
+          [](clexmonte::EventState const &self) {
+            if (self.formation_energy_delta_corr == nullptr) {
+              throw std::runtime_error(
+                  "Error in EventState.formation_energy_delta_corr: "
+                  "not calculated.");
+            }
+            return *self.formation_energy_delta_corr;
+          },
+          R"pbdoc(
+          numpy.ndarray[numpy.float[corr_size,]]: Change in formation energy
+          correlations if event occurs.
+          )pbdoc")
+      .def_property_readonly(
+          "local_corr",
+          [](clexmonte::EventState const &self) {
+            if (self.local_corr == nullptr) {
+              throw std::runtime_error(
+                  "Error in EventState.local_corr: "
+                  "not calculated.");
+            }
+            return *self.local_corr;
+          },
+          R"pbdoc(
+          numpy.ndarray[numpy.float[corr_size,]]: Local correlations for current
+          event neighborhood.
+          )pbdoc")
+      .def_readonly("is_normal", &clexmonte::EventState::is_normal,
+                    R"pbdoc(
+          bool: An event is "normal" if `dE_activated` > 0.0 and
+          `dE_activated` > `dE_final`.
+          )pbdoc")
+      .def_readonly("dE_final", &clexmonte::EventState::dE_final,
+                    R"pbdoc(
+          float: Final state energy, relative to initial state.
+          )pbdoc")
+      .def_readonly("Ekra", &clexmonte::EventState::Ekra,
+                    R"pbdoc(
+          float: KRA energy.
+          )pbdoc")
+      .def_readonly("dE_activated", &clexmonte::EventState::dE_activated,
+                    R"pbdoc(
+          float: Activated state energy, relative to initial state
+          )pbdoc")
+      .def_readonly("freq", &clexmonte::EventState::freq,
+                    R"pbdoc(
+          float: Attempt frequency
+          )pbdoc")
+      .def_readonly("rate", &clexmonte::EventState::rate,
+                    R"pbdoc(
+          float: Event rate
+          )pbdoc")
+      .def(
+          "to_dict",
+          [](clexmonte::EventState const &self) {
+            jsonParser json;
+            to_json(self, json);
+            return static_cast<nlohmann::json>(json);
+          },
+          "Represent the EventState as a Python dict.")
+      .def("__repr__", [](clexmonte::EventState const &self) {
+        std::stringstream ss;
+        jsonParser json;
+        to_json(self, json);
+        ss << json;
+        return ss.str();
+      });
+
+  py::class_<clexmonte::MonteEventList>(m, "MonteEventList",
+                                        R"pbdoc(
+      Allows iterating over EventID
+
+      .. rubric:: Special Methods
+
+      - Use `len(event_list)` to get the number of events
+      - Use ``for event_id in event_list:`` to iterate over the EventID
+
+      )pbdoc")
+      .def("__len__", &clexmonte::MonteEventList::size)
+      .def("total_rate", &clexmonte::MonteEventList::total_rate)
+      .def(
+          "__iter__",
+          [](clexmonte::MonteEventList const &self) {
+            return py::make_iterator(self.begin(), self.end());
+          },
+          py::keep_alive<
+              0, 1>() /* Essential: keep object alive while iterator exists */);
+
   py::class_<clexmonte::MonteEventData>(m, "MonteEventData",
                                         R"pbdoc(
       Interface to event data
 
       )pbdoc")
-      .def(
-          py::init<>(&make_event_data),
-          R"pbdoc(
+      .def(py::init<>(&make_event_data),
+           R"pbdoc(
           .. rubric:: Constructor
 
           Notes
           -----
 
-          - After calling, it is necessary to first set the state and potential,
+          - Before calling, it is necessary to first set the state and potential,
             using :func:`~libcasm.clexmonte.MonteCalculator.set_state_and_potential`.
           - After calling, the calculator's state data will be updated with a
             pointer to the resulting occupant location list.
@@ -667,8 +1001,90 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               state data will be set to point to this occupant location list.
 
           )pbdoc",
-          py::arg("calculator"), py::arg("state"), py::arg("engine") = nullptr,
-          py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr));
+           py::arg("calculator"), py::arg("state"), py::arg("engine") = nullptr,
+           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+      .def_property_readonly(
+          "prim_event_list",
+          [](clexmonte::MonteEventData &self)
+              -> std::vector<clexmonte::PrimEventData> const & {
+            return self.prim_event_list();
+          },
+          R"pbdoc(
+          libcasm.clexmonte.PrimEventList: The translationally distinct
+          instances of each event, including forward and reverse events separately,
+          associated with origin primitive cell.
+          )pbdoc")
+      .def_property_readonly("event_list",
+                             &clexmonte::MonteEventData::event_list,
+                             R"pbdoc(
+          MonteEventList: The current list of EventID.
+          )pbdoc")
+      .def("event_to_apply", &clexmonte::MonteEventData::event_to_apply,
+           R"pbdoc(
+          The event data structure that can used to apply the event to the current
+          configuration's occupant location list.
+
+          Parameters
+          ----------
+          id: libcasm.clexmonte.EventID
+              The event ID for the event.
+
+          Results
+          -------
+          event: libcasm.monte.events.OccEvent
+              The event data structure that can used to apply the event to the current
+              configuration's occupant location list. The reference is valid until the
+              next call to this function.
+          )pbdoc")
+      .def("event_rate", &clexmonte::MonteEventData::event_rate,
+           R"pbdoc(
+          Return the current rate for a specific event, as stored in the event list
+
+          Parameters
+          ----------
+          id: libcasm.clexmonte.EventID
+              The event ID for the event.
+
+          Results
+          -------
+          rate: float
+              The current rate for the specified event, as stored in the event list.
+          )pbdoc",
+           py::arg("id"))
+      .def("event_state", &clexmonte::MonteEventData::event_state,
+           R"pbdoc(
+          Calculate and return a reference to the EventState for a particular event
+          in the current configuration
+
+          Parameters
+          ----------
+          id: libcasm.clexmonte.EventID
+              The event ID for the occuring event.
+
+          Results
+          -------
+          state: libcasm.clexmonte.EventState
+              A reference to the EventState for a particular event in the current
+              configuration. The reference is valid until the next call to
+              this function.
+          )pbdoc",
+           py::arg("id"))
+      .def("event_impact", &clexmonte::MonteEventData::event_impact,
+           R"pbdoc(
+          Return a list of EventID for the events that must be updated if a specified
+          event occurs
+
+          Parameters
+          ----------
+          id: libcasm.clexmonte.EventID
+              The event ID for the occuring event.
+
+          Results
+          -------
+          impacted_events: list[libcasm.clexmonte.EventID]
+              The EventID for events that must be updated.
+          )pbdoc",
+           py::arg("id"));
 
   pyMonteCalculator
       .def(py::init<>(&make_monte_calculator),

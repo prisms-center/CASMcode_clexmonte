@@ -101,14 +101,30 @@ bool is_same_phenomenal_clusters(
     std::vector<occ_events::OccEvent> const &equivalents,
     EquivalentsInfo const &info);
 
+struct LocalBasisSetClusterInfo {
+  /// Cluster orbits, in order matching a Clexulator, by equivalent index:
+  ///
+  /// - The cluster `orbits[equivalent_index][orbit_index][j]` is `j`-th cluster
+  ///   equivalent to the prototype cluster
+  ///   `orbits[equivalent_index][orbit_index][0]` around the
+  ///   `equivalent_index`-th equivalent phenomenal cluster, in the
+  ///   `orbit_index`-th orbit.
+  std::vector<std::vector<std::set<clust::IntegralCluster>>> orbits;
+
+  /// Convert linear function index to linear cluster orbit index
+  std::vector<Index> function_to_orbit_index;
+};
+
 struct LocalClexData {
   std::string local_basis_set_name;
   clexulator::SparseCoefficients coefficients;
+  std::shared_ptr<LocalBasisSetClusterInfo const> cluster_info;
 };
 
 struct LocalMultiClexData {
   std::string local_basis_set_name;
   std::vector<clexulator::SparseCoefficients> coefficients;
+  std::shared_ptr<LocalBasisSetClusterInfo const> cluster_info;
 
   /// \brief Map of key ("kra", "freq", etc.) to coefficients index
   std::map<std::string, Index> coefficients_glossary;

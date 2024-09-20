@@ -220,8 +220,6 @@ void KineticEventData::update(
       clexmonte::make_complete_event_id_list(n_unitcells, prim_event_list),
       event_list.impact_table,
       std::make_shared<lotto::RandomGenerator>(engine));
-
-  rewind();
 }
 
 }  // namespace kinetic_2

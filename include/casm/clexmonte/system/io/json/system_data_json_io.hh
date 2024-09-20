@@ -20,15 +20,18 @@ struct Prim;
 
 namespace clexmonte {
 struct BasisSetClusterInfo;
+struct LocalBasisSetClusterInfo;
 struct EquivalentsInfo;
 
 /// \brief Parse BasisSetClusterInfo from a bspecs.json / eci.json file
-void parse(
-    InputParser<BasisSetClusterInfo> &parser, config::Prim const &prim,
-    std::map<std::string, std::shared_ptr<clexulator::Clexulator>> basis_sets);
+void parse(InputParser<BasisSetClusterInfo> &parser, config::Prim const &prim);
 
 /// \brief Parse EquivalentsInfo from JSON
 void parse(InputParser<EquivalentsInfo> &parser, config::Prim const &prim);
+
+/// \brief Parse LocalBasisSetClusterInfo from a bspecs.json / eci.json file
+void parse(InputParser<LocalBasisSetClusterInfo> &parser,
+           config::Prim const &prim, EquivalentsInfo const &info);
 
 }  // namespace clexmonte
 }  // namespace CASM

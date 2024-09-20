@@ -8,9 +8,11 @@
 
 namespace CASM {
 
-jsonParser &to_json(clexmonte::PrimEventData const &data, jsonParser &json,
-                    occ_events::OccSystem const &event_system,
-                    occ_events::OccEventOutputOptions const &options) {
+jsonParser &to_json(
+    clexmonte::PrimEventData const &data, jsonParser &json,
+    std::optional<std::reference_wrapper<occ_events::OccSystem const>>
+        event_system,
+    occ_events::OccEventOutputOptions const &options) {
   json.put_obj();
   json["event_type_name"] = data.event_type_name;
   json["equivalent_index"] = data.equivalent_index;

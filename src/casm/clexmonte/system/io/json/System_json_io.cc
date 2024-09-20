@@ -380,7 +380,7 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
         BasisSetClusterInfo cluster_info;
         if (parse_from_file(parser,
                             fs::path("basis_sets") / it.name() / "basis",
-                            search_path, cluster_info, prim, basis_sets)) {
+                            search_path, cluster_info, prim)) {
           basis_set_cluster_info.emplace(
               it.name(), std::make_shared<BasisSetClusterInfo const>(
                              std::move(cluster_info)));
@@ -392,6 +392,7 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
   // Parse "local_basis_sets"
   if (parser.self.contains("local_basis_sets")) {
     auto &local_basis_sets = system.local_basis_sets;
+    auto &local_basis_set_cluster_info = system.local_basis_set_cluster_info;
     auto &equivalents_info = system.equivalents_info;
     auto &prim_neighbor_list = system.prim_neighbor_list;
     auto &prim = *system.prim;
@@ -417,6 +418,20 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
           search_path, prim);
       if (info_subparser->valid()) {
         equivalents_info.emplace(it.name(), std::move(*info_subparser->value));
+      }
+
+      // "local_basis_sets"/<name>/"basis" (LocalBasisSetClusterInfo, optional)
+      if (parser.self.find_at(fs::path("local_basis_sets") / it.name() /
+                              "basis") != parser.self.end()) {
+        LocalBasisSetClusterInfo cluster_info;
+        if (parse_from_file(parser,
+                            fs::path("local_basis_sets") / it.name() / "basis",
+                            search_path, cluster_info, prim,
+                            equivalents_info.at(it.name()))) {
+          local_basis_set_cluster_info.emplace(
+              it.name(), std::make_shared<LocalBasisSetClusterInfo const>(
+                             std::move(cluster_info)));
+        }
       }
     }
   }
@@ -508,6 +523,13 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
         continue;
       }
 
+      // get local basis set cluster info if available
+      auto find_it =
+          system.local_basis_set_cluster_info.find(curr.local_basis_set_name);
+      if (find_it != system.local_basis_set_cluster_info.end()) {
+        curr.cluster_info = find_it->second;
+      }
+
       // "local_clex"/<name>/"coefficients"
       if (!parse_from_file(parser, clex_path / "coefficients", search_path,
                            curr.coefficients)) {
@@ -534,6 +556,13 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
               parser, clex_path / "local_basis_set", curr.local_basis_set_name,
               local_basis_sets)) {
         continue;
+      }
+
+      // get local basis set cluster info if available
+      auto find_it =
+          system.local_basis_set_cluster_info.find(curr.local_basis_set_name);
+      if (find_it != system.local_basis_set_cluster_info.end()) {
+        curr.cluster_info = find_it->second;
       }
 
       // "local_multiclex"/<name>/"coefficients"

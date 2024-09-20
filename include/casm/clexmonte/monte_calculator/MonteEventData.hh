@@ -6,11 +6,103 @@
 namespace CASM {
 namespace clexmonte {
 
+class MonteEventListIterator {
+ public:
+  using iterator_category = std::input_iterator_tag;
+  using difference_type = std::ptrdiff_t;
+  using value_type = EventID;
+  using pointer = EventID const *;    // or also value_type*
+  using reference = EventID const &;  // or also value_type&
+
+  MonteEventListIterator() : m_data(nullptr), m_lib(nullptr), m_index(-1) {}
+
+  MonteEventListIterator(std::shared_ptr<BaseMonteEventData> _data,
+                         std::shared_ptr<RuntimeLibrary> _lib, bool _is_end)
+      : m_data(_data), m_lib(_lib), m_index(m_data->new_iterator(_is_end)) {}
+
+  ~MonteEventListIterator() {
+    // ensure BaseMonteEventData is deleted before library
+    m_data.reset();
+  }
+
+  MonteEventListIterator &operator=(MonteEventListIterator const &other) {
+    m_data = other.m_data;
+    m_lib = other.m_lib;
+    m_index = m_data->copy_iterator(other.m_index);
+    return *this;
+  }
+
+  reference operator*() const { return m_data->event_id(m_index); }
+  pointer operator->() { return &m_data->event_id(m_index); }
+
+  // Prefix increment (++it)
+  MonteEventListIterator &operator++() {
+    m_data->advance_iterator(m_index);
+    return *this;
+  }
+
+  // Postfix increment (it++)
+  MonteEventListIterator operator++(int) {
+    MonteEventListIterator tmp = *this;
+    tmp.m_index = m_data->copy_iterator(m_index);
+    m_data->advance_iterator(m_index);
+    return tmp;
+  }
+
+  bool operator==(MonteEventListIterator const &other) const {
+    if (m_data == nullptr) {
+      return false;
+    }
+    return m_data == other.m_data &&
+           m_data->equal_iterator(m_index, other.m_index);
+  }
+
+  bool operator!=(MonteEventListIterator const &other) const {
+    return !(*this == other);
+  }
+
+ private:
+  std::shared_ptr<BaseMonteEventData> m_data;
+  std::shared_ptr<RuntimeLibrary> m_lib;
+  Index m_index;
+};
+
+/// Allows iterating over EventID
+class MonteEventList {
+ public:
+  MonteEventList(std::shared_ptr<BaseMonteEventData> _data,
+                 std::shared_ptr<RuntimeLibrary> _lib)
+      : m_data(_data), m_lib(_lib) {}
+
+  ~MonteEventList() {
+    // ensure BaseMonteEventData is deleted before library
+    m_data.reset();
+  }
+
+  MonteEventListIterator begin() const {
+    return MonteEventListIterator(m_data, m_lib, false);
+  }
+
+  MonteEventListIterator end() const {
+    return MonteEventListIterator(m_data, m_lib, true);
+  }
+
+  /// The number of events
+  Index size() const { return m_data->n_events(); }
+
+  /// The current total event rate
+  double total_rate() const { return m_data->total_rate(); }
+
+ private:
+  std::shared_ptr<BaseMonteEventData> m_data;
+  std::shared_ptr<RuntimeLibrary> m_lib;
+};
+
 class MonteEventData {
  public:
-  MonteEventData(std::shared_ptr<BaseMonteEventData> _pot,
+  MonteEventData(std::shared_ptr<BaseMonteEventData> _data,
                  std::shared_ptr<RuntimeLibrary> _lib)
-      : m_data(_pot), m_lib(_lib) {}
+      : m_data(_data), m_lib(_lib), m_event_list(_data, _lib) {}
 
   ~MonteEventData() {
     // ensure BaseMonteEventData is deleted before library
@@ -48,32 +140,18 @@ class MonteEventData {
     return m_data->kra_coefficients(prim_event_index);
   }
 
-  // -- Event list summary info --
+  // -- Event list --
 
-  /// The size of the event list
-  Index n_events() const { return m_data->n_events(); }
-
-  /// Return the current total event rate
-  double total_rate() const { return m_data->total_rate(); }
-
-  // -- Event list iteration --
-
-  /// Move internal iterator back to beginning of event list
-  void rewind() const { return m_data->rewind(); }
-
-  /// Advance internal iterator by one event
-  void advance() const { return m_data->advance(); }
-
-  /// Check if internal iterator is at the end of the event list
-  bool is_end() const { return m_data->is_end(); }
-
-  /// The event ID for the current state of the internal iterator
-  EventID const &event_id() const { return m_data->event_id(); }
-
-  /// The event data for the current state of the internal iterator
-  EventData const &event_data() const { return m_data->event_data(); }
+  /// Get EventID
+  MonteEventList const &event_list() const { return m_event_list; }
 
   // -- Event info (accessed by EventID) --
+
+  /// The monte::OccEvent that can apply the event for the current state of the
+  /// internal iterator
+  monte::OccEvent const &event_to_apply(EventID const &id) const {
+    return m_data->event_to_apply(id);
+  }
 
   /// Return the current rate for a specific event
   double event_rate(EventID const &id) const { return m_data->event_rate(id); }
@@ -84,13 +162,14 @@ class MonteEventData {
   }
 
   /// The events that must be updated if the specified event occurs
-  std::vector<EventID> const &impact(EventID const &id) const {
+  std::vector<EventID> const &event_impact(EventID const &id) const {
     return m_data->impact(id);
   }
 
  private:
   std::shared_ptr<BaseMonteEventData> m_data;
   std::shared_ptr<RuntimeLibrary> m_lib;
+  MonteEventList m_event_list;
 };
 
 }  // namespace clexmonte

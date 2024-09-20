@@ -10,10 +10,15 @@ from ._clexmonte_functions import (
     enforce_composition,
 )
 from ._clexmonte_monte_calculator import (
+    EventData,
+    EventID,
+    EventState,
     KineticsData,
     MonteCalculator,
     MonteEventData,
     MontePotential,
+    PrimEventData,
+    PrimEventList,
     StateData,
 )
 from ._clexmonte_run_management import (

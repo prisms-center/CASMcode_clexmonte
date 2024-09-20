@@ -8,6 +8,7 @@
 #include "casm/configuration/Prim.hh"
 #include "casm/configuration/clusterography/io/json/IntegralCluster_json_io.hh"
 #include "casm/configuration/clusterography/orbits.hh"
+#include "casm/configuration/sym_info/unitcellcoord_sym_info.hh"
 #include "casm/crystallography/UnitCellCoordRep.hh"
 
 namespace CASM {
@@ -17,16 +18,26 @@ namespace clexmonte {
 ///
 /// Notes:
 /// - This is valid for periodic, not local-cluster orbits
-void parse(
-    InputParser<BasisSetClusterInfo> &parser, config::Prim const &prim,
-    std::map<std::string, std::shared_ptr<clexulator::Clexulator>> basis_sets) {
+void parse(InputParser<BasisSetClusterInfo> &parser, config::Prim const &prim) {
   BasisSetClusterInfo curr;
 
   // "bspecs"/"cluster_specs"/"generating_group"
   std::vector<Index> generating_group_indices;
-  parser.require(
-      generating_group_indices,
-      fs::path("bspecs") / "cluster_specs" / "params" / "generating_group");
+  fs::path generating_group_path =
+      fs::path("bspecs") / "cluster_specs" / "generating_group";
+  if (parser.self.find_at(generating_group_path) != parser.self.end()) {
+    parser.require(generating_group_indices, generating_group_path);
+  } else {
+    fs::path generating_group_path_v1 =
+        fs::path("bspecs") / "cluster_specs" / "params" / "generating_group";
+    if (parser.self.find_at(generating_group_path_v1) != parser.self.end()) {
+      parser.require(generating_group_indices, generating_group_path_v1);
+    } else {
+      parser.insert_error("generating_group",
+                          "A 'generating_group' array is required");
+      return;
+    }
+  }
   if (!parser.valid()) {
     return;
   }
@@ -116,6 +127,109 @@ void parse(InputParser<EquivalentsInfo> &parser, config::Prim const &prim) {
 
   parser.value = std::make_unique<EquivalentsInfo>(
       prim, phenomenal_clusters, equivalent_generating_op_indices);
+}
+
+/// \brief Parse LocalBasisSetClusterInfo from a basis.json / eci.json file
+///
+/// Notes:
+/// - This is valid for local-cluster orbits, not periodic
+void parse(InputParser<LocalBasisSetClusterInfo> &parser,
+           config::Prim const &prim, EquivalentsInfo const &info) {
+  auto curr = std::make_unique<LocalBasisSetClusterInfo>();
+
+  // "bspecs"/"cluster_specs"/"generating_group"
+  std::vector<Index> generating_group_indices;
+  fs::path generating_group_path =
+      fs::path("bspecs") / "cluster_specs" / "generating_group";
+  if (parser.self.find_at(generating_group_path) != parser.self.end()) {
+    parser.require(generating_group_indices, generating_group_path);
+  } else {
+    fs::path generating_group_path_v1 =
+        fs::path("bspecs") / "cluster_specs" / "params" / "generating_group";
+    if (parser.self.find_at(generating_group_path_v1) != parser.self.end()) {
+      parser.require(generating_group_indices, generating_group_path_v1);
+    } else {
+      parser.insert_error("generating_group",
+                          "A 'generating_group' array is required");
+      return;
+    }
+  }
+  if (!parser.valid()) {
+    return;
+  }
+
+  // make local cluster generating group rep
+  std::vector<xtal::UnitCellCoordRep> generating_rep;
+  if (info.phenomenal_clusters.size() > 0) {
+    std::vector<xtal::SymOp> cluster_group_elements;
+    for (Index i : generating_group_indices) {
+      cluster_group_elements.push_back(clust::make_cluster_group_element(
+          info.phenomenal_clusters[0],
+          prim.basicstructure->lattice().lat_column_mat(),
+          prim.sym_info.factor_group->element[i],
+          prim.sym_info.unitcellcoord_symgroup_rep[i]));
+    }
+    generating_rep = sym_info::make_unitcellcoord_symgroup_rep(
+        cluster_group_elements, *prim.basicstructure);
+  }
+
+  // "orbits"/<i>/"prototype"
+  std::vector<clust::IntegralCluster> prototypes;
+  if (!parser.self.contains("orbits") || !parser.self["orbits"].is_array()) {
+    parser.insert_error("orbits", "An 'orbits' array is required");
+    return;
+  }
+  auto begin = parser.self["orbits"].begin();
+  auto end = parser.self["orbits"].end();
+  Index orbit_index = 0;
+  for (auto it = begin; it != end; ++it) {
+    fs::path orbit_path = fs::path("orbits") / std::to_string(orbit_index);
+
+    // "orbits"/<i>/"prototype"
+    clust::IntegralCluster prototype;
+    parser.require<clust::IntegralCluster>(prototype, orbit_path / "prototype",
+                                           *prim.basicstructure);
+    prototypes.push_back(prototype);
+
+    // populate function_to_orbit_index
+    if (!it->contains("cluster_functions") ||
+        !(*it)["cluster_functions"].is_array()) {
+      parser.insert_error(orbit_path / "cluster_functions",
+                          "A 'cluster_functions' array is required");
+      return;
+    }
+    for (Index j = 0; j < (*it)["cluster_functions"].size(); ++j) {
+      curr->function_to_orbit_index.push_back(orbit_index);
+    }
+    ++orbit_index;
+  }
+
+  // generate orbits about first phenomenal cluster
+  std::vector<std::set<clust::IntegralCluster>> orbits;
+  if (info.phenomenal_clusters.size() != 0) {
+    for (auto const &prototype : prototypes) {
+      orbits.push_back(
+          make_local_orbit(info.phenomenal_clusters[0], generating_rep));
+    }
+  }
+
+  // generate equivalent orbits
+  for (auto const &equivalent_generating_op : info.equivalent_generating_ops) {
+    xtal::UnitCellCoordRep unitcellcoord_rep = xtal::make_unitcellcoord_rep(
+        equivalent_generating_op, prim.basicstructure->lattice(),
+        xtal::symop_site_map(equivalent_generating_op, *prim.basicstructure));
+    std::vector<std::set<clust::IntegralCluster>> equiv_orbits;
+    for (auto const &orbit : orbits) {
+      std::set<clust::IntegralCluster> equiv_orbit;
+      for (auto const &cluster : orbit) {
+        equiv_orbit.emplace(copy_apply(unitcellcoord_rep, cluster));
+      }
+      equiv_orbits.push_back(equiv_orbit);
+    }
+    curr->orbits.push_back(equiv_orbits);
+  }
+
+  parser.value = std::move(curr);
 }
 
 }  // namespace clexmonte

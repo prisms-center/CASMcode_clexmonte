@@ -90,6 +90,46 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
     assert isinstance(event_data, clexmonte.MonteEventData)
 
 
+def test_event_data_1(FCCBinaryVacancy_kmc_System):
+    system = FCCBinaryVacancy_kmc_System
+    calculator = clexmonte.MonteCalculator(
+        method="kinetic",
+        system=system,
+    )
+
+    state = clexmonte.MonteCarloState(
+        configuration=system.make_default_configuration(
+            transformation_matrix_to_super=np.eye(3, dtype="int") * 2,
+        ),
+        conditions={
+            "temperature": 300.0,
+            "param_composition": [0.0, 0.0],  # <-one of param/mol composition is needed
+        },
+    )
+    event_data = clexmonte.MonteEventData(calculator=calculator, state=state)
+
+    # 6 A-Va exchange events, 6 B-Va exchange events, x2 for forward and reverse
+    assert len(event_data.prim_event_list) == 24
+
+    # Test PrimEventData repr
+    for i, prim_event_data in enumerate(event_data.prim_event_list):
+        assert isinstance(prim_event_data, clexmonte.PrimEventData)
+        print(f"--- Prim event: {i} ---")
+        print(prim_event_data)
+        print()
+
+        import io
+        from contextlib import redirect_stdout
+
+        f = io.StringIO()
+        with redirect_stdout(f):
+            print(prim_event_data)
+        out = f.getvalue()
+        assert "sites" in out
+
+    assert False
+
+
 def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
     """A single run, using a fixture"""
     system = FCCBinaryVacancy_kmc_System

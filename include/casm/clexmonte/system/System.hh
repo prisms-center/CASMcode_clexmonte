@@ -134,6 +134,13 @@ struct System {
   /// Maps local basis set name -> EquivalentsInfo
   std::map<std::string, EquivalentsInfo> equivalents_info;
 
+  /// Local cluster expansion basis sets cluster info
+  ///
+  /// Notes:
+  /// - Maps basis set name -> LocalBasisSetClusterInfo
+  std::map<std::string, std::shared_ptr<LocalBasisSetClusterInfo const>>
+      local_basis_set_cluster_info;
+
   /// Data used to construct clexulator::LocalClusterExpansion. Contains:
   /// - local_basis_set_name
   /// - clexulator::SparseCoefficients

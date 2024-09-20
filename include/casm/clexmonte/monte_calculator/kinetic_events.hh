@@ -247,28 +247,85 @@ class KineticEventData : public BaseMonteEventData {
 
   // -- Event list iteration --
 
-  /// Move internal iterator back to beginning of event list
-  void rewind() override { m_it = event_list.events.begin(); }
-
-  /// Advance internal iterator by one event
-  void advance() override {
-    if (is_end()) {
-      throw std::runtime_error(
-          "KineticEventData::advance: Cannot advance past end of event list");
+  /// Construct new internal iterator and return its index
+  Index new_iterator(bool is_end) override {
+    Index i = 0;
+    while (m_it.find(i) != m_it.end()) {
+      ++i;
     }
-    ++m_it;
+    if (is_end) {
+      m_it.emplace(i, event_list.events.end());
+    } else {
+      m_it.emplace(i, event_list.events.begin());
+    }
+    return i;
   }
 
-  /// Check if internal iterator is at the end of the event list
-  bool is_end() const override { return m_it == event_list.events.end(); }
+  /// Copy internal iterator and return the new iterator index
+  Index copy_iterator(Index i) override {
+    if (m_it.find(i) == m_it.end()) {
+      throw std::runtime_error(
+          "KineticEventData::copy_iterator: Iterator not found");
+    }
+    Index j = 0;
+    while (m_it.find(j) != m_it.end()) {
+      ++j;
+    }
+    m_it.emplace(j, m_it[i]);
+    return j;
+  }
+
+  /// Erase internal iterator
+  void erase_iterator(Index i) override { m_it.erase(i); }
+
+  /// Check if two internal iterators are equal
+  bool equal_iterator(Index i, Index j) override {
+    auto it_i = m_it.find(i);
+    auto it_j = m_it.find(j);
+    if (it_i == m_it.end() || it_j == m_it.end()) {
+      throw std::runtime_error(
+          "KineticEventData::equal_iterator: Iterator not found");
+    }
+    return it_i->second == it_j->second;
+  }
+
+  /// Advance internal iterator by one event
+  void advance_iterator(Index i) override {
+    auto it = m_it.find(i);
+    if (it == m_it.end()) {
+      throw std::runtime_error(
+          "KineticEventData::advance_iterator: Iterator not found");
+    }
+    if (it->second == event_list.events.end()) {
+      throw std::runtime_error(
+          "KineticEventData::advance_iterator: Cannot advance past end of "
+          "event list");
+    }
+    ++it->second;
+  }
 
   /// The event ID for the current state of the internal iterator
-  EventID const &event_id() const override { return m_it->first; }
-
-  /// The event data for the current state of the internal iterator
-  EventData const &event_data() const override { return m_it->second; }
+  EventID const &event_id(Index i) const override {
+    auto it = m_it.find(i);
+    if (it == m_it.end()) {
+      throw std::runtime_error(
+          "KineticEventData::event_id: Iterator not found");
+    }
+    return it->second->first;
+  }
 
   // -- Event info (accessed by EventID) --
+
+  /// The monte::OccEvent that can apply the specified event. Reference is
+  /// valid until the next call to this method.
+  monte::OccEvent const &event_to_apply(EventID const &id) const override {
+    auto it = event_list.events.find(id);
+    if (it == event_list.events.end()) {
+      throw std::runtime_error(
+          "KineticEventData::event_to_apply: Event not found in event list");
+    }
+    return it->second.event;
+  }
 
   /// Return the current rate for a specific event
   double event_rate(EventID const &id) const override {
@@ -309,7 +366,9 @@ class KineticEventData : public BaseMonteEventData {
   }
 
  private:
-  std::map<EventID, EventData>::const_iterator m_it;
+  /// \brief Holds internal iterators to allow generic interface for
+  /// iterating over EventID
+  std::map<Index, std::map<EventID, EventData>::const_iterator> m_it;
 
   /// \brief Holds temporary calculated event state
   mutable EventState m_event_state;

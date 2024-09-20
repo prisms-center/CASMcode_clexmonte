@@ -8,6 +8,7 @@
 #include "casm/configuration/occ_events/OccEvent.hh"
 #include "casm/crystallography/UnitCellCoord.hh"
 #include "casm/global/definitions.hh"
+#include "casm/misc/Comparisons.hh"
 #include "casm/monte/events/OccEvent.hh"
 
 namespace CASM {
@@ -78,58 +79,81 @@ struct EventImpactInfo {
   std::set<xtal::UnitCellCoord> required_update_neighborhood;
 };
 
+struct RelativeEventID;
+
 /// \brief Identifies an event via translation from the `origin` unit cell
 ///
 /// This data structure is used to build a "relative impact table" listing which
 /// events are impacted by the occurance of each possible event in the origin
 /// unit cell.
-struct RelativeEventID {
+struct RelativeEventID : public Comparisons<CRTPBase<RelativeEventID>> {
   /// \brief Index specifying a possible event in the `origin` unit cell
   Index prim_event_index;
 
   /// \brief Translation of the event from the origin unit cell
   xtal::UnitCell translation;
+
+  /// \brief Less than comparison of RelativeEventID
+  bool operator<(RelativeEventID const &rhs) const {
+    if (this->translation < rhs.translation) {
+      return true;
+    }
+    if (rhs.translation < this->translation) {
+      return false;
+    }
+    return this->prim_event_index < rhs.prim_event_index;
+  }
+
+ private:
+  friend struct Comparisons<CRTPBase<RelativeEventID>>;
+
+  /// \brief Equality comparison of RelativeEventID
+  bool eq_impl(RelativeEventID const &rhs) const {
+    return this->translation == rhs.translation &&
+           this->prim_event_index == rhs.prim_event_index;
+  }
 };
 
-bool operator<(RelativeEventID const &lhs, RelativeEventID const &rhs);
+struct EventID;
 
 /// \brief Identifies an event via linear unit cell index in some supercell
 ///
 /// Thie unitcell index and prim event index can be used to lookup the correct
 /// local clexulator and neighbor list information for evaluating local
 /// correlations and updating global correlations.
-struct EventID {
+struct EventID : public Comparisons<CRTPBase<EventID>> {
+  EventID() = default;
+
+  EventID(Index _prim_event_index, Index _unitcell_index)
+      : prim_event_index(_prim_event_index), unitcell_index(_unitcell_index) {}
+
   /// \brief Index specifying a possible event in the `origin` unit cell
   Index prim_event_index;
 
   /// \brief Linear unit cell index into a supercell, as determined by
   /// xtal::UnitCellIndexConverter
   Index unitcell_index;
+
+  /// \brief Less than comparison of EventID
+  bool operator<(EventID const &rhs) const {
+    if (this->unitcell_index < rhs.unitcell_index) {
+      return true;
+    }
+    if (this->unitcell_index > rhs.unitcell_index) {
+      return false;
+    }
+    return this->prim_event_index < rhs.prim_event_index;
+  }
+
+ private:
+  friend struct Comparisons<CRTPBase<EventID>>;
+
+  /// \brief Equality comparison of Configuration
+  bool eq_impl(EventID const &rhs) const {
+    return this->unitcell_index == rhs.unitcell_index &&
+           this->prim_event_index == rhs.prim_event_index;
+  }
 };
-
-bool operator<(EventID const &lhs, EventID const &rhs);
-
-// -- Inline definitions --
-
-inline bool operator<(RelativeEventID const &lhs, RelativeEventID const &rhs) {
-  if (lhs.translation < rhs.translation) {
-    return true;
-  }
-  if (rhs.translation < lhs.translation) {
-    return false;
-  }
-  return lhs.prim_event_index < rhs.prim_event_index;
-}
-
-inline bool operator<(EventID const &lhs, EventID const &rhs) {
-  if (lhs.unitcell_index < rhs.unitcell_index) {
-    return true;
-  }
-  if (lhs.unitcell_index > rhs.unitcell_index) {
-    return false;
-  }
-  return lhs.prim_event_index < rhs.prim_event_index;
-}
 
 }  // namespace clexmonte
 }  // namespace CASM
