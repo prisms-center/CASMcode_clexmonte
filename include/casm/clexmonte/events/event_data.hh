@@ -26,6 +26,14 @@ struct EventState {
   double dE_activated;  ///< Activation energy, relative to initial state
   double freq;          ///< Attempt frequency
   double rate;          ///< Occurance rate
+
+  /// \brief Number of each component by orbit, for select orbits
+  ///
+  ///     n = m_num_each_component_by_orbit(
+  ///             component_index,
+  ///             orbits_to_calculate_index)
+  ///
+  Eigen::MatrixXi const *num_each_component_by_orbit;
 };
 
 /// \brief Data particular to a single translationally distinct event

@@ -59,6 +59,11 @@ class KineticCalculator : public BaseMonteCalculator {
   StateModifyingFunctionMap standard_modifying_functions(
       std::shared_ptr<MonteCalculator> const &calculation) const override;
 
+  /// \brief Construct functions that may be used to collect selected event data
+  std::optional<monte::SelectedEventDataFunctions>
+  standard_selected_event_data_functions(
+      std::shared_ptr<MonteCalculator> const &calculation) const override;
+
   /// \brief Construct default SamplingFixtureParams
   sampling_fixture_params_type make_default_sampling_fixture_params(
       std::shared_ptr<MonteCalculator> const &calculation, std::string label,

@@ -225,6 +225,13 @@ class CanonicalCalculator : public BaseMonteCalculator {
     return function_map;
   }
 
+  /// \brief Construct functions that may be used to collect selected event data
+  std::optional<monte::SelectedEventDataFunctions>
+  standard_selected_event_data_functions(
+      std::shared_ptr<MonteCalculator> const &calculation) const override {
+    return std::nullopt;
+  }
+
   /// \brief Construct default SamplingFixtureParams
   sampling_fixture_params_type make_default_sampling_fixture_params(
       std::shared_ptr<MonteCalculator> const &calculation, std::string label,
@@ -264,12 +271,16 @@ class CanonicalCalculator : public BaseMonteCalculator {
 
     std::vector<std::string> analysis_names = {"heat_capacity"};
 
+    std::optional<monte::SelectedEventDataParams> selected_event_data_params =
+        std::nullopt;
+
     return clexmonte::make_sampling_fixture_params(
         label, calculation->sampling_functions,
         calculation->json_sampling_functions, calculation->analysis_functions,
-        sampling_params, completion_check_params, analysis_names, write_results,
-        write_trajectory, write_observations, write_status, output_dir,
-        log_file, log_frequency_in_s);
+        sampling_params, completion_check_params, analysis_names,
+        selected_event_data_params, write_results, write_trajectory,
+        write_observations, write_status, output_dir, log_file,
+        log_frequency_in_s);
   }
 
   /// \brief Validate the state's configuration

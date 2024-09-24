@@ -10,6 +10,56 @@ namespace CASM {
 namespace clexmonte {
 namespace kinetic_2 {
 
+class LocalOrbitCompositionCalculator {
+ public:
+  LocalOrbitCompositionCalculator(std::shared_ptr<system_type> _system,
+                                  std::string _event_type_name,
+                                  std::set<int> _orbits_to_calculate);
+
+  /// \brief Reset pointer to state currently being calculated
+  void set(state_type const *state);
+
+  /// \brief Calculate the composition by orbit around an event and set
+  ///     EventState::num_each_component_by_orbit
+  void calculate_num_each_component(EventState &state,
+                                    EventData const &event_data,
+                                    PrimEventData const &prim_event_data);
+
+ private:
+  /// System pointer
+  std::shared_ptr<system_type> m_system;
+
+  /// Event type name
+  std::string m_event_type_name;
+
+  /// Orbits to calculate
+  std::set<int> m_orbits_to_calculate;
+
+  /// State to use
+  state_type const *m_state;
+
+  /// Converter from occupation index to component index, by sublattice
+  /// component_index = converter[sublattice_index][occ_index]
+  std::vector<std::vector<Index>> m_occ_index_to_component_index_converter;
+
+  /// Holds calculated composition as number of each component by orbit:
+  ///
+  ///     n = m_num_each_component_by_orbit(
+  ///             component_index,
+  ///             orbits_to_calculate_index)
+  ///
+  Eigen::MatrixXi m_num_each_component_by_orbit;
+
+  /// Supercell neighbor list
+  std::shared_ptr<clexulator::SuperNeighborList> m_supercell_nlist;
+
+  /// Store {neighbor_index, sublattice_index} for each site in each orbit:
+  /// m_local_orbits_neighbor_indices[equivalent_index][orbit_index] ->
+  ///     std::set<std::pair<int, int>>
+  std::vector<std::vector<std::set<std::pair<int, int>>>>
+      m_local_orbits_neighbor_indices;
+};
+
 /// \brief Event rate calculation for a particular KMC event
 ///
 /// EventStateCalculator is used to separate the event calculation from the
@@ -82,6 +132,7 @@ class EventStateCalculator {
   mutable Eigen::VectorXd m_event_values;
   Index m_kra_index;
   Index m_freq_index;
+  std::shared_ptr<LocalBasisSetClusterInfo> m_cluster_info;
 };
 
 /// \brief CompleteEventCalculator is an event calculator with the required

@@ -1233,9 +1233,11 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
              std::string label) -> sampling_fixture_params_type {
             jsonParser json{data};
             bool time_sampling_allowed = false;
+
             InputParser<sampling_fixture_params_type> parser(
                 json, label, self->sampling_functions,
                 self->json_sampling_functions, self->analysis_functions,
+                self->selected_event_data_functions,
                 clexmonte::standard_results_io_methods(),
                 time_sampling_allowed);
             std::runtime_error error_if_invalid{
@@ -1397,6 +1399,12 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                      &calculator_type::modifying_functions,
                      R"pbdoc(
           libcasm.clexmonte.StateModifyingFunctionMap: State modifying functions
+          )pbdoc")
+      .def_readwrite("selected_event_data_functions",
+                     &calculator_type::selected_event_data_functions,
+                     R"pbdoc(
+          libcasm.monte.sampling.SelectedEventDataFunctions: Selected event data
+          functions
           )pbdoc")
       .def_property_readonly("name", &calculator_type::calculator_name,
                              R"pbdoc(

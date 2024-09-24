@@ -133,6 +133,11 @@ class BaseMonteCalculator {
   virtual StateModifyingFunctionMap standard_modifying_functions(
       std::shared_ptr<MonteCalculator> const &calculation) const = 0;
 
+  /// \brief Construct functions that may be used to collect selected event data
+  virtual std::optional<monte::SelectedEventDataFunctions>
+  standard_selected_event_data_functions(
+      std::shared_ptr<MonteCalculator> const &calculation) const = 0;
+
   /// \brief Construct default SamplingFixtureParams
   virtual sampling_fixture_params_type make_default_sampling_fixture_params(
       std::shared_ptr<MonteCalculator> const &calculation, std::string label,

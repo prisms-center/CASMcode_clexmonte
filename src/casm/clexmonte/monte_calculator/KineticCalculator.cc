@@ -134,6 +134,13 @@ StateModifyingFunctionMap KineticCalculator::standard_modifying_functions(
   return function_map;
 }
 
+/// \brief Construct functions that may be used to collect selected event data
+std::optional<monte::SelectedEventDataFunctions>
+KineticCalculator::standard_selected_event_data_functions(
+    std::shared_ptr<MonteCalculator> const &calculation) const override {
+  return std::nullopt;
+}
+
 /// \brief Construct default SamplingFixtureParams
 sampling_fixture_params_type
 KineticCalculator::make_default_sampling_fixture_params(
@@ -185,11 +192,15 @@ KineticCalculator::make_default_sampling_fixture_params(
 
   std::vector<std::string> analysis_names = {"heat_capacity"};
 
+  std::optional<monte::SelectedEventDataParams> selected_event_data_params =
+      std::nullopt;
+
   return clexmonte::make_sampling_fixture_params(
       label, calculation->sampling_functions,
       calculation->json_sampling_functions, calculation->analysis_functions,
-      sampling_params, completion_check_params, analysis_names, write_results,
-      write_trajectory, write_observations, write_status, output_dir, log_file,
+      sampling_params, completion_check_params, analysis_names,
+      selected_event_data_params, write_results, write_trajectory,
+      write_observations, write_status, output_dir, log_file,
       log_frequency_in_s);
 }
 
@@ -354,8 +365,9 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   // - Calculates all rates
   this->set_event_data(run_manager.engine);
 
-  // Used to apply selected events: EventID -> monte::OccEvent
-  auto get_event_f = [&](EventID const &selected_event_id) {
+  // Used to apply selected events: EventID -> -> monte::OccEvent const &
+  auto get_event_f =
+      [&](EventID const &selected_event_id) -> monte::OccEvent const & {
     // returns a monte::OccEvent
     return _event_data().event_list.events.at(selected_event_id).event;
   };

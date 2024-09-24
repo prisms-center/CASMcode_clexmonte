@@ -402,10 +402,23 @@ std::shared_ptr<clexulator::Clexulator> get_basis_set(System const &system,
   return _verify(system.basis_sets, key, "basis_sets");
 }
 
+/// \brief Helper to get BasisSetClusterInfo
+std::shared_ptr<BasisSetClusterInfo const> get_basis_set_cluster_info(
+    System const &system, std::string const &key) {
+  return _verify(system.basis_set_cluster_info, key, "basis_set_cluster_info");
+}
+
 /// \brief Helper to get the local Clexulator
 std::shared_ptr<std::vector<clexulator::Clexulator>> get_local_basis_set(
     System const &system, std::string const &key) {
   return _verify(system.local_basis_sets, key, "local_basis_sets");
+}
+
+/// \brief Helper to get LocalBasisSetClusterInfo
+std::shared_ptr<LocalBasisSetClusterInfo const>
+get_local_basis_set_cluster_info(System const &system, std::string const &key) {
+  return _verify(system.local_basis_set_cluster_info, key,
+                 "local_basis_set_cluster_info");
 }
 
 /// \brief Check for ClexData

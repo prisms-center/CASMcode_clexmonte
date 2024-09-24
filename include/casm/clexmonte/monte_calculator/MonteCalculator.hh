@@ -111,6 +111,9 @@ class MonteCalculator {
   /// State modifying functions
   StateModifyingFunctionMap modifying_functions;
 
+  /// Selected event data functions
+  monte::SelectedEventDataFunctions selected_event_data_functions;
+
   // --- Set when `set_state_and_potential` or `run` is called: ---
 
   /// State data for sampling functions, for the current state
@@ -265,6 +268,13 @@ class MonteCalculator {
   StateModifyingFunctionMap standard_modifying_functions(
       std::shared_ptr<MonteCalculator> const &calculation) const {
     return m_calc->standard_modifying_functions(calculation);
+  }
+
+  /// \brief Construct functions that may be used to collect selected event data
+  std::optional<monte::SelectedEventDataFunctions>
+  standard_selected_event_data_functions(
+      std::shared_ptr<MonteCalculator> const &calculation) const {
+    return m_calc->standard_selected_event_data_functions(calculation);
   }
 
   /// \brief Construct default SamplingFixtureParams

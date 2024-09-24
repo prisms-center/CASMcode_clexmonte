@@ -222,8 +222,12 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
               Sampling parameters, specifies which sampling functions to call
           completion_check_params: libcasm.monte.sampling.CompletionCheckParams
               Completion check parameters
-          analysis_names: list[str]
+          analysis_names: list[str] = []
               List of which analysis functions should be evaluated.
+          selected_event_data_functions: Optional[libcasm.monte.sampling.SelectedEventDataFunctions] = None
+              Functions for collecting data on selected events.
+          selected_event_data_params: Optional[libcasm.monte.sampling.SelectedEventDataParams] = None
+              Parameters for collecting data on selected events.
           write_results: bool = True
               If True, write results to file upon completion.
           write_trajectory: bool = False
@@ -251,6 +255,8 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
            py::arg("json_sampling_functions"), py::arg("analysis_functions"),
            py::arg("sampling_params"), py::arg("completion_check_params"),
            py::arg("analysis_names") = std::vector<std::string>(),
+           py::arg("selected_event_data_functions") = std::nullopt,
+           py::arg("selected_event_data_params") = std::nullopt,
            py::arg("write_results") = true, py::arg("write_trajectory") = false,
            py::arg("write_observations") = false,
            py::arg("write_status") = true, py::arg("output_dir") = std::nullopt,

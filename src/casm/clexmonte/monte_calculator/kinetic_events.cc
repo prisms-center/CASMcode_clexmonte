@@ -13,6 +13,111 @@ namespace CASM {
 namespace clexmonte {
 namespace kinetic_2 {
 
+LocalOrbitCompositionCalculator::LocalOrbitCompositionCalculator(
+    std::shared_ptr<system_type> _system, std::string _event_type_name,
+    std::set<int> _orbits_to_calculate)
+    : m_system(_system),
+      m_event_type_name(_event_type_name),
+      m_orbits_to_calculate(_orbits_to_calculate) {
+  // Make m_occ_index_to_component_index_converter
+  auto const &composition_calculator = get_composition_calculator(*m_system);
+  m_occ_index_to_component_index_converter =
+      composition::make_occ_index_to_component_index_converter(
+          composition_calculator.components(),
+          composition_calculator.allowed_occs());
+
+  // Setup m_num_each_component_by_orbit and validate orbits_to_calculate
+  auto cluster_info =
+      get_local_basis_set_cluster_info(*m_system, m_event_type_name);
+  int n_orbits = 0;
+  if (cluster_info->orbits.size() > 0) {
+    n_orbits = cluster_info->orbits[0].size();
+  }
+
+  for (int orbit_index : m_orbits_to_calculate) {
+    if (orbit_index < 0 || orbit_index >= n_orbits) {
+      std::stringstream msg;
+      msg << "Error in LocalOrbitCompositionCalculator: "
+          << "orbit_to_calculate=" << orbit_index << " out of range [0,"
+          << n_orbits << ").";
+      throw std::runtime_error(msg.str());
+    }
+  }
+
+  m_num_each_component_by_orbit.resize(
+      composition_calculator.components().size(), m_orbits_to_calculate.size());
+  m_num_each_component_by_orbit.setZero();
+}
+
+/// \brief Reset pointer to state currently being calculated
+void LocalOrbitCompositionCalculator::set(state_type const *state) {
+  // supercell-specific
+  m_state = state;
+  if (m_state == nullptr) {
+    throw std::runtime_error(
+        "Error setting LocalOrbitCompositionCalculator state: state is "
+        "empty");
+  }
+
+  // set shell composition calculation data
+  auto cluster_info =
+      get_local_basis_set_cluster_info(*m_system, m_event_type_name);
+
+  // Make m_local_orbits_neighbor_indices:
+  m_local_orbits_neighbor_indices.clear();
+  m_supercell_nlist = get_supercell_neighbor_list(*m_system, *m_state);
+  auto const &convert = get_index_conversions(*m_system, *m_state);
+  auto const &supercell_index_converter = convert.index_converter();
+  for (Index equivalent_index = 0;
+       equivalent_index < cluster_info->orbits.size(); ++equivalent_index) {
+    std::vector<std::set<std::pair<int, int>>> _neighbor_indices_by_orbit;
+    for (auto const &orbit : cluster_info->orbits[equivalent_index]) {
+      std::set<std::pair<int, int>> _neighbor_indices;
+      for (auto const &cluster : orbit) {
+        for (auto const &site : cluster) {
+          Index site_index = supercell_index_converter(site);
+          _neighbor_indices.emplace(
+              m_supercell_nlist->neighbor_index(site_index), site.sublattice());
+        }
+      }
+      _neighbor_indices_by_orbit.emplace_back(std::move(_neighbor_indices));
+    }
+    m_local_orbits_neighbor_indices.emplace_back(
+        std::move(_neighbor_indices_by_orbit));
+  }
+}
+
+/// \brief Calculate the composition by orbit around an event and set
+///     EventState::num_each_component_by_orbit
+void LocalOrbitCompositionCalculator::calculate_num_each_component(
+    EventState &state, EventData const &event_data,
+    PrimEventData const &prim_event_data) {
+  std::vector<Index> const &neighbor_index_to_linear_site_index =
+      m_supercell_nlist->sites(event_data.unitcell_index);
+  Eigen::VectorXi const &occupation = get_occupation(*m_state);
+
+  // indices[orbit_index] = std::set<std::pair<int, int>>
+  std::vector<std::set<std::pair<int, int>>> const &indices =
+      m_local_orbits_neighbor_indices[prim_event_data.equivalent_index];
+
+  m_num_each_component_by_orbit.setZero();
+  int col = 0;
+  for (int orbit_index : m_orbits_to_calculate) {
+    for (auto const &pair : indices[orbit_index]) {
+      int neighbor_index = pair.first;
+      int sublattice_index = pair.second;
+      int site_index = neighbor_index_to_linear_site_index[neighbor_index];
+      int occ_index = occupation(site_index);
+      int component_index =
+          m_occ_index_to_component_index_converter[sublattice_index][occ_index];
+      m_num_each_component_by_orbit.col(col)(component_index) += 1;
+    }
+    ++col;
+  }
+
+  state.num_each_component_by_orbit = &m_num_each_component_by_orbit;
+}
+
 /// \brief Constructor
 EventStateCalculator::EventStateCalculator(std::shared_ptr<system_type> _system,
                                            std::string _event_type_name)

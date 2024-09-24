@@ -193,16 +193,20 @@ void kinetic_monte_carlo_v2(
     run_manager.sample_data_by_time_if_due(event_time, state, pre_sample_action,
                                            post_sample_action);
 
-    // Apply event
-    run_manager.increment_n_accept();
-    occ_location.apply(get_event_f(selected_event_id), get_occupation(state));
-    kmc_data.time = event_time;
-
     // Set time -- for all fixtures
     run_manager.set_time(event_time);
 
     // Increment count -- for all fixtures
     run_manager.increment_step();
+
+    // Collect event statistics - with configuration state before event,
+    // but after step and time have been updated
+    monte::OccEvent const &selected_event = get_event_f(selected_event_id);
+
+    // Apply event
+    run_manager.increment_n_accept();
+    occ_location.apply(selected_event, get_occupation(state));
+    kmc_data.time = event_time;
   }
 
   run_manager.finalize(state);
