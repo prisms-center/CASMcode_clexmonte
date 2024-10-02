@@ -24,6 +24,6 @@ def test_MonteEventData_1(FCCBinaryVacancy_kmc_System):
     event_data = clexmonte.MonteEventData(calculator=calculator, state=state)
 
     assert len(event_data.prim_event_list) == 24
-    assert event_data.n_events == 24 * 8
-    assert isinstance(event_data.total_rate, float)
-    assert math.isclose(event_data.total_rate, 0.0, abs_tol=1e-10)
+    assert len(event_data.event_list) == 24 * 8
+    assert isinstance(event_data.event_list.total_rate(), float)
+    assert math.isclose(event_data.event_list.total_rate(), 0.0, abs_tol=1e-10)

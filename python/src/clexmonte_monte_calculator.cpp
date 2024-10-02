@@ -197,6 +197,18 @@ std::shared_ptr<run_manager_type> monte_calculator_run(
     monte::OccLocation *occ_location) {
   // print errors and warnings to sys.stdout
   py::scoped_ostream_redirect redirect;
+
+  if (run_manager == nullptr) {
+    throw std::runtime_error(
+        "Error in MonteCalculator.run: run_manager is None");
+  }
+
+  if (run_manager->sampling_fixtures.size() == 0) {
+    throw std::runtime_error(
+        "Error in MonteCalculator.run: "
+        "len(run_manager.sampling_fixtures) == 0");
+  }
+
   // Need to check for an OccLocation
   std::unique_ptr<monte::OccLocation> tmp;
   make_temporary_if_necessary(state, occ_location, tmp, self);
@@ -1029,7 +1041,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           id: libcasm.clexmonte.EventID
               The event ID for the event.
 
-          Results
+          Returns
           -------
           event: libcasm.monte.events.OccEvent
               The event data structure that can used to apply the event to the current
@@ -1045,7 +1057,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           id: libcasm.clexmonte.EventID
               The event ID for the event.
 
-          Results
+          Returns
           -------
           rate: float
               The current rate for the specified event, as stored in the event list.
@@ -1061,7 +1073,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           id: libcasm.clexmonte.EventID
               The event ID for the occuring event.
 
-          Results
+          Returns
           -------
           state: libcasm.clexmonte.EventState
               A reference to the EventState for a particular event in the current
@@ -1079,7 +1091,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           id: libcasm.clexmonte.EventID
               The event ID for the occuring event.
 
-          Results
+          Returns
           -------
           impacted_events: list[libcasm.clexmonte.EventID]
               The EventID for events that must be updated.
@@ -1237,7 +1249,6 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
             InputParser<sampling_fixture_params_type> parser(
                 json, label, self->sampling_functions,
                 self->json_sampling_functions, self->analysis_functions,
-                self->selected_event_data_functions,
                 clexmonte::standard_results_io_methods(),
                 time_sampling_allowed);
             std::runtime_error error_if_invalid{
@@ -1400,11 +1411,205 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                      R"pbdoc(
           libcasm.clexmonte.StateModifyingFunctionMap: State modifying functions
           )pbdoc")
-      .def_readwrite("selected_event_data_functions",
-                     &calculator_type::selected_event_data_functions,
-                     R"pbdoc(
-          libcasm.monte.sampling.SelectedEventDataFunctions: Selected event data
-          functions
+      .def_property_readonly("selected_event", &calculator_type::selected_event,
+                             R"pbdoc(
+          Optional[libcasm.monte.sampling.SelectedEvent]: If applicable, will
+          be set to the last selected event.
+
+          If applicable for a particular calculator method, this will be set
+          after each event selection to provide the selected event information
+          to make that information available to
+          :class:`libcasm.monte.sampling.SelectedEventDataFunctions`.
+
+          If not applicable for a particular calculator method, this will be
+          None.
+          )pbdoc")
+      .def_property_readonly("selected_event_data_functions",
+                             &calculator_type::selected_event_data_functions,
+                             R"pbdoc(
+          Optional[libcasm.monte.sampling.SelectedEventDataFunctions]: Selected
+          event data functions.
+
+          If applicable for a particular calculator method, this will be
+          constructed with standard functions and allows adding additional
+          custom functions that can be called after each event is selected to
+          collect selected event data, if requested by
+          :func:`MonteCalculator.selected_event_data_params`.
+
+          If not applicable for a particular calculator method, this will be
+          None.
+          )pbdoc")
+      .def_property(
+          "selected_event_data_params",
+          &calculator_type::selected_event_data_params,
+          [](calculator_type &self,
+             std::shared_ptr<monte::SelectedEventDataParams>
+                 selected_event_data_params) {
+            self.set_selected_event_data_params(selected_event_data_params);
+          },
+          R"pbdoc(
+          Optional[libcasm.monte.sampling.SelectedEventDataParams]: Selected event
+          data collection parameters.
+
+          If applicable for a particular calculator method, this may be set
+          directly or read from the MonteCalculator constructor `params` input,
+          if that is implemented by the calculator method. If it exists when a
+          run begins, selected event data will be collected accordingly.
+
+          If not applicable for a particular calculator method, this will be
+          None.
+
+          )pbdoc")
+      .def(
+          "collect_hop_correlations",
+          [](calculator_type &self, Index jumps_per_position_sample,
+             Index max_n_position_samples, bool output_incomplete_samples,
+             bool stop_run_when_complete) {
+            auto params_ptr = self.selected_event_data_params();
+            if (params_ptr == nullptr) {
+              self.set_selected_event_data_params(
+                  std::make_shared<monte::SelectedEventDataParams>());
+              params_ptr = self.selected_event_data_params();
+            }
+            params_ptr->correlations_data_params =
+                monte::CorrelationsDataParams(
+                    {jumps_per_position_sample, max_n_position_samples,
+                     output_incomplete_samples, stop_run_when_complete});
+            return self;
+          },
+          R"pbdoc(
+          Update :py:attr:`selected_event_data_params` to collect hop
+          correlations data
+
+          Parameters
+          ----------
+          jumps_per_position_sample : int = 1
+              Every `jumps_per_position_sample` steps of an individual atom,
+              its position will be stored in Cartesian coordinates (as if
+              periodic boundaries did not exist).
+          max_n_position_samples : int = 100
+              The maximum number of positions to store for each atom.
+          output_incomplete_samples : bool = False
+              If false, when representing this object as a Python dict, only
+              output data for the number of samples for which all atoms have
+              jumped the necessary number of times. If true, output matrices
+              with 0.0 values for atoms that have not jumped enough times to be
+              sampled.
+          stop_run_when_complete : bool = False
+              If true, stop the run when all atoms have jumped the necessary number
+              of times to be sampled.
+
+          Returns
+          -------
+          self: libcasm.clexmonte.SelectedEventDataParams
+              To allow chaining multiple calls, `self` is returned
+          )pbdoc",
+          py::arg("jumps_per_position_sample") = 1,
+          py::arg("max_n_position_samples") = 100,
+          py::arg("output_incomplete_samples") = false,
+          py::arg("stop_run_when_complete") = false)
+      .def(
+          "do_not_collect_hop_correlations",
+          [](calculator_type &self) {
+            auto params_ptr = self.selected_event_data_params();
+            if (params_ptr) {
+              params_ptr->correlations_data_params = std::nullopt;
+            }
+            return self;
+          },
+          R"pbdoc(
+          Update :py:attr:`selected_event_data_params` to not collect hop correlations data
+
+          Returns
+          -------
+          self: libcasm.clexmonte.SelectedEventDataParams
+              To allow chaining multiple calls, `self` is returned
+          )pbdoc")
+      .def(
+          "collect",
+          [](calculator_type &self, std::string name,
+             std::optional<double> tol = std::nullopt,
+             std::optional<double> bin_width = std::nullopt,
+             std::optional<double> initial_begin = std::nullopt,
+             std::optional<std::string> spacing = std::nullopt,
+             std::optional<int> max_size = std::nullopt) {
+            auto params_ptr = self.selected_event_data_params();
+            if (params_ptr == nullptr) {
+              self.set_selected_event_data_params(
+                  std::make_shared<monte::SelectedEventDataParams>());
+              params_ptr = self.selected_event_data_params();
+            }
+            params_ptr->collect(name, tol, bin_width, initial_begin, spacing,
+                                max_size);
+            return self;
+          },
+          R"pbdoc(
+          Update :py:attr:`selected_event_data_params` to add the name of a
+          function that will be evaluated to collect data for each selected
+          event, along with optional custom settings.
+
+          Parameters
+          ----------
+          name : str
+              The name of a selected event data function to be added to
+              `self.selected_event_data_params.function_names`. These should
+              be keys in one of the dictionaries in
+              :func:`MonteCalculator.selected_event_data_functions`.
+          tol : Optional[float] = None
+              The tolerance for comparing values, applicable to
+              discrete floating point valued functions. If None, the
+              function's default tolerance value is used.
+          bin_width : Optional[float] = None
+              The tolerance for comparing values, applicable to
+              continuous valued functions. If None, the function's default bin
+              width is used.
+          initial_begin : Optional[float] = None
+              The initial value for the first bin, applicable to continuous
+              valued functions. If None, the function's default initial begin
+              value is used.
+          spacing : Optional[str] = None
+              The spacing of the bins, applicable to continuous valued
+              functions. If None, the function's default spacing is used.
+              Options are "log" or "linear".
+          max_size : Optional[int] = None
+              The maximum number of bins to store, applicable to all functions.
+              If None, the function's default maximum number of bins is used.
+
+          Returns
+          -------
+          self: libcasm.clexmonte.SelectedEventDataParams
+              To allow chaining multiple calls, `self` is returned
+          )pbdoc",
+          py::arg("name"), py::arg("tol") = std::nullopt,
+          py::arg("bin_width") = std::nullopt,
+          py::arg("initial_begin") = std::nullopt,
+          py::arg("spacing") = std::nullopt, py::arg("max_size") = std::nullopt)
+      .def(
+          "do_not_collect",
+          [](calculator_type &self, std::string name) {
+            auto params_ptr = self.selected_event_data_params();
+            if (params_ptr) {
+              params_ptr->do_not_collect(name);
+            }
+            return self;
+          },
+          R"pbdoc(
+          Update :py:attr:`selected_event_data_params` to remove the name of a
+          function that will be evaluated to collect data for each selected
+          event, and to remove all custom settings.
+          )pbdoc")
+      .def_property_readonly("selected_event_data",
+                             &calculator_type::selected_event_data,
+                             R"pbdoc(
+          Optional[libcasm.monte.sampling.SelectedEventData]: Selected event
+          data
+
+          If applicable for a particular calculator method, and requested by
+          setting :func:`MonteCalculator.selected_event_data_params`, this will
+          store selected event data.
+
+          If not applicable for a particular calculator method, this will be
+          None.
           )pbdoc")
       .def_property_readonly("name", &calculator_type::calculator_name,
                              R"pbdoc(

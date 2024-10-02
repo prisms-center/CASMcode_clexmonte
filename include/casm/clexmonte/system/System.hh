@@ -3,6 +3,7 @@
 
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/misc/Matrix3lCompare.hh"
+#include "casm/clexmonte/state/LocalOrbitCompositionCalculator.hh"
 #include "casm/clexmonte/system/system_data.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/DoFSpace.hh"
@@ -188,6 +189,10 @@ struct System {
   /// transformation_matrix_to_super as key).
   std::map<Eigen::Matrix3l, SupercellSystemData, Matrix3lCompare>
       supercell_data;
+
+  // -- Additional parameters --
+
+  jsonParser additional_params;
 };
 
 /// \brief Data structure for holding supercell-specific Monte Carlo calculation

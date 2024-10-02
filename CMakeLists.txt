@@ -156,6 +156,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/kinetic_sampling_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/modifying_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/sampling_functions.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/selected_event_data_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_events.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_impl.hh
@@ -186,6 +187,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/Conditions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/Configuration.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/CorrMatchingPotential.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/LocalOrbitCompositionCalculator.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/enforce_composition.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/io/json/CorrMatchingPotential_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/state/io/json/State_json_io.hh
@@ -224,6 +226,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/kinetic_events.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/sampling_functions.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/selected_event_data_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold_events.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/convariance_functions.cc
@@ -234,6 +237,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/semigrand_canonical/potential.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/Conditions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/CorrMatchingPotential.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/LocalOrbitCompositionCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/io/json/CorrMatchingPotential_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/io/json/State_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/state/io/json/parse_conditions.cc

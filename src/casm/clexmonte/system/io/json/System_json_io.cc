@@ -642,9 +642,10 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
     } else {
       auto const &clex_data = get_clex_data(system, "formation_energy");
       if (!clex_data.cluster_info) {
-        std::cout << "Warning: no \"basis\" input for basis_set '"
-                  << clex_data.basis_set_name << "' (required for KMC)"
-                  << std::endl;
+        std::stringstream ss;
+        ss << "Warning: no \"basis\" input for basis_set '"
+           << clex_data.basis_set_name << "' (required for KMC)" << std::endl;
+        parser.insert_warning("kmc_events", ss.str());
       }
 
       // parse "kmc_events"/<name>
@@ -691,6 +692,14 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
 
   // Parse "dof_subspaces"
   parser.optional(system.dof_subspaces, "dof_subspaces");
+
+  // Parse "additional_params"
+  system.additional_params.put_obj();
+  parser.optional(system.additional_params, "additional_params");
+  if (!system.additional_params.is_obj()) {
+    parser.insert_error("additional_params",
+                        "Error: if present, must be a JSON object or null");
+  }
 }
 
 }  // namespace clexmonte

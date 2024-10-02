@@ -2,7 +2,6 @@
 #define CASM_clexmonte_monte_calculator_KineticCalculator
 
 #include "casm/clexmonte/kinetic/kinetic_events.hh"
-#include "casm/clexmonte/methods/kinetic_monte_carlo.hh"
 #include "casm/clexmonte/monte_calculator/BaseMonteCalculator.hh"
 #include "casm/clexmonte/monte_calculator/MonteCalculator.hh"
 

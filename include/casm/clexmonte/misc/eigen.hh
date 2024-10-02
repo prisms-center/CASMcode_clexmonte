@@ -8,18 +8,20 @@
 namespace CASM {
 namespace clexmonte {
 
+inline Eigen::VectorXi to_VectorXi(int value) {
+  return Eigen::VectorXi::Constant(1, value);
+}
+
+inline Eigen::VectorXl to_VectorXl(long value) {
+  return Eigen::VectorXl::Constant(1, value);
+}
+
 inline Eigen::VectorXd to_VectorXd(double value) {
-  Eigen::VectorXd vec(1);
-  vec(0) = value;
-  return vec;
+  return Eigen::VectorXd::Constant(1, value);
 }
 
 inline Eigen::VectorXd to_VectorXd(std::vector<double> const &value) {
-  Eigen::VectorXd vec(value.size());
-  for (long unsigned int i = 0; i < value.size(); ++i) {
-    vec(i) = value[i];
-  }
-  return vec;
+  return Eigen::Map<const Eigen::VectorXd>(value.data(), value.size());
 }
 
 }  // namespace clexmonte

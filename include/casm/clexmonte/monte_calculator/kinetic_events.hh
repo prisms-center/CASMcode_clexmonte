@@ -19,11 +19,10 @@ class LocalOrbitCompositionCalculator {
   /// \brief Reset pointer to state currently being calculated
   void set(state_type const *state);
 
-  /// \brief Calculate the composition by orbit around an event and set
-  ///     EventState::num_each_component_by_orbit
-  void calculate_num_each_component(EventState &state,
-                                    EventData const &event_data,
-                                    PrimEventData const &prim_event_data);
+  /// \brief Calculate the composition by orbit around an event
+  Eigen::MatrixXi const &calculate_num_each_component(
+      Eigen::VectorXi const &occupation, Index unitcell_index,
+      Index equivalent_index);
 
  private:
   /// System pointer
@@ -232,10 +231,16 @@ class KineticEventData : public BaseMonteEventData {
   /// Event selector
   std::shared_ptr<event_selector_type> event_selector;
 
-  /// \brief Update for given state, conditions, occupants, event filters
+  /// \brief Update for given state, conditions, and occupants
   void update(state_type const &state, monte::OccLocation const &occ_location,
               std::optional<std::vector<EventFilterGroup>> _event_filters,
               std::shared_ptr<engine_type> engine);
+
+  // --- Event selection ---
+
+  /// \brief Select an event, and optionally re-calculate event state for the
+  ///     selected event
+  void select_event(SelectedEvent &selected_event, bool requires_event_state);
 
   // --- BaseMonteEventData interface ---
 

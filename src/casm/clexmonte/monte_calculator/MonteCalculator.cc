@@ -105,7 +105,7 @@ std::shared_ptr<MonteCalculator> make_monte_calculator(
   std::optional<monte::SelectedEventDataFunctions> x =
       calculator->standard_selected_event_data_functions(calculator);
   if (x.has_value()) {
-    calculator->selected_event_data_functions = std::move(x.value());
+    *calculator->selected_event_data_functions() = std::move(x.value());
   }
 
   return calculator;

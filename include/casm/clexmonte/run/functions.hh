@@ -44,13 +44,10 @@ sampling_fixture_params_type make_sampling_fixture_params(
         analysis_functions,
     monte::SamplingParams sampling_params,
     monte::CompletionCheckParams<statistics_type> completion_check_params,
-    std::vector<std::string> analysis_names,
-    std::optional<monte::SelectedEventDataFunctions>
-        selected_event_data_functions,
-    std::optional<monte::SelectedEventDataParams> selected_event_data_params,
-    bool write_results, bool write_trajectory, bool write_observations,
-    bool write_status, std::optional<std::string> output_dir,
-    std::optional<std::string> log_file, double log_frequency_in_s);
+    std::vector<std::string> analysis_names, bool write_results,
+    bool write_trajectory, bool write_observations, bool write_status,
+    std::optional<std::string> output_dir, std::optional<std::string> log_file,
+    double log_frequency_in_s);
 
 // --- Implementation ---
 
@@ -176,13 +173,10 @@ inline sampling_fixture_params_type make_sampling_fixture_params(
         analysis_functions,
     monte::SamplingParams sampling_params,
     monte::CompletionCheckParams<statistics_type> completion_check_params,
-    std::vector<std::string> analysis_names,
-    std::optional<monte::SelectedEventDataFunctions>
-        selected_event_data_functions,
-    std::optional<monte::SelectedEventDataParams> selected_event_data_params,
-    bool write_results, bool write_trajectory, bool write_observations,
-    bool write_status, std::optional<std::string> output_dir,
-    std::optional<std::string> log_file, double log_frequency_in_s) {
+    std::vector<std::string> analysis_names, bool write_results,
+    bool write_trajectory, bool write_observations, bool write_status,
+    std::optional<std::string> output_dir, std::optional<std::string> log_file,
+    double log_frequency_in_s) {
   if (!output_dir.has_value()) {
     output_dir = (fs::path("output") / label).string();
   }
@@ -207,8 +201,6 @@ inline sampling_fixture_params_type make_sampling_fixture_params(
   return sampling_fixture_params_type(
       label, sampling_functions, json_sampling_functions, analysis_functions,
       sampling_params, completion_check_params, analysis_names,
-      std::move(selected_event_data_functions),
-      std::move(selected_event_data_params),
       write_results ? std::move(results_io) : nullptr, method_log);
 }
 

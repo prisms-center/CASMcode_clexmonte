@@ -111,9 +111,6 @@ class MonteCalculator {
   /// State modifying functions
   StateModifyingFunctionMap modifying_functions;
 
-  /// Selected event data functions
-  monte::SelectedEventDataFunctions selected_event_data_functions;
-
   // --- Set when `set_state_and_potential` or `run` is called: ---
 
   /// State data for sampling functions, for the current state
@@ -189,17 +186,48 @@ class MonteCalculator {
     return occ_location;
   }
 
-  // --- Set when `set_event_data` or `run` is called: ---
+  // --- Constructed if applicable ---
+
+  /// Selected event data functions (if applicable)
+  /// - Constructed by constructor
+  std::shared_ptr<monte::SelectedEventDataFunctions>
+  selected_event_data_functions() {
+    return m_calc->selected_event_data_functions;
+  }
+
+  /// Selected event data collection parameters (if applicable)
+  /// - Constructed by `reset`
+  std::shared_ptr<monte::SelectedEventDataParams> selected_event_data_params() {
+    return m_calc->selected_event_data_params;
+  }
 
   /// Event data access (if applicable)
+  /// - Constructed by `reset`
+  /// - Updated by `set_event_data` or `run`
   MonteEventData event_data() {
     if (m_calc->event_data == nullptr) {
       throw std::runtime_error(
-          "Error in MonteCalculator::event_data: Event data is not "
-          "yet constructed. To use outside of the `run` method, call "
-          "`set_state_and_potential` first.");
+          "Error in MonteCalculator::event_data: Event data does not "
+          "exist.");
     }
     return MonteEventData(m_calc->event_data, m_lib);
+  }
+
+  /// Set selected event data collection paramters
+  void set_selected_event_data_params(
+      std::shared_ptr<monte::SelectedEventDataParams>
+          selected_event_data_params) {
+    m_calc->selected_event_data_params = selected_event_data_params;
+  }
+
+  /// Selected event data access (if applicable)
+  std::shared_ptr<monte::SelectedEventData> selected_event_data() {
+    return m_calc->selected_event_data;
+  }
+
+  /// Selected event access (if applicable)
+  std::shared_ptr<SelectedEvent> selected_event() {
+    return m_calc->selected_event;
   }
 
   /// \brief Set event data (includes calculating all rates), using current

@@ -54,6 +54,10 @@
     }
   },
   "local_basis_sets": {
+    "Va": {
+      "equivalents_info": "basis_sets/bset.Va/equivalents_info.json",
+      "source": "basis_sets/bset.Va/FCC_binary_vacancy_Clexulator_Va.cc"
+    },
     "A_Va_1NN": {
       "equivalents_info": "basis_sets/bset.A_Va_1NN/equivalents_info.json",
       "source": "basis_sets/bset.A_Va_1NN/FCC_binary_vacancy_Clexulator_A_Va_1NN.cc"
@@ -61,6 +65,21 @@
     "B_Va_1NN": {
       "equivalents_info": "basis_sets/bset.B_Va_1NN/equivalents_info.json",
       "source": "basis_sets/bset.B_Va_1NN/FCC_binary_vacancy_Clexulator_B_Va_1NN.cc"
+    }
+  },
+  "additional_params": {
+    "local_orbit_composition": {
+      "A_Va_1NN": {
+        "local_basis_set": "A_Va_1NN",
+        "orbits": [1, 2, 3],
+        "combine_orbits": true
+      }
+    },
+    "local_corr": {
+      "Va": {
+        "local_basis_set": "A_Va_1NN",
+        "allowed_occ": ["Va"]
+      }
     }
   }
 }

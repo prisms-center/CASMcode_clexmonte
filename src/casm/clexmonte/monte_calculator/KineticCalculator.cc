@@ -1,15 +1,19 @@
 #include "casm/clexmonte/monte_calculator/KineticCalculator.hh"
 
+#include "casm/casm_io/json/InputParser_impl.hh"
+#include "casm/clexmonte/methods/kinetic_monte_carlo.hh"
 #include "casm/clexmonte/monte_calculator/analysis_functions.hh"
 #include "casm/clexmonte/monte_calculator/kinetic_events.hh"
 #include "casm/clexmonte/monte_calculator/kinetic_sampling_functions.hh"
 #include "casm/clexmonte/monte_calculator/modifying_functions.hh"
 #include "casm/clexmonte/monte_calculator/sampling_functions.hh"
+#include "casm/clexmonte/monte_calculator/selected_event_data_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
 #include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
+#include "casm/monte/sampling/io/json/SelectedEventData_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -54,7 +58,13 @@ KineticCalculator::KineticCalculator()
                           true,                  // update_atoms,
                           false,                 // save_atom_info,
                           false                  // is_multistate_method,
-      ) {}
+      ) {
+  // this could go into base constructor
+  this->selected_event = std::make_shared<SelectedEvent>();
+  this->selected_event_data_functions =
+      std::make_shared<monte::SelectedEventDataFunctions>();
+  this->selected_event_data = std::make_shared<monte::SelectedEventData>();
+}
 
 /// \brief Construct functions that may be used to sample various quantities
 ///     of the Monte Carlo calculation as it runs
@@ -137,8 +147,19 @@ StateModifyingFunctionMap KineticCalculator::standard_modifying_functions(
 /// \brief Construct functions that may be used to collect selected event data
 std::optional<monte::SelectedEventDataFunctions>
 KineticCalculator::standard_selected_event_data_functions(
-    std::shared_ptr<MonteCalculator> const &calculation) const override {
-  return std::nullopt;
+    std::shared_ptr<MonteCalculator> const &calculation) const {
+  using namespace monte_calculator;
+  monte::SelectedEventDataFunctions functions;
+
+  functions.insert(make_selected_event_by_type_f(calculation));
+  functions.insert(make_selected_event_by_equivalent_index_f(calculation));
+  functions.insert(make_selected_event_by_prim_event_index_f(calculation));
+  for (auto f :
+       make_selected_event_by_equivalent_index_per_event_type_f(calculation)) {
+    functions.insert(f);
+  }
+
+  return functions;
 }
 
 /// \brief Construct default SamplingFixtureParams
@@ -167,13 +188,14 @@ KineticCalculator::make_default_sampling_fixture_params(
                        "jumps_per_event_by_type",
                        "jumps_per_atom_per_event_by_type"};
     std::string prefix;
-    prefix = "order_parameter_";
+    prefix = "order_parameter.";
     for (auto const &pair : calculation->system()->dof_spaces) {
       s.sampler_names.push_back(prefix + pair.first);
     }
-    prefix = "subspace_order_parameter_";
+    prefix = "order_parameter.";
+    std::string suffix = ".subspace_magnitudes";
     for (auto const &pair : calculation->system()->dof_subspaces) {
-      s.sampler_names.push_back(prefix + pair.first);
+      s.sampler_names.push_back(prefix + pair.first + suffix);
     }
     if (write_trajectory) {
       s.do_sample_trajectory = true;
@@ -192,15 +214,11 @@ KineticCalculator::make_default_sampling_fixture_params(
 
   std::vector<std::string> analysis_names = {"heat_capacity"};
 
-  std::optional<monte::SelectedEventDataParams> selected_event_data_params =
-      std::nullopt;
-
   return clexmonte::make_sampling_fixture_params(
       label, calculation->sampling_functions,
       calculation->json_sampling_functions, calculation->analysis_functions,
-      sampling_params, completion_check_params, analysis_names,
-      selected_event_data_params, write_results, write_trajectory,
-      write_observations, write_status, output_dir, log_file,
+      sampling_params, completion_check_params, analysis_names, write_results,
+      write_trajectory, write_observations, write_status, output_dir, log_file,
       log_frequency_in_s);
 }
 
@@ -349,6 +367,12 @@ void KineticCalculator::set_event_data(std::shared_ptr<engine_type> engine) {
 /// \brief Perform a single run, evolving current state
 void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
                             run_manager_type<engine_type> &run_manager) {
+  if (run_manager.sampling_fixtures.size() == 0) {
+    throw std::runtime_error(
+        "Error in KineticCalculator::run: "
+        "run_manager.sampling_fixtures.size()==0");
+  }
+
   // Set state and potential
   // - Validates this->system is not null
   // - Validates state
@@ -365,13 +389,6 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   // - Calculates all rates
   this->set_event_data(run_manager.engine);
 
-  // Used to apply selected events: EventID -> -> monte::OccEvent const &
-  auto get_event_f =
-      [&](EventID const &selected_event_id) -> monte::OccEvent const & {
-    // returns a monte::OccEvent
-    return _event_data().event_list.events.at(selected_event_id).event;
-  };
-
   // Construct KMCData
   this->kmc_data = std::make_shared<kmc_data_type>();
 
@@ -379,10 +396,36 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   // -- These do not change (no atoms moving to/from reservoirs) --
   auto event_system = get_event_system(*this->system);
 
+  // Optional: Manages constructing histogram data structures
+  // and collecting selected event data
+
+  std::optional<monte::SelectedEventDataCollector> collector;
+  if (this->selected_event_data_params) {
+    if (this->selected_event_data_functions == nullptr) {
+      throw std::runtime_error(
+          "Error in KineticCalculator::run: "
+          "this->selected_event_data_functions==nullptr");
+    }
+    collector = monte::SelectedEventDataCollector(
+        *selected_event_data_functions, *selected_event_data_params,
+        selected_event_data);
+  }
+
+  // Check this->selected_event is not null
+  if (this->selected_event == nullptr) {
+    throw std::runtime_error(
+        "Error in KineticCalculator::run: this->selected_event==nullptr");
+  }
+
+  auto set_selected_event_f = [=](SelectedEvent &selected_event,
+                                  bool requires_event_data) {
+    this->_event_data().select_event(selected_event, requires_event_data);
+  };
+
   // Run Kinetic Monte Carlo at a single condition
   kinetic_monte_carlo_v2<EventID>(state, occ_location, *this->kmc_data,
-                                  *_event_data().event_selector, get_event_f,
-                                  run_manager, event_system);
+                                  *this->selected_event, set_selected_event_f,
+                                  collector, run_manager, event_system);
 }
 
 /// \brief Perform a single run, evolving one or more states
@@ -405,6 +448,12 @@ void KineticCalculator::run(int current_state, std::vector<state_type> &states,
 ///       - "verbose" is equivalent to integer value 20
 ///       - "debug" is equivalent to integer value 100
 void KineticCalculator::_reset() {
+  // -- Parsing ----------------------------
+
+  // `params` is BaseMonteCalculator::params
+  // - originally "calculation_options" from the run params input file
+  // - `params` argument of MonteCalculator Python constructor
+
   ParentInputParser parser{params};
 
   // "verbosity": str or int, default=10
@@ -417,14 +466,27 @@ void KineticCalculator::_reset() {
 
   // TODO: enumeration
 
+  // TODO: Read event_filters from params
+  std::optional<std::vector<EventFilterGroup>> event_filters = std::nullopt;
+
+  // Read selected event data params
+  this->selected_event_data_params.reset();
+  if (parser.self.contains("selected_event_data")) {
+    auto selected_event_data_subparser =
+        parser.subparse<monte::SelectedEventDataParams>("selected_event_data");
+    if (selected_event_data_subparser->valid()) {
+      this->selected_event_data_params =
+          std::move(selected_event_data_subparser->value);
+    }
+  }
+
   std::stringstream ss;
   ss << "Error in KineticCalculator: error reading calculation "
         "parameters.";
   std::runtime_error error_if_invalid{ss.str()};
   report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
 
-  // TODO: Read event_filters from params
-  std::optional<std::vector<EventFilterGroup>> event_filters = std::nullopt;
+  // -- After parsing ----------------------------
 
   // Make event data
   this->event_data =

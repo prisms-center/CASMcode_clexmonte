@@ -163,6 +163,28 @@ struct EventID : public Comparisons<CRTPBase<EventID>> {
   }
 };
 
+struct SelectedEvent {
+  EventID event_id;
+  double total_rate;
+  double time_increment;
+  PrimEventData const *prim_event_data;
+  EventData const *event_data;
+
+  /// \brief Event state data, re-calculated for the selected event if
+  /// `requires_event_state` is true for one of the selected event data
+  /// functions; otherwise, nullptr
+  EventState const *event_state;
+
+  void reset() {
+    event_id = EventID();
+    total_rate = 0.0;
+    time_increment = 0.0;
+    prim_event_data = nullptr;
+    event_data = nullptr;
+    event_state = nullptr;
+  }
+};
+
 }  // namespace clexmonte
 }  // namespace CASM
 

@@ -2,6 +2,7 @@
 #define CASM_clexmonte_state_Configuration
 
 #include "casm/clexmonte/definitions.hh"
+#include "casm/clexmonte/state/LocalOrbitCompositionCalculator.hh"
 #include "casm/clexulator/ClusterExpansion.hh"
 #include "casm/clexulator/ConfigDoFValues.hh"
 #include "casm/clexulator/LocalClusterExpansion.hh"
@@ -68,6 +69,12 @@ inline void set(clexulator::LocalClusterExpansion &calculator,
 
 /// \brief Set calculator so it evaluates using `state`
 inline void set(clexulator::MultiLocalClusterExpansion &calculator,
+                state_type const &state) {
+  calculator.set(&get_dof_values(state));
+}
+
+/// \brief Set calculator so it evaluates using `state`
+inline void set(LocalOrbitCompositionCalculator &calculator,
                 state_type const &state) {
   calculator.set(&get_dof_values(state));
 }

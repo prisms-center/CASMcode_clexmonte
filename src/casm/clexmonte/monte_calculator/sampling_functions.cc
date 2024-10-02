@@ -303,7 +303,7 @@ state_sampling_function_type make_order_parameter_f(
 /// \brief Make order parameter magnitudes by subspace sampling function
 /// ("order_parameter.<key>.subspace_magnitudes")
 ///
-/// Creates a "order_parameters.<key>.subspace_magnitudes" function for the
+/// Creates a "order_parameter.<key>.subspace_magnitudes" function for the
 /// specified DoFSpace, using the subspaces specified in the
 /// `calculation->system()->dof_subspaces` map.
 ///

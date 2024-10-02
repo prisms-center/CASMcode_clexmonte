@@ -14,6 +14,7 @@
 #include "casm/monte/methods/kinetic_monte_carlo.hh"
 #include "casm/monte/run_management/ResultsAnalysisFunction.hh"
 #include "casm/monte/run_management/SamplingFixture.hh"
+#include "casm/monte/sampling/SelectedEventData.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -108,7 +109,7 @@ class BaseMonteCalculator {
     this->_reset();
   }
 
-  // --- Use after `set` and before `run` is called: ---
+  // --- Use after `reset` and before `run` is called: ---
 
   /// \brief Construct functions that may be used to sample various quantities
   /// of
@@ -168,10 +169,35 @@ class BaseMonteCalculator {
   virtual void set_state_and_potential(state_type &state,
                                        monte::OccLocation *occ_location) = 0;
 
-  // --- Set when `set_event_data` is called: ---
+  // --- Constructed by derived constructor, if applicable ---
+
+  /// Selected event (if applicable)
+  // - `reset` should: Do nothing to this
+  // - `run` should: Set the members of this for each selected event
+  std::shared_ptr<SelectedEvent> selected_event;
+
+  /// Selected event data functions (if applicable)
+  // - `reset` should: Do nothing to this
+  std::shared_ptr<monte::SelectedEventDataFunctions>
+      selected_event_data_functions;
+
+  /// Selected event data (if applicable)
+  // - `reset` should: Do nothing to this
+  // - `run` should: Reset the members of this and collect data if
+  //   `selected_event_data_params` has a value
+  std::shared_ptr<monte::SelectedEventData> selected_event_data;
+
+  // --- Set for system by `reset`, updated for state by `set_event_data`: ---
 
   /// Event data (if applicable)
+  // - `reset` should: Reset this, set prim_event_list, make empty event_list
+  // - `set_event_data` should: Update event_list for current state
   std::shared_ptr<BaseMonteEventData> event_data;
+
+  /// Selected event data collection paramters (if applicable)
+  // - `reset` should: Reset this, then read it from `this->params`
+  //   if key "selected_event_data" exists
+  std::shared_ptr<monte::SelectedEventDataParams> selected_event_data_params;
 
   /// \brief Set event data (includes calculating all rates), using current
   /// state data

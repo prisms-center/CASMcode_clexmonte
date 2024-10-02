@@ -839,7 +839,16 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               default values (0 for occupation indices, 0.0 for all global and
               local DoF components), and empty conditions.
           )pbdoc",
-           py::arg("transformation_matrix_to_super"));
+           py::arg("transformation_matrix_to_super"))
+      .def_property_readonly(
+          "additional_params",
+          [](clexmonte::System const &self) {
+            return static_cast<nlohmann::json>(self.additional_params);
+          },
+          R"pbdoc(
+          dict: A dict of additional parameters, which may be used to customize
+          sampling functions or other purposes.
+          )pbdoc");
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

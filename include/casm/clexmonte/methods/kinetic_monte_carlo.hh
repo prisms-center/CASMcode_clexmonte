@@ -21,6 +21,7 @@
 #include "casm/monte/events/OccLocation.hh"
 #include "casm/monte/methods/kinetic_monte_carlo.hh"
 #include "casm/monte/run_management/State.hh"
+#include "casm/monte/sampling/SelectedEventData.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -30,12 +31,15 @@ std::vector<Index> make_atom_name_index_list(
     monte::OccLocation const &occ_location,
     occ_events::OccSystem const &occ_system);
 
-template <typename EventIDType, typename ConfigType, typename EventSelectorType,
-          typename GetEventType, typename StatisticsType, typename EngineType>
+template <typename EventIDType, typename ConfigType,
+          typename SetSelectedEventFunction, typename StatisticsType,
+          typename EngineType>
 void kinetic_monte_carlo_v2(
-    monte::State<ConfigType> &state, monte::OccLocation &occ_location,
+    state_type &state, monte::OccLocation &occ_location,
     monte::KMCData<ConfigType, StatisticsType, EngineType> &kmc_data,
-    EventSelectorType &event_selector, GetEventType get_event_f,
+    SelectedEvent &selected_event,
+    SetSelectedEventFunction set_selected_event_f,
+    std::optional<monte::SelectedEventDataCollector> &collector,
     monte::RunManager<ConfigType, StatisticsType, EngineType> &run_manager,
     std::shared_ptr<occ_events::OccSystem> event_system);
 
@@ -79,9 +83,6 @@ inline std::vector<Index> make_atom_name_index_list(
 
 /// \brief Run a kinetic Monte Carlo calculation
 ///
-/// TODO: clean up the way data is made available to samplers, especiallly
-/// for storing and sharing data taken at the previous sample time.
-///
 /// \param state The state. Consists of both the initial
 ///     configuration and conditions. Conditions must include `temperature`
 ///     and any others required by `potential`.
@@ -89,10 +90,13 @@ inline std::vector<Index> make_atom_name_index_list(
 ///     event proposal. It must already be initialized with the input state.
 /// \param kmc_data Stores data to be made available to the sampling functions
 ///     along with the current state.
-/// \param event_selector A method that selects events and returns an
-///     std::pair<EventIDType, TimeIncrementType>.
-/// \param get_event_f A method that gives an `OccEvent const &` corresponding
-///     to the selected EventID.
+/// \param selected_event The selected event data object which the selected
+///     event data functions are expecting to be set with the selected event
+///     data.
+/// \param set_selected_event_f A function that can set `selected_event` with
+///     signature `set_selected_event_f(SelectedEvent &selected_event, bool
+///     requires_event_state)`.
+/// \param collector Collects selected event data
 /// \param run_manager Contains sampling fixtures and after completion holds
 ///     final results
 /// \param event_system Defines the system for OccPosition / OccTrajectory /
@@ -109,19 +113,24 @@ inline std::vector<Index> make_atom_name_index_list(
 /// State properties that are set:
 /// - None
 ///
-template <typename EventIDType, typename ConfigType, typename EventSelectorType,
-          typename GetEventType, typename StatisticsType, typename EngineType>
+template <typename EventIDType, typename ConfigType,
+          typename SetSelectedEventFunction, typename StatisticsType,
+          typename EngineType>
 void kinetic_monte_carlo_v2(
-    monte::State<ConfigType> &state, monte::OccLocation &occ_location,
+    state_type &state, monte::OccLocation &occ_location,
     monte::KMCData<ConfigType, StatisticsType, EngineType> &kmc_data,
-    EventSelectorType &event_selector, GetEventType get_event_f,
+    SelectedEvent &selected_event,
+    SetSelectedEventFunction set_selected_event_f,
+    std::optional<monte::SelectedEventDataCollector> &collector,
     monte::RunManager<ConfigType, StatisticsType, EngineType> &run_manager,
     std::shared_ptr<occ_events::OccSystem> event_system) {
-  // Used within the main loop:
-  double total_rate;
-  double event_time;
-  double time_increment;
-  EventIDType selected_event_id;
+  // Validate existence of sampling fixtures
+  if (run_manager.sampling_fixtures.empty()) {
+    throw std::runtime_error(
+        "Error in clexmonte::kinetic_monte_carlo_v2: no sampling fixtures");
+  }
+  monte::MonteCounter const &counter =
+      run_manager.sampling_fixtures.front()->counter();
 
   // Initialize atom positions & time
   kmc_data.sampling_fixture_label.clear();
@@ -144,7 +153,7 @@ void kinetic_monte_carlo_v2(
   // Pre- and post- sampling actions:
 
   // notes: it is important this uses
-  // - the total_rate obtained before event selection
+  // - the total_rate obtained for the state before applying the selected event
   auto pre_sample_action =
       [&](monte::SamplingFixture<ConfigType, StatisticsType, EngineType>
               &fixture,
@@ -156,7 +165,7 @@ void kinetic_monte_carlo_v2(
         kmc_data.atom_name_index_list =
             make_atom_name_index_list(occ_location, *event_system);
         kmc_data.atom_positions_cart = occ_location.atom_positions_cart();
-        kmc_data.total_rate = total_rate;
+        kmc_data.total_rate = selected_event.total_rate;
         if (fixture.params().sampling_params.sample_mode ==
             monte::SAMPLE_MODE::BY_TIME) {
           kmc_data.time = fixture.next_sample_time();
@@ -175,21 +184,41 @@ void kinetic_monte_carlo_v2(
       };
 
   // Main loop
+  double event_time;
+  bool collect_selected_event_data = collector.has_value();
+  bool requires_event_state =
+      collector.has_value() && collector->requires_event_state;
+  selected_event.reset();
   run_manager.initialize(occ_location.mol_size());
   run_manager.update_next_sampling_fixture();
   while (!run_manager.is_complete()) {
     run_manager.write_status_if_due();
 
-    // Select an event
-    total_rate = event_selector.total_rate();
-    std::tie(selected_event_id, time_increment) = event_selector.select_event();
-    event_time = kmc_data.time + time_increment;
+    // Select an event. This function:
+    // - Updates rates of events impacted by the previous selected event (if
+    //   there was a previous event)
+    // - Updates the total rate
+    // - Chooses an event and time increment (does not apply event)
+    // - Sets a list of impacted events by the chosen event that will be updated
+    //   on the next iteration
+    // - If `requires_event_state` is true, then the event state is calculated
+    //   for the selected event
+    set_selected_event_f(selected_event, requires_event_state);
+    event_time = kmc_data.time + selected_event.time_increment;
 
     // Sample data, if a sample is due by count
+    // - This location correctly handles sampling at count=0 and count!=0
+    // - If the sample count is n, then the state after the n-th step/pass is
+    //   sampled.
     run_manager.sample_data_by_count_if_due(state, pre_sample_action,
                                             post_sample_action);
 
     // Sample data, if a sample is due by time
+    // - This location correctly handles sampling at sample times >= 0
+    // - Samples are taken using the state before the event for each
+    //   sample time <= the event time
+    // - If the sample time is exactly equal to the event time (should be
+    //   vanishingly rare), then the state before the event occurs is sampled.
     run_manager.sample_data_by_time_if_due(event_time, state, pre_sample_action,
                                            post_sample_action);
 
@@ -199,13 +228,14 @@ void kinetic_monte_carlo_v2(
     // Increment count -- for all fixtures
     run_manager.increment_step();
 
-    // Collect event statistics - with configuration state before event,
-    // but after step and time have been updated
-    monte::OccEvent const &selected_event = get_event_f(selected_event_id);
+    // Collect selected event data
+    if (collect_selected_event_data) {
+      collector->collect(counter);
+    }
 
     // Apply event
     run_manager.increment_n_accept();
-    occ_location.apply(selected_event, get_occupation(state));
+    occ_location.apply(selected_event.event_data->event, get_occupation(state));
     kmc_data.time = event_time;
   }
 

@@ -316,13 +316,14 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
       s.sampler_names = {"clex.formation_energy", "potential_energy",
                          "mol_composition", "param_composition"};
       std::string prefix;
-      prefix = "order_parameter_";
+      prefix = "order_parameter.";
       for (auto const &pair : calculation->system()->dof_spaces) {
         s.sampler_names.push_back(prefix + pair.first);
       }
-      prefix = "subspace_order_parameter_";
+      prefix = "order_parameter.";
+      std::string suffix = ".subspace_magnitudes";
       for (auto const &pair : calculation->system()->dof_subspaces) {
-        s.sampler_names.push_back(prefix + pair.first);
+        s.sampler_names.push_back(prefix + pair.first + suffix);
       }
       if (write_trajectory) {
         s.do_sample_trajectory = true;
@@ -345,16 +346,12 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
         "heat_capacity", "mol_susc", "param_susc", "mol_thermochem_susc",
         "param_thermochem_susc"};
 
-    std::optional<monte::SelectedEventDataParams> selected_event_data_params =
-        std::nullopt;
-
     return clexmonte::make_sampling_fixture_params(
         label, calculation->sampling_functions,
         calculation->json_sampling_functions, calculation->analysis_functions,
-        sampling_params, completion_check_params, analysis_names,
-        selected_event_data_params, write_results, write_trajectory,
-        write_observations, write_status, output_dir, log_file,
-        log_frequency_in_s);
+        sampling_params, completion_check_params, analysis_names, write_results,
+        write_trajectory, write_observations, write_status, output_dir,
+        log_file, log_frequency_in_s);
   }
 
   /// \brief Validate the state's configuration (all are valid)

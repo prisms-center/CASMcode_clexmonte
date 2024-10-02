@@ -127,8 +127,6 @@ def test_event_data_1(FCCBinaryVacancy_kmc_System):
         out = f.getvalue()
         assert "sites" in out
 
-    assert False
-
 
 def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
     """A single run, using a fixture"""
@@ -141,6 +139,7 @@ def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
         method="kinetic",
         system=system,
     )
+    calculator.collect("selected_event.by_equivalent_index")
 
     def print_step_f():
         step = calculator.kinetics_data.sampling_fixture.step

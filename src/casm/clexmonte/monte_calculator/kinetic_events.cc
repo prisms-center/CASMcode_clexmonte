@@ -87,18 +87,17 @@ void LocalOrbitCompositionCalculator::set(state_type const *state) {
   }
 }
 
-/// \brief Calculate the composition by orbit around an event and set
-///     EventState::num_each_component_by_orbit
-void LocalOrbitCompositionCalculator::calculate_num_each_component(
-    EventState &state, EventData const &event_data,
-    PrimEventData const &prim_event_data) {
+/// \brief Calculate the composition by orbit around an event
+Eigen::MatrixXi const &
+LocalOrbitCompositionCalculator::calculate_num_each_component(
+    Eigen::VectorXi const &occupation, Index unitcell_index,
+    Index equivalent_index) {
   std::vector<Index> const &neighbor_index_to_linear_site_index =
-      m_supercell_nlist->sites(event_data.unitcell_index);
-  Eigen::VectorXi const &occupation = get_occupation(*m_state);
+      m_supercell_nlist->sites(unitcell_index);
 
   // indices[orbit_index] = std::set<std::pair<int, int>>
   std::vector<std::set<std::pair<int, int>>> const &indices =
-      m_local_orbits_neighbor_indices[prim_event_data.equivalent_index];
+      m_local_orbits_neighbor_indices[equivalent_index];
 
   m_num_each_component_by_orbit.setZero();
   int col = 0;
@@ -115,7 +114,7 @@ void LocalOrbitCompositionCalculator::calculate_num_each_component(
     ++col;
   }
 
-  state.num_each_component_by_orbit = &m_num_each_component_by_orbit;
+  return m_num_each_component_by_orbit;
 }
 
 /// \brief Constructor
@@ -325,6 +324,36 @@ void KineticEventData::update(
       clexmonte::make_complete_event_id_list(n_unitcells, prim_event_list),
       event_list.impact_table,
       std::make_shared<lotto::RandomGenerator>(engine));
+}
+
+/// \brief Update for given state, conditions, occupants, event filters
+void KineticEventData::select_event(SelectedEvent &selected_event,
+                                    bool requires_event_state) {
+  // This function:
+  // - Updates rates of events impacted by the *last* selected event (if there
+  //   was a previous selection)
+  // - Updates the total rate
+  // - Chooses an event and time increment (does not apply event)
+  // - Sets a list of impacted events by the chosen event
+  auto &event_id = selected_event.event_id;
+  std::tie(event_id, selected_event.time_increment) =
+      event_selector->select_event();
+  selected_event.total_rate = event_selector->total_rate();
+  selected_event.event_data = &event_list.events.at(event_id);
+  selected_event.prim_event_data = &prim_event_list[event_id.prim_event_index];
+
+  if (requires_event_state) {
+    prim_event_calculators.at(event_id.prim_event_index)
+        .calculate_event_state(m_event_state, *selected_event.event_data,
+                               *selected_event.prim_event_data);
+    selected_event.event_state = &m_event_state;
+
+    //    if (calculate_local_orbit_composition) {
+    //      local_orbit_composition_calculator.calculate_num_each_component(
+    //          *selected_event.event_state, *selected_event.event_data,
+    //          *selected_event.prim_event_data);
+    //    }
+  }
 }
 
 }  // namespace kinetic_2

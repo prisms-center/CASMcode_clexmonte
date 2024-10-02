@@ -23,19 +23,19 @@
     },
     "_quantities": "(.by_event_type, .by_equivalent_index, .by_prim_event_index)",
     "quantities": [
-      "event",
+      "event", <-- []
       "is_normal",
       "Ekra",
       "Ef_init",
       "dE_final",
-      "dE_activated",
+      "dE_activated", <-- []  (events selected && all events including not selected)
       "freq",
       "rate",
       "total_rate",
       "time_increment",
-      "<event_type>.formation_energy_delta_corr",
-      "<event_type>.local_corr",
-      "<event_type>.num_each_component_by_orbit"
+      "formation_energy_delta_corr.A_Va_1NN",
+      "local_corr.A_Va_1NN",
+      "local_orbit_composition.A_Va_1NN", # [list of orbit index]
     ],
     "tol": {
       "local_corr": 0.0001
