@@ -225,6 +225,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/analysis_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/kinetic_events.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/kinetic_sampling_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/sampling_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/selected_event_data_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold.cc

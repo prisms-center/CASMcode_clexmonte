@@ -1,10 +1,10 @@
 #ifndef CASM_clexmonte_LocalOrbitCompositionCalculator
 #define CASM_clexmonte_LocalOrbitCompositionCalculator
 
+#include "casm/clexmonte/misc/eigen.hh"
 #include "casm/clexulator/NeighborList.hh"
-#include "casm/composition/CompositionCalculator.hh"
 #include "casm/configuration/clusterography/IntegralCluster.hh"
-#include "casm/crystallography/LinearIndexConverter.hh"
+#include "casm/monte/misc/LexicographicalCompare.hh"
 
 namespace CASM {
 
@@ -12,7 +12,45 @@ namespace clexulator {
 struct ConfigDoFValues;
 }
 
+namespace composition {
+class CompositionCalculator;
+}
+
 namespace clexmonte {
+
+struct PossibleLocalOrbitCompositions {
+  /// \brief The maximum number of possible unique local orbit compositions
+  Index max_possible_compositions;
+
+  /// \brief Whether all possible unique local orbit compositions have been
+  /// found
+  bool found_all;
+
+  /// \brief Number of components
+  Index n_components;
+
+  /// \brief The number of local orbits composition is calculated for
+  Index n_orbits;
+
+  /// \brief  Holds unique num_each_component_by_orbit as column-major
+  ///     Eigen::VectorXi, up to max_possible_compositions
+  std::set<Eigen::VectorXi, monte::LexicographicalCompare> possible;
+
+  /// \brief Calculate the number of possible unique local orbit compositions
+  PossibleLocalOrbitCompositions(
+      composition::CompositionCalculator const &comp_calculator,
+      std::vector<std::vector<std::set<std::pair<int, int>>>> const
+          &local_orbits_neighbor_indices,
+      Index _max_possible_occupations);
+};
+
+/// \brief Make a component name, which describes a composition matrix using
+/// orbit indices and the component names
+std::string make_component_name(
+    Eigen::MatrixXi const &num_each_component_by_orbit,
+    std::set<int> orbits_to_calculate,
+    std::vector<std::string> const &components, bool combine_orbits);
+
 class LocalOrbitCompositionCalculator {
  public:
   //  LocalOrbitCompositionCalculator(std::shared_ptr<system_type> _system,
@@ -34,12 +72,28 @@ class LocalOrbitCompositionCalculator {
   /// \brief Reset pointer to configuration currently being calculated
   void set(clexulator::ConfigDoFValues const *dof_values);
 
-  // {prim_event_index} -> \vec{n}
-  // {equivalent_index} -> \vec{n}
-  // {event_type} -> \vec{n}
-
   /// \brief Calculate the composition by orbit around an event
   Eigen::MatrixXi const &value(Index unitcell_index, Index equivalent_index);
+
+  /// \brief The orbits to calculate
+  std::set<int> const &orbits_to_calculate() const {
+    return m_orbits_to_calculate;
+  }
+
+  /// \brief Whether orbits are combined
+  bool combine_orbits() const { return m_combine_orbits; }
+
+  /// \brief The local orbit neighbor and sublattice indices
+  std::vector<std::vector<std::set<std::pair<int, int>>>> const &
+  local_orbits_neighbor_indices() const {
+    return m_local_orbits_neighbor_indices;
+  }
+
+  /// \brief The local orbit sites
+  std::vector<std::vector<std::set<xtal::UnitCellCoord>>> const &
+  local_orbits_sites() const {
+    return m_local_orbits_sites;
+  }
 
  private:
   /// Orbits to calculate
@@ -48,11 +102,12 @@ class LocalOrbitCompositionCalculator {
   /// \brief Combine orbits?
   ///
   /// If true, calculate the number of each component for
-  /// the sites in the union of the orbits in `_orbits_to_calculate`. If false,
-  /// calculate the number of each component for the sites in each orbit in
-  /// `_orbits_to_calculate` for each orbit. If true, the resulting value will
-  /// be a matrix with a single column. If false, the value will be a matrix
-  /// with a column for each orbit.
+  /// the sites in the union of the orbits in `_orbits_to_calculate`. If
+  /// false, calculate the number of each component for the sites in each
+  /// orbit in
+  /// `_orbits_to_calculate` for each orbit. If true, the resulting value
+  /// will be a matrix with a single column. If false, the value will be a
+  /// matrix with a column for each orbit.
   bool m_combine_orbits;
 
   /// Supercell neighbor list
@@ -68,8 +123,15 @@ class LocalOrbitCompositionCalculator {
   /// Store {neighbor_index, sublattice_index} for each site in each orbit:
   /// m_local_orbits_neighbor_indices[equivalent_index][orbit_index] ->
   ///     std::set<std::pair<int, int>>
+  /// If m_combine_orbits is true, all orbits are combined into `orbit_index` 0
   std::vector<std::vector<std::set<std::pair<int, int>>>>
       m_local_orbits_neighbor_indices;
+
+  /// Store the unique set of sites in each orbit:
+  /// m_local_orbits_neighbor_indices[equivalent_index][orbit_index] ->
+  ///     std::set<xta::UnitCellCoord>
+  /// If m_combine_orbits is true, all orbits are combined into `orbit_index` 0
+  std::vector<std::vector<std::set<xtal::UnitCellCoord>>> m_local_orbits_sites;
 
   /// Holds calculated composition as number of each component by orbit:
   ///

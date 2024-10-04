@@ -92,6 +92,8 @@ KineticCalculator::standard_sampling_functions(
   functions.push_back(make_jumps_per_atom_by_type_f(calculation));
   functions.push_back(make_jumps_per_event_by_type_f(calculation));
   functions.push_back(make_jumps_per_atom_per_event_by_type_f(calculation));
+  functions.push_back(make_selected_event_count_by_type_f(calculation));
+  functions.push_back(make_selected_event_fraction_by_type_f(calculation));
 
   std::map<std::string, state_sampling_function_type> function_map;
   for (auto const &f : functions) {

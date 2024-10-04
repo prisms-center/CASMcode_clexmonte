@@ -12,8 +12,16 @@ inline Eigen::VectorXi to_VectorXi(int value) {
   return Eigen::VectorXi::Constant(1, value);
 }
 
+inline Eigen::VectorXi to_VectorXi(std::vector<int> const &value) {
+  return Eigen::Map<const Eigen::VectorXi>(value.data(), value.size());
+}
+
 inline Eigen::VectorXl to_VectorXl(long value) {
   return Eigen::VectorXl::Constant(1, value);
+}
+
+inline Eigen::VectorXl to_VectorXi(std::vector<long> const &value) {
+  return Eigen::Map<const Eigen::VectorXl>(value.data(), value.size());
 }
 
 inline Eigen::VectorXd to_VectorXd(double value) {
