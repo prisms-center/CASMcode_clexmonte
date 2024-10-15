@@ -689,6 +689,10 @@ state_sampling_function_type make_jumps_per_atom_per_event_by_type_f(
       });
 }
 
+// -- Selected event ----------------------------
+
+// -- Selected event by type --
+
 /// \brief Make selected event type sampling function
 /// ("selected_event.count.by_type")
 ///
@@ -739,6 +743,227 @@ state_sampling_function_type make_selected_event_fraction_by_type_f(
   return state_sampling_function_type(name, desc,
                                       hist_sampling_f.component_names(),
                                       hist_sampling_f.shape(), hist_sampling_f);
+}
+
+// -- Selected event by equivalent index --
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.count.by_equivalent_index")
+///
+/// Notes:
+/// - This requires that the selected event data function
+///   `selected_event.by_equivalent_index` has already been added
+state_sampling_function_type make_selected_event_count_by_equivalent_index_f(
+    std::shared_ptr<MonteCalculator> const &calculation) {
+  std::string name = "selected_event.count.by_equivalent_index";
+  std::string desc =
+      "Selected event count, for all events by equivalent index. In the set of "
+      "symmetrically equivalent events, events with the same equivalent index"
+      "differ only by a translation. Requires selected_event.by_type selected "
+      "event data is collected.";
+
+  std::string histogram_name = "selected_event.by_equivalent_index";
+  auto const &event_f =
+      _get_vector_int_histogram_function(calculation, name, histogram_name);
+  bool sample_count = true;
+
+  DiscreteVectorIntHistogramSamplingFunction hist_sampling_f(
+      calculation, name, histogram_name, sample_count, *event_f.value_labels);
+
+  return state_sampling_function_type(name, desc,
+                                      hist_sampling_f.component_names(),
+                                      hist_sampling_f.shape(), hist_sampling_f);
+}
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.fraction.by_equivalent_index")
+///
+/// Notes:
+/// - This requires that the selected event data function
+///   `selected_event.by_equivalent_index` has already been added
+state_sampling_function_type make_selected_event_fraction_by_equivalent_index_f(
+    std::shared_ptr<MonteCalculator> const &calculation) {
+  std::string name = "selected_event.fraction.by_equivalent_index";
+  std::string desc =
+      "Selected event count, for all events by equivalent index. In the set of "
+      "symmetrically equivalent events, events with the same equivalent index"
+      "differ only by a translation. Requires selected_event.by_type selected "
+      "event data is collected.";
+
+  std::string histogram_name = "selected_event.by_equivalent_index";
+  auto const &event_f =
+      _get_vector_int_histogram_function(calculation, name, histogram_name);
+  bool sample_count = false;  // sample fraction
+
+  DiscreteVectorIntHistogramSamplingFunction hist_sampling_f(
+      calculation, name, histogram_name, sample_count, *event_f.value_labels);
+
+  return state_sampling_function_type(name, desc,
+                                      hist_sampling_f.component_names(),
+                                      hist_sampling_f.shape(), hist_sampling_f);
+}
+
+// -- Selected event by prim event index --
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.count.by_equivalent_index_and_direction")
+///
+/// Notes:
+/// - This requires that the selected event data function
+///   `selected_event.by_equivalent_index_and_direction` has already been added
+state_sampling_function_type
+make_selected_event_count_by_equivalent_index_and_direction_f(
+    std::shared_ptr<MonteCalculator> const &calculation) {
+  std::string name = "selected_event.count.by_equivalent_index_and_direction";
+  std::string desc =
+      "Selected event count, for all events by prim event index. In the set of "
+      "symmetrically equivalent events, events with the same prim event index"
+      "differ only by a translation and jump in the same direction. Requires "
+      "selected_event.by_equivalent_index_and_direction selected event data is "
+      "collected.";
+
+  std::string histogram_name =
+      "selected_event.by_equivalent_index_and_direction";
+  auto const &event_f =
+      _get_vector_int_histogram_function(calculation, name, histogram_name);
+  bool sample_count = true;
+
+  DiscreteVectorIntHistogramSamplingFunction hist_sampling_f(
+      calculation, name, histogram_name, sample_count, *event_f.value_labels);
+
+  return state_sampling_function_type(name, desc,
+                                      hist_sampling_f.component_names(),
+                                      hist_sampling_f.shape(), hist_sampling_f);
+}
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.fraction.by_equivalent_index_and_direction")
+///
+/// Notes:
+/// - This requires that the selected event data function
+///   `selected_event.by_equivalent_index_and_direction` has already been added
+state_sampling_function_type
+make_selected_event_fraction_by_equivalent_index_and_direction_f(
+    std::shared_ptr<MonteCalculator> const &calculation) {
+  std::string name =
+      "selected_event.fraction.by_equivalent_index_and_direction";
+  std::string desc =
+      "Selected event count, for all events by prim event index. In the set of "
+      "symmetrically equivalent events, events with the same prim event index"
+      "differ only by a translation and jump in the same direction. Requires "
+      "selected_event.by_equivalent_index_and_direction selected event data is "
+      "collected.";
+
+  std::string histogram_name =
+      "selected_event.by_equivalent_index_and_direction";
+  auto const &event_f =
+      _get_vector_int_histogram_function(calculation, name, histogram_name);
+  bool sample_count = false;  // sample fraction
+
+  DiscreteVectorIntHistogramSamplingFunction hist_sampling_f(
+      calculation, name, histogram_name, sample_count, *event_f.value_labels);
+
+  return state_sampling_function_type(name, desc,
+                                      hist_sampling_f.component_names(),
+                                      hist_sampling_f.shape(), hist_sampling_f);
+}
+
+// -- Selected event by equivalent index, per event type --
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.count.<event_type>.by_equivalent_index")
+///
+/// Notes:
+/// - This requires that the selected event data function
+///   `selected_event.<event_type>.by_equivalent_index` has already been added
+/// - This is the same as i.e. `selected_event.count.by_equivalent_index` but
+///   for a single event type instead of all event types
+std::vector<state_sampling_function_type>
+make_selected_event_count_by_equivalent_index_per_event_type_f(
+    std::shared_ptr<MonteCalculator> const &calculation) {
+  // prim_event_list should be present after calculation->reset():
+  auto const &prim_event_list = get_prim_event_list(calculation);
+
+  // get names in alphabetical order
+  std::set<std::string> keys;
+  for (clexmonte::PrimEventData const &x : prim_event_list) {
+    keys.insert(x.event_type_name);
+  }
+
+  std::vector<state_sampling_function_type> f_list;
+
+  for (std::string event_type_name : keys) {
+    std::string name =
+        "selected_event.count." + event_type_name + ".by_equivalent_index";
+    std::string desc =
+        "Selected event count, for all events of a single event type by "
+        "equivalent index. In the set of symmetrically equivalent events, "
+        "events with the same equivalent index differ only by a translation. "
+        "Requires selected_event." +
+        event_type_name +
+        ".by_equivalent_index selected event data is collected.";
+
+    std::string histogram_name =
+        "selected_event." + event_type_name + ".by_equivalent_index";
+    auto const &event_f =
+        _get_vector_int_histogram_function(calculation, name, histogram_name);
+    bool sample_count = true;
+
+    DiscreteVectorIntHistogramSamplingFunction hist_sampling_f(
+        calculation, name, histogram_name, sample_count, *event_f.value_labels);
+
+    f_list.emplace_back(name, desc, hist_sampling_f.component_names(),
+                        hist_sampling_f.shape(), hist_sampling_f);
+  }
+  return f_list;
+}
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.fraction.<event_type>.by_equivalent_index")
+///
+/// Notes:
+/// - This requires that the selected event data function
+///   `selected_event.<event_type>.by_equivalent_index` has already been added
+/// - This is the same as i.e. `selected_event.fraction.by_equivalent_index` but
+///   for a single event type instead of all event types
+std::vector<state_sampling_function_type>
+make_selected_event_fraction_by_equivalent_index_per_event_type_f(
+    std::shared_ptr<MonteCalculator> const &calculation) {
+  // prim_event_list should be present after calculation->reset():
+  auto const &prim_event_list = get_prim_event_list(calculation);
+
+  // get names in alphabetical order
+  std::set<std::string> keys;
+  for (clexmonte::PrimEventData const &x : prim_event_list) {
+    keys.insert(x.event_type_name);
+  }
+
+  std::vector<state_sampling_function_type> f_list;
+
+  for (std::string event_type_name : keys) {
+    std::string name =
+        "selected_event.fraction." + event_type_name + ".by_equivalent_index";
+    std::string desc =
+        "Selected event count, for all events of a single event type by "
+        "equivalent index. In the set of symmetrically equivalent events, "
+        "events with the same equivalent index differ only by a translation. "
+        "Requires selected_event." +
+        event_type_name +
+        ".by_equivalent_index selected event data is collected.";
+
+    std::string histogram_name =
+        "selected_event." + event_type_name + ".by_equivalent_index";
+    auto const &event_f =
+        _get_vector_int_histogram_function(calculation, name, histogram_name);
+    bool sample_count = false;
+
+    DiscreteVectorIntHistogramSamplingFunction hist_sampling_f(
+        calculation, name, histogram_name, sample_count, *event_f.value_labels);
+
+    f_list.emplace_back(name, desc, hist_sampling_f.component_names(),
+                        hist_sampling_f.shape(), hist_sampling_f);
+  }
+  return f_list;
 }
 
 }  // namespace monte_calculator

@@ -207,6 +207,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/canonical/canonical.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/CompleteEventList.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/ImpactTable.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/event_data.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/event_methods.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/EventFilterGroup_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/EventState_json_io.cc
@@ -220,6 +221,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/CanonicalCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/KineticCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/MonteCalculator.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/MonteEventData.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/SemiGrandCanonicalCalculator.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/StateData.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/analysis_functions.cc

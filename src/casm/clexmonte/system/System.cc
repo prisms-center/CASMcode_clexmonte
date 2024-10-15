@@ -505,6 +505,32 @@ std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
   return nhood;
 }
 
+/// \brief Construct impact tables
+std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
+    System const &system, LocalMultiClexData const &local_multiclex_data,
+    Index equivalent_index, std::string const &key) {
+  auto const &clexulator =
+      *_verify(system.local_basis_sets,
+               local_multiclex_data.local_basis_set_name, "local_basis_sets");
+
+  if (!local_multiclex_data.coefficients_glossary.count(key)) {
+    std::stringstream msg;
+    msg << "Error: local_multiclex_data does not contain required "
+        << "coefficients '" << key << "'." << std::endl;
+    throw std::runtime_error(msg.str());
+  }
+
+  Index i_coeff = local_multiclex_data.coefficients_glossary.at(key);
+
+  std::set<xtal::UnitCellCoord> nhood;
+  auto const &coeff = local_multiclex_data.coefficients[i_coeff];
+  auto begin = coeff.index.data();
+  auto end = begin + coeff.index.size();
+  auto tmp = clexulator[equivalent_index].site_neighborhood(begin, end);
+  nhood.insert(tmp.begin(), tmp.end());
+  return nhood;
+}
+
 /// \brief Single swap types for canonical Monte Carlo events
 std::vector<monte::OccSwap> const &get_canonical_swaps(System const &system) {
   return system.canonical_swaps;

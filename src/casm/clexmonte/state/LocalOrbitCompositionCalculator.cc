@@ -21,28 +21,26 @@ namespace clexmonte {
 /// \brief Calculate the number of possible unique local orbit compositions
 ///
 /// \param comp_calculator The composition calculator
-/// \param local_orbits_neighbor_indices Stores
-///     {neighbor_index, sublattice_index} for each site in each orbit:
-///     local_orbits_neighbor_indices[equivalent_index][orbit_index] ->
-///         std::set<std::pair<int, int>>
-/// \param max_size The maximum number of possible occupations to find
+/// \param orbits Stores clusters for each orbit, for each equivalent
+/// phenomenal cluster:
+///     orbits[equivalent_index][orbit_index] ->
+///     std::set<clust::IntegralCluster>
+/// \param max_size The maximum number of possible compositions to find
 ///
 /// \return {found_all, found_all ? possible_compositions.size() | max_size}
 PossibleLocalOrbitCompositions::PossibleLocalOrbitCompositions(
     composition::CompositionCalculator const &comp_calculator,
-    std::vector<std::vector<std::set<std::pair<int, int>>>> const
-        &local_orbits_neighbor_indices,
+    std::vector<std::vector<std::set<clust::IntegralCluster>>> const &orbits,
     Index _max_possible_occupations)
     : max_possible_compositions(_max_possible_occupations),
       found_all(false),
       n_components(comp_calculator.components().size()),
       n_orbits(0) {
-  if (local_orbits_neighbor_indices.size() == 0) {
+  if (orbits.size() == 0) {
     found_all = true;
     return;
   }
-  auto const &orbits = local_orbits_neighbor_indices[0];
-  n_orbits = orbits.size();
+  n_orbits = orbits[0].size();
 
   // Build the counter over possible occupations:
   std::vector<int> initial;
@@ -56,9 +54,18 @@ PossibleLocalOrbitCompositions::PossibleLocalOrbitCompositions(
           comp_calculator.components(), comp_calculator.allowed_occs());
 
   int i_orbit = 0;
-  for (auto const &orbit : orbits) {
-    for (auto const &site_indices : orbit) {
-      Index b = site_indices.second;
+  for (auto const &orbit : orbits[0]) {
+    // Get the unique sites in the orbit
+    std::set<xtal::UnitCellCoord> sites;
+    for (auto const &cluster : orbit) {
+      for (auto const &site : cluster) {
+        sites.insert(site);
+      }
+    }
+
+    // Add the sites to the counter
+    for (auto const &site : sites) {
+      Index b = site.sublattice();
       Index n_occupants = converter[b].size();
       initial.push_back(0);
       final.push_back(n_occupants);
@@ -267,12 +274,14 @@ std::string make_component_name(
 LocalOrbitCompositionCalculator::LocalOrbitCompositionCalculator(
     std::vector<std::vector<std::set<clust::IntegralCluster>>> const &_orbits,
     std::set<int> _orbits_to_calculate, bool _combine_orbits,
+    std::shared_ptr<clexulator::PrimNeighborList> _prim_nlist,
     std::shared_ptr<clexulator::SuperNeighborList> _supercell_nlist,
     xtal::UnitCellCoordIndexConverter const &_supercell_index_converter,
     composition::CompositionCalculator const &_composition_calculator,
     clexulator::ConfigDoFValues const *_dof_values)
     : m_orbits_to_calculate(_orbits_to_calculate),
       m_combine_orbits(_combine_orbits),
+      m_prim_nlist(_prim_nlist),
       m_supercell_nlist(_supercell_nlist) {
   // Make m_occ_index_to_component_index_converter
   m_occ_index_to_component_index_converter =
@@ -296,12 +305,6 @@ LocalOrbitCompositionCalculator::LocalOrbitCompositionCalculator(
     }
   }
 
-  // Setup m_num_each_component_by_orbit
-  m_num_each_component_by_orbit.resize(
-      _composition_calculator.components().size(),
-      m_orbits_to_calculate.size());
-  m_num_each_component_by_orbit.setZero();
-
   // Make:
   // - m_local_orbits_neighbor_indices:
   // - m_local_orbits_sites:
@@ -311,19 +314,20 @@ LocalOrbitCompositionCalculator::LocalOrbitCompositionCalculator(
        ++equivalent_index) {
     std::vector<std::set<std::pair<int, int>>> _neighbor_indices_by_orbit;
     std::vector<std::set<xtal::UnitCellCoord>> _sites_by_orbit;
+    int i_orbit = 0;
     for (auto const &orbit : _orbits[equivalent_index]) {
       std::set<std::pair<int, int>> _neighbor_indices;
       std::set<xtal::UnitCellCoord> _sites;
       for (auto const &cluster : orbit) {
         for (auto const &site : cluster) {
           _sites.insert(site);
-          Index site_index = _supercell_index_converter(site);
-          _neighbor_indices.emplace(
-              m_supercell_nlist->neighbor_index(site_index), site.sublattice());
+          _neighbor_indices.emplace(m_prim_nlist->neighbor_index(site),
+                                    site.sublattice());
         }
       }
       _neighbor_indices_by_orbit.emplace_back(std::move(_neighbor_indices));
       _sites_by_orbit.emplace_back(std::move(_sites));
+      ++i_orbit;
     }
     m_local_orbits_neighbor_indices.emplace_back(
         std::move(_neighbor_indices_by_orbit));
@@ -344,7 +348,16 @@ LocalOrbitCompositionCalculator::LocalOrbitCompositionCalculator(
       indices.resize(1);
       sites.resize(1);
     }
+    m_unified_orbits_to_calculate = {0};
+  } else {
+    m_unified_orbits_to_calculate = m_orbits_to_calculate;
   }
+
+  // Setup m_num_each_component_by_orbit
+  m_num_each_component_by_orbit.resize(
+      _composition_calculator.components().size(),
+      m_unified_orbits_to_calculate.size());
+  m_num_each_component_by_orbit.setZero();
 
   // (Optional) Set configuration to be calculated
   if (_dof_values) {
@@ -377,7 +390,7 @@ Eigen::MatrixXi const &LocalOrbitCompositionCalculator::value(
 
   m_num_each_component_by_orbit.setZero();
   int col = 0;
-  for (int orbit_index : m_orbits_to_calculate) {
+  for (int orbit_index : m_unified_orbits_to_calculate) {
     for (auto const &pair : indices[orbit_index]) {
       int neighbor_index = pair.first;
       int sublattice_index = pair.second;
@@ -389,7 +402,6 @@ Eigen::MatrixXi const &LocalOrbitCompositionCalculator::value(
     }
     ++col;
   }
-
   return m_num_each_component_by_orbit;
 }
 

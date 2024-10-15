@@ -142,6 +142,11 @@ struct System {
   std::map<std::string, std::shared_ptr<LocalBasisSetClusterInfo const>>
       local_basis_set_cluster_info;
 
+  /// Parameters for LocalOrbitCompositionCalculator
+  std::map<std::string,
+           std::shared_ptr<LocalOrbitCompositionCalculatorData const>>
+      local_orbit_composition_calculator_data;
+
   /// Data used to construct clexulator::LocalClusterExpansion. Contains:
   /// - local_basis_set_name
   /// - clexulator::SparseCoefficients
@@ -391,6 +396,11 @@ std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
 std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
     System const &system, LocalMultiClexData const &local_multiclex_data,
     Index equivalent_index);
+
+/// \brief Construct impact tables
+std::set<xtal::UnitCellCoord> get_required_update_neighborhood(
+    System const &system, LocalMultiClexData const &local_multiclex_data,
+    Index equivalent_index, std::string const &key);
 
 /// \brief Single swap types for canonical Monte Carlo events
 std::vector<monte::OccSwap> const &get_canonical_swaps(System const &system);

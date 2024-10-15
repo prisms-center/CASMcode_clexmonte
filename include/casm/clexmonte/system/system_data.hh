@@ -101,6 +101,37 @@ bool is_same_phenomenal_clusters(
     std::vector<occ_events::OccEvent> const &equivalents,
     EquivalentsInfo const &info);
 
+struct LocalOrbitCompositionCalculatorData {
+  LocalOrbitCompositionCalculatorData() = default;
+
+  LocalOrbitCompositionCalculatorData(std::string _event_type_name,
+                                      std::string _local_basis_set_name,
+                                      std::set<int> _orbits_to_calculate,
+                                      bool _combine_orbits, Index _max_size)
+      : event_type_name(_event_type_name),
+        local_basis_set_name(_local_basis_set_name),
+        orbits_to_calculate(_orbits_to_calculate),
+        combine_orbits(_combine_orbits),
+        max_size(_max_size) {}
+
+  /// \brief The name of the event type to calculate for
+  std::string event_type_name;
+
+  /// \brief The name of the local basis set specifying the local orbits to use
+  std::string local_basis_set_name;
+
+  /// \brief The indices of the local orbit to calculate the composition of
+  std::set<int> orbits_to_calculate;
+
+  /// \brief If true, calculate the number of each component for the sites in
+  /// the union of the orbits_to_calculate; else, calculate the number of each
+  /// component for the sites in each of the orbits_to_calculate
+  bool combine_orbits;
+
+  /// \brief The maximum number of distinct local compositions to track
+  Index max_size;
+};
+
 struct LocalBasisSetClusterInfo {
   /// Cluster orbits, in order matching a Clexulator, by equivalent index:
   ///
@@ -114,6 +145,12 @@ struct LocalBasisSetClusterInfo {
   /// Convert linear function index to linear cluster orbit index
   std::vector<Index> function_to_orbit_index;
 };
+
+std::set<int> get_point_cluster_orbit_indices(
+    std::vector<std::vector<std::set<clust::IntegralCluster>>> const &orbits);
+
+std::set<int> get_all_orbit_indices(
+    std::vector<std::vector<std::set<clust::IntegralCluster>>> const &orbits);
 
 struct LocalClexData {
   std::string local_basis_set_name;

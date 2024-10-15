@@ -39,8 +39,7 @@ struct PossibleLocalOrbitCompositions {
   /// \brief Calculate the number of possible unique local orbit compositions
   PossibleLocalOrbitCompositions(
       composition::CompositionCalculator const &comp_calculator,
-      std::vector<std::vector<std::set<std::pair<int, int>>>> const
-          &local_orbits_neighbor_indices,
+      std::vector<std::vector<std::set<clust::IntegralCluster>>> const &orbits,
       Index _max_possible_occupations);
 };
 
@@ -64,6 +63,7 @@ class LocalOrbitCompositionCalculator {
   LocalOrbitCompositionCalculator(
       std::vector<std::vector<std::set<clust::IntegralCluster>>> const &_orbits,
       std::set<int> _orbits_to_calculate, bool _combine_orbits,
+      std::shared_ptr<clexulator::PrimNeighborList> _prim_nlist,
       std::shared_ptr<clexulator::SuperNeighborList> _supercell_nlist,
       xtal::UnitCellCoordIndexConverter const &_supercell_index_converter,
       composition::CompositionCalculator const &_composition_calculator,
@@ -110,6 +110,9 @@ class LocalOrbitCompositionCalculator {
   /// matrix with a column for each orbit.
   bool m_combine_orbits;
 
+  /// Prim neighbor list
+  std::shared_ptr<clexulator::PrimNeighborList> m_prim_nlist;
+
   /// Supercell neighbor list
   std::shared_ptr<clexulator::SuperNeighborList> m_supercell_nlist;
 
@@ -143,6 +146,10 @@ class LocalOrbitCompositionCalculator {
   /// If m_combine_orbits is true:
   ///     n = m_num_each_component_by_orbit(component_index, 0)
   Eigen::MatrixXi m_num_each_component_by_orbit;
+
+  /// Indices of m_local_orbits_neighbor_indices / m_local_orbits_sites to use
+  /// whether combine_orbits is true or false
+  std::set<int> m_unified_orbits_to_calculate;
 };
 
 }  // namespace clexmonte

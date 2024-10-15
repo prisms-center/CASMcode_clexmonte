@@ -21,7 +21,7 @@
       "max_n_position_samples": 1000,
       "output_incomplete_samples": false
     },
-    "_quantities": "(.by_event_type, .by_equivalent_index, .by_prim_event_index)",
+    "_quantities": "(.by_event_type, .by_equivalent_index, .by_equivalent_index_and_direction)",
     "quantities": [
       "event", <-- []
       "is_normal",

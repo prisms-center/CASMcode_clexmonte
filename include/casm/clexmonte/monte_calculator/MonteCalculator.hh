@@ -378,6 +378,9 @@ system_type const &get_system(
 state_type const &get_state(
     std::shared_ptr<MonteCalculator> const &calculation);
 
+std::vector<PrimEventData> const &get_prim_event_list(
+    std::shared_ptr<MonteCalculator> const &calculation);
+
 /// \brief Make temporary monte::OccLocation if necessary
 void make_temporary_if_necessary(state_type const &state,
                                  monte::OccLocation *&occ_location,

@@ -118,5 +118,39 @@ bool is_same_phenomenal_clusters(
   return true;
 }
 
+std::set<int> get_point_cluster_orbit_indices(
+    std::vector<std::vector<std::set<clust::IntegralCluster>>> const &orbits) {
+  std::set<int> point_cluster_orbits;
+  if (!orbits.size()) {
+    return point_cluster_orbits;
+  }
+  Index i_orbit = 0;
+  for (auto const &orbit : orbits[0]) {
+    if (orbit.empty()) {
+      continue;
+    }
+    clust::IntegralCluster const &prototype = *orbit.begin();
+    if (prototype.size() == 1) {
+      point_cluster_orbits.insert(i_orbit);
+    }
+    ++i_orbit;
+  }
+  return point_cluster_orbits;
+}
+
+std::set<int> get_all_orbit_indices(
+    std::vector<std::vector<std::set<clust::IntegralCluster>>> const &orbits) {
+  std::set<int> all_orbits;
+  if (!orbits.size()) {
+    return all_orbits;
+  }
+  Index i_orbit = 0;
+  for (auto const &orbit : orbits[0]) {
+    all_orbits.insert(i_orbit);
+    ++i_orbit;
+  }
+  return all_orbits;
+}
+
 }  // namespace clexmonte
 }  // namespace CASM

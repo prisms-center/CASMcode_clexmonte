@@ -208,8 +208,7 @@ void parse(InputParser<LocalBasisSetClusterInfo> &parser,
   std::vector<std::set<clust::IntegralCluster>> orbits;
   if (info.phenomenal_clusters.size() != 0) {
     for (auto const &prototype : prototypes) {
-      orbits.push_back(
-          make_local_orbit(info.phenomenal_clusters[0], generating_rep));
+      orbits.push_back(make_local_orbit(prototype, generating_rep));
     }
   }
 
@@ -230,6 +229,37 @@ void parse(InputParser<LocalBasisSetClusterInfo> &parser,
   }
 
   parser.value = std::move(curr);
+}
+
+/// \brief Output LocalOrbitCompositionCalculatorData as JSON
+jsonParser &to_json(LocalOrbitCompositionCalculatorData const &data,
+                    jsonParser &json) {
+  json.put_obj();
+  to_json(data.event_type_name, json["event"]);
+  to_json(data.local_basis_set_name, json["local_basis_set"]);
+  to_json(data.orbits_to_calculate, json["orbits_to_calculate"]);
+  to_json(data.combine_orbits, json["combine_orbits"]);
+  to_json(data.max_size, json["max_size"]);
+  return json;
+}
+
+/// \brief Parse LocalOrbitCompositionCalculatorData from JSON
+void parse(InputParser<LocalOrbitCompositionCalculatorData> &parser,
+           std::string local_basis_set_name) {
+  // parse local-orbit composition calculator data
+  LocalOrbitCompositionCalculatorData data;
+  data.local_basis_set_name = local_basis_set_name;
+  parser.require(data.event_type_name, "event");
+  parser.require(data.orbits_to_calculate, "orbits_to_calculate");
+  parser.require(data.combine_orbits, "combine_orbits");
+  parser.require(data.max_size, "max_size");
+
+  if (!parser.valid()) {
+    return;
+  }
+
+  parser.value =
+      std::make_unique<LocalOrbitCompositionCalculatorData>(std::move(data));
 }
 
 }  // namespace clexmonte

@@ -96,6 +96,8 @@ bool parse_event(
     std::map<std::string,
              std::shared_ptr<std::vector<clexulator::Clexulator>>> const
         &local_basis_sets,
+    std::map<std::string, std::shared_ptr<LocalBasisSetClusterInfo const>>
+        &local_basis_set_cluster_info,
     std::map<std::string, EquivalentsInfo> const &equivalents_info,
     std::vector<occ_events::OccEventRep> const &occevent_symgroup_rep,
     occ_events::OccSystem const &event_system) {
@@ -142,6 +144,14 @@ bool parse_event(
     parser.insert_error(option / "local_basis_set",
                         "Missing equivalents_info for this local basis set");
     return false;
+  }
+  // get local basis set cluster info if available
+  {
+    auto it = local_basis_set_cluster_info.find(
+        curr_local_multiclex.local_basis_set_name);
+    if (it != local_basis_set_cluster_info.end()) {
+      curr_local_multiclex.cluster_info = it->second;
+    }
   }
 
   // Save the LocalMultiClexData
@@ -228,7 +238,17 @@ bool parse_event(
 ///
 ///           "<name>": {
 ///             "source": "<path>",
-///             "equivalents_info": "<path">
+///             "equivalents_info": "<path">,
+///             "basis": "<path>",
+///             "local_orbit_composition": {
+///               "<key>": {
+///                 "event": "<event name>",
+///                 "orbits_to_calculate": [orbit indices... ],
+///                 "combine_orbits": bool,
+///                 "max_size": int
+///               },
+///               ...
+///             }
 ///           }
 ///
 ///        where "<name>" is the local-cluster basis set name, and "source" is
@@ -240,6 +260,44 @@ bool parse_event(
 ///        i.e.
 ///
 ///            "/path/to/basis_sets/bset.local/equivalents_info.json"
+///
+///        and "basis" is the path to a "basis.json" file,
+///        i.e.
+///
+///            "/path/to/basis_sets/bset.local/basis.json"
+///
+///
+///        The "local_orbit_composition" input is optional and specifies how to
+///        calculate the local orbit composition for each event. Both
+///        "equivalents_info" and "basis" are required for
+///        "local_orbit_composition". The key is used to specify which local
+///        orbit composition calculator to collect data from during a Monte
+///        Carlo simulation. The value is a JSON object containing:
+///
+///            "event": string
+///                The name of the event type to calculate the local
+///                composition for.
+///            "orbits_to_calculate": array of int
+///                The indices of the local orbit to calculate the composition
+///                of.
+///            "combine_orbits": bool
+///                If true, calculate the number of each component for the sites
+///                in the union of the orbits_to_calculate; else, calculate the
+///                number of each component for the sites in each of the
+///                orbits_to_calculate individually. If true, the output is a
+///                matrix with a single column, where each row corresponds to
+///                a component in the order defined by the system's composition
+///                calculator. If false, the output is a matrix with a column
+///                for each orbit in orbits_to_calculate.
+///            "max_size": int
+///                The maximum number of distinct local compositions to track.
+///                Once this number is reached, the count of new compositions
+///                is stored in the "out-of-range" bin.
+///
+///         For each KMC event, several default local orbit composition
+///         calculator functions are constructed: one for each point cluster
+///         orbit, one for all orbits calculated individually, and one for all
+///         orbits calculated with sites combined.
 ///
 ///   "clex": object (optional)
 ///       Input specifies one or more cluster expansions. A JSON object
@@ -401,36 +459,61 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
     auto begin = parser.self["local_basis_sets"].begin();
     auto end = parser.self["local_basis_sets"].end();
     for (auto it = begin; it != end; ++it) {
+      std::string local_basis_set_name = it.name();
+
       // parse "local_basis_sets"/<name>/"source"
       auto subparser = parser.subparse<std::vector<clexulator::Clexulator>>(
-          fs::path("local_basis_sets") / it.name(), prim_neighbor_list,
-          search_path);
+          fs::path("local_basis_sets") / local_basis_set_name,
+          prim_neighbor_list, search_path);
       if (subparser->valid()) {
         auto local_clexulator =
             std::make_shared<std::vector<clexulator::Clexulator>>(
                 std::move(*subparser->value));
-        local_basis_sets.emplace(it.name(), local_clexulator);
+        local_basis_sets.emplace(local_basis_set_name, local_clexulator);
       }
 
+      fs::path opt;
+      opt = fs::path("local_basis_sets") / local_basis_set_name /
+            "equivalents_info";
+
       // parse "local_basis_sets"/<name>/"equivalents_info"
-      auto info_subparser = subparse_from_file<EquivalentsInfo>(
-          parser, fs::path("local_basis_sets") / it.name() / "equivalents_info",
-          search_path, prim);
+      auto info_subparser =
+          subparse_from_file<EquivalentsInfo>(parser, opt, search_path, prim);
       if (info_subparser->valid()) {
-        equivalents_info.emplace(it.name(), std::move(*info_subparser->value));
+        equivalents_info.emplace(local_basis_set_name,
+                                 std::move(*info_subparser->value));
       }
 
       // "local_basis_sets"/<name>/"basis" (LocalBasisSetClusterInfo, optional)
-      if (parser.self.find_at(fs::path("local_basis_sets") / it.name() /
-                              "basis") != parser.self.end()) {
+      opt = fs::path("local_basis_sets") / local_basis_set_name / "basis";
+      if (parser.self.find_at(opt) != parser.self.end()) {
         LocalBasisSetClusterInfo cluster_info;
-        if (parse_from_file(parser,
-                            fs::path("local_basis_sets") / it.name() / "basis",
-                            search_path, cluster_info, prim,
-                            equivalents_info.at(it.name()))) {
+        if (parse_from_file(parser, opt, search_path, cluster_info, prim,
+                            equivalents_info.at(local_basis_set_name))) {
           local_basis_set_cluster_info.emplace(
-              it.name(), std::make_shared<LocalBasisSetClusterInfo const>(
-                             std::move(cluster_info)));
+              local_basis_set_name,
+              std::make_shared<LocalBasisSetClusterInfo const>(
+                  std::move(cluster_info)));
+        }
+      }
+
+      // "local_basis_sets"/<name>/"local_orbit_composition" (optional)
+      opt = fs::path("local_basis_sets") / local_basis_set_name /
+            "local_orbit_composition";
+      if (parser.self.find_at(opt) != parser.self.end()) {
+        auto key_begin = parser.self.at(opt).begin();
+        auto key_end = parser.self.at(opt).begin();
+        for (auto key_it = key_begin; key_it != key_end; ++key_it) {
+          // parse local-orbit composition calculator data
+          auto subparser = parser.subparse<LocalOrbitCompositionCalculatorData>(
+              opt / key_it.name(), local_basis_set_name);
+          if (!subparser->valid()) {
+            continue;
+          }
+          system.local_orbit_composition_calculator_data.emplace(
+              key_it.name(),
+              std::shared_ptr<LocalOrbitCompositionCalculatorData>(
+                  std::move(subparser->value)));
         }
       }
     }
@@ -656,8 +739,70 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
         parse_event(parser, fs::path("kmc_events") / it.name(), search_path,
                     system.event_type_data, system.local_multiclex_data,
                     *basicstructure, system.local_basis_sets,
+                    system.local_basis_set_cluster_info,
                     system.equivalents_info, system.occevent_symgroup_rep,
                     *system.event_system);
+      }
+    }
+
+    // For each event, construct default local orbit composition calculator data
+    for (auto const &event : system.event_type_data) {
+      std::string const &event_type_name = event.first;
+      OccEventTypeData const &event_data = event.second;
+      LocalMultiClexData const &local_multiclex_data =
+          system.local_multiclex_data.at(event_data.local_multiclex_name);
+      std::string const &local_basis_set_name =
+          local_multiclex_data.local_basis_set_name;
+      if (local_multiclex_data.cluster_info == nullptr) {
+        throw std::runtime_error(
+            "Error: missing cluster_info for local basis set '" +
+            local_basis_set_name + "'");
+      }
+      LocalBasisSetClusterInfo const &cluster_info =
+          *local_multiclex_data.cluster_info;
+      auto const &orbits = cluster_info.orbits;
+
+      if (!orbits.size()) {
+        std::stringstream ss;
+        ss << "Warning: no local orbits for event '" << event_type_name
+           << "', so local orbit composition calculators cannot be constructed";
+        parser.insert_warning("kmc_events", ss.str());
+        continue;
+      }
+
+      std::set<int> point_cluster_orbits =
+          get_point_cluster_orbit_indices(orbits);
+
+      // Local-orbit composition calculator data for each point-cluster orbit:
+      // - Named <event_type_name>-<orbit_index>
+      for (int i_orbit : point_cluster_orbits) {
+        system.local_orbit_composition_calculator_data.emplace(
+            event_type_name + "-" + std::to_string(i_orbit),
+            std::make_shared<LocalOrbitCompositionCalculatorData>(
+                event_type_name, local_basis_set_name,
+                std::set<int>({i_orbit}) /* orbits_to_calculate */,
+                false /* combine_orbits */, 1000 /* max_size */));
+      }
+
+      std::set<int> all_orbits = get_all_orbit_indices(orbits);
+      if (!all_orbits.empty()) {
+        // Local-orbit composition calculator data for all orbits
+        // - Named <event_type_name>-all
+        system.local_orbit_composition_calculator_data.emplace(
+            event_type_name + "-all",
+            std::make_shared<LocalOrbitCompositionCalculatorData>(
+                event_type_name, local_basis_set_name,
+                all_orbits /* orbits_to_calculate */,
+                false /* combine_orbits */, 10000 /* max_size */));
+        // Local-orbit composition calculator data for the union of sites in all
+        // orbits
+        // - Named <event_type_name>-all-combined
+        system.local_orbit_composition_calculator_data.emplace(
+            event_type_name + "-all-combined",
+            std::make_shared<LocalOrbitCompositionCalculatorData>(
+                event_type_name, local_basis_set_name,
+                all_orbits /* orbits_to_calculate */, true /* combine_orbits */,
+                10000 /* max_size */));
       }
     }
   }

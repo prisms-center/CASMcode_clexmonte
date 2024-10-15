@@ -13,9 +13,6 @@
 #include "casm/composition/CompositionConverter.hh"
 #include "casm/monte/sampling/SelectedEventData.hh"
 
-// debugging
-#include "casm/casm_io/container/stream_io.hh"
-
 namespace CASM {
 namespace clexmonte {
 
@@ -167,6 +164,40 @@ state_sampling_function_type make_selected_event_count_by_type_f(
 /// \brief Make selected event type sampling function
 /// ("selected_event.fraction.by_type")
 state_sampling_function_type make_selected_event_fraction_by_type_f(
+    std::shared_ptr<MonteCalculator> const &calculation);
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.count.by_equivalent_index")
+state_sampling_function_type make_selected_event_count_by_equivalent_index_f(
+    std::shared_ptr<MonteCalculator> const &calculation);
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.fraction.by_equivalent_index")
+state_sampling_function_type make_selected_event_fraction_by_equivalent_index_f(
+    std::shared_ptr<MonteCalculator> const &calculation);
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.count.by_equivalent_index_and_direction")
+state_sampling_function_type
+make_selected_event_count_by_equivalent_index_and_direction_f(
+    std::shared_ptr<MonteCalculator> const &calculation);
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.fraction.by_equivalent_index_and_direction")
+state_sampling_function_type
+make_selected_event_fraction_by_equivalent_index_and_direction_f(
+    std::shared_ptr<MonteCalculator> const &calculation);
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.count.<event_type>.by_equivalent_index")
+std::vector<state_sampling_function_type>
+make_selected_event_count_by_equivalent_index_per_event_type_f(
+    std::shared_ptr<MonteCalculator> const &calculation);
+
+/// \brief Make selected event type sampling function
+/// ("selected_event.fraction.<event_type>.by_equivalent_index")
+std::vector<state_sampling_function_type>
+make_selected_event_fraction_by_equivalent_index_per_event_type_f(
     std::shared_ptr<MonteCalculator> const &calculation);
 
 // -- Inline definitions --

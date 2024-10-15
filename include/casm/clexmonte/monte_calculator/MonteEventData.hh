@@ -2,8 +2,14 @@
 #define CASM_clexmonte_MonteEventData
 
 #include "casm/clexmonte/monte_calculator/BaseMonteEventData.hh"
+#include "casm/clexmonte/monte_calculator/StateData.hh"
+#include "casm/monte/sampling/SelectedEventData.hh"
 
 namespace CASM {
+
+size_t memory_used(bool resident = false);
+std::string convert_size(size_t size_bytes);
+
 namespace clexmonte {
 
 class MonteEventListIterator {
@@ -171,6 +177,132 @@ class MonteEventData {
   std::shared_ptr<RuntimeLibrary> m_lib;
   MonteEventList m_event_list;
 };
+
+struct EventTypeStats {
+  typedef monte::CountType CountType;
+
+  EventTypeStats(
+      std::vector<std::string> const &_partion_names_by_type,
+      std::vector<std::string> const &_partion_names_by_equivalent_index,
+      double _initial_begin, double _bin_width, bool _is_log,
+      Index _max_size = 10000);
+
+  CountType n_total;
+  double min;
+  double max;
+  double sum;
+  double mean;
+  monte::PartitionedHistogram1D hist_by_type;
+  monte::PartitionedHistogram1D hist_by_equivalent_index;
+
+  void insert(int partition_by_type, int partition_by_equivalent_index,
+              double value);
+};
+
+struct EventDataSummary {
+  // -- Primary data --
+
+  std::shared_ptr<StateData> state_data;
+  MonteEventData event_data;
+  std::vector<PrimEventData> const &prim_event_list;
+
+  typedef monte::CountType CountType;
+  typedef std::string TypeKey;
+  typedef std::pair<std::string, Index> EquivKey;
+
+  TypeKey type_key(Index prim_event_index) const {
+    return prim_event_list.at(prim_event_index).event_type_name;
+  }
+
+  TypeKey type_key(EventID const &id) const {
+    return type_key(id.prim_event_index);
+  }
+
+  EquivKey equiv_key(Index prim_event_index) const {
+    return std::make_pair(
+        prim_event_list.at(prim_event_index).event_type_name,
+        prim_event_list.at(prim_event_index).equivalent_index);
+  }
+
+  EquivKey equiv_key(EventID const &id) const {
+    return equiv_key(id.prim_event_index);
+  }
+
+  EventDataSummary(std::shared_ptr<StateData> const &_state_data,
+                   MonteEventData const &_event_data,
+                   double energy_bin_width = 0.1, double freq_bin_width = 0.1,
+                   double rate_bin_width = 0.1);
+
+  /// The event type index for each prim event index
+  std::vector<Index> to_event_type;
+  std::vector<std::string> event_type_names;
+
+  /// The {event type + equivalent index} index for each prim event index
+  std::vector<Index> to_equivalent_index;
+  std::vector<std::string> equivalent_index_names;
+
+  std::set<TypeKey> all_types;
+  std::map<TypeKey, std::set<EquivKey>> equiv_keys_by_type;
+  std::set<EquivKey> all_equiv_keys;
+
+  struct IntCountByType {
+    std::map<TypeKey, Index> by_type;
+    std::map<EquivKey, Index> by_equivalent_index;
+  };
+
+  struct FloatCountByType {
+    std::map<TypeKey, double> by_type;
+    std::map<EquivKey, double> by_equivalent_index;
+  };
+
+  struct ImpactTable {
+    // value: number impacted events of type (first key) when type (second key)
+    // occurs
+    std::map<TypeKey, std::map<TypeKey, double>> by_type;
+    std::map<EquivKey, std::map<EquivKey, double>> by_equivalent_index;
+  };
+
+  // -- Count & total rate info --
+
+  Index n_events_allowed;
+  Index n_events_possible;
+  Index event_list_size;
+  double total_rate;
+  double mean_time_increment;
+
+  IntCountByType n_possible;
+  IntCountByType n_allowed;
+  IntCountByType n_not_normal;
+
+  FloatCountByType rate;
+
+  // -- Memory usage --
+
+  size_t resident_bytes_used;
+  size_t virtual_bytes_used;
+
+  // -- Impact info --
+
+  FloatCountByType n_impact;
+  ImpactTable impact_table;
+
+  std::map<TypeKey, CountType> neighborhood_size_total;
+  std::map<TypeKey, CountType> neighborhood_size_formation_energy;
+  std::map<TypeKey, CountType> neighborhood_size_kra;
+  std::map<TypeKey, CountType> neighborhood_size_freq;
+
+  // -- State info --
+
+  std::vector<std::string> stats_labels;
+  std::vector<EventTypeStats> stats;
+
+ private:
+  void _add_count(EventID const &id, EventState const &state);
+  void _add_impact(EventID const &id, EventState const &state);
+  void _add_stats(EventID const &id, EventState const &state);
+};
+
+void print(std::ostream &out, EventDataSummary const &event_data_summary);
 
 }  // namespace clexmonte
 }  // namespace CASM

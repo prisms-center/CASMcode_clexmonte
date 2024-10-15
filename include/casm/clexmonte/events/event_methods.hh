@@ -6,9 +6,6 @@
 #include "casm/configuration/clusterography/IntegralCluster.hh"
 #include "casm/configuration/occ_events/OccEvent.hh"
 
-// debug
-#include "casm/crystallography/io/UnitCellCoordIO.hh"
-
 namespace CASM {
 namespace monte {
 class OccLocation;

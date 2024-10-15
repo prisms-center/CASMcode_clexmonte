@@ -10,6 +10,7 @@
 #include "casm/global/definitions.hh"
 #include "casm/misc/Comparisons.hh"
 #include "casm/monte/events/OccEvent.hh"
+#include "casm/monte/misc/LexicographicalCompare.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -26,14 +27,6 @@ struct EventState {
   double dE_activated;  ///< Activation energy, relative to initial state
   double freq;          ///< Attempt frequency
   double rate;          ///< Occurance rate
-
-  /// \brief Number of each component by orbit, for select orbits
-  ///
-  ///     n = m_num_each_component_by_orbit(
-  ///             component_index,
-  ///             orbits_to_calculate_index)
-  ///
-  Eigen::MatrixXi const *num_each_component_by_orbit;
 };
 
 /// \brief Data particular to a single translationally distinct event
@@ -183,6 +176,39 @@ struct SelectedEvent {
     event_data = nullptr;
     event_state = nullptr;
   }
+};
+
+/// \brief Get selected event data needed for the collecting functions
+///
+/// Notes:
+/// - prim_event_list should be present after calculation->reset()
+struct SelectedEventInfo {
+  std::vector<PrimEventData> const &prim_event_list;
+  std::shared_ptr<std::vector<Index>> prim_event_index_to_index;
+  std::shared_ptr<std::vector<bool>> prim_event_index_to_has_value;
+
+  std::vector<std::string> partition_names;
+  std::map<Eigen::VectorXi, std::string, monte::LexicographicalCompare>
+      value_labels;
+
+  SelectedEventInfo(std::vector<PrimEventData> const &_prim_event_list);
+
+  /// \brief Construct `prim_event_index_to_index` so that indices differentiate
+  ///     by event type
+  void make_indices_by_type();
+
+  /// \brief Construct `prim_event_index_to_index` so that indices differentiate
+  ///     by event type and equivalent index
+  void make_indices_by_equivalent_index();
+
+  /// \brief Construct `prim_event_index_to_index` so that indices differentiate
+  ///     by event type, equivalent index, and direction
+  void make_indices_by_equivalent_index_and_direction();
+
+  /// \brief Construct `prim_event_index_to_index` so that indices differentiate
+  ///     by event type and equivalent index, but only for a single event type
+  void make_indices_by_equivalent_index_per_event_type(
+      std::string event_type_name);
 };
 
 }  // namespace clexmonte

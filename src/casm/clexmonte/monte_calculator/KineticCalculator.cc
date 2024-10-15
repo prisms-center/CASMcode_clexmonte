@@ -2,6 +2,7 @@
 
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/methods/kinetic_monte_carlo.hh"
+#include "casm/clexmonte/monte_calculator/MonteEventData.hh"
 #include "casm/clexmonte/monte_calculator/analysis_functions.hh"
 #include "casm/clexmonte/monte_calculator/kinetic_events.hh"
 #include "casm/clexmonte/monte_calculator/kinetic_sampling_functions.hh"
@@ -94,6 +95,26 @@ KineticCalculator::standard_sampling_functions(
   functions.push_back(make_jumps_per_atom_per_event_by_type_f(calculation));
   functions.push_back(make_selected_event_count_by_type_f(calculation));
   functions.push_back(make_selected_event_fraction_by_type_f(calculation));
+  functions.push_back(
+      make_selected_event_count_by_equivalent_index_f(calculation));
+  functions.push_back(
+      make_selected_event_fraction_by_equivalent_index_f(calculation));
+  functions.push_back(
+      make_selected_event_count_by_equivalent_index_and_direction_f(
+          calculation));
+  functions.push_back(
+      make_selected_event_fraction_by_equivalent_index_and_direction_f(
+          calculation));
+
+  for (auto f : make_selected_event_count_by_equivalent_index_per_event_type_f(
+           calculation)) {
+    functions.push_back(f);
+  }
+  for (auto f :
+       make_selected_event_fraction_by_equivalent_index_per_event_type_f(
+           calculation)) {
+    functions.push_back(f);
+  }
 
   std::map<std::string, state_sampling_function_type> function_map;
   for (auto const &f : functions) {
@@ -153,13 +174,22 @@ KineticCalculator::standard_selected_event_data_functions(
   using namespace monte_calculator;
   monte::SelectedEventDataFunctions functions;
 
+  // Event type data:
   functions.insert(make_selected_event_by_type_f(calculation));
   functions.insert(make_selected_event_by_equivalent_index_f(calculation));
-  functions.insert(make_selected_event_by_prim_event_index_f(calculation));
+  functions.insert(
+      make_selected_event_by_equivalent_index_and_direction_f(calculation));
   for (auto f :
        make_selected_event_by_equivalent_index_per_event_type_f(calculation)) {
     functions.insert(f);
   }
+  for (auto f : make_local_orbit_composition_f(calculation)) {
+    functions.insert(f);
+  }
+
+  // Event state data:
+  functions.insert(make_dE_activated_by_type_f(calculation));
+  functions.insert(make_dE_activated_by_equivalent_index_f(calculation));
 
   return functions;
 }
@@ -390,6 +420,17 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   // - Constructs this->event_data->event_selector
   // - Calculates all rates
   this->set_event_data(run_manager.engine);
+
+  // Construct EventDataSummary
+  MonteEventData monte_event_data(this->event_data, nullptr);
+  double energy_bin_width = 0.1;
+  double freq_bin_width = 0.1;
+  double rate_bin_width = 0.1;
+
+  EventDataSummary event_data_summary(this->state_data, monte_event_data,
+                                      energy_bin_width, freq_bin_width,
+                                      rate_bin_width);
+  print(std::cout, event_data_summary);
 
   // Construct KMCData
   this->kmc_data = std::make_shared<kmc_data_type>();
