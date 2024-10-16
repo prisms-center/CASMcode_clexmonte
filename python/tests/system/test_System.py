@@ -135,13 +135,13 @@ def test_kmc_System_from_dict_1(
     _check(
         *system.local_basis_set_cluster_info("A_Va_1NN"),
         expected_n_equiv=6,
-        expected_orbit_sizes=[1, 1, 1, 1, 1],
+        expected_orbit_sizes=[1, 2, 4, 4, 8],
         expected_function_to_orbit_index=[0, 1, 1, 2, 2, 3, 3, 4, 4],
     )
     _check(
         *system.local_basis_set_cluster_info("B_Va_1NN"),
         expected_n_equiv=6,
-        expected_orbit_sizes=[1, 1, 1, 1, 1],
+        expected_orbit_sizes=[1, 2, 4, 4, 8],
         expected_function_to_orbit_index=[0, 1, 1, 2, 2, 3, 3, 4, 4],
     )
 

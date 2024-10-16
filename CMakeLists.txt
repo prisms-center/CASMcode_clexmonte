@@ -113,6 +113,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/canonical/canonical_impl.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/canonical/canonical_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/definitions.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/AllowedEventList.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/CompleteEventList.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/ImpactTable.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/event_data.hh
@@ -205,6 +206,7 @@ set(
 set(
   libcasm_clexmonte_SOURCES
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/canonical/canonical.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/AllowedEventList.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/CompleteEventList.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/ImpactTable.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/event_data.cc

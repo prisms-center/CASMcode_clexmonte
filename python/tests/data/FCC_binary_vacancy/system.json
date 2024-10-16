@@ -56,11 +56,13 @@
   "local_basis_sets": {
     "A_Va_1NN": {
       "equivalents_info": "basis_sets/bset.A_Va_1NN/equivalents_info.json",
-      "source": "basis_sets/bset.A_Va_1NN/FCC_binary_vacancy_Clexulator_A_Va_1NN.cc"
+      "source": "basis_sets/bset.A_Va_1NN/FCC_binary_vacancy_Clexulator_A_Va_1NN.cc",
+      "basis": "basis_sets/bset.A_Va_1NN/basis.json"
     },
     "B_Va_1NN": {
       "equivalents_info": "basis_sets/bset.B_Va_1NN/equivalents_info.json",
-      "source": "basis_sets/bset.B_Va_1NN/FCC_binary_vacancy_Clexulator_B_Va_1NN.cc"
+      "source": "basis_sets/bset.B_Va_1NN/FCC_binary_vacancy_Clexulator_B_Va_1NN.cc",
+      "basis": "basis_sets/bset.B_Va_1NN/basis.json"
     }
   },
   "additional_params": {

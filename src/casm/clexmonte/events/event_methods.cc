@@ -1,5 +1,6 @@
 #include "casm/clexmonte/events/event_methods.hh"
 
+#include "casm/clexulator/NeighborList.hh"
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/events/OccLocation.hh"
 
@@ -55,6 +56,28 @@ std::vector<PrimEventData> make_prim_event_list(
     append_to_prim_event_list(prim_event_list, pair.first, pair.second.events);
   }
   return prim_event_list;
+}
+
+/// \brief Sets `linear_site_index` given a `unitcell_index` and
+/// `neighbor_index` list
+///
+/// This uses the SuperNeighborList to set the linear_site_index for an
+/// event in a particular unitcell. It requires that neighbor_index is
+/// constructed ahead of time.
+void set_event_linear_site_index(
+    std::vector<Index> &linear_site_index, Index unitcell_index,
+    std::vector<int> neighbor_index,
+    clexulator::SuperNeighborList const &supercell_nlist) {
+  Index n_sites = neighbor_index.size();
+  std::vector<Index> const &neighbor_index_to_linear_site_index =
+      supercell_nlist.sites(unitcell_index);
+
+  // set e.linear_site_index --- specify sites being transformed
+  linear_site_index.resize(n_sites);
+  for (Index i = 0; i < n_sites; ++i) {
+    linear_site_index[i] =
+        neighbor_index_to_linear_site_index[neighbor_index[i]];
+  }
 }
 
 /// \brief Sets a monte::OccEvent consistent with the PrimEventData and

@@ -46,7 +46,6 @@ class MonteCalculator {
   typedef std::mt19937_64 engine_type;
   typedef monte::KMCData<config_type, statistics_type, engine_type>
       kmc_data_type;
-  typedef kinetic_2::KineticEventData event_data_type;
 
   /// \brief Constructor.
   ///

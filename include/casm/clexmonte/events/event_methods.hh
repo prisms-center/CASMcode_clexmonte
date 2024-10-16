@@ -7,6 +7,9 @@
 #include "casm/configuration/occ_events/OccEvent.hh"
 
 namespace CASM {
+namespace clexulator {
+class SuperNeighborList;
+}
 namespace monte {
 class OccLocation;
 }
@@ -40,6 +43,13 @@ std::vector<PrimEventData> make_prim_event_list(SystemType const &system);
 /// \brief Construct linear list of events associated with the origin unit cell
 std::vector<PrimEventData> make_prim_event_list(
     std::map<std::string, OccEventTypeData> const &event_type_data);
+
+/// \brief Sets `linear_site_index` given a `unitcell_index` and
+/// `neighbor_index` list
+void set_event_linear_site_index(
+    std::vector<Index> &linear_site_index, Index unitcell_index,
+    std::vector<int> neighbor_index,
+    clexulator::SuperNeighborList const &supercell_nlist);
 
 /// \brief Sets a monte::OccEvent consistent with the PrimEventData and
 /// OccLocation
