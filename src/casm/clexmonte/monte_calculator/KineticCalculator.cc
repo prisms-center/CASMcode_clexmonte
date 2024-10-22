@@ -222,6 +222,7 @@ KineticCalculator::make_default_sampling_fixture_params(
                        "jumps_per_atom_by_type",
                        "jumps_per_event_by_type",
                        "jumps_per_atom_per_event_by_type"};
+    s.do_sample_time = true;
     std::string prefix;
     prefix = "order_parameter.";
     for (auto const &pair : calculation->system()->dof_spaces) {
