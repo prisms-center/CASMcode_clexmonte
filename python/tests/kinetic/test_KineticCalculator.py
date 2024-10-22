@@ -20,10 +20,12 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
     assert np.allclose(system.composition_converter.end_member(0), [0.0, 1.0, 0.0])
     assert np.allclose(system.composition_converter.end_member(1), [0.0, 0.0, 1.0])
 
+    print("begin MonteCalculator construction")
     calculator = clexmonte.MonteCalculator(
         method="kinetic",
         system=system,
     )
+    print("ok")
     assert isinstance(calculator, clexmonte.MonteCalculator)
     with pytest.raises(Exception):
         assert isinstance(calculator.potential, clexmonte.MontePotential)
@@ -33,16 +35,23 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
 
     # default configuration is occupied by A: [1.0, 0.0, 0.0], which corresponds
     # to the origin composition as defined in the system's composition axes
+    print("begin MonteCarloState construction")
     state = clexmonte.MonteCarloState(
         configuration=system.make_default_configuration(
             transformation_matrix_to_super=np.eye(3, dtype="int") * 2,
         ),
         conditions={
             "temperature": 300.0,
-            "param_composition": [0.0, 0.0],  # <-one of param/mol composition is needed
+            "param_composition": [
+                0.0,
+                0.0,
+            ],  # <-one of param/mol composition is needed
             # "mol_composition": [1.0, 0.0, 0.0],
         },
     )
+    print("ok")
+
+    print("Composition checks")
     composition_calculator = system.composition_calculator
     composition_converter = system.composition_converter
     mol_composition = composition_calculator.mean_num_each_component(
@@ -57,6 +66,7 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
     assert np.allclose(
         param_composition, state.conditions.vector_values["param_composition"]
     )
+    print("ok")
 
     ## Set state data and potential
     calculator.set_state_and_potential(state=state)
@@ -86,7 +96,9 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
     assert isinstance(calculator.event_data, clexmonte.MonteEventData)
 
     ## MonteEventData constructor
-    event_data = clexmonte.MonteEventData(calculator=calculator, state=state)
+    # event_data = clexmonte.MonteEventData(calculator=calculator, state=state)
+    calculator.set_event_data()
+    event_data = calculator.event_data
     assert isinstance(event_data, clexmonte.MonteEventData)
 
 

@@ -25,6 +25,8 @@ class BaseMonteEventData {
   /// Information about what sites may impact each prim event
   std::vector<clexmonte::EventImpactInfo> prim_impact_info_list;
 
+  // -- System data --
+
   /// Get the formation energy coefficients
   virtual clexulator::SparseCoefficients const &formation_energy_coefficients()
       const = 0;
@@ -36,6 +38,15 @@ class BaseMonteEventData {
   /// Get the KRA coefficients for a specific event
   virtual clexulator::SparseCoefficients const &kra_coefficients(
       Index prim_event_index) const = 0;
+
+  // -- Select Event --
+
+  /// Select an event to apply
+  virtual void select_event(SelectedEvent &selected_event,
+                            bool requires_event_state) = 0;
+
+  /// Return number of events calculated with no barrier, by type
+  virtual std::map<std::string, Index> const &n_not_normal() const = 0;
 
   // -- Event list summary info --
 

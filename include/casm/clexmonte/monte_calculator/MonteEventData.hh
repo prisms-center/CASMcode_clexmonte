@@ -266,6 +266,7 @@ struct EventDataSummary {
 
   Index n_events_allowed;
   Index n_events_possible;
+  Index n_not_normal_total;
   Index event_list_size;
   double total_rate;
   double mean_time_increment;
@@ -279,11 +280,15 @@ struct EventDataSummary {
   // -- Memory usage --
 
   size_t resident_bytes_used;
-  size_t virtual_bytes_used;
+  double resident_MiB_used;
 
   // -- Impact info --
 
-  FloatCountByType n_impact;
+  //  FloatCountByType n_impact;
+
+  /// The number of impacted events of type (second key) when type (first key)
+  /// occurs. Values are only added for allowed events, so n_allowed can be
+  /// used to normalize.
   ImpactTable impact_table;
 
   std::map<TypeKey, CountType> neighborhood_size_total;
@@ -305,6 +310,18 @@ struct EventDataSummary {
 void print(std::ostream &out, EventDataSummary const &event_data_summary);
 
 }  // namespace clexmonte
+
+jsonParser &to_json(clexmonte::EventTypeStats const &stats, jsonParser &json);
+
+jsonParser &to_json(clexmonte::EventDataSummary::IntCountByType const &count,
+                    jsonParser &json);
+
+jsonParser &to_json(clexmonte::EventDataSummary::FloatCountByType const &count,
+                    jsonParser &json);
+
+jsonParser &to_json(clexmonte::EventDataSummary const &event_data_summary,
+                    jsonParser &json);
+
 }  // namespace CASM
 
 #endif

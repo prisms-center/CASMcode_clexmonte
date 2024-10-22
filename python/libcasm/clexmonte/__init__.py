@@ -16,6 +16,7 @@ from ._clexmonte_monte_calculator import (
     KineticsData,
     MonteCalculator,
     MonteEventData,
+    MonteEventDataSummary,
     MonteEventList,
     MontePotential,
     PrimEventData,

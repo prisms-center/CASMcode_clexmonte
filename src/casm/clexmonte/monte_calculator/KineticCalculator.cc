@@ -54,11 +54,14 @@ KineticCalculator::KineticCalculator()
                           {},                    // required_local_multiclex,
                           {},                    // required_dof_spaces,
                           {},                    // required_params,
-                          {},                    // optional_params,
-                          true,                  // time_sampling_allowed,
-                          true,                  // update_atoms,
-                          false,                 // save_atom_info,
-                          false                  // is_multistate_method,
+                          {"verbosity", "mol_composition_tol",
+                           "event_data_type", "event_selector_type",
+                           "impact_table_type", "allow_events_with_no_barrier",
+                           "selected_event_data"},  // optional_params,
+                          true,                     // time_sampling_allowed,
+                          true,                     // update_atoms,
+                          false,                    // save_atom_info,
+                          false                     // is_multistate_method,
       ) {
   // this could go into base constructor
   this->selected_event = std::make_shared<SelectedEvent>();
@@ -393,7 +396,19 @@ void KineticCalculator::set_event_data(std::shared_ptr<engine_type> engine) {
 
   // Currently, event_filters are only set at _reset() by reading from params
   std::optional<std::vector<EventFilterGroup>> event_filters = std::nullopt;
-  _event_data().update(state, occ_location, event_filters, engine);
+  if (this->event_data_type == kinetic_event_data_type::high_memory) {
+    this->_complete_event_data().update(state, occ_location, event_filters,
+                                        engine);
+  } else if (this->event_data_type == kinetic_event_data_type::default_memory) {
+    this->_allowed_event_data().update(state, occ_location, engine);
+  } else if (this->event_data_type == kinetic_event_data_type::low_memory) {
+    this->_allowed_event_data().update(state, occ_location, engine);
+
+  } else {
+    throw std::runtime_error(
+        "Error in KineticCalculator::set_event_data: event_data_type is "
+        "invalid");
+  }
 }
 
 /// \brief Perform a single run, evolving current state
@@ -419,9 +434,12 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   // - Throw if this->state_data is null
   // - Constructs this->event_data->event_selector
   // - Calculates all rates
+  std::cout << "Setting event data ... " << std::endl;
   this->set_event_data(run_manager.engine);
+  std::cout << "Setting event data ... DONE" << std::endl << std::endl;
 
   // Construct EventDataSummary
+  std::cout << "Generating event data summary ... " << std::flush;
   MonteEventData monte_event_data(this->event_data, nullptr);
   double energy_bin_width = 0.1;
   double freq_bin_width = 0.1;
@@ -430,6 +448,8 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   EventDataSummary event_data_summary(this->state_data, monte_event_data,
                                       energy_bin_width, freq_bin_width,
                                       rate_bin_width);
+  std::cout << "Generating event data summary ... DONE" << std::endl
+            << std::endl;
   print(std::cout, event_data_summary);
 
   // Construct KMCData
@@ -460,15 +480,42 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
         "Error in KineticCalculator::run: this->selected_event==nullptr");
   }
 
-  auto set_selected_event_f = [=](SelectedEvent &selected_event,
-                                  bool requires_event_data) {
-    this->_event_data().select_event(selected_event, requires_event_data);
+  // Function to set selected event
+  bool requires_event_state =
+      collector.has_value() && collector->requires_event_state;
+  auto set_selected_event_f = [=](SelectedEvent &selected_event) {
+    this->event_data->select_event(selected_event, requires_event_state);
   };
 
   // Run Kinetic Monte Carlo at a single condition
   kinetic_monte_carlo_v2<EventID>(state, occ_location, *this->kmc_data,
                                   *this->selected_event, set_selected_event_f,
                                   collector, run_manager, event_system);
+
+  // Warn if events with no barrier were encountered
+  check_n_not_normal(this->event_data->n_not_normal());
+}
+
+/// \brief Print a warning to std::cerr if events with no barrier were
+///     encountered
+void KineticCalculator::check_n_not_normal(
+    std::map<std::string, Index> const &n_not_normal) const {
+  if (n_not_normal.empty()) {
+    return;
+  }
+
+  std::cerr << "## WARNING: EVENTS WITH NO BARRIER ##################\n"
+               "#                                                   #\n"
+               "# Events with no barrier are treated as having a    #\n"
+               "# rate equal to the attempt frequency.              #\n"
+               "#                                                   #\n"
+               "# Number encountered by type:                       #\n";
+  for (auto const &pair : n_not_normal) {
+    std::cerr << "  - " << pair.first << ": " << pair.second << "\n";
+  }
+  std::cerr << "#                                                   #\n"
+               "#####################################################\n"
+            << std::endl;
 }
 
 /// \brief Perform a single run, evolving one or more states
@@ -523,6 +570,66 @@ void KineticCalculator::_reset() {
     }
   }
 
+  // Read "event_data_type"
+  // - "high_memory": complete event list,
+  // - "default" (default): allowed event list w/ vector index, or
+  // - "low_memory": allowed event list w/ map index
+  std::string event_data_type_str = "default";
+  parser.optional(event_data_type_str, "event_data_type");
+  if (event_data_type_str == "high_memory") {
+    this->event_data_type = kinetic_event_data_type::high_memory;
+  } else if (event_data_type_str == "default") {
+    this->event_data_type = kinetic_event_data_type::default_memory;
+  } else if (event_data_type_str == "low_memory") {
+    this->event_data_type = kinetic_event_data_type::low_memory;
+
+    if (event_filters.has_value()) {
+      parser.insert_error(
+          "event_data_type",
+          "event_filters are not supported by event_data_type 'low_memory'");
+    }
+  } else {
+    parser.insert_error("event_data_type",
+                        "Invalid event_data_type: " + event_data_type_str);
+  }
+
+  // Read "event_selector_type"
+  // - "vector_sum_tree" (default): binary sum tree (log complexity) built
+  //   using std::vector
+  // - "sum_tree": binary sum tree (log complexity) built using std::map and
+  //   linked lists
+  // - "direct_sum": direct sum of rate vector (linear complexity)
+  std::string event_selector_type_str = "vector_sum_tree";
+  parser.optional(event_selector_type_str, "event_selector_type");
+  if (event_selector_type_str == "vector_sum_tree") {
+    this->event_selector_type = kinetic_event_selector_type::vector_sum_tree;
+  } else if (event_selector_type_str == "sum_tree") {
+    this->event_selector_type = kinetic_event_selector_type::sum_tree;
+  } else if (event_selector_type_str == "direct_sum") {
+    this->event_selector_type = kinetic_event_selector_type::direct_sum;
+  } else {
+    parser.insert_error("event_selector_type", "Invalid event_selector_type: " +
+                                                   event_selector_type_str);
+  }
+
+  /// Read "impact_table_type" (optional, only takes affect for "low_memory")
+  this->use_neighborlist_impact_table = true;
+  std::string impact_table_type_str = "neighborlist";
+  parser.optional(impact_table_type_str, "impact_table_type");
+  if (impact_table_type_str == "neighborlist") {
+    this->use_neighborlist_impact_table = true;
+  } else if (impact_table_type_str == "relative") {
+    this->use_neighborlist_impact_table = false;
+  } else {
+    parser.insert_error("impact_table_type",
+                        "Invalid impact_table_type: " + impact_table_type_str);
+  }
+
+  // Read "allow_events_with_no_barrier"
+  // - true or false (default)
+  this->allow_events_with_no_barrier = false;
+  parser.optional(allow_events_with_no_barrier, "allow_events_with_no_barrier");
+
   std::stringstream ss;
   ss << "Error in KineticCalculator: error reading calculation "
         "parameters.";
@@ -532,8 +639,18 @@ void KineticCalculator::_reset() {
   // -- After parsing ----------------------------
 
   // Make event data
-  this->event_data =
-      std::make_shared<kinetic_2::KineticEventData>(system, event_filters);
+  if (this->event_data_type == kinetic_event_data_type::high_memory) {
+    this->event_data = std::make_shared<kinetic_2::CompleteKineticEventData>(
+        system, event_filters, this->allow_events_with_no_barrier);
+  } else if (this->event_data_type == kinetic_event_data_type::default_memory) {
+    this->event_data = std::make_shared<kinetic_2::AllowedKineticEventData>(
+        system, this->allow_events_with_no_barrier, false /* use_map_index */,
+        this->use_neighborlist_impact_table, this->event_selector_type);
+  } else {
+    this->event_data = std::make_shared<kinetic_2::AllowedKineticEventData>(
+        system, this->allow_events_with_no_barrier, true /* use_map_index */,
+        this->use_neighborlist_impact_table, this->event_selector_type);
+  }
 
   return;
 }

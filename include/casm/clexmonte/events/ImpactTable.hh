@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "casm/clexmonte/events/event_data.hh"
+#include "casm/clexulator/NeighborList.hh"
 #include "casm/crystallography/LinearIndexConverter.hh"
 #include "casm/crystallography/UnitCellCoord.hh"
 
@@ -33,6 +34,26 @@ struct RelativeEventImpactTable {
   std::vector<std::vector<RelativeEventID>> m_impact_table;
   xtal::UnitCellIndexConverter m_unitcell_converter;
   mutable std::vector<EventID> m_result;
+};
+
+/// \brief Implements an event impact table, storing only relative interations
+/// explicitly, and using the neighbor list to determine unitcell indices
+struct NeighborlistEventImpactTable {
+  NeighborlistEventImpactTable(
+      std::vector<EventImpactInfo> const &prim_event_list,
+      xtal::UnitCellIndexConverter const &unitcell_converter,
+      std::shared_ptr<clexulator::PrimNeighborList> prim_nlist,
+      Eigen::Matrix3l const &transformation_matrix_to_super,
+      std::shared_ptr<clexulator::SuperNeighborList> supercell_nlist);
+
+  std::vector<EventID> const &operator()(EventID const &event_id) const;
+
+ private:
+  /// \brief Neighbor list indices used to set the unitcell_index of impacted
+  /// events in `results`
+  std::vector<std::vector<Index>> m_unitcell_nlist_index;
+  std::shared_ptr<clexulator::SuperNeighborList> m_supercell_nlist;
+  mutable std::vector<std::vector<EventID>> m_result;
 };
 
 /// \brief Implement an event impact table, storing all interations in a
@@ -76,6 +97,19 @@ inline std::vector<EventID> const &RelativeEventImpactTable::operator()(
                              relative_event_id.translation);
   }
   return m_result;
+}
+
+inline std::vector<EventID> const &NeighborlistEventImpactTable::operator()(
+    EventID const &event_id) const {
+  std::vector<Index> const &nlist_index =
+      m_unitcell_nlist_index[event_id.prim_event_index];
+  std::vector<Index> const &unitcells =
+      m_supercell_nlist->unitcells(event_id.unitcell_index);
+  std::vector<EventID> &result = m_result[event_id.prim_event_index];
+  for (Index i = 0; i < nlist_index.size(); ++i) {
+    result[i].unitcell_index = unitcells[nlist_index[i]];
+  }
+  return result;
 }
 
 inline std::vector<EventID> const &SupercellEventImpactTable::operator()(

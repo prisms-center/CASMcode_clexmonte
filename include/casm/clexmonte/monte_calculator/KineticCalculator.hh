@@ -30,6 +30,12 @@ class KineticPotential : public BaseMontePotential {
                                  std::vector<int> const &new_occ) override;
 };
 
+enum class kinetic_event_data_type {
+  high_memory,
+  default_memory,
+  low_memory,
+};
+
 class KineticCalculator : public BaseMonteCalculator {
  public:
   using BaseMonteCalculator::engine_type;
@@ -98,9 +104,39 @@ class KineticCalculator : public BaseMonteCalculator {
            std::vector<monte::OccLocation> &occ_locations,
            run_manager_type<engine_type> &run_manager) override;
 
+  // --- KineticCalculator specific functions ---
+
+  /// \brief Print a warning to std::cerr if events with no barrier were
+  ///     encountered
+  void check_n_not_normal(
+      std::map<std::string, Index> const &n_not_normal) const;
+
   // --- Parameters ---
+
+  // Verbosity level (if applicable)
   int verbosity_level = 10;
+
+  // Used by state modifying functions
   double mol_composition_tol = CASM::TOL;
+
+  // Type of event data structure
+  kinetic_event_data_type event_data_type =
+      kinetic_event_data_type::default_memory;
+
+  // Type of event selector
+  kinetic_event_selector_type event_selector_type =
+      kinetic_event_selector_type::vector_sum_tree;
+
+  // Type of impact table:
+  // - Only takes effect if event_data_type is `default_memory` or `low_memory`
+  // - If true: somewhat higher memory use; somewhat faster impact list
+  // - If false: somewhat lower memory use; somewhat slower impact list
+  bool use_neighborlist_impact_table = true;
+
+  // If true, events without barriers are allowed with warning messages;
+  // If false (default), an exception is thrown at the `select_event` step of
+  // a run if an event without a barrier is encountered
+  bool allow_events_with_no_barrier = false;
 
   /// \brief Reset the derived Monte Carlo calculator
   void _reset() override;
@@ -108,8 +144,12 @@ class KineticCalculator : public BaseMonteCalculator {
   /// \brief Clone the KineticCalculator
   KineticCalculator *_clone() const override;
 
-  KineticEventData &_event_data() {
-    return static_cast<KineticEventData &>(*this->event_data);
+  CompleteKineticEventData &_complete_event_data() {
+    return static_cast<CompleteKineticEventData &>(*this->event_data);
+  }
+
+  AllowedKineticEventData &_allowed_event_data() {
+    return static_cast<AllowedKineticEventData &>(*this->event_data);
   }
 };
 

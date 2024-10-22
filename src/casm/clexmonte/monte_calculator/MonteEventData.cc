@@ -1,89 +1,7 @@
 #include "casm/clexmonte/monte_calculator/MonteEventData.hh"
 
-// -- Memory usage --
-// https://stackoverflow.com/a/372525
-
-#ifdef __linux__
-#include <sys/sysinfo.h>
-#endif
-
-#ifdef __APPLE__
-#include <mach/mach_init.h>
-#include <mach/task.h>
-#endif
-
-#ifdef _WINDOWS
-#include <windows.h>
-#else
-#include <sys/resource.h>
-#endif
-
-namespace CASM {
-
-/// \brief The amount of memory currently being used by this process, in bytes.
-///
-/// By default, returns the full virtual arena, but if resident=true,
-/// it will report just the resident set in RAM (if supported on that OS).
-size_t memory_used(bool resident) {
-#if defined(__linux__)
-  // Ugh, getrusage doesn't work well on Linux.  Try grabbing info
-  // directly from the /proc pseudo-filesystem.  Reading from
-  // /proc/self/statm gives info on your own process, as one line of
-  // numbers that are: virtual mem program size, resident set size,
-  // shared pages, text/code, data/stack, library, dirty pages.  The
-  // mem sizes should all be multiplied by the page size.
-  size_t size = 0;
-  FILE *file = fopen("/proc/self/statm", "r");
-  if (file) {
-    unsigned long vm = 0;
-    fscanf(file, "%ul", &vm);  // Just need the first num: vm size
-    fclose(file);
-    size = (size_t)vm * getpagesize();
-  }
-  return size;
-
-#elif defined(__APPLE__)
-  // Inspired by:
-  // http://miknight.blogspot.com/2005/11/resident-set-size-in-mac-os-x.html
-  struct task_basic_info t_info;
-  mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
-  task_info(current_task(), TASK_BASIC_INFO, (task_info_t)&t_info,
-            &t_info_count);
-  size_t size = (resident ? t_info.resident_size : t_info.virtual_size);
-  return size;
-
-#elif defined(_WINDOWS)
-  // According to MSDN...
-  PROCESS_MEMORY_COUNTERS counters;
-  if (GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters)))
-    return counters.PagefileUsage;
-  else
-    return 0;
-
-#else
-  // No idea what platform this is
-  return 0;  // Punt
-#endif
-}
-
-std::string convert_size(size_t size_bytes) {
-  // Based on # https://stackoverflow.com/a/14822210
-  if (size_bytes == 0) {
-    return "0B";
-  }
-  std::vector<std::string> size_name = {"B",   "KiB", "MiB", "GiB", "TiB",
-                                        "PiB", "EiB", "ZiB", "YiB"};
-  double i = std::floor(std::log2(size_bytes) / std::log2(1024));
-  double s = size_bytes / std::pow(1024, i);
-  std::stringstream ss;
-  ss << std::fixed << std::setprecision(2) << s
-     << size_name[static_cast<int>(i)];
-  return ss.str();
-}
-
-}  // namespace CASM
-
-// -- End Memory usage --
+#include "casm/monte/misc/memory_used.hh"
+#include "casm/monte/sampling/io/json/SelectedEventData_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -141,18 +59,26 @@ EventDataSummary::EventDataSummary(
     rate.by_type[type] = 0.0;
     rate.by_equivalent_index[equiv] = 0.0;
 
-    n_impact.by_type[type] = 0.0;
-    n_impact.by_equivalent_index[equiv] = 0.0;
+    //    n_impact.by_type[type] = 0.0;
+    //    n_impact.by_equivalent_index[equiv] = 0.0;
+
+    auto &_impact_by_type = impact_table.by_type[type];
+    auto &_impact_by_equiv = impact_table.by_equivalent_index[equiv];
+    for (Index j = 0; j < prim_event_list.size(); ++j) {
+      _impact_by_type[type_key(j)] = 0.0;
+      _impact_by_equiv[equiv_key(j)] = 0.0;
+    }
   }
 
-  n_events_allowed = 0.0;
-  n_events_possible = 0.0;
+  n_events_allowed = 0;
+  n_events_possible = 0;
+  n_not_normal_total = 0;
   event_list_size = event_data.event_list().size();
   total_rate = event_data.event_list().total_rate();
   mean_time_increment = 1.0 / total_rate;
 
   resident_bytes_used = memory_used(true);
-  virtual_bytes_used = memory_used(false);
+  resident_MiB_used = memory_used_MiB(true);
 
   SelectedEventInfo info(event_data.prim_event_list());
   info.make_indices_by_type();
@@ -215,6 +141,7 @@ void EventDataSummary::_add_count(EventID const &id, EventState const &state) {
     if (!state.is_normal) {
       n_not_normal.by_type[type] += increment;
       n_not_normal.by_equivalent_index[equiv] += increment;
+      n_not_normal_total += increment;
     }
   }
   rate.by_type[type] += state.rate;
@@ -228,18 +155,21 @@ void EventDataSummary::_add_impact(EventID const &id, EventState const &state) {
   // double increment = 1.0 / state_data->n_unitcells;
   Index increment = 1;
 
-  // -- impact_table.by_type --
-  for (EventID const &impact_id : event_data.event_impact(id)) {
-    TypeKey impact_type = type_key(impact_id);
-    n_impact.by_type[type] += increment;
-    impact_table.by_type[type][impact_type] += increment;
-  }
+  if (state.is_allowed) {
+    //    n_impact.by_type[type] += increment;
+    //    n_impact.by_equivalent_index[equiv] += increment;
 
-  // -- impact_table.by_equivalent_index --
-  for (EventID const &impact_id : event_data.event_impact(id)) {
-    EquivKey impact_equiv = equiv_key(impact_id);
-    n_impact.by_equivalent_index[equiv] += increment;
-    impact_table.by_equivalent_index[equiv][impact_equiv] += increment;
+    // -- impact_table.by_type --
+    for (EventID const &impact_id : event_data.event_impact(id)) {
+      TypeKey impact_type = type_key(impact_id);
+      impact_table.by_type[type][impact_type] += increment;
+    }
+
+    // -- impact_table.by_equivalent_index --
+    for (EventID const &impact_id : event_data.event_impact(id)) {
+      EquivKey impact_equiv = equiv_key(impact_id);
+      impact_table.by_equivalent_index[equiv][impact_equiv] += increment;
+    }
   }
 
   // -- neighborhood_size_total --
@@ -361,26 +291,28 @@ void print(std::ostream &out, EventDataSummary const &event_data_summary) {
         << x.neighborhood_size_kra.at(event_type_name) << " / "
         << x.neighborhood_size_freq.at(event_type_name) << ")" << std::endl;
   }
-  // Impact list:
-  out << "- Impact list sizes (total):" << std::endl;
-  for (auto const &pair : x.equiv_keys_by_type) {
-    std::string event_type_name = pair.first;
-    out << "  - " << event_type_name << " = "
-        << x.n_impact.by_type.at(event_type_name) << std::endl;
-
-    for (auto const &equiv_key : pair.second) {
-      Index equivalent_index = equiv_key.second;
-      out << "    - " << event_type_name << "." << equivalent_index << " = "
-          << x.n_impact.by_equivalent_index.at(equiv_key) << std::endl;
-    }
-  }
+  //  // Impact list:
+  //  out << "- Impact list sizes (total):" << std::endl;
+  //  for (auto const &pair : x.equiv_keys_by_type) {
+  //    std::string event_type_name = pair.first;
+  //    out << "  - " << event_type_name << " = "
+  //        << x.n_impact.by_type.at(event_type_name) << std::endl;
+  //
+  //    for (auto const &equiv_key : pair.second) {
+  //      Index equivalent_index = equiv_key.second;
+  //      out << "    - " << event_type_name << "." << equivalent_index << " = "
+  //          << x.n_impact.by_equivalent_index.at(equiv_key) << std::endl;
+  //    }
+  //  }
   // Impact table:
-  out << "- Impact list sizes (by type):" << std::endl;
+  out << "- Impact number (by occurring type -> impacted type) "
+         "(Avg. # over allowed events):"
+      << std::endl;
   for (auto const &pair : x.equiv_keys_by_type) {
     std::string event_type_name = pair.first;
     out << "  - " << event_type_name << " = ";
     for (auto const &pair2 : x.impact_table.by_type.at(event_type_name)) {
-      out << pair2.second << " ";
+      out << pair2.second / x.n_allowed.by_type.at(event_type_name) << " ";
     }
     out << std::endl;
 
@@ -389,7 +321,8 @@ void print(std::ostream &out, EventDataSummary const &event_data_summary) {
       out << "    - " << event_type_name << "." << equivalent_index << " = ";
       for (auto const &pair2 :
            x.impact_table.by_equivalent_index.at(equiv_key)) {
-        out << pair2.second << " ";
+        out << pair2.second / x.n_allowed.by_equivalent_index.at(equiv_key)
+            << " ";
       }
       out << std::endl;
     }
@@ -398,4 +331,160 @@ void print(std::ostream &out, EventDataSummary const &event_data_summary) {
 }
 
 }  // namespace clexmonte
+
+jsonParser &to_json(clexmonte::EventTypeStats const &stats, jsonParser &json) {
+  json.put_obj();
+  json["n_total"] = stats.n_total;
+  json["min"] = stats.min;
+  json["max"] = stats.max;
+  json["sum"] = stats.sum;
+  json["mean"] = stats.mean;
+  json["by_type"] = stats.hist_by_type;
+  json["by_equivalent_index"] = stats.hist_by_equivalent_index;
+  return json;
+}
+
+jsonParser &to_json(clexmonte::EventDataSummary::IntCountByType const &count,
+                    jsonParser &json) {
+  json.put_obj();
+  {
+    jsonParser &y = json["by_type"];
+    for (auto const &pair : count.by_type) {
+      y[pair.first] = pair.second;
+    }
+  }
+  {
+    jsonParser &y = json["by_equivalent_index"];
+    for (auto const &pair : count.by_equivalent_index) {
+      auto const &key = pair.first;
+      y[key.first + "." + std::to_string(key.second)] = pair.second;
+    }
+  }
+  return json;
+}
+
+jsonParser &to_json(clexmonte::EventDataSummary::FloatCountByType const &count,
+                    jsonParser &json) {
+  json.put_obj();
+  {
+    jsonParser &y = json["by_type"];
+    for (auto const &pair : count.by_type) {
+      y[pair.first] = pair.second;
+    }
+  }
+  {
+    jsonParser &y = json["by_equivalent_index"];
+    for (auto const &pair : count.by_equivalent_index) {
+      auto const &key = pair.first;
+      y[key.first + "." + std::to_string(key.second)] = pair.second;
+    }
+  }
+  return json;
+}
+
+jsonParser &to_json(clexmonte::EventDataSummary const &event_data_summary,
+                    jsonParser &json) {
+  auto const &x = event_data_summary;
+  json.put_obj();
+
+  // Number of unit cells
+  json["n_unitcells"] = x.state_data->n_unitcells;
+
+  // Number of each event type
+  to_json(x.n_allowed, json["n_events"]);
+
+  // Total number of allowed events
+  json["n_events"]["total"] = x.n_events_allowed;
+
+  // Event list size
+  json["event_list_size"] = x.event_list_size;
+
+  // Number of events without barrier, by type
+  to_json(x.n_not_normal, json["n_events_with_no_barrier"]);
+
+  json["n_events_with_no_barrier"]["total"] = x.n_not_normal_total;
+
+  // Event rate sum, by type
+  to_json(x.rate, json["rate"]);
+
+  // Total event rate sum
+  json["rate"]["total"] = x.total_rate;
+
+  // Mean time increment, by type
+  clexmonte::EventDataSummary::FloatCountByType mean_time_increment;
+  for (auto const &pair : x.rate.by_type) {
+    mean_time_increment.by_type[pair.first] = 1.0 / pair.second;
+  }
+  for (auto const &pair : x.rate.by_equivalent_index) {
+    mean_time_increment.by_equivalent_index[pair.first] = 1.0 / pair.second;
+  }
+  to_json(mean_time_increment, json["mean_time_increment"]);
+
+  // Mean time increment total
+  json["mean_time_increment"]["total"] = x.mean_time_increment;
+
+  // Memory used (in MiB)
+  json["memory_used_MiB"] = x.resident_MiB_used;
+
+  // Memory used (str)
+  json["memory_used"] = convert_size(x.resident_bytes_used);
+
+  // Impact neighborhood
+  {
+    jsonParser &y = json["impact_neighborhood"];
+    for (auto const &pair : x.neighborhood_size_total) {
+      std::string event_type_name = pair.first;
+      jsonParser &z = json["impact_neighborhood"][event_type_name];
+      z["total"] = pair.second;
+      z["formation_energy"] =
+          x.neighborhood_size_formation_energy.at(event_type_name);
+      z["kra"] = x.neighborhood_size_kra.at(event_type_name);
+      z["freq"] = x.neighborhood_size_freq.at(event_type_name);
+    }
+  }
+
+  //  // Impact number
+  //  to_json(x.n_impact, json["impact_number"]);
+
+  // Impact table
+  {
+    jsonParser &y = json["impact_number"];
+
+    y["type"] = jsonParser::array();
+    for (auto const &type : x.all_types) {
+      y["type"].push_back(type);
+    }
+    y["by_type"] = jsonParser::array();
+    for (auto const &pair : x.impact_table.by_type) {
+      jsonParser j = jsonParser::array();
+      for (auto const &pair2 : pair.second) {
+        j.push_back(pair2.second / x.n_allowed.by_type.at(pair.first));
+      }
+      y["by_type"].push_back(j);
+    }
+
+    y["equiv"] = jsonParser::array();
+    for (auto &equiv : x.all_equiv_keys) {
+      y["equiv"].push_back(equiv.first + "." + std::to_string(equiv.second));
+    }
+    y["by_equiv"] = jsonParser::array();
+    for (auto const &pair : x.impact_table.by_equivalent_index) {
+      jsonParser j = jsonParser::array();
+      for (auto const &pair2 : pair.second) {
+        j.push_back(pair2.second /
+                    x.n_allowed.by_equivalent_index.at(pair.first));
+      }
+      y["by_equiv"].push_back(j);
+    }
+  }
+
+  // Stats
+  json["stats"] = jsonParser::object();
+  for (int i = 0; i < x.stats_labels.size(); ++i) {
+    json["stats"][x.stats_labels[i]] = x.stats[i];
+  }
+
+  return json;
+}
+
 }  // namespace CASM

@@ -53,15 +53,14 @@ namespace enforce_composition_impl {
 
 template <typename GeneratorType>
 std::vector<monte::OccSwap>::const_iterator find_semigrand_canonical_swap(
-    Eigen::VectorXi &occupation, Eigen::VectorXd const &target_mol_composition,
+    Eigen::VectorXi &occupation, Eigen::VectorXd &current_mol_composition,
+    Eigen::VectorXd const &target_mol_composition,
     composition::CompositionCalculator const &composition_calculator,
     std::vector<Index> const &species_to_component_index_converter,
     GeneratorType &random_number_generator,
     monte::OccLocation const &occ_location,
     std::vector<monte::OccSwap>::const_iterator begin,
     std::vector<monte::OccSwap>::const_iterator end) {
-  Eigen::VectorXd current_mol_composition =
-      composition_calculator.mean_num_each_component(occupation);
   auto const &index_converter = species_to_component_index_converter;
 
   double original_dist =
@@ -75,8 +74,8 @@ std::vector<monte::OccSwap>::const_iterator find_semigrand_canonical_swap(
   // store <distance_to_target_mol_composition>:{swap_iterator, number of
   // swaps}
   typedef std::vector<monte::OccSwap>::const_iterator iterator_type;
-  typedef std::pair<iterator_type, Index> cand_and_count_pair;
-  std::vector<cand_and_count_pair> choices;
+  typedef std::tuple<iterator_type, Index, Eigen::VectorXd> value_type;
+  std::vector<value_type> choices;
 
   // check each possible swap for how close the composition is afterwards
   for (auto it = begin; it != end; ++it) {
@@ -93,12 +92,14 @@ std::vector<monte::OccSwap>::const_iterator find_semigrand_canonical_swap(
         // if clear improvement, new best
       } else if (dist < best_dist - tol) {
         choices.clear();
-        choices.push_back({it, occ_location.cand_size(it->cand_a)});
+        choices.push_back(
+            {it, occ_location.cand_size(it->cand_a), tmol_composition});
         best_dist = dist;
 
         // if tied with existing improvement, add as a choice
       } else if (dist < best_dist + tol) {
-        choices.push_back({it, occ_location.cand_size(it->cand_a)});
+        choices.push_back(
+            {it, occ_location.cand_size(it->cand_a), tmol_composition});
       }
     }
   }
@@ -109,15 +110,16 @@ std::vector<monte::OccSwap>::const_iterator find_semigrand_canonical_swap(
   // break ties randomly, weighted by number of candidates
   double sum = 0.0;
   for (const auto &val : choices) {
-    sum += val.second;
+    sum += std::get<1>(val);
   }
 
   double rand = random_number_generator.random_real(sum);
   sum = 0.0;
   for (const auto &val : choices) {
-    sum += val.second;
+    sum += std::get<1>(val);
     if (rand < sum) {
-      return val.first;
+      current_mol_composition = std::get<2>(val);
+      return std::get<0>(val);
     }
   }
   throw std::runtime_error(
@@ -182,11 +184,14 @@ void enforce_composition(
   auto begin = semigrand_canonical_swaps.begin();
   auto end = semigrand_canonical_swaps.end();
   monte::OccEvent event;
+  Eigen::VectorXd current_mol_composition =
+      composition_calculator.mean_num_each_component(occupation);
+
   while (true) {
     auto it = enforce_composition_impl::find_semigrand_canonical_swap(
-        occupation, target_mol_composition, composition_calculator,
-        species_to_component_index_converter, random_number_generator,
-        occ_location, begin, end);
+        occupation, current_mol_composition, target_mol_composition,
+        composition_calculator, species_to_component_index_converter,
+        random_number_generator, occ_location, begin, end);
 
     if (it == end) {
       break;

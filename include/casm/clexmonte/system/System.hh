@@ -338,6 +338,10 @@ Configuration to_standard_values(
 /// \brief Check for DoFSpace
 bool is_dof_space(System const &system, std::string const &key);
 
+/// \brief Helper to get the prim neighbor list for a system
+std::shared_ptr<clexulator::PrimNeighborList> get_prim_neighbor_list(
+    System &system);
+
 /// \brief Check for basis set (Clexulator)
 bool is_basis_set(System const &system, std::string const &key);
 

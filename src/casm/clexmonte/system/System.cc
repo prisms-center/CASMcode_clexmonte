@@ -386,6 +386,12 @@ bool is_dof_space(System const &system, std::string const &key) {
   return system.dof_spaces.find(key) != system.dof_spaces.end();
 }
 
+/// \brief Helper to get the prim neighbor list for a system
+std::shared_ptr<clexulator::PrimNeighborList> get_prim_neighbor_list(
+    System &system) {
+  return system.prim_neighbor_list;
+}
+
 /// \brief Check for basis set (Clexulator)
 bool is_basis_set(System const &system, std::string const &key) {
   return system.basis_sets.find(key) != system.basis_sets.end();

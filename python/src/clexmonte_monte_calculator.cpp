@@ -76,6 +76,17 @@ clexmonte::MontePotential make_potential(
   return calculator->potential();
 }
 
+std::shared_ptr<clexmonte::EventDataSummary> make_event_data_summary(
+    std::shared_ptr<clexmonte::MonteCalculator> calculator,
+    double energy_bin_width, double freq_bin_width, double rate_bin_width) {
+  // print errors and warnings to sys.stdout
+  py::scoped_ostream_redirect redirect;
+
+  return std::make_shared<clexmonte::EventDataSummary>(
+      calculator->state_data(), calculator->event_data(), energy_bin_width,
+      freq_bin_width, rate_bin_width);
+}
+
 clexmonte::MonteEventData make_event_data(
     std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type &state,
     std::shared_ptr<engine_type> engine, monte::OccLocation *occ_location) {
@@ -1098,6 +1109,14 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc",
            py::arg("id"));
 
+  py::class_<clexmonte::EventDataSummary,
+             std::shared_ptr<clexmonte::EventDataSummary>>
+      pyMonteEventDataSummary(m, "MonteEventDataSummary",
+                              R"pbdoc(
+      Summarizes MonteEventData
+
+      )pbdoc");
+
   pyMonteCalculator
       .def(py::init<>(&make_monte_calculator),
            R"pbdoc(
@@ -1637,7 +1656,83 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def_property_readonly("kinetics_data", &calculator_type::kmc_data,
                              R"pbdoc(
           KineticsData : The current kinetics data.
-          )pbdoc");
+          )pbdoc")
+      .def(
+          "event_data_summary",
+          [](calculator_type &calculator, double energy_bin_width,
+             double freq_bin_width, double rate_bin_width) {
+            return std::make_shared<clexmonte::EventDataSummary>(
+                calculator.state_data(), calculator.event_data(),
+                energy_bin_width, freq_bin_width, rate_bin_width);
+          },
+          R"pbdoc(
+          Construct :class:`~libcasm.clexmonte.MonteEventDataSummary` for the
+          current event data
+
+          Parameters
+          ----------
+          energy_bin_width : float = 0.1
+              The bin width for energy histograms (eV).
+
+          freq_bin_width : float = 0.1
+              The bin width for frequency histograms (log10(1/s)).
+
+          rate_bin_width : float = 0.1
+              The bin width for rate histograms (log10(1/s)).
+
+          Returns
+          -------
+          event_data_summary: libcasm.clexmonte.MonteEventDataSummary
+              The event data summary. Includes:
+
+              - "n_unitcells": The number of unit cells in the calculation
+                supercell.
+              - "n_events": The number of events in the current
+                state in total, by event type, and by event type and
+                equivalent event index.
+              - "n_events_with_no_barrier": The number of events in the
+                current state with no barrier (using the current model
+                parameters) in total, by event type, and by event type and
+                equivalent event index.
+              - "event_list_size": The total event list size. This may be
+                larger than the number of events in the current state if the
+                event list method saves slots for events that are possible
+                but not allowed in the current state (these are given rate 0.0
+                and not chosen).
+              - "rate": The sum of the rate of all events in total, events by
+                event type, and events by event type and equivalent event index.
+              - "mean_time_increment": The mean time increment until the next
+                event occurs in total (1/total_rate), by event type, and by
+                event type and equivalent event index.
+              - "memory_used": The total memory used by the current process, as
+                a str with units.
+              - "memory_used_MiB": The total memory used by the current process
+                as a float in MiB.
+              - "impact_neighborhood": The number of sites where a change in DoF
+                value triggers an update of the event rate, by event type.
+                The number of sites that trigger an update due to the formation
+                energy cluster expansion, the kra local cluster expansion, and
+                the attempt frequency local cluster expansion are given
+                individually, and the total number of sites, which is the union
+                of the three, is also given. For example, if
+                "impact_neighborhood/A_Va_1NN/total" has the value 20, then
+                there are 20 sites where a change in the DoF values triggers an
+                update of the `A_Va_1NN` event rate.
+              - "impact_table": The number of events for which an
+                update is triggered if a specified event occurs, by occurring
+                event type (or event type and equivalent index), and by
+                impacted event type (or event type and equivalent index)
+                averaged over all events in the current event list (which may
+                include both allowed and not allowed events, depending on the
+                event list method), as tables, where the rows correspond to the
+                occuring event type and the columns correspond to the impacted
+                event type. The `"type"` and `"equiv"` attributes give the
+                order of event type (or event type and equivalent index), for
+                the rows and columns of the tables.
+
+          )pbdoc",
+          py::arg("energy_bin_width") = 0.1, py::arg("freq_bin_width") = 0.1,
+          py::arg("rate_bin_width") = 0.1);
 
   m.def("make_custom_monte_calculator", &make_custom_monte_calculator, R"pbdoc(
           .. rubric:: Constructor
@@ -1701,6 +1796,103 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
         py::arg("compile_options") = std::nullopt,
         py::arg("so_options") = std::nullopt,
         py::arg("search_path") = std::nullopt);
+
+  pyMonteEventDataSummary
+      .def(py::init<>(&make_event_data_summary),
+           R"pbdoc(
+          .. rubric:: Constructor
+
+          Parameters
+          ----------
+          calculator : libcasm.clexmonte.MonteCalculator
+              Monte Carlo calculator with event data already generated.
+          energy_bin_width : float = 0.1
+              The bin width for energy histograms (eV).
+          freq_bin_width : float = 0.1
+              The bin width for frequency histograms (log10(1/s)).
+          rate_bin_width : float = 0.1
+              The bin width for rate histograms (log10(1/s)).
+          )pbdoc",
+           py::arg("calculator"), py::arg("energy_bin_width") = 0.1,
+           py::arg("freq_bin_width") = 0.1, py::arg("rate_bin_width") = 0.1)
+      .def("__repr__",
+           [](clexmonte::EventDataSummary const &event_data_summary) {
+             std::stringstream ss;
+             jsonParser json;
+             auto const &x = event_data_summary;
+             json["rate_total"]["total"] = x.total_rate;
+             json["n_events_total"]["total"] = x.n_events_allowed;
+             json["memory_used"] = convert_size(x.resident_bytes_used);
+             ss << json;
+             return ss.str();
+           })
+      .def("__str__",
+           [](clexmonte::EventDataSummary const &event_data_summary) {
+             std::stringstream ss;
+             print(ss, event_data_summary);
+             return ss.str();
+           })
+      .def(
+          "to_dict",
+          [](clexmonte::EventDataSummary const &event_data_summary)
+              -> nlohmann::json {
+            jsonParser json;
+            to_json(event_data_summary, json);
+            return static_cast<nlohmann::json>(json);
+          },
+          R"pbdoc(
+          Return MonteEventDataSummary as a dict
+
+          Returns
+          -------
+          data: dict
+              The event data summary as a dict. Includes:
+
+              - "n_unitcells": The number of unit cells in the calculation
+                supercell.
+              - "n_events": The number of events in the current
+                state in total, by event type, and by event type and
+                equivalent event index.
+              - "n_events_with_no_barrier": The number of events in the
+                current state with no barrier (using the current model
+                parameters) in total, by event type, and by event type and
+                equivalent event index.
+              - "event_list_size": The total event list size. This may be
+                larger than the number of events in the current state if the
+                event list method saves slots for events that are possible
+                but not allowed in the current state (these are given rate 0.0
+                and not chosen).
+              - "rate": The sum of the rate of all events in total, events by
+                event type, and events by event type and equivalent event index.
+              - "mean_time_increment": The mean time increment until the next
+                event occurs in total (1/total_rate), by event type, and by
+                event type and equivalent event index.
+              - "memory_used": The total memory used by the current process, as
+                a str with units.
+              - "memory_used_MiB": The total memory used by the current process
+                as a float in MiB.
+              - "impact_neighborhood": The number of sites where a change in DoF
+                value triggers an update of the event rate, by event type.
+                The number of sites that trigger an update due to the formation
+                energy cluster expansion, the kra local cluster expansion, and
+                the attempt frequency local cluster expansion are given
+                individually, and the total number of sites, which is the union
+                of the three, is also given. For example, if
+                "impact_neighborhood/A_Va_1NN/total" has the value 20, then
+                there are 20 sites where a change in the DoF values triggers an
+                update of the `A_Va_1NN` event rate.
+              - "impact_table": The number of events for which an
+                update is triggered if a specified event occurs, by occurring
+                event type (or event type and equivalent index), and by
+                impacted event type (or event type and equivalent index)
+                averaged over all allowed events, as tables, where the rows
+                correspond to the occurring event type and the columns
+                correspond to the impacted event type. The `"type"` and
+                `"equiv"` attributes give the order of event type (or event
+                type and equivalent index), for the rows and columns of the
+                tables.
+
+          )pbdoc");
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

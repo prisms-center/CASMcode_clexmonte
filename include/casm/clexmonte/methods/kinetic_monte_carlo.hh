@@ -186,8 +186,6 @@ void kinetic_monte_carlo_v2(
   // Main loop
   double event_time;
   bool collect_selected_event_data = collector.has_value();
-  bool requires_event_state =
-      collector.has_value() && collector->requires_event_state;
   selected_event.reset();
   run_manager.initialize(occ_location.mol_size());
   run_manager.update_next_sampling_fixture();
@@ -203,7 +201,7 @@ void kinetic_monte_carlo_v2(
     //   on the next iteration
     // - If `requires_event_state` is true, then the event state is calculated
     //   for the selected event
-    set_selected_event_f(selected_event, requires_event_state);
+    set_selected_event_f(selected_event);
     event_time = kmc_data.time + selected_event.time_increment;
 
     // Sample data, if a sample is due by count

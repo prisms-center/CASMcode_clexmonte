@@ -7,12 +7,15 @@
 #include "casm/configuration/occ_events/OccEvent.hh"
 
 namespace CASM {
+
 namespace clexulator {
+struct ConfigDoFValues;
 class SuperNeighborList;
-}
+}  // namespace clexulator
+
 namespace monte {
 class OccLocation;
-}
+}  // namespace monte
 
 namespace clexmonte {
 
@@ -51,12 +54,29 @@ void set_event_linear_site_index(
     std::vector<int> neighbor_index,
     clexulator::SuperNeighborList const &supercell_nlist);
 
+/// \brief Sets `event.occ_transform` and `event.atom_traj`
+void set_event_occ_transform_and_atom_traj(
+    monte::OccEvent &event, PrimEventData const &prim_event_data,
+    Index unitcell_index, monte::OccLocation const &occ_location);
+
+/// \brief Sets a monte::OccEvent
+monte::OccEvent &set_event(
+    monte::OccEvent &event, PrimEventData const &prim_event_data,
+    Index unitcell_index, monte::OccLocation const &occ_location,
+    std::vector<int> neighbor_index,
+    clexulator::SuperNeighborList const &supercell_nlist);
+
 /// \brief Sets a monte::OccEvent consistent with the PrimEventData and
 /// OccLocation
 monte::OccEvent &set_event(monte::OccEvent &event,
                            PrimEventData const &prim_event_data,
                            xtal::UnitCell const &translation,
                            monte::OccLocation const &occ_location);
+
+/// \brief Return true if the event is allowed; false otherwise.
+bool event_is_allowed(std::vector<Index> const &linear_site_index,
+                      clexulator::ConfigDoFValues const &dof_values,
+                      PrimEventData const &prim_event_data);
 
 // --- Inline definitions ---
 

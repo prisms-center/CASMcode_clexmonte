@@ -1,5 +1,6 @@
 #include "casm/clexmonte/events/event_methods.hh"
 
+#include "casm/clexulator/ConfigDoFValues.hh"
 #include "casm/clexulator/NeighborList.hh"
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/events/OccLocation.hh"
@@ -78,6 +79,89 @@ void set_event_linear_site_index(
     linear_site_index[i] =
         neighbor_index_to_linear_site_index[neighbor_index[i]];
   }
+}
+
+/// \brief Sets `linear_site_index` given a `unitcell_index` and
+/// `neighbor_index` list
+///
+/// This uses the SuperNeighborList to set the linear_site_index for an
+/// event in a particular unitcell. It requires that neighbor_index is
+/// constructed ahead of time.
+void set_event_occ_transform_and_atom_traj(
+    monte::OccEvent &event, PrimEventData const &prim_event_data,
+    Index unitcell_index, monte::OccLocation const &occ_location) {
+  monte::Conversions const &convert = occ_location.convert();
+
+  Index n_sites = prim_event_data.sites.size();
+  event.occ_transform.resize(n_sites);
+  for (Index i = 0; i < n_sites; ++i) {
+    Index l = event.linear_site_index[i];
+    Index asym = convert.l_to_asym(l);
+
+    monte::OccTransform &transform = event.occ_transform[i];
+    transform.mol_id = occ_location.l_to_mol_id(l);
+    transform.l = l;
+    transform.asym = asym;
+    transform.from_species =
+        convert.species_index(asym, prim_event_data.occ_init[i]);
+    transform.to_species =
+        convert.species_index(asym, prim_event_data.occ_final[i]);
+  }
+
+  // set e.atom_traj --- specify atom motion
+  xtal::UnitCell const &translation =
+      convert.unitcell_index_converter()(unitcell_index);
+  Index n_atoms = prim_event_data.event.size();
+  event.atom_traj.resize(n_atoms);
+  for (Index i = 0; i < n_atoms; ++i) {
+    occ_events::OccTrajectory const &occ_traj = prim_event_data.event[i];
+    if (occ_traj.position.size() != 2) {
+      throw std::runtime_error("Error: KMC event trajectories must be size 2.");
+    }
+    xtal::UnitCellCoord const &from_site =
+        occ_traj.position[0].integral_site_coordinate + translation;
+    xtal::UnitCell const &from_unitcell = from_site.unitcell();
+    xtal::UnitCellCoord const &to_site =
+        occ_traj.position[1].integral_site_coordinate + translation;
+    xtal::UnitCell const &to_unitcell = to_site.unitcell();
+
+    monte::AtomTraj &atom_traj = event.atom_traj[i];
+    atom_traj.from.l = convert.bijk_to_l(from_site);
+    atom_traj.from.mol_id = occ_location.l_to_mol_id(atom_traj.from.l);
+    atom_traj.from.mol_comp = occ_traj.position[0].atom_position_index;
+
+    atom_traj.to.l = convert.bijk_to_l(to_site);
+    atom_traj.to.mol_id = occ_location.l_to_mol_id(atom_traj.to.l);
+    atom_traj.to.mol_comp = occ_traj.position[1].atom_position_index;
+
+    atom_traj.delta_ijk = to_unitcell - from_unitcell;
+  }
+}
+
+/// \brief Sets `linear_site_index` given a `unitcell_index` and
+/// `neighbor_index` list
+///
+/// This uses the SuperNeighborList to set the linear_site_index for an
+/// event in a particular unitcell. It requires that neighbor_index is
+/// constructed ahead of time.
+monte::OccEvent &set_event(
+    monte::OccEvent &event, PrimEventData const &prim_event_data,
+    Index unitcell_index, monte::OccLocation const &occ_location,
+    std::vector<int> neighbor_index,
+    clexulator::SuperNeighborList const &supercell_nlist) {
+  // set event.new_occ --- specify new site occupation
+  event.new_occ = prim_event_data.occ_final;
+
+  // set event.linear_site_index
+  set_event_linear_site_index(event.linear_site_index, unitcell_index,
+                              neighbor_index, supercell_nlist);
+
+  // set e.occ_transform --- specify change in occupation variable
+  // set e.atom_traj --- specify atom motion
+  set_event_occ_transform_and_atom_traj(event, prim_event_data, unitcell_index,
+                                        occ_location);
+
+  return event;
 }
 
 /// \brief Sets a monte::OccEvent consistent with the PrimEventData and
@@ -163,6 +247,20 @@ monte::OccEvent &set_event(monte::OccEvent &event,
   }
 
   return event;
+}
+
+/// \brief Return true if the event is allowed; false otherwise.
+bool event_is_allowed(std::vector<Index> const &linear_site_index,
+                      clexulator::ConfigDoFValues const &dof_values,
+                      PrimEventData const &prim_event_data) {
+  int i = 0;
+  for (Index l : linear_site_index) {
+    if (dof_values.occupation(l) != prim_event_data.occ_init[i]) {
+      return false;
+    }
+    ++i;
+  }
+  return true;
 }
 
 }  // namespace clexmonte
