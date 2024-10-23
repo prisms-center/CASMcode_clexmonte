@@ -8,115 +8,15 @@
 #include "casm/clexmonte/system/System.hh"
 #include "casm/configuration/Configuration.hh"
 #include "casm/monte/events/OccLocation.hh"
+#include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/run_management/State.hh"
+
+// this must be included after the classes are defined for its application here
+#include "casm/clexmonte/methods/kinetic_monte_carlo.hh"
 
 namespace CASM {
 namespace clexmonte {
 namespace kinetic_2 {
-
-LocalOrbitCompositionCalculator::LocalOrbitCompositionCalculator(
-    std::shared_ptr<system_type> _system, std::string _event_type_name,
-    std::set<int> _orbits_to_calculate)
-    : m_system(_system),
-      m_event_type_name(_event_type_name),
-      m_orbits_to_calculate(_orbits_to_calculate) {
-  // Make m_occ_index_to_component_index_converter
-  auto const &composition_calculator = get_composition_calculator(*m_system);
-  m_occ_index_to_component_index_converter =
-      composition::make_occ_index_to_component_index_converter(
-          composition_calculator.components(),
-          composition_calculator.allowed_occs());
-
-  // Setup m_num_each_component_by_orbit and validate orbits_to_calculate
-  auto cluster_info =
-      get_local_basis_set_cluster_info(*m_system, m_event_type_name);
-  int n_orbits = 0;
-  if (cluster_info->orbits.size() > 0) {
-    n_orbits = cluster_info->orbits[0].size();
-  }
-
-  for (int orbit_index : m_orbits_to_calculate) {
-    if (orbit_index < 0 || orbit_index >= n_orbits) {
-      std::stringstream msg;
-      msg << "Error in LocalOrbitCompositionCalculator: "
-          << "orbit_to_calculate=" << orbit_index << " out of range [0,"
-          << n_orbits << ").";
-      throw std::runtime_error(msg.str());
-    }
-  }
-
-  m_num_each_component_by_orbit.resize(
-      composition_calculator.components().size(), m_orbits_to_calculate.size());
-  m_num_each_component_by_orbit.setZero();
-}
-
-/// \brief Reset pointer to state currently being calculated
-void LocalOrbitCompositionCalculator::set(state_type const *state) {
-  // supercell-specific
-  m_state = state;
-  if (m_state == nullptr) {
-    throw std::runtime_error(
-        "Error setting LocalOrbitCompositionCalculator state: state is "
-        "empty");
-  }
-
-  // set shell composition calculation data
-  auto cluster_info =
-      get_local_basis_set_cluster_info(*m_system, m_event_type_name);
-
-  // Make m_local_orbits_neighbor_indices:
-  m_local_orbits_neighbor_indices.clear();
-  m_supercell_nlist = get_supercell_neighbor_list(*m_system, *m_state);
-  auto const &convert = get_index_conversions(*m_system, *m_state);
-  auto const &supercell_index_converter = convert.index_converter();
-  for (Index equivalent_index = 0;
-       equivalent_index < cluster_info->orbits.size(); ++equivalent_index) {
-    std::vector<std::set<std::pair<int, int>>> _neighbor_indices_by_orbit;
-    for (auto const &orbit : cluster_info->orbits[equivalent_index]) {
-      std::set<std::pair<int, int>> _neighbor_indices;
-      for (auto const &cluster : orbit) {
-        for (auto const &site : cluster) {
-          Index site_index = supercell_index_converter(site);
-          _neighbor_indices.emplace(
-              m_supercell_nlist->neighbor_index(site_index), site.sublattice());
-        }
-      }
-      _neighbor_indices_by_orbit.emplace_back(std::move(_neighbor_indices));
-    }
-    m_local_orbits_neighbor_indices.emplace_back(
-        std::move(_neighbor_indices_by_orbit));
-  }
-}
-
-/// \brief Calculate the composition by orbit around an event
-Eigen::MatrixXi const &
-LocalOrbitCompositionCalculator::calculate_num_each_component(
-    Eigen::VectorXi const &occupation, Index unitcell_index,
-    Index equivalent_index) {
-  std::vector<Index> const &neighbor_index_to_linear_site_index =
-      m_supercell_nlist->sites(unitcell_index);
-
-  // indices[orbit_index] = std::set<std::pair<int, int>>
-  std::vector<std::set<std::pair<int, int>>> const &indices =
-      m_local_orbits_neighbor_indices[equivalent_index];
-
-  m_num_each_component_by_orbit.setZero();
-  int col = 0;
-  for (int orbit_index : m_orbits_to_calculate) {
-    for (auto const &pair : indices[orbit_index]) {
-      int neighbor_index = pair.first;
-      int sublattice_index = pair.second;
-      int site_index = neighbor_index_to_linear_site_index[neighbor_index];
-      int occ_index = occupation(site_index);
-      int component_index =
-          m_occ_index_to_component_index_converter[sublattice_index][occ_index];
-      m_num_each_component_by_orbit.col(col)(component_index) += 1;
-    }
-    ++col;
-  }
-
-  return m_num_each_component_by_orbit;
-}
 
 /// \brief Constructor
 EventStateCalculator::EventStateCalculator(std::shared_ptr<system_type> _system,
@@ -364,6 +264,30 @@ void CompleteKineticEventData::update(
           std::make_shared<lotto::RandomGenerator>(engine));
 }
 
+void CompleteKineticEventData::run(
+    state_type &state, monte::OccLocation &occ_location,
+    kmc_data_type &kmc_data, SelectedEvent &selected_event,
+    std::optional<monte::SelectedEventDataCollector> &collector,
+    run_manager_type &run_manager,
+    std::shared_ptr<occ_events::OccSystem> event_system) {
+  // Function to set selected event
+  bool requires_event_state =
+      collector.has_value() && collector->requires_event_state;
+  auto set_selected_event_f = [=](SelectedEvent &selected_event) {
+    this->select_event(selected_event, requires_event_state);
+  };
+
+  auto set_impacted_events_f = [=](SelectedEvent &selected_event) {
+    // Set impacted events
+    this->event_selector->set_impacted_events(selected_event.event_id);
+  };
+
+  // Run Kinetic Monte Carlo at a single condition
+  kinetic_monte_carlo_v2<EventID>(state, occ_location, kmc_data, selected_event,
+                                  set_selected_event_f, set_impacted_events_f,
+                                  collector, run_manager, event_system);
+}
+
 /// \brief Update for given state, conditions, occupants, event filters
 void CompleteKineticEventData::select_event(SelectedEvent &selected_event,
                                             bool requires_event_state) {
@@ -492,14 +416,15 @@ EventData const &AllowedEventCalculator::set_event_data(
   return this->event_data;
 }
 
-AllowedKineticEventData::AllowedKineticEventData(
+template <typename EventSelectorType>
+AllowedKineticEventData<EventSelectorType>::AllowedKineticEventData(
     std::shared_ptr<system_type> _system, bool _allow_events_with_no_barrier,
     bool _use_map_index, bool _use_neighborlist_impact_table,
-    kinetic_event_selector_type _event_selector_type)
+    bool _assign_allowed_events_only)
     : allow_events_with_no_barrier(_allow_events_with_no_barrier),
       use_map_index(_use_map_index),
       use_neighborlist_impact_table(_use_neighborlist_impact_table),
-      event_selector_type(_event_selector_type) {
+      assign_allowed_events_only(_assign_allowed_events_only) {
   system = _system;
   if (!is_clex_data(*system, "formation_energy")) {
     throw std::runtime_error(
@@ -514,6 +439,24 @@ AllowedKineticEventData::AllowedKineticEventData(
         "prim event list is empty.");
   }
 
+  Log &log = CASM::log();
+  log.begin_section();
+  log << "Event data and selection:" << std::endl;
+  log << "- event_data_type="
+      << (use_map_index ? std::string("\"low_memory\"")
+                        : std::string("\"default\""))
+      << std::endl;
+  log << "- impact_table_type="
+      << (use_neighborlist_impact_table ? std::string("\"neighborlist\"")
+                                        : std::string("\"relative\""))
+      << std::endl;
+  log << "- event_selector_type=\"" << this->event_selector_type_str() << "\""
+      << std::endl;
+  log << "- assigned_allowed_events_only=" << std::boolalpha
+      << assign_allowed_events_only << std::endl;
+  log << std::endl;
+  log.end_section();
+
   prim_impact_info_list = clexmonte::make_prim_impact_info_list(
       *system, prim_event_list, {"formation_energy"});
 }
@@ -523,13 +466,22 @@ AllowedKineticEventData::AllowedKineticEventData(
 /// Notes:
 /// - This constructs the complete event list and impact table, and constructs
 ///   the event selector, which calculates all event rates.
-/// - If there are no event filters and the supercell remains unchanged from the
-///   previous update, then the event list and impact table are not
-///   re-constructed, but the event rates are still re-calculated.
-void AllowedKineticEventData::update(state_type const &state,
-                                     monte::OccLocation const &occ_location,
-                                     std::shared_ptr<engine_type> engine) {
+/// - Event filters are ignored (with a warning). This is a TODO feature.
+template <typename EventSelectorType>
+void AllowedKineticEventData<EventSelectorType>::update(
+    state_type const &state, monte::OccLocation const &occ_location,
+    std::optional<std::vector<EventFilterGroup>> _event_filters,
+    std::shared_ptr<engine_type> engine) {
   random_generator = std::make_shared<lotto::RandomGenerator>(engine);
+
+  // Warning if event_filters:
+  if (_event_filters.has_value()) {
+    std::cerr << "#############################################" << std::endl;
+    std::cerr << "Warning: Event filters are being ignored. Use" << std::endl;
+    std::cerr << "the \"high_memory\" event data type to apply " << std::endl;
+    std::cerr << "event filters.                               " << std::endl;
+    std::cerr << "#############################################" << std::endl;
+  }
 
   // These are constructed/re-constructed so cluster expansions point
   // at the current state
@@ -545,7 +497,7 @@ void AllowedKineticEventData::update(state_type const &state,
       prim_event_list, prim_impact_info_list, get_dof_values(state),
       occ_location, get_prim_neighbor_list(*system),
       get_supercell_neighbor_list(*system, state), use_map_index,
-      use_neighborlist_impact_table);
+      use_neighborlist_impact_table, assign_allowed_events_only);
 
   if (event_list->allowed_event_map.n_assigned() == 0) {
     throw std::runtime_error(
@@ -562,77 +514,115 @@ void AllowedKineticEventData::update(state_type const &state,
   make_event_selector();
 }
 
-/// \brief Constructs `event_selector` from the current `event_list` and
-/// `random_generator`; must be called after `update`
-void AllowedKineticEventData::make_event_selector() {
+template <typename EventSelectorType>
+void AllowedKineticEventData<EventSelectorType>::run(
+    state_type &state, monte::OccLocation &occ_location,
+    kmc_data_type &kmc_data, SelectedEvent &selected_event,
+    std::optional<monte::SelectedEventDataCollector> &collector,
+    run_manager_type &run_manager,
+    std::shared_ptr<occ_events::OccSystem> event_system) {
+  // Function to set selected event
+  bool requires_event_state =
+      collector.has_value() && collector->requires_event_state;
+  auto set_selected_event_f = [=](SelectedEvent &selected_event) {
+    this->select_event(selected_event, requires_event_state);
+  };
+
+  auto set_impacted_events_f = [=](SelectedEvent &selected_event) {
+    // Set impacted events
+    this->event_selector->set_impacted_events(selected_event.event_index);
+  };
+
+  // Run Kinetic Monte Carlo at a single condition
+  kinetic_monte_carlo_v2<EventID>(state, occ_location, kmc_data, selected_event,
+                                  set_selected_event_f, set_impacted_events_f,
+                                  collector, run_manager, event_system);
+}
+
+template <>
+std::string AllowedKineticEventData<
+    sum_tree_event_selector_type>::event_selector_type_str() const {
+  return "sum_tree";
+}
+
+template <>
+std::string AllowedKineticEventData<
+    vector_sum_tree_event_selector_type>::event_selector_type_str() const {
+  return "vector_sum_tree";
+}
+
+template <>
+std::string AllowedKineticEventData<
+    direct_sum_event_selector_type>::event_selector_type_str() const {
+  return "direct_sum";
+}
+
+/// \brief Constructs `event_selector`; must be called after `update`
+template <>
+void AllowedKineticEventData<
+    sum_tree_event_selector_type>::make_event_selector() {
   // Make event selector
   // - This calculates all rates at construction
+  event_selector = std::make_shared<sum_tree_event_selector_type>(
+      event_calculator, event_list->allowed_event_map.event_index_list(),
+      GetImpactFromAllowedEventList(event_list), random_generator);
+}
 
-  if (this->event_selector_type == kinetic_event_selector_type::sum_tree) {
-    std::cout << "Constructing \"sum_tree\" event selector" << std::endl;
-    sum_tree_event_selector = std::make_shared<sum_tree_event_selector_type>(
-        event_calculator,
-        this->event_list->allowed_event_map.event_index_list(),
-        GetImpactFromAllowedEventList(this->event_list),
-        this->random_generator);
-  } else if (this->event_selector_type ==
-             kinetic_event_selector_type::vector_sum_tree) {
-    std::cout << "Constructing \"vector_sum_tree\" event selector" << std::endl;
-    vector_sum_tree_event_selector =
-        std::make_shared<vector_sum_tree_event_selector_type>(
-            event_calculator,
-            this->event_list->allowed_event_map.events().size(),
-            GetImpactFromAllowedEventList(this->event_list),
-            this->random_generator);
-  } else {
-    throw std::runtime_error(
-        "Error constructing AllowedKineticEventData: "
-        "invalid event_selector_type.");
-  }
+/// \brief Constructs `event_selector`; must be called after `update`
+template <>
+void AllowedKineticEventData<
+    vector_sum_tree_event_selector_type>::make_event_selector() {
+  // Make event selector
+  // - This calculates all rates at construction
+  event_selector = std::make_shared<vector_sum_tree_event_selector_type>(
+      event_calculator, event_list->allowed_event_map.events().size(),
+      GetImpactFromAllowedEventList(event_list), random_generator);
+}
+
+/// \brief Constructs `event_selector`; must be called after `update`
+template <>
+void AllowedKineticEventData<
+    direct_sum_event_selector_type>::make_event_selector() {
+  // Make event selector
+  // - This calculates all rates at construction
+  event_selector = std::make_shared<direct_sum_event_selector_type>(
+      event_calculator, event_list->allowed_event_map.events().size(),
+      GetImpactFromAllowedEventList(event_list), random_generator);
 }
 
 /// \brief Update for given state, conditions, occupants, event filters
-void AllowedKineticEventData::select_event(SelectedEvent &selected_event,
-                                           bool requires_event_state) {
+template <typename EventSelectorType>
+void AllowedKineticEventData<EventSelectorType>::select_event(
+    SelectedEvent &selected_event, bool requires_event_state) {
+  // If updating the event list with impacted events after the previous step
+  // caused the event list to increase in size, then it needs to be
+  // re-constructed.
   if (this->event_list->allowed_event_map.has_new_events()) {
     this->make_event_selector();
     this->event_list->allowed_event_map.clear_has_new_events();
   }
 
-  // This function:
+  // The function `only_select_event` does the following:
   // - Updates rates of events impacted by the *last* selected event (if there
   //   was a previous selection)
   // - Updates the total rate
-  // - Chooses an event and time increment (does not apply event)
-  // - Sets a list of impacted events by the chosen event
+  // - Chooses an event and time increment
+  //
+  // It does not apply the event or set the impacted events.
   Index selected_event_index;
-
-  if (this->event_selector_type == kinetic_event_selector_type::sum_tree) {
-    // sum_tree_event_selector
-    std::tie(selected_event_index, selected_event.time_increment) =
-        sum_tree_event_selector->select_event();
-    selected_event.total_rate = sum_tree_event_selector->total_rate();
-
-  } else if (this->event_selector_type ==
-             kinetic_event_selector_type::vector_sum_tree) {
-    // vector_sum_tree_event_selector
-    std::tie(selected_event_index, selected_event.time_increment) =
-        vector_sum_tree_event_selector->select_event();
-    selected_event.total_rate = vector_sum_tree_event_selector->total_rate();
-
-  } else {
-    throw std::runtime_error(
-        "Error constructing AllowedKineticEventData: "
-        "invalid event_selector_type.");
-  }
+  std::tie(selected_event_index, selected_event.time_increment) =
+      event_selector->only_select_event();
+  selected_event.total_rate = event_selector->total_rate();
 
   EventID const &event_id =
       this->event_list->allowed_event_map.event_id(selected_event_index);
   EventData const &event_data =
       event_calculator->set_event_data(selected_event_index);
-
   PrimEventData const &prim_event_data =
       prim_event_list[event_id.prim_event_index];
+
+  selected_event.event_id = event_id;
+  selected_event.event_index = selected_event_index;
   selected_event.event_data = &event_data;
   selected_event.prim_event_data = &prim_event_data;
 
@@ -649,6 +639,11 @@ void AllowedKineticEventData::select_event(SelectedEvent &selected_event,
     selected_event.event_state = &m_event_state;
   }
 }
+
+// Explicit instantiation:
+template class AllowedKineticEventData<vector_sum_tree_event_selector_type>;
+template class AllowedKineticEventData<sum_tree_event_selector_type>;
+template class AllowedKineticEventData<direct_sum_event_selector_type>;
 
 }  // namespace kinetic_2
 }  // namespace clexmonte

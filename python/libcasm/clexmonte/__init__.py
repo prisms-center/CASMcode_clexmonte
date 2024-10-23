@@ -21,6 +21,7 @@ from ._clexmonte_monte_calculator import (
     MontePotential,
     PrimEventData,
     PrimEventList,
+    SelectedEvent,
     StateData,
 )
 from ._clexmonte_run_management import (

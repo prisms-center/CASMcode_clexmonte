@@ -1,17 +1,28 @@
 #ifndef CASM_clexmonte_BaseMonteEventData
 #define CASM_clexmonte_BaseMonteEventData
 
+#include <random>
+
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/events/event_data.hh"
 #include "casm/clexmonte/system/System.hh"
+#include "casm/monte/methods/kinetic_monte_carlo.hh"
+#include "casm/monte/sampling/SelectedEventData.hh"
 
 namespace CASM {
 namespace clexmonte {
+
+struct EventFilterGroup;
 
 /// \brief Base class to provide access to event data for a Monte Carlo
 /// simulation
 class BaseMonteEventData {
  public:
+  typedef std::mt19937_64 engine_type;
+  typedef monte::KMCData<config_type, statistics_type, engine_type>
+      kmc_data_type;
+  typedef clexmonte::run_manager_type<engine_type> run_manager_type;
+
   BaseMonteEventData() = default;
   virtual ~BaseMonteEventData() = default;
 
@@ -38,6 +49,19 @@ class BaseMonteEventData {
   /// Get the KRA coefficients for a specific event
   virtual clexulator::SparseCoefficients const &kra_coefficients(
       Index prim_event_index) const = 0;
+
+  // -- Update and run --
+
+  virtual void update(
+      state_type const &state, monte::OccLocation const &occ_location,
+      std::optional<std::vector<EventFilterGroup>> _event_filters,
+      std::shared_ptr<engine_type> engine) = 0;
+
+  virtual void run(state_type &state, monte::OccLocation &occ_location,
+                   kmc_data_type &kmc_data, SelectedEvent &selected_event,
+                   std::optional<monte::SelectedEventDataCollector> &collector,
+                   run_manager_type &run_manager,
+                   std::shared_ptr<occ_events::OccSystem> event_system) = 0;
 
   // -- Select Event --
 

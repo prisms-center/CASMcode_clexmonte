@@ -10,18 +10,21 @@ namespace CASM {
 namespace clexmonte {
 
 AllowedEventList::AllowedEventList(
-    std::vector<PrimEventData> const &prim_event_list,
+    std::vector<PrimEventData> const &_prim_event_list,
     std::vector<EventImpactInfo> const &prim_impact_info_list,
     clexulator::ConfigDoFValues const &_dof_values,
     monte::OccLocation const &_occ_location,
     std::shared_ptr<clexulator::PrimNeighborList> prim_nlist,
     std::shared_ptr<clexulator::SuperNeighborList> _supercell_nlist,
-    bool use_map_index, bool _use_neighborlist_impact_table)
+    bool use_map_index, bool _use_neighborlist_impact_table,
+    bool _assign_allowed_events_only)
     : use_neighborlist_impact_table(_use_neighborlist_impact_table),
+      prim_event_list(_prim_event_list),
       dof_values(_dof_values),
       occ_location(_occ_location),
       supercell_nlist(_supercell_nlist),
-      allowed_event_map(use_map_index) {
+      allowed_event_map(use_map_index),
+      assign_allowed_events_only(_assign_allowed_events_only) {
   if (prim_event_list.size() != prim_impact_info_list.size()) {
     throw std::runtime_error(
         "Error in AllowedEventList constructor: prim_event_list and "
@@ -113,9 +116,41 @@ std::vector<Index> const &AllowedEventList::make_impact_list(
       use_neighborlist_impact_table
           ? this->neighborlist_impact_table.value()(selected_event_id)
           : this->relative_impact_table.value()(selected_event_id);
-  for (auto const &event_id : impacted_event_ids) {
-    this->impact_list.push_back(this->allowed_event_map.assign(event_id));
+
+  if (assign_allowed_events_only) {
+    // approach 1: include assigned events,
+    // and only assign new events that are allowed
+
+    std::vector<Index> linear_site_index;
+    for (auto const &event_id : impacted_event_ids) {
+      // check if already assigned
+      auto it = this->allowed_event_map.find(event_id);
+      if (it != this->allowed_event_map.events().end()) {
+        // if already assigned, add to impact list
+        this->impact_list.push_back(
+            std::distance(this->allowed_event_map.events().begin(), it));
+      }
+      // if not assigned, check if event is allowed and assign it if allowed
+      else {
+        // set linear_site_index
+        PrimEventData const &prim_event_data =
+            prim_event_list[event_id.prim_event_index];
+        set_event_linear_site_index(
+            linear_site_index, event_id.unitcell_index,
+            this->neighbor_index[event_id.prim_event_index], *supercell_nlist);
+        if (event_is_allowed(linear_site_index, dof_values, prim_event_data)) {
+          // assign event
+          this->impact_list.push_back(allowed_event_map.assign(it, event_id));
+        }
+      }
+    }
+  } else {
+    // approach 2: include all possible impacted events
+    for (auto const &event_id : impacted_event_ids) {
+      this->impact_list.push_back(this->allowed_event_map.assign(event_id));
+    }
   }
+
   return this->impact_list;
 }
 

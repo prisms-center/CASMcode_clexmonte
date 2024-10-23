@@ -4,6 +4,7 @@
 #include "casm/clexmonte/kinetic/kinetic_events.hh"
 #include "casm/clexmonte/monte_calculator/BaseMonteCalculator.hh"
 #include "casm/clexmonte/monte_calculator/MonteCalculator.hh"
+#include "casm/monte/MethodLog.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -138,19 +139,19 @@ class KineticCalculator : public BaseMonteCalculator {
   // a run if an event without a barrier is encountered
   bool allow_events_with_no_barrier = false;
 
+  /// If true (default) check if potentially impacted events are allowed
+  /// and only assign them to the event list if they are (adds an
+  /// additional check, but may reduce the size of the event list).
+  /// Otherwise, assign all potentially impacted events to the event list
+  /// (whether they are allowed will still be checked during the rate
+  /// calculation).
+  bool assign_allowed_events_only = true;
+
   /// \brief Reset the derived Monte Carlo calculator
   void _reset() override;
 
   /// \brief Clone the KineticCalculator
   KineticCalculator *_clone() const override;
-
-  CompleteKineticEventData &_complete_event_data() {
-    return static_cast<CompleteKineticEventData &>(*this->event_data);
-  }
-
-  AllowedKineticEventData &_allowed_event_data() {
-    return static_cast<AllowedKineticEventData &>(*this->event_data);
-  }
 };
 
 }  // namespace kinetic_2

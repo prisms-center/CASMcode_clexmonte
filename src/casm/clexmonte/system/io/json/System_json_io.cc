@@ -501,10 +501,15 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
       opt = fs::path("local_basis_sets") / local_basis_set_name /
             "local_orbit_composition";
       if (parser.self.find_at(opt) != parser.self.end()) {
+        std::cout << "Parsing local_orbit_composition" << std::endl;
+        std::cout << "- local_basis_set_name: " << local_basis_set_name
+                  << std::endl;
+
         auto key_begin = parser.self.at(opt).begin();
-        auto key_end = parser.self.at(opt).begin();
+        auto key_end = parser.self.at(opt).end();
         for (auto key_it = key_begin; key_it != key_end; ++key_it) {
           // parse local-orbit composition calculator data
+          std::cout << "- key: " << key_it.name() << std::endl;
           auto subparser = parser.subparse<LocalOrbitCompositionCalculatorData>(
               opt / key_it.name(), local_basis_set_name);
           if (!subparser->valid()) {

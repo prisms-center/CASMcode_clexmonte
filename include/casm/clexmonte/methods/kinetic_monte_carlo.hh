@@ -32,13 +32,14 @@ std::vector<Index> make_atom_name_index_list(
     occ_events::OccSystem const &occ_system);
 
 template <typename EventIDType, typename ConfigType,
-          typename SetSelectedEventFunction, typename StatisticsType,
-          typename EngineType>
+          typename SetSelectedEventFunction, typename SetImpactedEvenstFunction,
+          typename StatisticsType, typename EngineType>
 void kinetic_monte_carlo_v2(
     state_type &state, monte::OccLocation &occ_location,
     monte::KMCData<ConfigType, StatisticsType, EngineType> &kmc_data,
     SelectedEvent &selected_event,
     SetSelectedEventFunction set_selected_event_f,
+    SetImpactedEvenstFunction set_impacted_events_f,
     std::optional<monte::SelectedEventDataCollector> &collector,
     monte::RunManager<ConfigType, StatisticsType, EngineType> &run_manager,
     std::shared_ptr<occ_events::OccSystem> event_system);
@@ -96,6 +97,9 @@ inline std::vector<Index> make_atom_name_index_list(
 /// \param set_selected_event_f A function that can set `selected_event` with
 ///     signature `set_selected_event_f(SelectedEvent &selected_event, bool
 ///     requires_event_state)`.
+/// \param set_impacted_events_f A function that can set the impacted events
+///     based on the selected event, after the event has been applied, with
+///     signature `set_impacted_events_f(SelectedEvent &selected_event)`.
 /// \param collector Collects selected event data
 /// \param run_manager Contains sampling fixtures and after completion holds
 ///     final results
@@ -114,13 +118,14 @@ inline std::vector<Index> make_atom_name_index_list(
 /// - None
 ///
 template <typename EventIDType, typename ConfigType,
-          typename SetSelectedEventFunction, typename StatisticsType,
-          typename EngineType>
+          typename SetSelectedEventFunction, typename SetImpactedEvenstFunction,
+          typename StatisticsType, typename EngineType>
 void kinetic_monte_carlo_v2(
     state_type &state, monte::OccLocation &occ_location,
     monte::KMCData<ConfigType, StatisticsType, EngineType> &kmc_data,
     SelectedEvent &selected_event,
     SetSelectedEventFunction set_selected_event_f,
+    SetImpactedEvenstFunction set_impacted_events_f,
     std::optional<monte::SelectedEventDataCollector> &collector,
     monte::RunManager<ConfigType, StatisticsType, EngineType> &run_manager,
     std::shared_ptr<occ_events::OccSystem> event_system) {
@@ -235,6 +240,9 @@ void kinetic_monte_carlo_v2(
     run_manager.increment_n_accept();
     occ_location.apply(selected_event.event_data->event, get_occupation(state));
     kmc_data.time = event_time;
+
+    // Set the impacted events which need to be updated for the next iteration
+    set_impacted_events_f(selected_event);
   }
 
   run_manager.finalize(state);

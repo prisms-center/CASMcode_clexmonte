@@ -11,61 +11,6 @@ namespace CASM {
 namespace clexmonte {
 namespace kinetic_2 {
 
-enum class kinetic_event_selector_type {
-  vector_sum_tree,
-  sum_tree,
-  direct_sum,
-};
-
-class LocalOrbitCompositionCalculator {
- public:
-  LocalOrbitCompositionCalculator(std::shared_ptr<system_type> _system,
-                                  std::string _event_type_name,
-                                  std::set<int> _orbits_to_calculate);
-
-  /// \brief Reset pointer to state currently being calculated
-  void set(state_type const *state);
-
-  /// \brief Calculate the composition by orbit around an event
-  Eigen::MatrixXi const &calculate_num_each_component(
-      Eigen::VectorXi const &occupation, Index unitcell_index,
-      Index equivalent_index);
-
- private:
-  /// System pointer
-  std::shared_ptr<system_type> m_system;
-
-  /// Event type name
-  std::string m_event_type_name;
-
-  /// Orbits to calculate
-  std::set<int> m_orbits_to_calculate;
-
-  /// State to use
-  state_type const *m_state;
-
-  /// Converter from occupation index to component index, by sublattice
-  /// component_index = converter[sublattice_index][occ_index]
-  std::vector<std::vector<Index>> m_occ_index_to_component_index_converter;
-
-  /// Holds calculated composition as number of each component by orbit:
-  ///
-  ///     n = m_num_each_component_by_orbit(
-  ///             component_index,
-  ///             orbits_to_calculate_index)
-  ///
-  Eigen::MatrixXi m_num_each_component_by_orbit;
-
-  /// Supercell neighbor list
-  std::shared_ptr<clexulator::SuperNeighborList> m_supercell_nlist;
-
-  /// Store {neighbor_index, sublattice_index} for each site in each orbit:
-  /// m_local_orbits_neighbor_indices[equivalent_index][orbit_index] ->
-  ///     std::set<std::pair<int, int>>
-  std::vector<std::vector<std::set<std::pair<int, int>>>>
-      m_local_orbits_neighbor_indices;
-};
-
 /// \brief Event rate calculation for a particular KMC event
 ///
 /// EventStateCalculator is used to separate the event calculation from the
@@ -253,7 +198,14 @@ class CompleteKineticEventData : public BaseMonteEventData {
   /// \brief Update for given state, conditions, and occupants
   void update(state_type const &state, monte::OccLocation const &occ_location,
               std::optional<std::vector<EventFilterGroup>> _event_filters,
-              std::shared_ptr<engine_type> engine);
+              std::shared_ptr<engine_type> engine) override;
+
+  /// \brief Run the KMC simulation
+  void run(state_type &state, monte::OccLocation &occ_location,
+           kmc_data_type &kmc_data, SelectedEvent &selected_event,
+           std::optional<monte::SelectedEventDataCollector> &collector,
+           run_manager_type &run_manager,
+           std::shared_ptr<occ_events::OccSystem> event_system) override;
 
   // -- Validators --
 
@@ -524,6 +476,27 @@ struct AllowedEventCalculator {
   EventData const &set_event_data(EventID const &event_id);
 };
 
+enum class kinetic_event_selector_type {
+  vector_sum_tree,
+  sum_tree,
+  direct_sum,
+};
+
+typedef lotto::VectorRejectionFreeEventSelector<Index, AllowedEventCalculator,
+                                                std::mt19937_64,
+                                                GetImpactFromAllowedEventList>
+    vector_sum_tree_event_selector_type;
+
+typedef lotto::RejectionFreeEventSelector<Index, AllowedEventCalculator,
+                                          std::mt19937_64,
+                                          GetImpactFromAllowedEventList>
+    sum_tree_event_selector_type;
+
+typedef lotto::DirectSumRejectionFreeEventSelector<
+    Index, AllowedEventCalculator, std::mt19937_64,
+    GetImpactFromAllowedEventList>
+    direct_sum_event_selector_type;
+
 /// \brief Data for kinetic Monte Carlo events
 ///
 /// Includes:
@@ -535,24 +508,17 @@ struct AllowedEventCalculator {
 /// - allowed event list
 /// - AllowedEventCalculator: uses event state calculator and allowed event
 ///   list to calculate a rate given an event index
+template <typename EventSelectorType>
 class AllowedKineticEventData : public BaseMonteEventData {
  public:
   typedef std::mt19937_64 engine_type;
-
-  typedef lotto::RejectionFreeEventSelector<
-      Index, AllowedEventCalculator, engine_type, GetImpactFromAllowedEventList>
-      sum_tree_event_selector_type;
-
-  typedef lotto::VectorRejectionFreeEventSelector<
-      Index, AllowedEventCalculator, engine_type, GetImpactFromAllowedEventList>
-      vector_sum_tree_event_selector_type;
+  typedef EventSelectorType event_selector_type;
 
   AllowedKineticEventData(std::shared_ptr<system_type> _system,
                           bool _allow_events_with_no_barrier = false,
                           bool _use_map_index = true,
                           bool _use_neighborlist_impact_table = true,
-                          kinetic_event_selector_type _event_selector_type =
-                              kinetic_event_selector_type::vector_sum_tree);
+                          bool _assign_allowed_events_only = true);
 
   // -- Options --
 
@@ -560,21 +526,25 @@ class AllowedKineticEventData : public BaseMonteEventData {
   /// an exception is thrown by `select_event` if one was encountered when
   /// calculating rates in the preceding step. If true, events with no barrier
   /// are allowed with rate 1.0 and warning messages are written.
-  bool allow_events_with_no_barrier;
+  const bool allow_events_with_no_barrier;
 
   /// \brief If true (default), use the map index for the AllowedEventMap; If
   /// false, use the vector index
   ///
   /// The map index is lower memory, but may be slower; The vector index is
   /// higher memory, but may be faster.
-  bool use_map_index;
+  const bool use_map_index;
 
   /// \brief If true (default), use the neighborlist impact table; else use the
   /// relative impact table
-  bool use_neighborlist_impact_table;
+  const bool use_neighborlist_impact_table;
 
-  /// \brief Specifies the type of event selector to use
-  kinetic_event_selector_type event_selector_type;
+  /// \brief If true (default) check if potentially impacted events are allowed
+  ///     and only assign them to the event list if they are. Otherwise,
+  ///     assign all potentially impacted events to the event list (whether they
+  ///     are allowed will still be checked during the rate calculation).
+  ///
+  const bool assign_allowed_events_only;
 
   // --- BaseMonteEventData data ---
 
@@ -613,19 +583,23 @@ class AllowedKineticEventData : public BaseMonteEventData {
 
   // -- Event selector options --
 
-  /// Event selector - sum_tree
-  std::shared_ptr<sum_tree_event_selector_type> sum_tree_event_selector;
-
-  /// Event selector - vector_sum_tree
-  std::shared_ptr<vector_sum_tree_event_selector_type>
-      vector_sum_tree_event_selector;
-
-  //  /// Event selector - direct_sum
-  //  std::shared_ptr<direct_sum_event_selector_type> direct_sum_event_selector;
+  /// \brief Event selector
+  std::shared_ptr<event_selector_type> event_selector;
 
   /// \brief Update for given state, conditions, and occupants
   void update(state_type const &state, monte::OccLocation const &occ_location,
-              std::shared_ptr<engine_type> engine);
+              std::optional<std::vector<EventFilterGroup>> _event_filters,
+              std::shared_ptr<engine_type> engine) override;
+
+  /// \brief Run the KMC simulation
+  void run(state_type &state, monte::OccLocation &occ_location,
+           kmc_data_type &kmc_data, SelectedEvent &selected_event,
+           std::optional<monte::SelectedEventDataCollector> &collector,
+           run_manager_type &run_manager,
+           std::shared_ptr<occ_events::OccSystem> event_system) override;
+
+  /// \brief Return event selector type name
+  std::string event_selector_type_str() const;
 
   /// \brief Constructs `event_selector` from the current `event_list` and
   /// `random_generator`; must be called after `update`
@@ -676,27 +650,12 @@ class AllowedKineticEventData : public BaseMonteEventData {
     return *event_calculator;
   }
 
-  void _validate_event_selector() const {
-    if (this->event_selector_type == kinetic_event_selector_type::sum_tree) {
-      // sum_tree_event_selector
-      if (!sum_tree_event_selector) {
-        throw std::runtime_error(
-            "Error in AllowedKineticEventData: Event selector not set");
-      }
-
-    } else if (this->event_selector_type ==
-               kinetic_event_selector_type::vector_sum_tree) {
-      // vector_sum_tree_event_selector
-      if (!vector_sum_tree_event_selector) {
-        throw std::runtime_error(
-            "Error in AllowedKineticEventData: Event selector not set");
-      }
-
-    } else {
+  event_selector_type const &_event_selector() const {
+    if (!event_selector) {
       throw std::runtime_error(
-          "Error constructing AllowedKineticEventData: "
-          "invalid event_selector_type.");
+          "Error in AllowedKineticEventData: Event selector not set");
     }
+    return *event_selector;
   }
 
   // --- BaseMonteEventData interface ---
@@ -741,21 +700,7 @@ class AllowedKineticEventData : public BaseMonteEventData {
   }
 
   /// Return the current total event rate
-  double total_rate() const override {
-    _validate_event_selector();
-
-    if (this->event_selector_type == kinetic_event_selector_type::sum_tree) {
-      return sum_tree_event_selector->total_rate();
-
-    } else if (this->event_selector_type ==
-               kinetic_event_selector_type::vector_sum_tree) {
-      return vector_sum_tree_event_selector->total_rate();
-    } else {
-      throw std::runtime_error(
-          "Error in AllowedKineticEventData: "
-          "invalid event_selector_type.");
-    }
-  }
+  double total_rate() const override { return _event_selector().total_rate(); }
 
   // -- Event list iteration --
 
@@ -853,19 +798,7 @@ class AllowedKineticEventData : public BaseMonteEventData {
     auto begin = _event_list().allowed_event_map.events().begin();
     Index index = std::distance(begin, it);
 
-    _validate_event_selector();
-
-    if (this->event_selector_type == kinetic_event_selector_type::sum_tree) {
-      return sum_tree_event_selector->get_rate(index);
-
-    } else if (this->event_selector_type ==
-               kinetic_event_selector_type::vector_sum_tree) {
-      return vector_sum_tree_event_selector->get_rate(index);
-    } else {
-      throw std::runtime_error(
-          "Error in AllowedKineticEventData: "
-          "invalid event_selector_type.");
-    }
+    return _event_selector().get_rate(index);
   }
 
   /// Calculate event state data

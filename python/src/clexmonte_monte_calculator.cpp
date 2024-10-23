@@ -969,6 +969,57 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
         return ss.str();
       });
 
+  py::class_<clexmonte::SelectedEvent,
+             std::shared_ptr<clexmonte::SelectedEvent>>(m, "SelectedEvent",
+                                                        R"pbdoc(
+      Data structure holding the last selected event and its state
+      )pbdoc")
+      .def(py::init<>(),
+           R"pbdoc(
+          .. rubric:: Constructor
+
+          Default constructor only.
+
+          )pbdoc")
+      .def_readonly("event_id", &clexmonte::SelectedEvent::event_id,
+                    R"pbdoc(
+          EventID: The event ID for the selected event.
+          )pbdoc")
+      .def_readonly("event_index", &clexmonte::SelectedEvent::event_index,
+                    R"pbdoc(
+          int: The index of the selected event in the event list (for
+          `event_data_type` `"default"` or `"low_memory"`).
+          )pbdoc")
+      .def_readonly("total_rate", &clexmonte::SelectedEvent::total_rate,
+                    R"pbdoc(
+          float: The total rate when the event was selected.
+          )pbdoc")
+      .def_readonly("time_increment", &clexmonte::SelectedEvent::time_increment,
+                    R"pbdoc(
+          float: The time increment when the event occurred.
+          )pbdoc")
+      .def_readonly("prim_event_data",
+                    &clexmonte::SelectedEvent::prim_event_data,
+                    R"pbdoc(
+          PrimEventData: Description of the selected event.
+          )pbdoc")
+      .def_readonly("event_data", &clexmonte::SelectedEvent::event_data,
+                    R"pbdoc(
+          EventData: Data for the selected event.
+          )pbdoc")
+      .def_readonly("event_state", &clexmonte::SelectedEvent::event_state,
+                    R"pbdoc(
+          Optional[EventState]: The calculated properties of the
+          selected event.
+
+          The kinetic Monte Carlo event lists may only contain the event rates
+          and not store all the event properties. If
+          `requires_event_state=True` for one or more selected event data
+          functions, after the event is selected, the state of the selected
+          event will be calculated and this will have a value; otherwise it
+          will be None.
+          )pbdoc");
+
   py::class_<clexmonte::MonteEventList>(m, "MonteEventList",
                                         R"pbdoc(
       Allows iterating over EventID
@@ -1433,12 +1484,11 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def_property_readonly("selected_event", &calculator_type::selected_event,
                              R"pbdoc(
           Optional[libcasm.monte.sampling.SelectedEvent]: If applicable, will
-          be set to the last selected event.
+          be set to provide information about the last selected event.
 
           If applicable for a particular calculator method, this will be set
-          after each event selection to provide the selected event information
-          to make that information available to
-          :class:`libcasm.monte.sampling.SelectedEventDataFunctions`.
+          after each event selection to make the selected event information
+          available for collection.
 
           If not applicable for a particular calculator method, this will be
           None.

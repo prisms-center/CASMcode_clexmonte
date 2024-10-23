@@ -191,6 +191,35 @@ class AllowedEventMap {
     return index;
   }
 
+  /// \brief Assign an event ID to an event index
+  ///
+  /// - This overload uses an existing `find` result to avoid a second lookup
+  Index assign(std::vector<AllowedEventData>::const_iterator it,
+               EventID const &event_id) {
+    if (it != m_events.end()) {
+      return std::distance(events().begin(), it);
+    }
+
+    if (m_available.empty()) {
+      m_available.push_back(m_events.size());
+      m_events.push_back({false, EventID()});
+      m_has_new_events = true;
+    }
+
+    Index index = m_available.back();
+    if (m_use_map_index) {
+      _set_map_index(event_id, index);
+    } else {
+      _set_vec_index(event_id, index);
+    }
+    AllowedEventData &event_data = m_events[index];
+    event_data.is_assigned = true;
+    event_data.event_id = event_id;
+    m_n_assigned++;
+    m_available.pop_back();
+    return index;
+  }
+
   /// \brief If true, the `events` list has been expanded
   bool has_new_events() const { return m_has_new_events; }
 
@@ -341,11 +370,15 @@ struct AllowedEventList {
       monte::OccLocation const &occ_location,
       std::shared_ptr<clexulator::PrimNeighborList> prim_nlist,
       std::shared_ptr<clexulator::SuperNeighborList> supercell_nlist,
-      bool use_map_index, bool use_neighborlist_impact_table);
+      bool use_map_index, bool use_neighborlist_impact_table,
+      bool assign_allowed_events_only);
 
   /// \brief If true, use the neighborlist impact table; if false, use the
   /// relative impact table
   const bool use_neighborlist_impact_table;
+
+  /// \brief A reference to the prim event list
+  std::vector<PrimEventData> const &prim_event_list;
 
   /// \brief The relative impact table
   std::optional<RelativeEventImpactTable> relative_impact_table;
@@ -379,6 +412,13 @@ struct AllowedEventList {
   /// \brief A list that gets updated based on the selected event to contain
   /// the elements of `events` that are impacted by the selected event
   std::vector<Index> impact_list;
+
+  /// \brief If true (default) check if potentially impacted events are allowed
+  ///     and only assign them to the event list if they are. Otherwise,
+  ///     assign all potentially impacted events to the event list (whether they
+  ///     are allowed will still be checked during the rate calculation).
+  ///
+  bool assign_allowed_events_only;
 
   /// \brief Returns a list of indices of events that are impacted by the
   /// selected event

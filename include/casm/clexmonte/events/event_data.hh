@@ -158,6 +158,7 @@ struct EventID : public Comparisons<CRTPBase<EventID>> {
 
 struct SelectedEvent {
   EventID event_id;
+  Index event_index;
   double total_rate;
   double time_increment;
   PrimEventData const *prim_event_data;
@@ -170,6 +171,7 @@ struct SelectedEvent {
 
   void reset() {
     event_id = EventID();
+    event_index = -1;
     total_rate = 0.0;
     time_increment = 0.0;
     prim_event_data = nullptr;
