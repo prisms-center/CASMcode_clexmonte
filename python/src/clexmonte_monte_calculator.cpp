@@ -1,4 +1,5 @@
 #include <pybind11/eigen.h>
+#include <pybind11/functional.h>
 #include <pybind11/iostream.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -13,8 +14,7 @@
 #include "pybind11_json/pybind11_json.hpp"
 
 // clexmonte/semigrand_canonical
-#include "casm/clexmonte/events/io/json/EventState_json_io.hh"
-#include "casm/clexmonte/events/io/json/PrimEventData_json_io.hh"
+#include "casm/clexmonte/events/io/json/event_data_json_io.hh"
 #include "casm/clexmonte/monte_calculator/MonteCalculator.hh"
 #include "casm/clexmonte/monte_calculator/io/json/MonteCalculator_json_io.hh"
 #include "casm/clexmonte/run/StateModifyingFunction.hh"
@@ -225,7 +225,7 @@ std::shared_ptr<run_manager_type> monte_calculator_run(
   make_temporary_if_necessary(state, occ_location, tmp, self);
 
   // run
-  self.run(state, *occ_location, *run_manager);
+  self.run(state, *occ_location, run_manager);
   return run_manager;
 }
 
@@ -1493,31 +1493,484 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           If not applicable for a particular calculator method, this will be
           None.
           )pbdoc")
-      .def_property_readonly("selected_event_data_functions",
-                             &calculator_type::selected_event_data_functions,
+      .def_property_readonly("selected_event_functions",
+                             &calculator_type::selected_event_functions,
                              R"pbdoc(
-          Optional[libcasm.monte.sampling.SelectedEventDataFunctions]: Selected
+          Optional[libcasm.monte.sampling.SelectedEventFunctions]: Selected
           event data functions.
 
           If applicable for a particular calculator method, this will be
           constructed with standard functions and allows adding additional
           custom functions that can be called after each event is selected to
           collect selected event data, if requested by
-          :func:`MonteCalculator.selected_event_data_params`.
+          :func:`MonteCalculator.selected_event_function_params`.
 
           If not applicable for a particular calculator method, this will be
           None.
           )pbdoc")
-      .def_property(
-          "selected_event_data_params",
-          &calculator_type::selected_event_data_params,
-          [](calculator_type &self,
-             std::shared_ptr<monte::SelectedEventDataParams>
-                 selected_event_data_params) {
-            self.set_selected_event_data_params(selected_event_data_params);
+      .def(
+          "add_generic_function",
+          [](calculator_type &self, std::string name, std::string description,
+             bool requires_event_state, std::function<void()> function,
+             std::function<bool()> has_value_function, Index order) {
+            // -- Validation --
+            if (function == nullptr) {
+              throw std::runtime_error(
+                  "Error in MonteCalculator.add_generic_function: "
+                  "function=None");
+            }
+
+            std::shared_ptr<monte::SelectedEventFunctions> functions =
+                self.selected_event_functions();
+            if (!functions) {
+              throw std::runtime_error(
+                  "Error in MonteCalculator.add_generic_function: "
+                  "selected_event_functions == None");
+            }
+
+            // -- End validation --
+
+            if (has_value_function == nullptr) {
+              has_value_function = []() { return true; };
+            }
+
+            monte::GenericSelectedEventFunction f(
+                name, description, requires_event_state, function,
+                has_value_function, order);
+
+            functions->insert(f);
           },
           R"pbdoc(
-          Optional[libcasm.monte.sampling.SelectedEventDataParams]: Selected event
+          Add a function that will be evaluated after
+          selecting an event and before collecting data about the event.
+
+          This is a convenience method that:
+
+          - constructs a
+            :class:`~libcasm.monte.sampling.GenericSelectedEventFunction`
+            with the given parameters, and
+          - adds it to `self.selected_event_functions.generic_functions`.
+
+          Parameters
+          ----------
+          name : str
+              Name of the sampled quantity.
+          description : str
+              Description of the function.
+          requires_event_state : bool
+              If true, the function requires the event state of the selected
+              event to be calculated.
+          function : function
+              A function with 0 arguments that returns a float. Typically this
+              is a lambda function that has been given a reference or pointer to
+              a Monte Carlo calculation object so that it can access the last
+              selected event state and the Monte Carlo state before the event
+              occurs.
+          has_value_function : Optional[function] = None
+              An optional function with 0 arguments that returns a bool
+              indicating that the value of `function` should be collected.
+              Default is to always return True. Typically this is a lambda
+              function that has been given a reference or pointer to a Monte
+              Carlo calculation object so that it can access the current
+              selected event and determine if a value should be collected.
+          order : int = 0
+              Order in which the function is evaluated. Functions with lower
+              order are evaluated first. If two functions have the same order,
+              they are evaluated in lexicographical order by function name.
+           )pbdoc",
+          py::arg("name"), py::arg("description"),
+          py::arg("requires_event_state"), py::arg("function"),
+          py::arg("has_value_functions") = nullptr, py::arg("order") = 0)
+      .def(
+          "add_discrete_vector_int_function",
+          [](calculator_type &self, std::string name, std::string description,
+             std::vector<Index> shape, bool requires_event_state,
+             std::function<Eigen::VectorXl()> function,
+             std::function<bool()> has_value_function,
+             std::optional<std::vector<std::string>> component_names,
+             Index max_size,
+             std::optional<std::vector<std::pair<Eigen::VectorXl, std::string>>>
+                 value_labels) {
+            // -- Validation --
+            if (function == nullptr) {
+              throw std::runtime_error(
+                  "Error in MonteCalculator.add_discrete_vector_int_function: "
+                  "function=None");
+            }
+
+            std::shared_ptr<monte::SelectedEventFunctions> functions =
+                self.selected_event_functions();
+            if (!functions) {
+              throw std::runtime_error(
+                  "Error in MonteCalculator.add_discrete_vector_int_function: "
+                  "selected_event_functions == None");
+            }
+
+            // -- End validation --
+
+            if (has_value_function == nullptr) {
+              has_value_function = []() { return true; };
+            }
+
+            monte::DiscreteVectorIntHistogramFunction f(
+                name, description, shape, component_names, requires_event_state,
+                function, has_value_function, max_size);
+
+            if (value_labels.has_value()) {
+              for (auto const &pair : value_labels.value()) {
+                f.value_labels->emplace(pair.first, pair.second);
+              }
+            }
+
+            functions->insert(f);
+          },
+          R"pbdoc(
+          Add a function for collecting integer-valued data after selecting an
+          event.
+
+          This is a convenience method that:
+
+          - constructs a
+            :class:`~libcasm.monte.sampling.VectorIntHistogramFunction`
+            with the given parameters, and
+          - adds it to `self.selected_event_functions.discrete_vector_int_functions`.
+
+          Parameters
+          ----------
+          name : str
+              Name of the sampled quantity.
+
+          description : str
+              Description of the function.
+
+          shape : list[int]
+              Shape of quantity, with column-major unrolling
+
+              Scalar: [], Vector: [n], Matrix: [m, n], etc.
+
+          requires_event_state : bool
+              If true, the function requires the event state of the selected
+              event to be calculated.
+
+          function : function
+              A function with 0 arguments that returns a integer-valued array.
+              Typically this is a lambda function that has been given a
+              reference or pointer to a Monte Carlo calculation object so that
+              it can access the last selected event state and the Monte Carlo
+              state before the event occurs.
+
+          has_value_function : Optional[function] = None
+              An optional function with 0 arguments that returns a bool
+              indicating that the value of `function` should be collected.
+              Default is to always return True. Typically this is a lambda
+              function that has been given a reference or pointer to a Monte
+              Carlo calculation object so that it can access the current
+              selected event and determine if a value should be collected.
+
+          component_names : Optional[list[str]] = None
+              A name for each component of the resulting vector.
+
+              Can be strings representing an indices (i.e "0", "1", "2", etc.) or can be a descriptive string (i.e. "Mg", "Va", "O", etc.). If None, indices for column-major ordering are used (i.e. "0,0", "1,0", ..., "m-1,n-1")
+
+          max_size : int = 10000
+              Maximum number of bins to create. If adding an additional data
+              point would cause the number of bins to exceed `max_size`, the
+              count / weight is instead added to the `out_of_range_count` of the
+              :class:`~libcasm.monte.sampling.DiscreteVectorIntHistogram`.
+
+          value_labels: Optional[list[tuple[np.ndarray, str]]]
+              A list of tuples containing values and labels that if provided
+              will be used to label the values in the output.
+
+              For example, the standard function "selected_event.by_type"
+              returns a value `[0]`, `[1]`, ... to indicate which type of event
+              was selected and labels the output with the event type name
+              using:
+
+              .. code-block:: python
+
+                  value_labels = [
+                      (np.array([0]), "A_Va_1NN"),
+                      (np.array([1]), "B_Va_1NN"),
+                      ...
+                  ]
+
+
+          )pbdoc",
+          py::arg("name"), py::arg("description"), py::arg("shape"),
+          py::arg("requires_event_state"), py::arg("function"),
+          py::arg("has_value_function") = nullptr,
+          py::arg("component_names") = std::nullopt,
+          py::arg("max_size") = 10000, py::arg("value_labels") = std::nullopt)
+      .def(
+          "add_discrete_vector_float_function",
+          [](calculator_type &self, std::string name, std::string description,
+             std::vector<Index> shape, bool requires_event_state,
+             std::function<Eigen::VectorXd()> function,
+             std::function<bool()> has_value_function,
+             std::optional<std::vector<std::string>> component_names,
+             Index max_size, double tol,
+             std::optional<std::vector<std::pair<Eigen::VectorXd, std::string>>>
+                 value_labels) {
+            // -- Validation --
+            if (function == nullptr) {
+              throw std::runtime_error(
+                  "Error in "
+                  "MonteCalculator.add_discrete_vector_float_function: "
+                  "function=None");
+            }
+
+            std::shared_ptr<monte::SelectedEventFunctions> functions =
+                self.selected_event_functions();
+            if (!functions) {
+              throw std::runtime_error(
+                  "Error in "
+                  "MonteCalculator.add_discrete_vector_float_function: "
+                  "selected_event_functions == None");
+            }
+
+            // -- End validation --
+
+            if (has_value_function == nullptr) {
+              has_value_function = []() { return true; };
+            }
+
+            monte::DiscreteVectorFloatHistogramFunction f(
+                name, description, shape, component_names, requires_event_state,
+                function, has_value_function, max_size, tol);
+
+            if (value_labels.has_value()) {
+              for (auto const &pair : value_labels.value()) {
+                f.value_labels->emplace(pair.first, pair.second);
+              }
+            }
+
+            functions->insert(f);
+          },
+          R"pbdoc(
+          Add a function for collecting discrete floating-valued data after
+          selecting an event.
+
+          This is a convenience method that:
+
+          - constructs a
+            :class:`~libcasm.monte.sampling.VectorFloatHistogramFunction`
+            with the given parameters, and
+          - adds it to `self.selected_event_functions.discrete_vector_float_functions`.
+
+          Parameters
+          ----------
+          name : str
+              Name of the sampled quantity.
+
+          description : str
+              Description of the function.
+
+          shape : list[int]
+              Shape of quantity, with column-major unrolling
+
+              Scalar: [], Vector: [n], Matrix: [m, n], etc.
+
+          requires_event_state : bool
+              If true, the function requires the event state of the selected
+              event to be calculated.
+
+          function : function
+              A function with 0 arguments that returns a float-valued array.
+              Typically this is a lambda function that has been given a
+              reference or pointer to a Monte Carlo calculation object so that
+              it can access the last selected event state and the Monte Carlo
+              state before the event occurs.
+
+          has_value_function : Optional[function] = None
+              An optional function with 0 arguments that returns a bool
+              indicating that the value of `function` should be collected.
+              Default is to always return True. Typically this is a lambda
+              function that has been given a reference or pointer to a Monte
+              Carlo calculation object so that it can access the current
+              selected event and determine if a value should be collected.
+
+          component_names : Optional[list[str]] = None
+              A name for each component of the resulting vector.
+
+              Can be strings representing an indices (i.e "0", "1", "2", etc.) or can be a descriptive string (i.e. "Mg", "Va", "O", etc.). If None, indices for column-major ordering are used (i.e. "0,0", "1,0", ..., "m-1,n-1")
+
+          max_size : int = 10000
+              Maximum number of bins to create. If adding an additional data
+              point would cause the number of bins to exceed `max_size`, the
+              count / weight is instead added to the `out_of_range_count` of the
+              :class:`~libcasm.monte.sampling.DiscreteVectorIntHistogram`.
+
+          tol : float = :data:`~libcasm.casmglobal.TOL`
+              Tolerance for floating point comparisons used when determining
+              counts for the histogram.
+
+          value_labels: Optional[list[tuple[np.ndarray, str]]]
+              A list of tuples containing values and labels that if provided
+              will be used to label the values in the output.
+
+              For example:
+
+              .. code-block:: python
+
+                  value_labels = [
+                      (np.array([-1.0]), "negative"),
+                      (np.array([1.0]), "positive"),
+                      ...
+                  ]
+
+
+          )pbdoc",
+          py::arg("name"), py::arg("description"), py::arg("shape"),
+          py::arg("requires_event_state"), py::arg("function"),
+          py::arg("has_value_function") = nullptr,
+          py::arg("component_names") = std::nullopt,
+          py::arg("max_size") = 10000, py::arg("tol") = CASM::TOL,
+          py::arg("value_labels") = std::nullopt)
+      .def(
+          "add_partitioned_histogram_function",
+          [](calculator_type &self, std::string name, std::string description,
+             bool requires_event_state, std::function<double()> function,
+             std::string partition_type, bool is_log, double initial_begin,
+             double bin_width, Index max_size) {
+            // -- Validation --
+            if (function == nullptr) {
+              throw std::runtime_error(
+                  "Error in MonteCalculator.add_histogram_function: "
+                  "function=None");
+            }
+
+            std::shared_ptr<monte::SelectedEventFunctions> functions =
+                self.selected_event_functions();
+            if (!functions) {
+              throw std::runtime_error(
+                  "Error in MonteCalculator.add_histogram_function: "
+                  "selected_event_functions == None");
+            }
+
+            std::shared_ptr<clexmonte::SelectedEvent> selected_event =
+                self.selected_event();
+            if (!selected_event) {
+              throw std::runtime_error(
+                  "Error in MonteCalculator.add_histogram_function: "
+                  "selected_event == None");
+            }
+
+            // -- End validation --
+
+            // This makes:
+            // - a lookup table for prim_event_index -> partition index
+            // - a vector of partition names
+            clexmonte::SelectedEventInfo info(
+                self.event_data().prim_event_list());
+            if (partition_type == "by_type") {
+              info.make_indices_by_type();
+            } else if (partition_type == "by_equivalent_index") {
+              info.make_indices_by_equivalent_index();
+            } else if (partition_type == "by_equivalent_index_and_direction") {
+              info.make_indices_by_equivalent_index_and_direction();
+            } else {
+              throw std::runtime_error(
+                  "Error in MonteCalculator.add_histogram_function: "
+                  "invalid partition_type=" +
+                  partition_type);
+            }
+
+            // This is the lookup table, as a shared_ptr which can be
+            // captured by the lambda function `get_partition`
+            std::shared_ptr<std::vector<Index>> prim_event_index_to_index =
+                info.prim_event_index_to_index;
+            // The `selected_event` is a shared_ptr<SelectedEvent> which
+            // will be updated by the MonteCalculator after each event is
+            // selected.
+            auto get_partition = [prim_event_index_to_index, selected_event]() {
+              return prim_event_index_to_index->at(
+                  selected_event->prim_event_data->prim_event_index);
+            };
+
+            monte::PartitionedHistogramFunction<double> f(
+                name, description, requires_event_state, function,
+                info.partition_names, get_partition, is_log, initial_begin,
+                bin_width, max_size);
+
+            functions->insert(f);
+          },
+          R"pbdoc(
+          Add a custom function for collecting continuous scalar quantities of
+          the selected events in 1d histograms, partitioned by (i) event type,
+          or (ii) event type and equivalent index, or (iii) event type,
+          equivalent index, and hop direction.
+
+          This is a convenience method that:
+
+          - constructs a lookup table (`prim_event_index` -> `partition_index`)
+            to partition collected data by the type of selected event,
+          - generates the corresponding list of partition names,
+          - constructs a
+            :class:`~libcasm.monte.sampling.PartitionedHistogramFunction`
+            with the partitions and given parameters, and
+          - adds it to `self.selected_event_functions.continuous_1d_functions`.
+
+          Parameters
+          ----------
+          name : str
+              Name of the sampled quantity.
+          description : str
+              Description of the function.
+          requires_event_state : bool
+              If true, the function requires the event state of the selected
+              event to be calculated.
+          function : function
+              A function with 0 arguments that returns a float. Typically this
+              is a lambda function that has been given a reference or pointer to
+              a Monte Carlo calculation object so that it can access the last
+              selected event state and the Monte Carlo state before the event
+              occurs.
+          partition_type : str
+              Determines the type of partitioning to use for the histogram.
+              Options are:
+
+              - "by_type": Partition by event type
+              - "by_equivalent_index": Partition by event type and equivalent
+                index.
+              - "by_equivalent_index_and_direction": Partition by event
+                type, equivalent index, and direction
+
+          is_log : bool = False
+              True if bin coordinate spacing is log-scaled; False otherwise.
+          initial_begin : float = 0.0
+              Initial `begin` coordinate, specifying the beginning of the range
+              for the first bin. The bin number for a particular value is
+              calculated as `(value - begin) / bin_width`, so the range for
+              bin `i` is [begin, begin + i*bin_width). Coordinates are adjusted
+              to fit the data encountered by starting `begin` at
+              `initial_begin` and adjusting it as necessary by multiples of
+              `bin_width`.
+          bin_width : float = 1.0
+              Bin width.
+          max_size : int = 10000
+              Maximum number of bins to create. If adding an additional data
+              point would cause the number of bins to exceed `max_size`, the
+              count / weight is instead added to the `out_of_range_count` of the
+              :class:`~libcasm.monte.sampling.PartitionedHistogram1D`.
+
+          )pbdoc",
+          py::arg("name"), py::arg("description"),
+          py::arg("requires_event_state"), py::arg("function"),
+          py::arg("partition_type"), py::arg("is_log") = false,
+          py::arg("initial_begin") = 0.0, py::arg("bin_width") = 1.0,
+          py::arg("max_size") = 10000)
+      .def_property(
+          "selected_event_function_params",
+          &calculator_type::selected_event_function_params,
+          [](calculator_type &self,
+             std::shared_ptr<monte::SelectedEventFunctionParams>
+                 selected_event_function_params) {
+            self.set_selected_event_function_params(
+                selected_event_function_params);
+          },
+          R"pbdoc(
+          Optional[libcasm.monte.sampling.SelectedEventFunctionParams]: Selected event
           data collection parameters.
 
           If applicable for a particular calculator method, this may be set
@@ -1534,11 +1987,11 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           [](calculator_type &self, Index jumps_per_position_sample,
              Index max_n_position_samples, bool output_incomplete_samples,
              bool stop_run_when_complete) {
-            auto params_ptr = self.selected_event_data_params();
+            auto params_ptr = self.selected_event_function_params();
             if (params_ptr == nullptr) {
-              self.set_selected_event_data_params(
-                  std::make_shared<monte::SelectedEventDataParams>());
-              params_ptr = self.selected_event_data_params();
+              self.set_selected_event_function_params(
+                  std::make_shared<monte::SelectedEventFunctionParams>());
+              params_ptr = self.selected_event_function_params();
             }
             params_ptr->correlations_data_params =
                 monte::CorrelationsDataParams(
@@ -1547,7 +2000,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
             return self;
           },
           R"pbdoc(
-          Update :py:attr:`selected_event_data_params` to collect hop
+          Update :py:attr:`selected_event_function_params` to collect hop
           correlations data
 
           Parameters
@@ -1570,7 +2023,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           Returns
           -------
-          self: libcasm.clexmonte.SelectedEventDataParams
+          self: libcasm.clexmonte.SelectedEventFunctionParams
               To allow chaining multiple calls, `self` is returned
           )pbdoc",
           py::arg("jumps_per_position_sample") = 1,
@@ -1580,20 +2033,57 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def(
           "do_not_collect_hop_correlations",
           [](calculator_type &self) {
-            auto params_ptr = self.selected_event_data_params();
+            auto params_ptr = self.selected_event_function_params();
             if (params_ptr) {
               params_ptr->correlations_data_params = std::nullopt;
             }
             return self;
           },
           R"pbdoc(
-          Update :py:attr:`selected_event_data_params` to not collect hop correlations data
+          Update :py:attr:`selected_event_function_params` to not collect hop correlations data
 
           Returns
           -------
-          self: libcasm.clexmonte.SelectedEventDataParams
+          self: libcasm.clexmonte.SelectedEventFunctionParams
               To allow chaining multiple calls, `self` is returned
           )pbdoc")
+      .def(
+          "evaluate",
+          [](calculator_type &self, std::string name,
+             std::optional<Index> order = std::nullopt) {
+            auto params_ptr = self.selected_event_function_params();
+            if (params_ptr == nullptr) {
+              self.set_selected_event_function_params(
+                  std::make_shared<monte::SelectedEventFunctionParams>());
+              params_ptr = self.selected_event_function_params();
+            }
+            params_ptr->evaluate(name, order);
+            return self;
+          },
+          R"pbdoc(
+          Update :py:attr:`selected_event_function_params` to add the name of a
+          generic function that will be evaluated for each selected
+          event, along with optional order of evaluation.
+
+          Parameters
+          ----------
+          name : str
+              The name of a Selected event function to be added to
+              `self.selected_event_function_params.function_names`. These should
+              be keys in one of the dictionaries in
+              :func:`MonteCalculator.selected_event_functions`.
+          order : Optional[int] = None
+              The order in which generic selected event functions are evaluated.
+              Functions with lower order are evaluated first. If two functions
+              have the same order, they are evaluated in lexicographical order
+              by function name.
+
+          Returns
+          -------
+          self: libcasm.clexmonte.SelectedEventFunctionParams
+              To allow chaining multiple calls, `self` is returned
+          )pbdoc",
+          py::arg("name"), py::arg("order") = std::nullopt)
       .def(
           "collect",
           [](calculator_type &self, std::string name,
@@ -1602,28 +2092,28 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
              std::optional<double> initial_begin = std::nullopt,
              std::optional<std::string> spacing = std::nullopt,
              std::optional<int> max_size = std::nullopt) {
-            auto params_ptr = self.selected_event_data_params();
+            auto params_ptr = self.selected_event_function_params();
             if (params_ptr == nullptr) {
-              self.set_selected_event_data_params(
-                  std::make_shared<monte::SelectedEventDataParams>());
-              params_ptr = self.selected_event_data_params();
+              self.set_selected_event_function_params(
+                  std::make_shared<monte::SelectedEventFunctionParams>());
+              params_ptr = self.selected_event_function_params();
             }
             params_ptr->collect(name, tol, bin_width, initial_begin, spacing,
                                 max_size);
             return self;
           },
           R"pbdoc(
-          Update :py:attr:`selected_event_data_params` to add the name of a
+          Update :py:attr:`selected_event_function_params` to add the name of a
           function that will be evaluated to collect data for each selected
           event, along with optional custom settings.
 
           Parameters
           ----------
           name : str
-              The name of a selected event data function to be added to
-              `self.selected_event_data_params.function_names`. These should
+              The name of a Selected event function to be added to
+              `self.selected_event_function_params.function_names`. These should
               be keys in one of the dictionaries in
-              :func:`MonteCalculator.selected_event_data_functions`.
+              :func:`MonteCalculator.selected_event_functions`.
           tol : Optional[float] = None
               The tolerance for comparing values, applicable to
               discrete floating point valued functions. If None, the
@@ -1646,7 +2136,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           Returns
           -------
-          self: libcasm.clexmonte.SelectedEventDataParams
+          self: libcasm.clexmonte.SelectedEventFunctionParams
               To allow chaining multiple calls, `self` is returned
           )pbdoc",
           py::arg("name"), py::arg("tol") = std::nullopt,
@@ -1656,14 +2146,14 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def(
           "do_not_collect",
           [](calculator_type &self, std::string name) {
-            auto params_ptr = self.selected_event_data_params();
+            auto params_ptr = self.selected_event_function_params();
             if (params_ptr) {
               params_ptr->do_not_collect(name);
             }
             return self;
           },
           R"pbdoc(
-          Update :py:attr:`selected_event_data_params` to remove the name of a
+          Update :py:attr:`selected_event_function_params` to remove the name of a
           function that will be evaluated to collect data for each selected
           event, and to remove all custom settings.
           )pbdoc")
@@ -1674,7 +2164,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           data
 
           If applicable for a particular calculator method, and requested by
-          setting :func:`MonteCalculator.selected_event_data_params`, this will
+          setting :func:`MonteCalculator.selected_event_function_params`, this will
           store selected event data.
 
           If not applicable for a particular calculator method, this will be
@@ -1698,6 +2188,10 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def_property_readonly("potential", &calculator_type::potential, R"pbdoc(
           MontePotential : The potential calculator for the current state.
+          )pbdoc")
+      .def_property_readonly("run_manager", &calculator_type::run_manager,
+                             R"pbdoc(
+          RunManager : The current :class:`libcasm.clexmonte.RunManager`.
           )pbdoc")
       .def_property_readonly("event_data", &calculator_type::event_data,
                              R"pbdoc(

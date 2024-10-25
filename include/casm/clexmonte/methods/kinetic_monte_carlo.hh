@@ -21,7 +21,7 @@
 #include "casm/monte/events/OccLocation.hh"
 #include "casm/monte/methods/kinetic_monte_carlo.hh"
 #include "casm/monte/run_management/State.hh"
-#include "casm/monte/sampling/SelectedEventData.hh"
+#include "casm/monte/sampling/SelectedEventFunctions.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -31,7 +31,7 @@ std::vector<Index> make_atom_name_index_list(
     monte::OccLocation const &occ_location,
     occ_events::OccSystem const &occ_system);
 
-template <typename EventIDType, typename ConfigType,
+template <bool DebugMode, typename ConfigType,
           typename SetSelectedEventFunction, typename SetImpactedEvenstFunction,
           typename StatisticsType, typename EngineType>
 void kinetic_monte_carlo_v2(
@@ -45,6 +45,21 @@ void kinetic_monte_carlo_v2(
     std::shared_ptr<occ_events::OccSystem> event_system);
 
 // --- Implementation ---
+
+template <bool Debug, int size = 50>
+void begin_section(const std::string &message) {
+  if constexpr (Debug) {
+    std::cout << "## " << message << " "
+              << std::string(size - 4 - message.size(), '#') << std::endl;
+  }
+}
+
+template <bool Debug, int size = 50>
+void end_section() {
+  if constexpr (Debug) {
+    std::cout << std::string(size, '#') << std::endl << std::endl;
+  }
+}
 
 /// \brief Construct a list of atom names corresponding to OccLocation atoms
 ///
@@ -117,7 +132,7 @@ inline std::vector<Index> make_atom_name_index_list(
 /// State properties that are set:
 /// - None
 ///
-template <typename EventIDType, typename ConfigType,
+template <bool DebugMode, typename ConfigType,
           typename SetSelectedEventFunction, typename SetImpactedEvenstFunction,
           typename StatisticsType, typename EngineType>
 void kinetic_monte_carlo_v2(
@@ -134,8 +149,6 @@ void kinetic_monte_carlo_v2(
     throw std::runtime_error(
         "Error in clexmonte::kinetic_monte_carlo_v2: no sampling fixtures");
   }
-  monte::MonteCounter const &counter =
-      run_manager.sampling_fixtures.front()->counter();
 
   // Initialize atom positions & time
   kmc_data.sampling_fixture_label.clear();
@@ -192,10 +205,27 @@ void kinetic_monte_carlo_v2(
   double event_time;
   bool collect_selected_event_data = collector.has_value();
   selected_event.reset();
+  begin_section<DebugMode>("Initialize RunManager");
   run_manager.initialize(occ_location.mol_size());
   run_manager.update_next_sampling_fixture();
+  end_section<DebugMode>();
+
+  // Sample data, if a sample is due by count
+  // - This location correctly handles sampling at count=0 and count!=0
+  // - If the sample count is n, then the state after the n-th step/pass is
+  //   sampled.
+  begin_section<DebugMode>("Sample by count, if due");
+  run_manager.sample_data_by_count_if_due(state, pre_sample_action,
+                                          post_sample_action);
+  end_section<DebugMode>();
+
+  begin_section<DebugMode, 80>("Check for completion");
   while (!run_manager.is_complete()) {
+    end_section<DebugMode, 80>();
+
+    begin_section<DebugMode>("Write status, if due");
     run_manager.write_status_if_due();
+    end_section<DebugMode>();
 
     // Select an event. This function:
     // - Updates rates of events impacted by the previous selected event (if
@@ -206,15 +236,10 @@ void kinetic_monte_carlo_v2(
     //   on the next iteration
     // - If `requires_event_state` is true, then the event state is calculated
     //   for the selected event
+    begin_section<DebugMode>("Select an event");
     set_selected_event_f(selected_event);
+    end_section<DebugMode>();
     event_time = kmc_data.time + selected_event.time_increment;
-
-    // Sample data, if a sample is due by count
-    // - This location correctly handles sampling at count=0 and count!=0
-    // - If the sample count is n, then the state after the n-th step/pass is
-    //   sampled.
-    run_manager.sample_data_by_count_if_due(state, pre_sample_action,
-                                            post_sample_action);
 
     // Sample data, if a sample is due by time
     // - This location correctly handles sampling at sample times >= 0
@@ -222,30 +247,56 @@ void kinetic_monte_carlo_v2(
     //   sample time <= the event time
     // - If the sample time is exactly equal to the event time (should be
     //   vanishingly rare), then the state before the event occurs is sampled.
+    begin_section<DebugMode>("Sample by time, if due");
     run_manager.sample_data_by_time_if_due(event_time, state, pre_sample_action,
                                            post_sample_action);
+    end_section<DebugMode>();
 
-    // Set time -- for all fixtures
+    // Set time -- for all fixtures and kmc_data
+    begin_section<DebugMode>("Update time");
     run_manager.set_time(event_time);
+    kmc_data.time = event_time;
+    end_section<DebugMode>();
 
     // Increment count -- for all fixtures
+    begin_section<DebugMode>("Update step / pass / count");
     run_manager.increment_step();
+    run_manager.increment_n_accept();
+    end_section<DebugMode>();
 
     // Collect selected event data
+    begin_section<DebugMode>("Evaluate selected event functions");
     if (collect_selected_event_data) {
-      collector->collect(counter);
+      collector->collect();
     }
+    end_section<DebugMode>();
 
     // Apply event
-    run_manager.increment_n_accept();
+    begin_section<DebugMode>("Apply selected event");
     occ_location.apply(selected_event.event_data->event, get_occupation(state));
-    kmc_data.time = event_time;
+    end_section<DebugMode>();
 
     // Set the impacted events which need to be updated for the next iteration
+    begin_section<DebugMode>("Set impacted events");
     set_impacted_events_f(selected_event);
-  }
+    end_section<DebugMode>();
 
+    // Sample data, if a sample is due by count
+    // - This location correctly handles sampling at count=0 and count!=0
+    // - If the sample count is n, then the state after the n-th step/pass is
+    //   sampled.
+    begin_section<DebugMode>("Sample by count, if due");
+    run_manager.sample_data_by_count_if_due(state, pre_sample_action,
+                                            post_sample_action);
+    end_section<DebugMode>();
+
+    begin_section<DebugMode, 80>("Check for completion");
+  }
+  end_section<DebugMode, 80>();
+
+  begin_section<DebugMode>("Finalize RunManager");
   run_manager.finalize(state);
+  end_section<DebugMode>();
 }
 
 }  // namespace clexmonte

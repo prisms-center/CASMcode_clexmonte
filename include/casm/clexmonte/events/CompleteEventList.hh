@@ -20,17 +20,6 @@ struct CompleteEventList {
   std::map<EventID, EventData> events;
 };
 
-struct EventFilterGroup {
-  /// The linear unit cell index for which the group applies
-  std::set<Index> unitcell_index;
-
-  /// Whether events are included (default) or excluded as a default
-  bool include_by_default = true;
-
-  /// The prim event index of excluded/included events
-  std::set<Index> prim_event_index;
-};
-
 CompleteEventList make_complete_event_list(
     std::vector<PrimEventData> const &prim_event_list,
     std::vector<EventImpactInfo> const &prim_impact_info_list,

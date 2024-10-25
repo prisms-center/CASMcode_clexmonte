@@ -7,13 +7,13 @@
 #include "casm/clexmonte/monte_calculator/kinetic_sampling_functions.hh"
 #include "casm/clexmonte/monte_calculator/modifying_functions.hh"
 #include "casm/clexmonte/monte_calculator/sampling_functions.hh"
-#include "casm/clexmonte/monte_calculator/selected_event_data_functions.hh"
+#include "casm/clexmonte/monte_calculator/selected_event_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
 #include "casm/configuration/io/json/Configuration_json_io.hh"
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/sampling/RequestedPrecisionConstructor.hh"
-#include "casm/monte/sampling/io/json/SelectedEventData_json_io.hh"
+#include "casm/monte/sampling/io/json/SelectedEventFunctions_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -65,8 +65,8 @@ KineticCalculator::KineticCalculator()
       ) {
   // this could go into base constructor
   this->selected_event = std::make_shared<SelectedEvent>();
-  this->selected_event_data_functions =
-      std::make_shared<monte::SelectedEventDataFunctions>();
+  this->selected_event_functions =
+      std::make_shared<monte::SelectedEventFunctions>();
   this->selected_event_data = std::make_shared<monte::SelectedEventData>();
 }
 
@@ -171,11 +171,11 @@ StateModifyingFunctionMap KineticCalculator::standard_modifying_functions(
 }
 
 /// \brief Construct functions that may be used to collect selected event data
-std::optional<monte::SelectedEventDataFunctions>
-KineticCalculator::standard_selected_event_data_functions(
+std::optional<monte::SelectedEventFunctions>
+KineticCalculator::standard_selected_event_functions(
     std::shared_ptr<MonteCalculator> const &calculation) const {
   using namespace monte_calculator;
-  monte::SelectedEventDataFunctions functions;
+  monte::SelectedEventFunctions functions;
 
   // Event type data:
   functions.insert(make_selected_event_by_type_f(calculation));
@@ -401,7 +401,6 @@ void KineticCalculator::set_event_data(std::shared_ptr<engine_type> engine) {
   monte::OccLocation const &occ_location = *this->state_data->occ_location;
 
   // Currently, event_filters are only set at _reset() by reading from params
-  std::optional<std::vector<EventFilterGroup>> event_filters = std::nullopt;
   this->event_data->update(state, occ_location, event_filters, engine);
 }
 
@@ -457,14 +456,14 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   // and collecting selected event data
 
   std::optional<monte::SelectedEventDataCollector> collector;
-  if (this->selected_event_data_params) {
-    if (this->selected_event_data_functions == nullptr) {
+  if (this->selected_event_function_params) {
+    if (this->selected_event_functions == nullptr) {
       throw std::runtime_error(
           "Error in KineticCalculator::run: "
-          "this->selected_event_data_functions==nullptr");
+          "this->selected_event_functions==nullptr");
     }
     collector = monte::SelectedEventDataCollector(
-        *selected_event_data_functions, *selected_event_data_params,
+        *selected_event_functions, *selected_event_function_params,
         selected_event_data);
   }
 
@@ -525,6 +524,50 @@ void KineticCalculator::run(int current_state, std::vector<state_type> &states,
       "Error: KineticCalculator does not allow multi-state runs");
 }
 
+template <bool DebugMode>
+void KineticCalculator::make_complete_event_data_impl() {
+  this->event_data = std::make_shared<CompleteKineticEventData<DebugMode>>(
+      system, event_filters, allow_events_with_no_barrier);
+}
+
+template <bool DebugMode>
+void KineticCalculator::make_allowed_event_data_impl() {
+  std::cout << "!! make_allowed_event_data_impl !! " << std::endl;
+  std::cout << "!! DebugMode=" << DebugMode << " !! " << std::endl;
+
+  bool use_map_index = false; /* default_memory */
+  if (this->event_data_type == kinetic_event_data_type::low_memory) {
+    use_map_index = true;
+  }
+
+  if (this->event_selector_type ==
+      kinetic_event_selector_type::vector_sum_tree) {
+    this->event_data = std::make_shared<AllowedKineticEventData<
+        vector_sum_tree_event_selector_type, DebugMode>>(
+        system, allow_events_with_no_barrier, use_map_index,
+        use_neighborlist_impact_table, assign_allowed_events_only);
+
+  } else if (this->event_selector_type ==
+             kinetic_event_selector_type::sum_tree) {
+    this->event_data = std::make_shared<
+        AllowedKineticEventData<sum_tree_event_selector_type, DebugMode>>(
+        system, allow_events_with_no_barrier, use_map_index,
+        use_neighborlist_impact_table, assign_allowed_events_only);
+
+  } else if (this->event_selector_type ==
+             kinetic_event_selector_type::direct_sum) {
+    this->event_data = std::make_shared<
+        AllowedKineticEventData<direct_sum_event_selector_type, DebugMode>>(
+        system, allow_events_with_no_barrier, use_map_index,
+        use_neighborlist_impact_table, assign_allowed_events_only);
+
+  } else {
+    throw std::runtime_error(
+        "Error in KineticCalculator: "
+        "invalid event_selector_type for event_data_type");
+  }
+}
+
 /// \brief Reset the derived Monte Carlo calculator
 ///
 /// Parameters:
@@ -547,6 +590,8 @@ void KineticCalculator::_reset() {
 
   // "verbosity": str or int, default=10
   this->verbosity_level = parse_verbosity(parser);
+  std::cout << "!! verbosity_level=" << this->verbosity_level << " !!"
+            << std::endl;
   CASM::log().set_verbosity(this->verbosity_level);
 
   // "mol_composition_tol": float, default=CASM::TOL
@@ -556,15 +601,16 @@ void KineticCalculator::_reset() {
   // TODO: enumeration
 
   // TODO: Read event_filters from params
-  std::optional<std::vector<EventFilterGroup>> event_filters = std::nullopt;
+  this->event_filters = std::nullopt;
 
   // Read selected event data params
-  this->selected_event_data_params.reset();
+  this->selected_event_function_params.reset();
   if (parser.self.contains("selected_event_data")) {
     auto selected_event_data_subparser =
-        parser.subparse<monte::SelectedEventDataParams>("selected_event_data");
+        parser.subparse<monte::SelectedEventFunctionParams>(
+            "selected_event_data");
     if (selected_event_data_subparser->valid()) {
-      this->selected_event_data_params =
+      this->selected_event_function_params =
           std::move(selected_event_data_subparser->value);
     }
   }
@@ -657,44 +703,21 @@ void KineticCalculator::_reset() {
           "only event_selector_type=\"sum_tree\" is allowed.");
     }
 
-    this->event_data = std::make_shared<kinetic_2::CompleteKineticEventData>(
-        system, event_filters, this->allow_events_with_no_barrier);
+    if (this->verbosity_level == 100) {
+      const bool DebugMode = true;
+      this->make_complete_event_data_impl<DebugMode>();
+    } else {
+      const bool DebugMode = false;
+      this->make_complete_event_data_impl<DebugMode>();
+    }
   } else {
     // event_data_type == default_memory or low_memory
-
-    bool use_map_index = false; /* default_memory */
-    if (this->event_data_type == kinetic_event_data_type::low_memory) {
-      use_map_index = true;
-    }
-
-    if (this->event_selector_type ==
-        kinetic_event_selector_type::vector_sum_tree) {
-      this->event_data = std::make_shared<
-          AllowedKineticEventData<vector_sum_tree_event_selector_type>>(
-          system, this->allow_events_with_no_barrier, use_map_index,
-          this->use_neighborlist_impact_table,
-          this->assign_allowed_events_only);
-
-    } else if (this->event_selector_type ==
-               kinetic_event_selector_type::sum_tree) {
-      this->event_data = std::make_shared<
-          AllowedKineticEventData<sum_tree_event_selector_type>>(
-          system, this->allow_events_with_no_barrier, use_map_index,
-          this->use_neighborlist_impact_table,
-          this->assign_allowed_events_only);
-
-    } else if (this->event_selector_type ==
-               kinetic_event_selector_type::direct_sum) {
-      this->event_data = std::make_shared<
-          AllowedKineticEventData<direct_sum_event_selector_type>>(
-          system, this->allow_events_with_no_barrier, use_map_index,
-          this->use_neighborlist_impact_table,
-          this->assign_allowed_events_only);
-
+    if (this->verbosity_level == 100) {
+      const bool DebugMode = true;
+      this->make_allowed_event_data_impl<DebugMode>();
     } else {
-      throw std::runtime_error(
-          "Error in KineticCalculator: "
-          "invalid event_selector_type for event_data_type");
+      const bool DebugMode = false;
+      this->make_allowed_event_data_impl<DebugMode>();
     }
   }
 

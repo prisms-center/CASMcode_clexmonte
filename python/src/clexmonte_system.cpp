@@ -53,6 +53,7 @@ PYBIND11_MODULE(_clexmonte_system, m) {
   m.doc() = R"pbdoc(
     Cluster expansion Monte Carlo system
     )pbdoc";
+  py::module::import("libcasm.clexmonte._clexmonte_state");
   py::module::import("libcasm.clexulator");
   py::module::import("libcasm.clusterography");
   py::module::import("libcasm.composition");
@@ -769,6 +770,121 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               is the phenomenal event for the `equivalent_index`-th local cluster basis
               set.
           )pbdoc")
+      // local orbit composition calculators
+      .def_property_readonly(
+          "local_orbit_composition_calculator_keys",
+          [](clexmonte::System &m) -> std::vector<std::string> {
+            return get_keys(m.local_orbit_composition_calculator_data);
+          },
+          R"pbdoc(
+          Get a list of keys for local orbit composition calculators
+
+          Returns
+          -------
+          keys : list[str]
+              A list of keys for local orbit composition calculators
+          )pbdoc")
+      .def(
+          "local_orbit_composition_calculator",
+          [](clexmonte::System &self, clexmonte::state_type const &state,
+             std::string key) {
+            auto &system = self;
+            auto data = system.local_orbit_composition_calculator_data.at(key);
+
+            auto const &composition_calculator =
+                clexmonte::get_composition_calculator(system);
+            auto const &orbits = clexmonte::get_local_basis_set_cluster_info(
+                                     system, data->local_basis_set_name)
+                                     ->orbits;
+            auto prim_nlist = system.prim_neighbor_list;
+            auto supercell_nlist =
+                clexmonte::get_supercell_neighbor_list(system, state);
+            auto const &supercell_index_converter =
+                clexmonte::get_index_conversions(system, state)
+                    .index_converter();
+            clexulator::ConfigDoFValues const *dof_values =
+                &clexmonte::get_dof_values(state);
+
+            return std::make_shared<clexmonte::LocalOrbitCompositionCalculator>(
+                orbits, data->orbits_to_calculate, data->combine_orbits,
+                prim_nlist, supercell_nlist, supercell_index_converter,
+                composition_calculator, dof_values);
+          },
+          R"pbdoc(
+          Get a local orbit composition calculator
+
+          Local orbit composition calculators are generated if there if
+          specified using the `local_orbit_composition` attribute for a local
+          basis set in the system input file. The `local_orbit_composition`
+          is a dict attribute that can be used to specify one or more
+          calculators, where the keys are names for the calculators and the
+          values have the following format:
+
+          - "orbits_to_calculate": list[int], The indices of the orbits of
+            local-clusters to include in the composition calculation. The
+            indices (begin at 0) correspond to the linear orbit indices in the
+            associated `basis.json` file and the `local_orbits` obtained from
+            :func:`System.local_basis_set_cluster_info`.
+          - "combine_orbits": bool, If true, the composition will be calculated
+            for the union of sites in the orbits specified in
+            `orbits_to_calculate`. If false, the composition will be calculated
+            for the set of sites in each orbit separately.
+          - "event": Optional[str], The name of the type of KMC event that
+            this calculator is associated with. If specified, a function named
+            `local_orbit_composition.<key>` will be generated as one of the
+            standard event data collecting functions that can be used during
+            KMC simulations to sample the local orbit composition when this
+            type of event is selected. If not specified, the calculator can
+            still be accessed, but a selected event data collecting function
+            that can be used during KMC simulations will not be constructed.
+          - "max_size": Optional[int] = 10000, For selected event data
+            collection during KMC simulations, a histogram is constructed for
+            the number of occurrences of each encountered local orbit
+            composition and this number gives the maximum number of unique
+            compositions that are tracked. If additional unique local orbit
+            compositions are encountered their counts are added to the
+            out-of-range bin.
+
+          Example input:
+
+          .. code-block:: python
+
+              "local_basis_sets": {
+                "A_Va_1NN": {
+                  "equivalents_info": ...
+                  "source": ...
+                  "basis": ...
+                  "local_orbit_composition": {
+                    "A_Va_1NN-1+3": {
+                      "event": "A_Va_1NN",
+                      "orbits_to_calculate": [1, 3],
+                      "combine_orbits": true,
+                      "max_size": 10000
+                    },
+                    "A_Va_1NN-1:3": {
+                      "event": "A_Va_1NN",
+                      "orbits_to_calculate": [1, 2, 3],
+                      "combine_orbits": true,
+                      "max_size": 10000
+                    }
+                  }
+                },
+                ... other local basis sets ...
+              }
+
+          Parameters
+          ----------
+          state : libcasm.clexmonte.MonteCarloState
+              The state in which the local orbit composition is to be calculated
+          key : str
+              The local orbit composition calculator name
+
+          Returns
+          -------
+          local_orbit_composition_calculator : LocalOrbitCompositionCalculator
+              The local orbit composition calculator.
+          )pbdoc",
+          py::arg("state"), py::arg("key"))
       //
       .def_static(
           "from_dict",

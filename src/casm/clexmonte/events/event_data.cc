@@ -30,7 +30,7 @@ void SelectedEventInfo::make_indices_by_type() {
   for (auto &pair : key_to_index) {
     pair.second = i_label;
     partition_names[i_label] = pair.first;
-    value_labels.emplace(to_VectorXi(i_label), pair.first);
+    value_labels.emplace(to_VectorXl(i_label), pair.first);
     ++i_label;
   }
 
@@ -61,7 +61,7 @@ void SelectedEventInfo::make_indices_by_equivalent_index() {
     std::string label =
         pair.first.first + "." + std::to_string(pair.first.second);
     partition_names[i_label] = label;
-    value_labels.emplace(to_VectorXi(i_label), label);
+    value_labels.emplace(to_VectorXl(i_label), label);
     ++i_label;
   }
 
@@ -95,7 +95,7 @@ void SelectedEventInfo::make_indices_by_equivalent_index_and_direction() {
                         std::to_string(std::get<1>(pair.first)) + "." +
                         (std::get<2>(pair.first) ? "forward" : "reverse");
     partition_names[i_label] = label;
-    value_labels.emplace(to_VectorXi(i_label), label);
+    value_labels.emplace(to_VectorXl(i_label), label);
     ++i_label;
   }
 
@@ -124,7 +124,7 @@ void SelectedEventInfo::make_indices_by_equivalent_index_per_event_type(
       prim_event_index_to_has_value->push_back(true);
       prim_event_index_to_index->push_back(x.equivalent_index);
       value_labels.emplace(
-          to_VectorXi(x.equivalent_index),
+          to_VectorXl(x.equivalent_index),
           x.event_type_name + "." + std::to_string(x.equivalent_index));
     } else {
       prim_event_index_to_has_value->push_back(false);

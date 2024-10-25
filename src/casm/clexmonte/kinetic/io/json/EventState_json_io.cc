@@ -3,7 +3,7 @@
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/jsonParser.hh"
 #include "casm/clexmonte/events/event_data.hh"
-#include "casm/clexmonte/events/io/json/EventState_json_io.hh"
+#include "casm/clexmonte/events/io/json/event_data_json_io.hh"
 #include "casm/clexmonte/kinetic/kinetic_events.hh"
 
 namespace CASM {

@@ -156,6 +156,17 @@ struct EventID : public Comparisons<CRTPBase<EventID>> {
   }
 };
 
+struct EventFilterGroup {
+  /// The linear unit cell index for which the group applies
+  std::set<Index> unitcell_index;
+
+  /// Whether events are included (default) or excluded as a default
+  bool include_by_default = true;
+
+  /// The prim event index of excluded/included events
+  std::set<Index> prim_event_index;
+};
+
 struct SelectedEvent {
   EventID event_id;
   Index event_index;
@@ -190,7 +201,7 @@ struct SelectedEventInfo {
   std::shared_ptr<std::vector<bool>> prim_event_index_to_has_value;
 
   std::vector<std::string> partition_names;
-  std::map<Eigen::VectorXi, std::string, monte::LexicographicalCompare>
+  std::map<Eigen::VectorXl, std::string, monte::LexicographicalCompare>
       value_labels;
 
   SelectedEventInfo(std::vector<PrimEventData> const &_prim_event_list);

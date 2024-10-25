@@ -249,10 +249,12 @@ void parse(InputParser<LocalOrbitCompositionCalculatorData> &parser,
   // parse local-orbit composition calculator data
   LocalOrbitCompositionCalculatorData data;
   data.local_basis_set_name = local_basis_set_name;
-  parser.require(data.event_type_name, "event");
+  data.event_type_name.clear();
+  parser.optional(data.event_type_name, "event");
   parser.require(data.orbits_to_calculate, "orbits_to_calculate");
   parser.require(data.combine_orbits, "combine_orbits");
-  parser.require(data.max_size, "max_size");
+  data.max_size = 10000;
+  parser.optional(data.max_size, "max_size");
 
   if (!parser.valid()) {
     return;

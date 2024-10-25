@@ -11,7 +11,7 @@
 #include "casm/clexulator/Correlations.hh"
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"
-#include "casm/monte/sampling/SelectedEventData.hh"
+#include "casm/monte/sampling/SelectedEventFunctions.hh"
 
 // debugging
 #include "casm/casm_io/container/stream_io.hh"
@@ -25,53 +25,53 @@ namespace {
 // --- Helper functions ---
 
 // Should be OK to evaluate after a calculator has had
-// selected_event_data_functions added
+// selected_event_functions added
 monte::DiscreteVectorIntHistogramFunction _get_vector_int_histogram_function(
     std::shared_ptr<MonteCalculator> const &calculation,
     std::string sampling_function_name, std::string histogram_name) {
-  auto const &functions = calculation->selected_event_data_functions()
-                              ->discrete_vector_int_functions;
+  auto const &functions =
+      calculation->selected_event_functions()->discrete_vector_int_functions;
   auto it = functions.find(histogram_name);
   if (it == functions.end()) {
     throw std::runtime_error("Error in " + sampling_function_name +
                              " sampling function: "
-                             "selected event data function '" +
+                             "Selected event function '" +
                              histogram_name + "' not found");
   }
   return it->second;
 }
 
 // Should be OK to evaluate after a calculator has had
-// selected_event_data_functions added
+// selected_event_functions added
 monte::DiscreteVectorFloatHistogramFunction
 _get_vector_float_histogram_function(
     std::shared_ptr<MonteCalculator> const &calculation,
     std::string sampling_function_name, std::string histogram_name) {
-  auto const &functions = calculation->selected_event_data_functions()
-                              ->discrete_vector_float_functions;
+  auto const &functions =
+      calculation->selected_event_functions()->discrete_vector_float_functions;
   auto it = functions.find(histogram_name);
   if (it == functions.end()) {
     throw std::runtime_error("Error in " + sampling_function_name +
                              " sampling function: "
-                             "selected event data function '" +
+                             "Selected event function '" +
                              histogram_name + "' not found");
   }
   return it->second;
 }
 
 // Should be OK to evaluate after a calculator has had
-// selected_event_data_functions added
+// selected_event_functions added
 monte::PartitionedHistogramFunction<double>
 _get_continuous_1d_histogram_function(
     std::shared_ptr<MonteCalculator> const &calculation,
     std::string sampling_function_name, std::string histogram_name) {
   auto const &functions =
-      calculation->selected_event_data_functions()->continuous_1d_functions;
+      calculation->selected_event_functions()->continuous_1d_functions;
   auto it = functions.find(histogram_name);
   if (it == functions.end()) {
     throw std::runtime_error("Error in " + sampling_function_name +
                              " sampling function: "
-                             "selected event data function '" +
+                             "Selected event function '" +
                              histogram_name + "' not found");
   }
   return it->second;
@@ -697,7 +697,7 @@ state_sampling_function_type make_jumps_per_atom_per_event_by_type_f(
 /// ("selected_event.count.by_type")
 ///
 /// Notes:
-/// - This requires that the selected event data function
+/// - This requires that the Selected event function
 ///   `selected_event.by_type` has already been added
 state_sampling_function_type make_selected_event_count_by_type_f(
     std::shared_ptr<MonteCalculator> const &calculation) {
@@ -723,7 +723,7 @@ state_sampling_function_type make_selected_event_count_by_type_f(
 /// ("selected_event.fraction.by_type")
 ///
 /// Notes:
-/// - This requires that the selected event data function
+/// - This requires that the Selected event function
 ///   `selected_event.by_type` has already been added
 state_sampling_function_type make_selected_event_fraction_by_type_f(
     std::shared_ptr<MonteCalculator> const &calculation) {
@@ -751,7 +751,7 @@ state_sampling_function_type make_selected_event_fraction_by_type_f(
 /// ("selected_event.count.by_equivalent_index")
 ///
 /// Notes:
-/// - This requires that the selected event data function
+/// - This requires that the Selected event function
 ///   `selected_event.by_equivalent_index` has already been added
 state_sampling_function_type make_selected_event_count_by_equivalent_index_f(
     std::shared_ptr<MonteCalculator> const &calculation) {
@@ -779,7 +779,7 @@ state_sampling_function_type make_selected_event_count_by_equivalent_index_f(
 /// ("selected_event.fraction.by_equivalent_index")
 ///
 /// Notes:
-/// - This requires that the selected event data function
+/// - This requires that the Selected event function
 ///   `selected_event.by_equivalent_index` has already been added
 state_sampling_function_type make_selected_event_fraction_by_equivalent_index_f(
     std::shared_ptr<MonteCalculator> const &calculation) {
@@ -809,7 +809,7 @@ state_sampling_function_type make_selected_event_fraction_by_equivalent_index_f(
 /// ("selected_event.count.by_equivalent_index_and_direction")
 ///
 /// Notes:
-/// - This requires that the selected event data function
+/// - This requires that the Selected event function
 ///   `selected_event.by_equivalent_index_and_direction` has already been added
 state_sampling_function_type
 make_selected_event_count_by_equivalent_index_and_direction_f(
@@ -840,7 +840,7 @@ make_selected_event_count_by_equivalent_index_and_direction_f(
 /// ("selected_event.fraction.by_equivalent_index_and_direction")
 ///
 /// Notes:
-/// - This requires that the selected event data function
+/// - This requires that the Selected event function
 ///   `selected_event.by_equivalent_index_and_direction` has already been added
 state_sampling_function_type
 make_selected_event_fraction_by_equivalent_index_and_direction_f(
@@ -874,7 +874,7 @@ make_selected_event_fraction_by_equivalent_index_and_direction_f(
 /// ("selected_event.count.<event_type>.by_equivalent_index")
 ///
 /// Notes:
-/// - This requires that the selected event data function
+/// - This requires that the Selected event function
 ///   `selected_event.<event_type>.by_equivalent_index` has already been added
 /// - This is the same as i.e. `selected_event.count.by_equivalent_index` but
 ///   for a single event type instead of all event types
@@ -922,7 +922,7 @@ make_selected_event_count_by_equivalent_index_per_event_type_f(
 /// ("selected_event.fraction.<event_type>.by_equivalent_index")
 ///
 /// Notes:
-/// - This requires that the selected event data function
+/// - This requires that the Selected event function
 ///   `selected_event.<event_type>.by_equivalent_index` has already been added
 /// - This is the same as i.e. `selected_event.fraction.by_equivalent_index` but
 ///   for a single event type instead of all event types

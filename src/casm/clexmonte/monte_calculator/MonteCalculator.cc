@@ -91,11 +91,11 @@ std::shared_ptr<MonteCalculator> make_monte_calculator(
   /// Pass parameters and system data.
   calculator->reset(params, system);
 
-  /// Add standard selected event data functions
-  std::optional<monte::SelectedEventDataFunctions> x =
-      calculator->standard_selected_event_data_functions(calculator);
+  /// Add standard Selected event functions
+  std::optional<monte::SelectedEventFunctions> x =
+      calculator->standard_selected_event_functions(calculator);
   if (x.has_value()) {
-    *calculator->selected_event_data_functions() = std::move(x.value());
+    *calculator->selected_event_functions() = std::move(x.value());
   }
 
   /// Standard sampling, analysis, and modifying functions are provided the

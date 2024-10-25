@@ -66,8 +66,8 @@ class KineticCalculator : public BaseMonteCalculator {
       std::shared_ptr<MonteCalculator> const &calculation) const override;
 
   /// \brief Construct functions that may be used to collect selected event data
-  std::optional<monte::SelectedEventDataFunctions>
-  standard_selected_event_data_functions(
+  std::optional<monte::SelectedEventFunctions>
+  standard_selected_event_functions(
       std::shared_ptr<MonteCalculator> const &calculation) const override;
 
   /// \brief Construct default SamplingFixtureParams
@@ -128,6 +128,9 @@ class KineticCalculator : public BaseMonteCalculator {
   kinetic_event_selector_type event_selector_type =
       kinetic_event_selector_type::vector_sum_tree;
 
+  // Event filters
+  std::optional<std::vector<EventFilterGroup>> event_filters;
+
   // Type of impact table:
   // - Only takes effect if event_data_type is `default_memory` or `low_memory`
   // - If true: somewhat higher memory use; somewhat faster impact list
@@ -152,6 +155,12 @@ class KineticCalculator : public BaseMonteCalculator {
 
   /// \brief Clone the KineticCalculator
   KineticCalculator *_clone() const override;
+
+  template <bool DebugMode>
+  void make_complete_event_data_impl();
+
+  template <bool DebugMode>
+  void make_allowed_event_data_impl();
 };
 
 }  // namespace kinetic_2

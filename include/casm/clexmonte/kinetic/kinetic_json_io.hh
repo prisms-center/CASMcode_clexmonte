@@ -3,7 +3,7 @@
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
-#include "casm/clexmonte/events/io/json/EventFilterGroup_json_io.hh"
+#include "casm/clexmonte/events/io/json/event_data_json_io.hh"
 #include "casm/clexmonte/kinetic/kinetic.hh"
 #include "casm/clexmonte/misc/parse_array.hh"
 

@@ -1526,13 +1526,13 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
           int : Number of steps per pass (usually the number of mutating sites).
           )pbdoc")
       .def_property_readonly(
-          "step",
+          "n_step",
           [](sampling_fixture_type const &self) { return self.counter().step; },
           R"pbdoc(
           int : Current step count (in range [0, steps_per_pass)).
           )pbdoc")
       .def_property_readonly(
-          "pass",
+          "n_pass",
           [](sampling_fixture_type const &self) { return self.counter().pass; },
           R"pbdoc(
           int : Current pass count.

@@ -33,6 +33,7 @@ from ._clexmonte_run_management import (
     SamplingFixtureParams,
 )
 from ._clexmonte_state import (
+    LocalOrbitCompositionCalculator,
     MonteCarloState,
     StateModifyingFunction,
     StateModifyingFunctionMap,

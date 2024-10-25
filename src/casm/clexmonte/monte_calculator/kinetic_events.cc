@@ -178,7 +178,8 @@ double CompleteEventCalculator::calculate_rate(EventID const &id) {
   return event_state.rate;
 }
 
-CompleteKineticEventData::CompleteKineticEventData(
+template <bool DebugMode>
+CompleteKineticEventData<DebugMode>::CompleteKineticEventData(
     std::shared_ptr<system_type> _system,
     std::optional<std::vector<EventFilterGroup>> _event_filters,
     bool _allow_events_with_no_barrier)
@@ -214,7 +215,8 @@ CompleteKineticEventData::CompleteKineticEventData(
 /// - If there are no event filters and the supercell remains unchanged from the
 ///   previous update, then the event list and impact table are not
 ///   re-constructed, but the event rates are still re-calculated.
-void CompleteKineticEventData::update(
+template <bool DebugMode>
+void CompleteKineticEventData<DebugMode>::update(
     state_type const &state, monte::OccLocation const &occ_location,
     std::optional<std::vector<EventFilterGroup>> _event_filters,
     std::shared_ptr<engine_type> engine) {
@@ -264,7 +266,8 @@ void CompleteKineticEventData::update(
           std::make_shared<lotto::RandomGenerator>(engine));
 }
 
-void CompleteKineticEventData::run(
+template <bool DebugMode>
+void CompleteKineticEventData<DebugMode>::run(
     state_type &state, monte::OccLocation &occ_location,
     kmc_data_type &kmc_data, SelectedEvent &selected_event,
     std::optional<monte::SelectedEventDataCollector> &collector,
@@ -283,14 +286,15 @@ void CompleteKineticEventData::run(
   };
 
   // Run Kinetic Monte Carlo at a single condition
-  kinetic_monte_carlo_v2<EventID>(state, occ_location, kmc_data, selected_event,
-                                  set_selected_event_f, set_impacted_events_f,
-                                  collector, run_manager, event_system);
+  kinetic_monte_carlo_v2<DebugMode>(
+      state, occ_location, kmc_data, selected_event, set_selected_event_f,
+      set_impacted_events_f, collector, run_manager, event_system);
 }
 
 /// \brief Update for given state, conditions, occupants, event filters
-void CompleteKineticEventData::select_event(SelectedEvent &selected_event,
-                                            bool requires_event_state) {
+template <bool DebugMode>
+void CompleteKineticEventData<DebugMode>::select_event(
+    SelectedEvent &selected_event, bool requires_event_state) {
   // This function:
   // - Updates rates of events impacted by the *last* selected event (if there
   //   was a previous selection)
@@ -416,8 +420,8 @@ EventData const &AllowedEventCalculator::set_event_data(
   return this->event_data;
 }
 
-template <typename EventSelectorType>
-AllowedKineticEventData<EventSelectorType>::AllowedKineticEventData(
+template <typename EventSelectorType, bool DebugMode>
+AllowedKineticEventData<EventSelectorType, DebugMode>::AllowedKineticEventData(
     std::shared_ptr<system_type> _system, bool _allow_events_with_no_barrier,
     bool _use_map_index, bool _use_neighborlist_impact_table,
     bool _assign_allowed_events_only)
@@ -467,8 +471,8 @@ AllowedKineticEventData<EventSelectorType>::AllowedKineticEventData(
 /// - This constructs the complete event list and impact table, and constructs
 ///   the event selector, which calculates all event rates.
 /// - Event filters are ignored (with a warning). This is a TODO feature.
-template <typename EventSelectorType>
-void AllowedKineticEventData<EventSelectorType>::update(
+template <typename EventSelectorType, bool DebugMode>
+void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
     state_type const &state, monte::OccLocation const &occ_location,
     std::optional<std::vector<EventFilterGroup>> _event_filters,
     std::shared_ptr<engine_type> engine) {
@@ -514,8 +518,8 @@ void AllowedKineticEventData<EventSelectorType>::update(
   make_event_selector();
 }
 
-template <typename EventSelectorType>
-void AllowedKineticEventData<EventSelectorType>::run(
+template <typename EventSelectorType, bool DebugMode>
+void AllowedKineticEventData<EventSelectorType, DebugMode>::run(
     state_type &state, monte::OccLocation &occ_location,
     kmc_data_type &kmc_data, SelectedEvent &selected_event,
     std::optional<monte::SelectedEventDataCollector> &collector,
@@ -534,65 +538,90 @@ void AllowedKineticEventData<EventSelectorType>::run(
   };
 
   // Run Kinetic Monte Carlo at a single condition
-  kinetic_monte_carlo_v2<EventID>(state, occ_location, kmc_data, selected_event,
-                                  set_selected_event_f, set_impacted_events_f,
-                                  collector, run_manager, event_system);
+  kinetic_monte_carlo_v2<DebugMode>(
+      state, occ_location, kmc_data, selected_event, set_selected_event_f,
+      set_impacted_events_f, collector, run_manager, event_system);
 }
 
+// -- EventSelectorType specializations --
+namespace {
+template <typename EventSelectorType>
+std::string event_selector_type_str_impl();
+
 template <>
-std::string AllowedKineticEventData<
-    sum_tree_event_selector_type>::event_selector_type_str() const {
+std::string event_selector_type_str_impl<sum_tree_event_selector_type>() {
   return "sum_tree";
 }
 
 template <>
-std::string AllowedKineticEventData<
-    vector_sum_tree_event_selector_type>::event_selector_type_str() const {
+std::string
+event_selector_type_str_impl<vector_sum_tree_event_selector_type>() {
   return "vector_sum_tree";
 }
 
 template <>
-std::string AllowedKineticEventData<
-    direct_sum_event_selector_type>::event_selector_type_str() const {
+std::string event_selector_type_str_impl<direct_sum_event_selector_type>() {
   return "direct_sum";
 }
 
-/// \brief Constructs `event_selector`; must be called after `update`
+template <typename EventSelectorType>
+std::shared_ptr<EventSelectorType> make_event_selector_impl(
+    std::shared_ptr<AllowedEventCalculator> event_calculator,
+    std::shared_ptr<AllowedEventList> event_list,
+    std::shared_ptr<lotto::RandomGenerator> random_generator);
+
 template <>
-void AllowedKineticEventData<
-    sum_tree_event_selector_type>::make_event_selector() {
-  // Make event selector
-  // - This calculates all rates at construction
-  event_selector = std::make_shared<sum_tree_event_selector_type>(
+std::shared_ptr<sum_tree_event_selector_type> make_event_selector_impl(
+    std::shared_ptr<AllowedEventCalculator> event_calculator,
+    std::shared_ptr<AllowedEventList> event_list,
+    std::shared_ptr<lotto::RandomGenerator> random_generator) {
+  return std::make_shared<sum_tree_event_selector_type>(
       event_calculator, event_list->allowed_event_map.event_index_list(),
       GetImpactFromAllowedEventList(event_list), random_generator);
 }
 
-/// \brief Constructs `event_selector`; must be called after `update`
 template <>
-void AllowedKineticEventData<
-    vector_sum_tree_event_selector_type>::make_event_selector() {
-  // Make event selector
-  // - This calculates all rates at construction
-  event_selector = std::make_shared<vector_sum_tree_event_selector_type>(
+std::shared_ptr<vector_sum_tree_event_selector_type> make_event_selector_impl(
+    std::shared_ptr<AllowedEventCalculator> event_calculator,
+    std::shared_ptr<AllowedEventList> event_list,
+    std::shared_ptr<lotto::RandomGenerator> random_generator) {
+  return std::make_shared<vector_sum_tree_event_selector_type>(
       event_calculator, event_list->allowed_event_map.events().size(),
       GetImpactFromAllowedEventList(event_list), random_generator);
 }
 
-/// \brief Constructs `event_selector`; must be called after `update`
 template <>
-void AllowedKineticEventData<
-    direct_sum_event_selector_type>::make_event_selector() {
-  // Make event selector
-  // - This calculates all rates at construction
-  event_selector = std::make_shared<direct_sum_event_selector_type>(
+std::shared_ptr<direct_sum_event_selector_type> make_event_selector_impl(
+    std::shared_ptr<AllowedEventCalculator> event_calculator,
+    std::shared_ptr<AllowedEventList> event_list,
+    std::shared_ptr<lotto::RandomGenerator> random_generator) {
+  return std::make_shared<direct_sum_event_selector_type>(
       event_calculator, event_list->allowed_event_map.events().size(),
       GetImpactFromAllowedEventList(event_list), random_generator);
+}
+
+}  // namespace
+// -- end EventSelectorType specializations --
+
+template <typename EventSelectorType, bool DebugMode>
+std::string AllowedKineticEventData<
+    EventSelectorType, DebugMode>::event_selector_type_str() const {
+  return event_selector_type_str_impl<EventSelectorType>();
+}
+
+/// \brief Constructs `event_selector`; must be called after `update`
+template <typename EventSelectorType, bool DebugMode>
+void AllowedKineticEventData<EventSelectorType,
+                             DebugMode>::make_event_selector() {
+  // Make event selector
+  // - This calculates all rates at construction
+  event_selector = make_event_selector_impl<EventSelectorType>(
+      event_calculator, event_list, random_generator);
 }
 
 /// \brief Update for given state, conditions, occupants, event filters
-template <typename EventSelectorType>
-void AllowedKineticEventData<EventSelectorType>::select_event(
+template <typename EventSelectorType, bool DebugMode>
+void AllowedKineticEventData<EventSelectorType, DebugMode>::select_event(
     SelectedEvent &selected_event, bool requires_event_state) {
   // If updating the event list with impacted events after the previous step
   // caused the event list to increase in size, then it needs to be
@@ -641,9 +670,20 @@ void AllowedKineticEventData<EventSelectorType>::select_event(
 }
 
 // Explicit instantiation:
-template class AllowedKineticEventData<vector_sum_tree_event_selector_type>;
-template class AllowedKineticEventData<sum_tree_event_selector_type>;
-template class AllowedKineticEventData<direct_sum_event_selector_type>;
+
+// DebugMode=false
+template class CompleteKineticEventData<false>;
+template class AllowedKineticEventData<vector_sum_tree_event_selector_type,
+                                       false>;
+template class AllowedKineticEventData<sum_tree_event_selector_type, false>;
+template class AllowedKineticEventData<direct_sum_event_selector_type, false>;
+
+// DebugMode=true
+template class CompleteKineticEventData<true>;
+template class AllowedKineticEventData<vector_sum_tree_event_selector_type,
+                                       true>;
+template class AllowedKineticEventData<sum_tree_event_selector_type, true>;
+template class AllowedKineticEventData<direct_sum_event_selector_type, true>;
 
 }  // namespace kinetic_2
 }  // namespace clexmonte

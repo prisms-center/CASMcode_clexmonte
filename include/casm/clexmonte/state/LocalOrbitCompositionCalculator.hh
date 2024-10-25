@@ -33,8 +33,8 @@ struct PossibleLocalOrbitCompositions {
   Index n_orbits;
 
   /// \brief  Holds unique num_each_component_by_orbit as column-major
-  ///     Eigen::VectorXi, up to max_possible_compositions
-  std::set<Eigen::VectorXi, monte::LexicographicalCompare> possible;
+  ///     Eigen::VectorXl, up to max_possible_compositions
+  std::set<Eigen::VectorXl, monte::LexicographicalCompare> possible;
 
   /// \brief Calculate the number of possible unique local orbit compositions
   PossibleLocalOrbitCompositions(

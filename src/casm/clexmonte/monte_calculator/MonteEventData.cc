@@ -1,7 +1,7 @@
 #include "casm/clexmonte/monte_calculator/MonteEventData.hh"
 
 #include "casm/monte/misc/memory_used.hh"
-#include "casm/monte/sampling/io/json/SelectedEventData_json_io.hh"
+#include "casm/monte/sampling/io/json/SelectedEventFunctions_json_io.hh"
 
 namespace CASM {
 namespace clexmonte {

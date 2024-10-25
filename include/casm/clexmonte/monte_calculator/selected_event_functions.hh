@@ -1,10 +1,10 @@
-#ifndef CASM_clexmonte_monte_calculator_selected_event_data_functions
-#define CASM_clexmonte_monte_calculator_selected_event_data_functions
+#ifndef CASM_clexmonte_monte_calculator_selected_event_functions
+#define CASM_clexmonte_monte_calculator_selected_event_functions
 
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/state/LocalOrbitCompositionCalculator.hh"
 #include "casm/clexmonte/system/system_data.hh"
-#include "casm/monte/sampling/SelectedEventData.hh"
+#include "casm/monte/sampling/SelectedEventFunctions.hh"
 
 namespace CASM {
 namespace clexmonte {

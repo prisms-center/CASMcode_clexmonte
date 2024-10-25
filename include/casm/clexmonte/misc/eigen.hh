@@ -20,7 +20,7 @@ inline Eigen::VectorXl to_VectorXl(long value) {
   return Eigen::VectorXl::Constant(1, value);
 }
 
-inline Eigen::VectorXl to_VectorXi(std::vector<long> const &value) {
+inline Eigen::VectorXl to_VectorXl(std::vector<long> const &value) {
   return Eigen::Map<const Eigen::VectorXl>(value.data(), value.size());
 }
 

@@ -18,7 +18,7 @@
 #include "casm/monte/run_management/SamplingFixture.hh"
 #include "casm/monte/run_management/io/ResultsIO.hh"
 #include "casm/monte/run_management/io/json/jsonResultsIO_impl.hh"
-#include "casm/monte/sampling/SelectedEventData.hh"
+#include "casm/monte/sampling/SelectedEventFunctions.hh"
 
 namespace CASM {
 namespace clexmonte {

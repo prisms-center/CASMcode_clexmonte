@@ -72,6 +72,48 @@ clexmonte::StateModifyingFunction make_modifying_function(
   return clexmonte::StateModifyingFunction(name, description, function);
 }
 
+std::shared_ptr<clexmonte::LocalOrbitCompositionCalculator>
+make_local_orbit_composition_calculator(
+    std::vector<std::vector<std::vector<clust::IntegralCluster>>> const
+        &_orbits,
+    std::vector<int> _orbits_to_calculate, bool _combine_orbits,
+    std::shared_ptr<clexulator::PrimNeighborListWrapper> wrapper,
+    std::shared_ptr<clexulator::SuperNeighborList> _supercell_nlist,
+    xtal::UnitCellCoordIndexConverter const &_supercell_index_converter,
+    composition::CompositionCalculator const &_composition_calculator,
+    clexulator::ConfigDoFValues const *_dof_values) {
+  if (wrapper == nullptr || wrapper->prim_neighbor_list == nullptr) {
+    throw std::runtime_error(
+        "Error constructing LocalOrbitCompositionCalculator: "
+        "prim_neighbor_list is not initialized");
+  }
+
+  // Convert the orbits to the correct type
+  std::vector<std::vector<std::set<clust::IntegralCluster>>> converted_orbits;
+  for (auto const &orbit : _orbits) {
+    std::vector<std::set<clust::IntegralCluster>> converted_orbit;
+    for (auto const &cluster_set : orbit) {
+      std::set<clust::IntegralCluster> converted_cluster_set;
+      for (auto const &cluster : cluster_set) {
+        converted_cluster_set.insert(cluster);
+      }
+      converted_orbit.push_back(converted_cluster_set);
+    }
+    converted_orbits.push_back(converted_orbit);
+  }
+
+  // Convert the orbits to calculate to the correct type
+  std::set<int> converted_orbits_to_calculate;
+  for (auto const &orbit : _orbits_to_calculate) {
+    converted_orbits_to_calculate.insert(orbit);
+  }
+
+  return std::make_shared<clexmonte::LocalOrbitCompositionCalculator>(
+      converted_orbits, converted_orbits_to_calculate, _combine_orbits,
+      wrapper->prim_neighbor_list, _supercell_nlist, _supercell_index_converter,
+      _composition_calculator, _dof_values);
+}
+
 }  // namespace CASMpy
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
@@ -85,6 +127,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
       Cluster expansion Monte Carlo state
       )pbdoc";
   py::module::import("libcasm.clexulator");
+  py::module::import("libcasm.clusterography");
   py::module::import("libcasm.composition");
   py::module::import("libcasm.configuration");
   py::module::import("libcasm.monte");
@@ -323,6 +366,149 @@ PYBIND11_MODULE(_clexmonte_state, m) {
     StateModifyingFunctionMap is a Dict[str, :class:`~libcasm.clexmonte.StateModifyingFunction`]-like object.
     )pbdoc",
       py::module_local(false));
+
+  py::class_<clexmonte::LocalOrbitCompositionCalculator,
+             std::shared_ptr<clexmonte::LocalOrbitCompositionCalculator>>(
+      m, "LocalOrbitCompositionCalculator", R"pbdoc(
+        Calculate the composition on sites in local-cluster orbits.
+
+        .. rubric:: Special Methods
+
+        A call operator exists which is equivalent to
+        :func:`LocalOrbitCompositionCalculator.value`.
+
+        )pbdoc")
+      .def(py::init<>(&make_local_orbit_composition_calculator),
+           R"pbdoc(
+
+          .. rubric:: Constructor
+
+          Parameters
+          ----------
+          local_orbits : list[list[list[libcasm.clusterography.Cluster]]]
+              The local cluster orbits, where
+              `orbits[e][i][j]` is the `j`-th cluster in the `i`-th orbit of
+              equivalent clusters around the `e`-th equivalent phenomenal
+              cluster. Can be obtained from
+              :func:`libcasm.clexmonte.System.local_basis_set_cluster_info`.
+          orbits_to_calculate : list[int]
+              The indices (`i`, begin at 0) of the orbits to calculate. The
+              indices will be sorted and duplicates will be removed.
+          combine_orbits : bool
+              If True, calculate the composition of the union of sites in
+              all the `orbits_to_calculate`. If False, calculate the composition
+              for the set of sites in each orbit separately.
+          prim_nlist : libcasm.clexulator.PrimNeighborList
+              The primitive neighbor list.
+          supercell_nlist : libcasm.clexulator.SuperNeighborList
+              The supercell neighbor list.
+          supercell_index_converter : libcasm.xtal.UnitCellCoordIndexConverter
+              The supercell index converter.
+          composition_calculator : libcasm.composition.CompositionCalculator
+              The composition calculator.
+          dof_values : Optional[libcasm.clexulator.ConfigDoFValues]
+              The DoF values of the configuration to calculate.
+
+          )pbdoc",
+           py::arg("local_orbits"), py::arg("orbits_to_calculate"),
+           py::arg("combine_orbits"), py::arg("prim_nlist"),
+           py::arg("supercell_nlist"), py::arg("supercell_index_converter"),
+           py::arg("composition_calculator"), py::arg("dof_values") = nullptr)
+      .def(
+          "value",
+          [](clexmonte::LocalOrbitCompositionCalculator &f,
+             Index unitcell_index, Index equivalent_index) {
+            return f.value(unitcell_index, equivalent_index);
+          },
+          R"pbdoc(
+          Calculate the local orbit composition
+
+          Parameters
+          ----------
+          unitcell_index : int
+              The index of the unit cell the phenomenal cluster is associated
+              with.
+          equivalent_index : int
+              The index of the equivalent phenomenal cluster about which the
+              local orbits are constructed.
+
+          Returns
+          -------
+          composition : numpy.ndarray
+              The composition (as number of each component), as columns of
+              a matrix. If `combine_orbits` is True, then there will be a
+              single column; if False, there will be a column for each requested
+              orbit in the order given by `orbits_to_calculate`.
+          )pbdoc",
+          py::arg("unitcell_index"), py::arg("equivalent_index"))
+      .def(
+          "__call__",
+          [](clexmonte::LocalOrbitCompositionCalculator &f,
+             Index unitcell_index, Index equivalent_index) {
+            return f.value(unitcell_index, equivalent_index);
+          },
+          py::arg("unitcell_index"), py::arg("equivalent_index"))
+      .def_property_readonly(
+          "orbits_to_calculate",
+          [](clexmonte::LocalOrbitCompositionCalculator const &f) {
+            return std::vector<int>(f.orbits_to_calculate().begin(),
+                                    f.orbits_to_calculate().end());
+          },
+          R"pbdoc(
+          The orbits to calculate
+
+          Returns
+          -------
+          orbits_to_calculate : list[int]
+              The indices of the orbits to calculate.
+          )pbdoc")
+      .def_property_readonly(
+          "combine_orbits",
+          [](clexmonte::LocalOrbitCompositionCalculator const &f) {
+            return f.combine_orbits();
+          },
+          R"pbdoc(
+          Whether orbits are combined
+
+          Returns
+          -------
+          combine_orbits : bool
+              If True, calculate the composition of the union of sites in
+              all the `orbits_to_calculate`. If False, calculate the composition
+              for the set of sites in each orbit separately.
+          )pbdoc")
+      .def_property_readonly(
+          "local_orbits_sites",
+          [](clexmonte::LocalOrbitCompositionCalculator const &f) {
+            std::vector<std::vector<std::vector<xtal::UnitCellCoord>>>
+                converted_local_orbits_sites;
+            for (auto const &equiv_orbits : f.local_orbits_sites()) {
+              std::vector<std::vector<xtal::UnitCellCoord>>
+                  converted_equiv_orbits;
+              for (auto const &orbit_sites : equiv_orbits) {
+                std::vector<xtal::UnitCellCoord> converted_orbit_sites;
+                for (auto const &site : orbit_sites) {
+                  converted_orbit_sites.push_back(site);
+                }
+                converted_equiv_orbits.push_back(converted_orbit_sites);
+              }
+              converted_local_orbits_sites.push_back(converted_equiv_orbits);
+            }
+            return converted_local_orbits_sites;
+          },
+          R"pbdoc(
+          The sets of uniques sites used in the calculation
+
+          Returns
+          -------
+          local_orbits_sites : list[list[list[libcasm.xtal.IntegralSiteCoordinate]]]
+              The unique sites in the `orbits_to_calculate`, where
+              `orbits[e][i][j]` is the `j`-th site in the `i-th`
+              set of sites, for the `e`-th equivalent phenomenal cluster. If
+              `combine_orbits` is True, then all sites are combined into the
+              same set of sites and `i` only takes value 0; if False, then
+              `i` is an index into `orbits_to_calculate`.
+          )pbdoc");
 
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

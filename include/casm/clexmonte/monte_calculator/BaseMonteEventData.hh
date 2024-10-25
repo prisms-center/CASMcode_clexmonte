@@ -7,7 +7,7 @@
 #include "casm/clexmonte/events/event_data.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/monte/methods/kinetic_monte_carlo.hh"
-#include "casm/monte/sampling/SelectedEventData.hh"
+#include "casm/monte/sampling/SelectedEventFunctions.hh"
 
 namespace CASM {
 namespace clexmonte {

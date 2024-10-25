@@ -14,7 +14,7 @@
 #include "casm/monte/methods/kinetic_monte_carlo.hh"
 #include "casm/monte/run_management/ResultsAnalysisFunction.hh"
 #include "casm/monte/run_management/SamplingFixture.hh"
-#include "casm/monte/sampling/SelectedEventData.hh"
+#include "casm/monte/sampling/SelectedEventFunctions.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -135,8 +135,8 @@ class BaseMonteCalculator {
       std::shared_ptr<MonteCalculator> const &calculation) const = 0;
 
   /// \brief Construct functions that may be used to collect selected event data
-  virtual std::optional<monte::SelectedEventDataFunctions>
-  standard_selected_event_data_functions(
+  virtual std::optional<monte::SelectedEventFunctions>
+  standard_selected_event_functions(
       std::shared_ptr<MonteCalculator> const &calculation) const = 0;
 
   /// \brief Construct default SamplingFixtureParams
@@ -176,15 +176,14 @@ class BaseMonteCalculator {
   // - `run` should: Set the members of this for each selected event
   std::shared_ptr<SelectedEvent> selected_event;
 
-  /// Selected event data functions (if applicable)
+  /// Selected event functions (if applicable)
   // - `reset` should: Do nothing to this
-  std::shared_ptr<monte::SelectedEventDataFunctions>
-      selected_event_data_functions;
+  std::shared_ptr<monte::SelectedEventFunctions> selected_event_functions;
 
   /// Selected event data (if applicable)
   // - `reset` should: Do nothing to this
   // - `run` should: Reset the members of this and collect data if
-  //   `selected_event_data_params` has a value
+  //   `selected_event_function_params` has a value
   std::shared_ptr<monte::SelectedEventData> selected_event_data;
 
   // --- Set for system by `reset`, updated for state by `set_event_data`: ---
@@ -194,16 +193,22 @@ class BaseMonteCalculator {
   // - `set_event_data` should: Update event_list for current state
   std::shared_ptr<BaseMonteEventData> event_data;
 
-  /// Selected event data collection paramters (if applicable)
+  /// Selected event function paramters (if applicable)
   // - `reset` should: Reset this, then read it from `this->params`
   //   if key "selected_event_data" exists
-  std::shared_ptr<monte::SelectedEventDataParams> selected_event_data_params;
+  std::shared_ptr<monte::SelectedEventFunctionParams>
+      selected_event_function_params;
 
   /// \brief Set event data (includes calculating all rates), using current
   /// state data
   virtual void set_event_data(std::shared_ptr<engine_type> engine) = 0;
 
   // --- Set when `run` is called: ---
+
+  /// The current run manager, set when the `run` method is called by
+  /// `MonteCalculator::run` to give access to sampling fixtures via the
+  /// `calculator` object
+  std::shared_ptr<run_manager_type<engine_type>> shared_run_manager;
 
   /// KMC data for sampling functions, for the current state (if applicable)
   std::shared_ptr<kmc_data_type> kmc_data;

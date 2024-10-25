@@ -11,7 +11,7 @@
 #include "casm/clexulator/Correlations.hh"
 #include "casm/composition/CompositionCalculator.hh"
 #include "casm/composition/CompositionConverter.hh"
-#include "casm/monte/sampling/SelectedEventData.hh"
+#include "casm/monte/sampling/SelectedEventFunctions.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -120,7 +120,7 @@ struct HistogramSamplingFunctionT {
   Eigen::VectorXd operator()();
 };
 
-typedef HistogramSamplingFunctionT<Eigen::VectorXi,
+typedef HistogramSamplingFunctionT<Eigen::VectorXl,
                                    monte::LexicographicalCompare,
                                    monte::DiscreteVectorIntHistogram>
     DiscreteVectorIntHistogramSamplingFunction;

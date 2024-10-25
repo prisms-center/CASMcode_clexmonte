@@ -3,7 +3,7 @@
 
 #include "casm/clexmonte/monte_calculator/BaseMonteEventData.hh"
 #include "casm/clexmonte/monte_calculator/StateData.hh"
-#include "casm/monte/sampling/SelectedEventData.hh"
+#include "casm/monte/sampling/SelectedEventFunctions.hh"
 
 namespace CASM {
 

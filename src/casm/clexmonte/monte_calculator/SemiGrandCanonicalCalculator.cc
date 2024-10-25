@@ -297,8 +297,8 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
   }
 
   /// \brief Construct functions that may be used to collect selected event data
-  std::optional<monte::SelectedEventDataFunctions>
-  standard_selected_event_data_functions(
+  std::optional<monte::SelectedEventFunctions>
+  standard_selected_event_functions(
       std::shared_ptr<MonteCalculator> const &calculation) const override {
     return std::nullopt;
   }

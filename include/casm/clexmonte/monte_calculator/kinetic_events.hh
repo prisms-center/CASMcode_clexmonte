@@ -137,6 +137,7 @@ struct CompleteEventCalculator {
 /// - complete event list
 /// - CompleteEventCalculator: uses event state calculator and complete event
 ///   list to calculate a rate given an event ID
+template <bool DebugMode>
 class CompleteKineticEventData : public BaseMonteEventData {
  public:
   typedef std::mt19937_64 engine_type;
@@ -508,7 +509,7 @@ typedef lotto::DirectSumRejectionFreeEventSelector<
 /// - allowed event list
 /// - AllowedEventCalculator: uses event state calculator and allowed event
 ///   list to calculate a rate given an event index
-template <typename EventSelectorType>
+template <typename EventSelectorType, bool DebugMode>
 class AllowedKineticEventData : public BaseMonteEventData {
  public:
   typedef std::mt19937_64 engine_type;

@@ -187,17 +187,17 @@ class MonteCalculator {
 
   // --- Constructed if applicable ---
 
-  /// Selected event data functions (if applicable)
+  /// Selected event functions (if applicable)
   /// - Constructed by constructor
-  std::shared_ptr<monte::SelectedEventDataFunctions>
-  selected_event_data_functions() {
-    return m_calc->selected_event_data_functions;
+  std::shared_ptr<monte::SelectedEventFunctions> selected_event_functions() {
+    return m_calc->selected_event_functions;
   }
 
   /// Selected event data collection parameters (if applicable)
   /// - Constructed by `reset`
-  std::shared_ptr<monte::SelectedEventDataParams> selected_event_data_params() {
-    return m_calc->selected_event_data_params;
+  std::shared_ptr<monte::SelectedEventFunctionParams>
+  selected_event_function_params() {
+    return m_calc->selected_event_function_params;
   }
 
   /// Event data access (if applicable)
@@ -213,10 +213,10 @@ class MonteCalculator {
   }
 
   /// Set selected event data collection paramters
-  void set_selected_event_data_params(
-      std::shared_ptr<monte::SelectedEventDataParams>
-          selected_event_data_params) {
-    m_calc->selected_event_data_params = selected_event_data_params;
+  void set_selected_event_function_params(
+      std::shared_ptr<monte::SelectedEventFunctionParams>
+          selected_event_function_params) {
+    m_calc->selected_event_function_params = selected_event_function_params;
   }
 
   /// Selected event data access (if applicable)
@@ -250,6 +250,16 @@ class MonteCalculator {
 
   // --- Set when `run` is called: ---
 
+  /// Run manager access
+  std::shared_ptr<run_manager_type<engine_type>> run_manager() {
+    if (m_calc->shared_run_manager == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::run_manager: Run manager is not "
+          "yet set.");
+    }
+    return m_calc->shared_run_manager;
+  }
+
   /// KMC data for sampling functions, for the current state (if applicable)
   std::shared_ptr<kmc_data_type> kmc_data() {
     if (m_calc->kmc_data == nullptr) {
@@ -262,8 +272,13 @@ class MonteCalculator {
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
-           run_manager_type<engine_type> &run_manager) {
-    m_calc->run(state, occ_location, run_manager);
+           std::shared_ptr<run_manager_type<engine_type>> run_manager) {
+    if (!run_manager) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::run: Run manager is not set.");
+    }
+    m_calc->shared_run_manager = run_manager;
+    m_calc->run(state, occ_location, *m_calc->shared_run_manager);
   }
 
   /// \brief Construct functions that may be used to sample various quantities
@@ -298,10 +313,10 @@ class MonteCalculator {
   }
 
   /// \brief Construct functions that may be used to collect selected event data
-  std::optional<monte::SelectedEventDataFunctions>
-  standard_selected_event_data_functions(
+  std::optional<monte::SelectedEventFunctions>
+  standard_selected_event_functions(
       std::shared_ptr<MonteCalculator> const &calculation) const {
-    return m_calc->standard_selected_event_data_functions(calculation);
+    return m_calc->standard_selected_event_functions(calculation);
   }
 
   /// \brief Construct default SamplingFixtureParams
@@ -341,8 +356,14 @@ class MonteCalculator {
   /// \brief Perform a single run, evolving one or more states
   void run(int current_state, std::vector<state_type> &states,
            std::vector<monte::OccLocation> &occ_locations,
-           run_manager_type<engine_type> &run_manager) {
-    m_calc->run(current_state, states, occ_locations, run_manager);
+           std::shared_ptr<run_manager_type<engine_type>> run_manager) {
+    if (!run_manager) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::run: Run manager is not set.");
+    }
+    m_calc->shared_run_manager = run_manager;
+    m_calc->run(current_state, states, occ_locations,
+                *m_calc->shared_run_manager);
   }
 
  private:

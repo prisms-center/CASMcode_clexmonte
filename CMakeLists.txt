@@ -118,9 +118,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/ImpactTable.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/event_data.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/event_methods.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/json/EventFilterGroup_json_io.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/json/EventState_json_io.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/json/PrimEventData_json_io.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/json/event_data_json_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/io/stream/EventState_stream_io.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/lotto.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/events/lotto/event_rate_tree.hpp
@@ -157,7 +155,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/kinetic_sampling_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/modifying_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/sampling_functions.hh
-  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/selected_event_data_functions.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/monte_calculator/selected_event_functions.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_events.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/nfold/nfold_impl.hh
@@ -211,9 +209,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/ImpactTable.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/event_data.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/event_methods.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/EventFilterGroup_json_io.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/EventState_json_io.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/PrimEventData_json_io.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/json/event_data_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/events/io/stream/EventState_stream_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/io/json/EventState_json_io.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/kinetic/io/stream/EventState_stream_io.cc
@@ -231,7 +227,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/kinetic_events.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/kinetic_sampling_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/sampling_functions.cc
-  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/selected_event_data_functions.cc
+  ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/monte_calculator/selected_event_functions.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/nfold/nfold_events.cc
   ${PROJECT_SOURCE_DIR}/src/casm/clexmonte/run/io/convariance_functions.cc

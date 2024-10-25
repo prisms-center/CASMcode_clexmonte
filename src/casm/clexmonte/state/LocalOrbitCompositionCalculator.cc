@@ -95,7 +95,7 @@ PossibleLocalOrbitCompositions::PossibleLocalOrbitCompositions(
     }
 
     // Col-major unrolling of the matrix
-    Eigen::VectorXi v = num_each_component_by_orbit.reshaped();
+    Eigen::VectorXl v = num_each_component_by_orbit.reshaped().cast<long>();
     possible.insert(v);
 
     // If the maximum size of the set of possible occupations has been
