@@ -52,7 +52,9 @@ struct StateData {
   std::map<std::string, std::shared_ptr<clexulator::ClusterExpansion>> clex;
 
   /// Multi- Cluster expansion calculators, set for current state
-  std::map<std::string, std::shared_ptr<clexulator::MultiClusterExpansion>>
+  std::map<std::string,
+           std::pair<std::shared_ptr<clexulator::MultiClusterExpansion>,
+                     std::map<std::string, Index>>>
       multiclex;
 
   /// Local cluster expansion calculators, set for current state
@@ -60,12 +62,18 @@ struct StateData {
       local_clex;
 
   /// Multi- Local cluster expansion calculators, set for current state
-  std::map<std::string, std::shared_ptr<clexulator::MultiLocalClusterExpansion>>
+  std::map<std::string,
+           std::pair<std::shared_ptr<clexulator::MultiLocalClusterExpansion>,
+                     std::map<std::string, Index>>>
       local_multiclex;
 
   /// Order parameter calculators, set for current state
   std::map<std::string, std::shared_ptr<clexulator::OrderParameter>>
       order_parameters;
+
+  /// Local orbit composition calculators, set for current state
+  std::map<std::string, std::shared_ptr<LocalOrbitCompositionCalculator>>
+      local_orbit_composition_calculators;
 };
 
 }  // namespace clexmonte

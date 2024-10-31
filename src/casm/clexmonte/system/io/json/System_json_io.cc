@@ -2,6 +2,7 @@
 
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/json/InputParser_impl.hh"
+#include "casm/clexmonte/events/event_methods.hh"
 #include "casm/clexmonte/misc/parse_array.hh"
 #include "casm/clexmonte/misc/subparse_from_file.hh"
 #include "casm/clexmonte/system/System.hh"
@@ -805,6 +806,9 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path) {
                 10000 /* max_size */));
       }
     }
+
+    // Construct prim event list
+    system.prim_event_list = make_prim_event_list(system.event_type_data);
   }
 
   // Parse "dof_spaces"

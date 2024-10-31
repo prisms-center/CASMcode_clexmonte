@@ -20,12 +20,11 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
     assert np.allclose(system.composition_converter.end_member(0), [0.0, 1.0, 0.0])
     assert np.allclose(system.composition_converter.end_member(1), [0.0, 0.0, 1.0])
 
-    print("begin MonteCalculator construction")
+    print("-- Construct MonteCalculator --")
     calculator = clexmonte.MonteCalculator(
         method="kinetic",
         system=system,
     )
-    print("ok")
     assert isinstance(calculator, clexmonte.MonteCalculator)
     with pytest.raises(Exception):
         assert isinstance(calculator.potential, clexmonte.MontePotential)
@@ -35,7 +34,7 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
 
     # default configuration is occupied by A: [1.0, 0.0, 0.0], which corresponds
     # to the origin composition as defined in the system's composition axes
-    print("begin MonteCarloState construction")
+    print("-- Construct MonteCarloState --")
     state = clexmonte.MonteCarloState(
         configuration=system.make_default_configuration(
             transformation_matrix_to_super=np.eye(3, dtype="int") * 2,
@@ -49,9 +48,8 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
             # "mol_composition": [1.0, 0.0, 0.0],
         },
     )
-    print("ok")
 
-    print("Composition checks")
+    print("-- Composition checks --")
     composition_calculator = system.composition_calculator
     composition_converter = system.composition_converter
     mol_composition = composition_calculator.mean_num_each_component(
@@ -66,15 +64,16 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
     assert np.allclose(
         param_composition, state.conditions.vector_values["param_composition"]
     )
-    print("ok")
 
     ## Set state data and potential
+    print("-- Set state and potential --")
     calculator.set_state_and_potential(state=state)
     assert isinstance(calculator.potential, clexmonte.MontePotential)
     assert isinstance(calculator.state_data, clexmonte.StateData)
     assert isinstance(calculator.event_data, clexmonte.MonteEventData)
 
     ## StateData constructor
+    print("-- Construct StateData --")
     state_data = clexmonte.StateData(
         system=system,
         state=state,
@@ -83,23 +82,37 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
     assert isinstance(state_data, clexmonte.StateData)
 
     ## MontePotential constructor
+    print("-- Construct MontePotential --")
     potential = clexmonte.MontePotential(calculator=calculator, state=state)
     assert isinstance(potential, clexmonte.MontePotential)
 
-    # ## Set event data
+    # Set event data (raise if no occ_location)
+    print("-- Check set_event_data w/no occ_location raises --")
     with pytest.raises(Exception):
         # no occ_location set
         calculator.set_event_data()
 
+    ## Make occ_location
+    print("-- Make occupant location tracker --")
     occ_location = calculator.make_occ_location()
     assert isinstance(occ_location, monte_events.OccLocation)
     assert isinstance(calculator.event_data, clexmonte.MonteEventData)
 
-    ## MonteEventData constructor
+    ## Set event data (raise if no allowed events)
     # event_data = clexmonte.MonteEventData(calculator=calculator, state=state)
+    print("-- Set event data --")
     calculator.set_event_data()
     event_data = calculator.event_data
     assert isinstance(event_data, clexmonte.MonteEventData)
+    assert len(event_data.event_list) == 0
+
+    ## MonteEventData constructor
+    print("-- Construct MonteEventData --")
+    event_data = clexmonte.MonteEventData(calculator=calculator, state=state)
+    assert isinstance(event_data, clexmonte.MonteEventData)
+    assert len(event_data.event_list) == 0
+
+    assert False
 
 
 def test_event_data_1(FCCBinaryVacancy_kmc_System):

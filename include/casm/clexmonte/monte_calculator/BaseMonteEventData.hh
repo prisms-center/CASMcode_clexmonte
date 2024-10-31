@@ -13,6 +13,7 @@ namespace CASM {
 namespace clexmonte {
 
 struct EventFilterGroup;
+struct StateData;
 
 /// \brief Base class to provide access to event data for a Monte Carlo
 /// simulation
@@ -53,7 +54,7 @@ class BaseMonteEventData {
   // -- Update and run --
 
   virtual void update(
-      state_type const &state, monte::OccLocation const &occ_location,
+      std::shared_ptr<StateData> _state_data,
       std::optional<std::vector<EventFilterGroup>> _event_filters,
       std::shared_ptr<engine_type> engine) = 0;
 

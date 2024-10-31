@@ -176,7 +176,9 @@ state_sampling_function_type make_multiclex_f(
       component_names,
       shape,  // scalar
       [calculation, key]() {
-        return calculation->state_data()->multiclex.at(key)->per_unitcell();
+        return calculation->state_data()
+            ->multiclex.at(key)
+            .first->per_unitcell();
       });
 }
 
@@ -245,7 +247,7 @@ state_sampling_function_type make_multiclex_sparse_corr_f(
       "per primitive cell)",
       component_names, shape, [calculation, key]() {
         auto &correlations =
-            calculation->state_data()->multiclex.at(key)->correlations();
+            calculation->state_data()->multiclex.at(key).first->correlations();
         auto const &per_supercell_corr = correlations.per_supercell();
         Eigen::VectorXd all_corr =
             correlations.per_unitcell(per_supercell_corr);

@@ -34,7 +34,7 @@ class KineticPotential : public BaseMontePotential {
 enum class kinetic_event_data_type {
   high_memory,
   default_memory,
-  low_memory,
+  low_memory, /* currently not used */
 };
 
 class KineticCalculator : public BaseMonteCalculator {
@@ -132,7 +132,7 @@ class KineticCalculator : public BaseMonteCalculator {
   std::optional<std::vector<EventFilterGroup>> event_filters;
 
   // Type of impact table:
-  // - Only takes effect if event_data_type is `default_memory` or `low_memory`
+  // - Only takes effect if event_data_type is `default_memory`
   // - If true: somewhat higher memory use; somewhat faster impact list
   // - If false: somewhat lower memory use; somewhat slower impact list
   bool use_neighborlist_impact_table = true;

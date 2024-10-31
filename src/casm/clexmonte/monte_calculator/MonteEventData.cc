@@ -291,21 +291,8 @@ void print(std::ostream &out, EventDataSummary const &event_data_summary) {
         << x.neighborhood_size_kra.at(event_type_name) << " / "
         << x.neighborhood_size_freq.at(event_type_name) << ")" << std::endl;
   }
-  //  // Impact list:
-  //  out << "- Impact list sizes (total):" << std::endl;
-  //  for (auto const &pair : x.equiv_keys_by_type) {
-  //    std::string event_type_name = pair.first;
-  //    out << "  - " << event_type_name << " = "
-  //        << x.n_impact.by_type.at(event_type_name) << std::endl;
-  //
-  //    for (auto const &equiv_key : pair.second) {
-  //      Index equivalent_index = equiv_key.second;
-  //      out << "    - " << event_type_name << "." << equivalent_index << " = "
-  //          << x.n_impact.by_equivalent_index.at(equiv_key) << std::endl;
-  //    }
-  //  }
   // Impact table:
-  out << "- Impact number (by occurring type -> impacted type) "
+  out << "- Impact number (occurring type -> impacted type) "
          "(Avg. # over allowed events):"
       << std::endl;
   for (auto const &pair : x.equiv_keys_by_type) {

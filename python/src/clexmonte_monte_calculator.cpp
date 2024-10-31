@@ -397,7 +397,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def(
           "multiclex",
           [](clexmonte::StateData &m, std::string key)
-              -> std::shared_ptr<clexulator::MultiClusterExpansion> {
+              -> std::pair<std::shared_ptr<clexulator::MultiClusterExpansion>,
+                           std::map<std::string, Index>> {
             return m.multiclex.at(key);
           },
           R"pbdoc(
@@ -413,6 +414,11 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           multiclex : libcasm.clexulator.MultiClusterExpansion
               The multi-cluster expansion calculator for `key`, set to
               calculate for `state`.
+          glossary : dict[str, int]
+              The glossary provides the mapping between the property being
+              calculated and the index specifying the order in which
+              the MultiClusterExpansion stores coefficients and returns
+              property values.
           )pbdoc",
           py::arg("key"))
       .def(
@@ -439,7 +445,9 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def(
           "local_multiclex",
           [](clexmonte::StateData &m, std::string key)
-              -> std::shared_ptr<clexulator::MultiLocalClusterExpansion> {
+              -> std::pair<
+                  std::shared_ptr<clexulator::MultiLocalClusterExpansion>,
+                  std::map<std::string, Index>> {
             return m.local_multiclex.at(key);
           },
           R"pbdoc(
@@ -455,6 +463,11 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           local_multiclex : libcasm.clexulator.MultiLocalClusterExpansion
               The local multi-cluster expansion calculator for `key`, set to
               calculate for `state`.
+          glossary : dict[str, int]
+              The glossary provides the mapping between the property being
+              calculated and the index specifying the order in which
+              the MultiClusterExpansion stores coefficients and returns
+              property values.
           )pbdoc",
           py::arg("key"))
       .def(
@@ -475,6 +488,27 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           -------
           order_parameter : libcasm.clexulator.OrderParameter
               The order parameter calculator for `key`, set to calculate for
+              the current state.
+          )pbdoc",
+          py::arg("key"))
+      .def(
+          "local_orbit_composition_calculator",
+          [](clexmonte::StateData &m, std::string key)
+              -> std::shared_ptr<clexmonte::LocalOrbitCompositionCalculator> {
+            return m.local_orbit_composition_calculators.at(key);
+          },
+          R"pbdoc(
+          Get a local orbit composition calculator
+
+          Parameters
+          ----------
+          key : str
+              The local orbit composition calculator name
+
+          Returns
+          -------
+          local_orbit_composition_calculator : libcasm.clexmonte.LocalOrbitCompositionCalculator
+              The local orbit composition calculator `key`, set to calculate for
               the current state.
           )pbdoc",
           py::arg("key"));

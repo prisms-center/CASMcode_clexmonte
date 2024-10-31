@@ -2,6 +2,7 @@
 #define CASM_clexmonte_system_System
 
 #include "casm/clexmonte/definitions.hh"
+#include "casm/clexmonte/events/event_data.hh"
 #include "casm/clexmonte/misc/Matrix3lCompare.hh"
 #include "casm/clexmonte/state/LocalOrbitCompositionCalculator.hh"
 #include "casm/clexmonte/system/system_data.hh"
@@ -184,6 +185,11 @@ struct System {
 
   /// KMC events
   std::map<std::string, OccEventTypeData> event_type_data;
+
+  /// Linear list of events associated with the origin unit cell, including
+  /// each type of event, each equivalent event, and the forward and reverse
+  /// events (if distinct)
+  std::vector<PrimEventData> prim_event_list;
 
   // --- Supercells
 

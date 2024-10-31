@@ -1,6 +1,8 @@
 #include "casm/clexmonte/monte_calculator/KineticCalculator.hh"
 
 #include "casm/casm_io/json/InputParser_impl.hh"
+#include "casm/clexmonte/events/io/json/event_data_json_io.hh"
+#include "casm/clexmonte/misc/to_json.hh"
 #include "casm/clexmonte/monte_calculator/MonteEventData.hh"
 #include "casm/clexmonte/monte_calculator/analysis_functions.hh"
 #include "casm/clexmonte/monte_calculator/kinetic_events.hh"
@@ -397,11 +399,8 @@ void KineticCalculator::set_event_data(std::shared_ptr<engine_type> engine) {
         "this->event_data==nullptr");
   }
 
-  state_type const &state = *this->state_data->state;
-  monte::OccLocation const &occ_location = *this->state_data->occ_location;
-
   // Currently, event_filters are only set at _reset() by reading from params
-  this->event_data->update(state, occ_location, event_filters, engine);
+  this->event_data->update(this->state_data, event_filters, engine);
 }
 
 /// \brief Perform a single run, evolving current state
@@ -444,6 +443,10 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   std::cout << "Generating event data summary ... DONE" << std::endl
             << std::endl;
   print(std::cout, event_data_summary);
+
+  if (event_data_summary.n_events_allowed == 0) {
+    throw std::runtime_error("Error: Cannot run. No allowed events.");
+  }
 
   // Construct KMCData
   this->kmc_data = std::make_shared<kmc_data_type>();
@@ -526,19 +529,28 @@ void KineticCalculator::run(int current_state, std::vector<state_type> &states,
 
 template <bool DebugMode>
 void KineticCalculator::make_complete_event_data_impl() {
+  if constexpr (DebugMode) {
+    auto &log = CASM::log();
+    log << "!! make_complete_event_data_impl !! " << std::endl;
+    log << "!! DebugMode=" << DebugMode << " !! " << std::endl;
+    log << std::endl;
+  }
+
   this->event_data = std::make_shared<CompleteKineticEventData<DebugMode>>(
       system, event_filters, allow_events_with_no_barrier);
 }
 
 template <bool DebugMode>
 void KineticCalculator::make_allowed_event_data_impl() {
-  std::cout << "!! make_allowed_event_data_impl !! " << std::endl;
-  std::cout << "!! DebugMode=" << DebugMode << " !! " << std::endl;
-
-  bool use_map_index = false; /* default_memory */
-  if (this->event_data_type == kinetic_event_data_type::low_memory) {
-    use_map_index = true;
+  if constexpr (DebugMode) {
+    auto &log = CASM::log();
+    log << "!! make_allowed_event_data_impl !! " << std::endl;
+    log << "!! DebugMode=" << DebugMode << " !! " << std::endl;
+    log << std::endl;
   }
+
+  // current testing does not show this to be helpful - fix to false
+  bool use_map_index = false;
 
   if (this->event_selector_type ==
       kinetic_event_selector_type::vector_sum_tree) {
@@ -590,18 +602,24 @@ void KineticCalculator::_reset() {
 
   // "verbosity": str or int, default=10
   this->verbosity_level = parse_verbosity(parser);
-  std::cout << "!! verbosity_level=" << this->verbosity_level << " !!"
-            << std::endl;
   CASM::log().set_verbosity(this->verbosity_level);
+
+  auto &log = CASM::log();
+  log.read("KineticCalculator parameters");
+  log.indent() << "verbosity=" << this->verbosity_level << std::endl;
 
   // "mol_composition_tol": float, default=CASM::TOL
   this->mol_composition_tol = CASM::TOL;
   parser.optional(this->mol_composition_tol, "mol_composition_tol");
+  log.indent() << "mol_composition_tol=" << this->mol_composition_tol
+               << std::endl;
 
   // TODO: enumeration
 
   // TODO: Read event_filters from params
   this->event_filters = std::nullopt;
+  log.indent() << "event_filters=" << qto_json(this->event_filters)
+               << std::endl;
 
   // Read selected event data params
   this->selected_event_function_params.reset();
@@ -614,6 +632,8 @@ void KineticCalculator::_reset() {
           std::move(selected_event_data_subparser->value);
     }
   }
+  log.indent() << "selected_event_data=" << qto_json(this->event_filters)
+               << std::endl;
 
   // Read "event_data_type"
   // - "high_memory": complete event list,
@@ -623,9 +643,20 @@ void KineticCalculator::_reset() {
   parser.optional(event_data_type_str, "event_data_type");
   if (event_data_type_str == "high_memory") {
     this->event_data_type = kinetic_event_data_type::high_memory;
+    log.indent() << "event_data_type="
+                 << "\"high_memory\"" << std::endl;
   } else if (event_data_type_str == "default") {
     this->event_data_type = kinetic_event_data_type::default_memory;
-  } else if (event_data_type_str == "low_memory") {
+    log.indent() << "event_data_type="
+                 << "\"default\"" << std::endl;
+
+    if (event_filters.has_value()) {
+      parser.insert_error(
+          "event_data_type",
+          "event_filters are not supported by event_data_type 'default'");
+    }
+
+  } /* else if (event_data_type_str == "low_memory") { // not currently used
     this->event_data_type = kinetic_event_data_type::low_memory;
 
     if (event_filters.has_value()) {
@@ -633,7 +664,8 @@ void KineticCalculator::_reset() {
           "event_data_type",
           "event_filters are not supported by event_data_type 'low_memory'");
     }
-  } else {
+  } */
+  else {
     parser.insert_error("event_data_type",
                         "Invalid event_data_type: " + event_data_type_str);
   }
@@ -648,10 +680,16 @@ void KineticCalculator::_reset() {
   parser.optional(event_selector_type_str, "event_selector_type");
   if (event_selector_type_str == "vector_sum_tree") {
     this->event_selector_type = kinetic_event_selector_type::vector_sum_tree;
+    log.indent() << "event_selector_type="
+                 << "\"vector_sum_tree\"" << std::endl;
   } else if (event_selector_type_str == "sum_tree") {
     this->event_selector_type = kinetic_event_selector_type::sum_tree;
+    log.indent() << "event_selector_type="
+                 << "\"sum_tree\"" << std::endl;
   } else if (event_selector_type_str == "direct_sum") {
     this->event_selector_type = kinetic_event_selector_type::direct_sum;
+    log.indent() << "event_selector_type="
+                 << "\"direct_sum\"" << std::endl;
   } else {
     parser.insert_error("event_selector_type", "Invalid event_selector_type: " +
                                                    event_selector_type_str);
@@ -663,8 +701,12 @@ void KineticCalculator::_reset() {
   parser.optional(impact_table_type_str, "impact_table_type");
   if (impact_table_type_str == "neighborlist") {
     this->use_neighborlist_impact_table = true;
+    log.indent() << "impact_table_type="
+                 << "\"neighborlist\"" << std::endl;
   } else if (impact_table_type_str == "relative") {
     this->use_neighborlist_impact_table = false;
+    log.indent() << "impact_table_type="
+                 << "\"relative\"" << std::endl;
   } else {
     parser.insert_error("impact_table_type",
                         "Invalid impact_table_type: " + impact_table_type_str);
@@ -674,6 +716,8 @@ void KineticCalculator::_reset() {
   // - true or false (default)
   this->allow_events_with_no_barrier = false;
   parser.optional(allow_events_with_no_barrier, "allow_events_with_no_barrier");
+  log.indent() << "allow_events_with_no_barrier=" << std::boolalpha
+               << this->allow_events_with_no_barrier << std::endl;
 
   // Read "assign_allowed_events_only"
   //
@@ -685,6 +729,10 @@ void KineticCalculator::_reset() {
   ///     calculation).
   this->assign_allowed_events_only = true;
   parser.optional(assign_allowed_events_only, "assign_allowed_events_only");
+  log.indent() << "assign_allowed_events_only=" << std::boolalpha
+               << this->assign_allowed_events_only << std::endl
+               << std::endl;
+  log.end_section();
 
   std::stringstream ss;
   ss << "Error in KineticCalculator: error reading calculation "

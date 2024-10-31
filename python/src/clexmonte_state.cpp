@@ -372,6 +372,11 @@ PYBIND11_MODULE(_clexmonte_state, m) {
       m, "LocalOrbitCompositionCalculator", R"pbdoc(
         Calculate the composition on sites in local-cluster orbits.
 
+        LocalOrbitCompositionCalculator can be constructed independently, but
+        are most conveniently obtained by specifying them in the system input
+        file and accessing them using
+        :func:`~libcasm.clexmonte.System.local_orbit_composition_calculators`.
+
         .. rubric:: Special Methods
 
         A call operator exists which is equivalent to

@@ -92,7 +92,8 @@ StateData::StateData(std::shared_ptr<system_type> _system,
     auto _multiclex = std::make_shared<clexulator::MultiClusterExpansion>(
         supercell_neighbor_list, _clexulator, data.coefficients);
     set(*_multiclex, *state);
-    multiclex.emplace(key, _multiclex);
+    auto _glossary = data.coefficients_glossary;
+    multiclex.emplace(key, std::make_pair(_multiclex, _glossary));
   }
 
   // make local_clex
@@ -134,7 +135,8 @@ StateData::StateData(std::shared_ptr<system_type> _system,
         std::make_shared<clexulator::MultiLocalClusterExpansion>(
             supercell_neighbor_list, _local_clexulator, data.coefficients);
     set(*_local_multiclex, *state);
-    local_multiclex.emplace(key, _local_multiclex);
+    auto _glossary = data.coefficients_glossary;
+    local_multiclex.emplace(key, std::make_pair(_local_multiclex, _glossary));
   }
 
   // make order_parameters
@@ -147,6 +149,30 @@ StateData::StateData(std::shared_ptr<system_type> _system,
                              convert->index_converter(),
                              &get_dof_values(*state));
     order_parameters.emplace(key, _order_parameter);
+  }
+
+  // make local orbit composition calculators
+  for (auto const &pair : system->local_orbit_composition_calculator_data) {
+    auto const &key = pair.first;
+    auto const &data = pair.second;
+
+    auto const &composition_calculator = get_composition_calculator(*system);
+    auto const &orbits =
+        get_local_basis_set_cluster_info(*system, data->local_basis_set_name)
+            ->orbits;
+    auto prim_nlist = system->prim_neighbor_list;
+    auto supercell_nlist = get_supercell_neighbor_list(*system, *state);
+    auto const &supercell_index_converter =
+        get_index_conversions(*system, *state).index_converter();
+    clexulator::ConfigDoFValues const *dof_values = &get_dof_values(*state);
+
+    auto _local_orbit_composition_calculator =
+        std::make_shared<LocalOrbitCompositionCalculator>(
+            orbits, data->orbits_to_calculate, data->combine_orbits, prim_nlist,
+            supercell_nlist, supercell_index_converter, composition_calculator,
+            dof_values);
+    local_orbit_composition_calculators.emplace(
+        key, _local_orbit_composition_calculator);
   }
 }
 

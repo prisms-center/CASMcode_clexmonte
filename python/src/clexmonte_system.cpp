@@ -486,8 +486,11 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           "multiclex",
           [](clexmonte::System &m, clexmonte::state_type const &state,
              std::string key)
-              -> std::shared_ptr<clexulator::MultiClusterExpansion> {
-            return clexmonte::get_multiclex(m, state, key);
+              -> std::pair<std::shared_ptr<clexulator::MultiClusterExpansion>,
+                           std::map<std::string, Index>> {
+            return std::make_pair(
+                clexmonte::get_multiclex(m, state, key),
+                clexmonte::get_multiclex_data(m, key).coefficients_glossary);
           },
           R"pbdoc(
           Get a multi-cluster expansion calculator
@@ -504,6 +507,11 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           multiclex : libcasm.clexulator.MultiClusterExpansion
               The multi-cluster expansion calculator for `key`, set to
               calculate for `state`.
+          glossary : dict[str, int]
+              The glossary provides the mapping between the property being
+              calculated and the index specifying the order in which
+              the MultiClusterExpansion stores coefficients and returns
+              property values.
           )pbdoc",
           py::arg("state"), py::arg("key"))
       .def(
@@ -534,8 +542,12 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           "local_multiclex",
           [](clexmonte::System &m, clexmonte::state_type const &state,
              std::string key)
-              -> std::shared_ptr<clexulator::MultiLocalClusterExpansion> {
-            return clexmonte::get_local_multiclex(m, state, key);
+              -> std::pair<
+                  std::shared_ptr<clexulator::MultiLocalClusterExpansion>,
+                  std::map<std::string, Index>> {
+            return std::make_pair(clexmonte::get_local_multiclex(m, state, key),
+                                  clexmonte::get_local_multiclex_data(m, key)
+                                      .coefficients_glossary);
           },
           R"pbdoc(
           Get a local multi-cluster expansion
@@ -552,6 +564,11 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           local_multiclex : libcasm.clexulator.MultiLocalClusterExpansion
               The local multi-cluster expansion calculator for `key`, set to
               calculate for `state`.
+          glossary : dict[str, int]
+              The glossary provides the mapping between the property being
+              calculated and the index specifying the order in which
+              the MultiClusterExpansion stores coefficients and returns
+              property values.
           )pbdoc",
           py::arg("state"), py::arg("key"))
       //
@@ -769,6 +786,22 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               `events_local_multiclex_name`. This means that `events[equivalent_index]`
               is the phenomenal event for the `equivalent_index`-th local cluster basis
               set.
+          )pbdoc",
+          py::arg("event_type_name"))
+      .def(
+          "prim_event_list",
+          [](clexmonte::System const &self) { return self.prim_event_list; },
+          R"pbdoc(
+          Get a linear list of all distinct events associated with the origin
+          unit cell
+
+          Returns
+          -------
+          prim_event_list : list[libcasm.clexmonte.PrimEventData]
+              A list of the the distinct PrimEventData, include one entry for
+              each distinct event associated with the origin unit cell. Includes
+              separate entries for symmetrically equivalent events and for
+              forward and reverse events if they are distinct.
           )pbdoc")
       // local orbit composition calculators
       .def_property_readonly(
@@ -813,7 +846,22 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           R"pbdoc(
           Get a local orbit composition calculator
 
-          Local orbit composition calculators are generated if there if
+          Standard local orbit composition calculators are generated for each
+          KMC event using the local-cluster orbits of the local basis set used
+          to parameterize its properties. The standard composition calculators
+          are given the following names:
+
+          - "<event_name>-<i>": The composition on the union of sites
+            in the `i`-th local-cluster orbit only, where `i` is the linear
+            orbit index for orbit being calculated, as a matrix with a
+            single column.
+          - "<event_name>-all": Calculates the composition for each point
+            cluster orbit in separate columns.
+          - "<event_name>-all-combined": Calculates the composition for the
+            union of sites in all point cluster orbits, as a matrix with a
+            single column.
+
+          Custom local orbit composition calculators are generated if they are
           specified using the `local_orbit_composition` attribute for a local
           basis set in the system input file. The `local_orbit_composition`
           is a dict attribute that can be used to specify one or more
@@ -877,7 +925,7 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           state : libcasm.clexmonte.MonteCarloState
               The state in which the local orbit composition is to be calculated
           key : str
-              The local orbit composition calculator name
+              The local orbit composition calculator name.
 
           Returns
           -------

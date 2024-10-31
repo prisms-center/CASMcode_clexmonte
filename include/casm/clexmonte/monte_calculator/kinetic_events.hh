@@ -6,6 +6,7 @@
 #include "casm/clexmonte/events/event_methods.hh"
 #include "casm/clexmonte/events/lotto.hh"
 #include "casm/clexmonte/monte_calculator/BaseMonteEventData.hh"
+#include "casm/clexmonte/monte_calculator/StateData.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -175,6 +176,9 @@ class CompleteKineticEventData : public BaseMonteEventData {
 
   // -- Data - set when `update` is called --
 
+  /// \brief Current state data
+  std::shared_ptr<StateData> state_data;
+
   /// Functions for calculating event states, one for each prim event.
   /// This is supercell-specific, even though it is one per prim event,
   /// because it depends on supercell-specific clexulators
@@ -197,7 +201,7 @@ class CompleteKineticEventData : public BaseMonteEventData {
   std::shared_ptr<event_selector_type> event_selector;
 
   /// \brief Update for given state, conditions, and occupants
-  void update(state_type const &state, monte::OccLocation const &occ_location,
+  void update(std::shared_ptr<StateData> _state_data,
               std::optional<std::vector<EventFilterGroup>> _event_filters,
               std::shared_ptr<engine_type> engine) override;
 
@@ -564,6 +568,9 @@ class AllowedKineticEventData : public BaseMonteEventData {
 
   // -- Data - set when `update` is called --
 
+  /// \brief Current state data
+  std::shared_ptr<StateData> state_data;
+
   /// \brief Random number generator
   ///
   /// This is constructed at `update` and stored to allow re-building the
@@ -588,7 +595,7 @@ class AllowedKineticEventData : public BaseMonteEventData {
   std::shared_ptr<event_selector_type> event_selector;
 
   /// \brief Update for given state, conditions, and occupants
-  void update(state_type const &state, monte::OccLocation const &occ_location,
+  void update(std::shared_ptr<StateData> _state_data,
               std::optional<std::vector<EventFilterGroup>> _event_filters,
               std::shared_ptr<engine_type> engine) override;
 
