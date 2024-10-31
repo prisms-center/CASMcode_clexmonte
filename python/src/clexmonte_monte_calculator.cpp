@@ -1083,13 +1083,21 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
            R"pbdoc(
           .. rubric:: Constructor
 
-          Notes
-          -----
+          The constructor is equivalent to:
 
-          - Before calling, it is necessary to first set the state and potential,
-            using :func:`~libcasm.clexmonte.MonteCalculator.set_state_and_potential`.
-          - After calling, the calculator's state data will be updated with a
-            pointer to the resulting occupant location list.
+          .. code-block:: python
+
+              if occ_location is None:
+                  calculator.set_state_and_potential(state=state)
+                  calculator.make_occ_location()
+              else:
+                  calculator.set_state_and_potential(
+                      state=state,
+                      occ_location=occ_location,
+                  )
+              calculator.set_event_data(engine=engine)
+              event_data = calculator.event_data
+
 
           Parameters
           ----------

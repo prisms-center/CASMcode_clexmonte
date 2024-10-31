@@ -112,8 +112,6 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
     assert isinstance(event_data, clexmonte.MonteEventData)
     assert len(event_data.event_list) == 0
 
-    assert False
-
 
 def test_event_data_1(FCCBinaryVacancy_kmc_System):
     system = FCCBinaryVacancy_kmc_System
@@ -167,9 +165,9 @@ def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
     calculator.collect("selected_event.by_equivalent_index")
 
     def print_step_f():
-        step = calculator.kinetics_data.sampling_fixture.step
+        fixture = calculator.kinetics_data.sampling_fixture
         # print("step:", step)
-        return np.array([step])
+        return np.array([fixture.n_step])
 
     print_step_sampling_f = sampling.StateSamplingFunction(
         name="print_step",
@@ -180,7 +178,8 @@ def test_run_fixture_1(FCCBinaryVacancy_kmc_System, tmp_path):
     )
 
     def json_step_f():
-        json_step = {"step": calculator.kinetics_data.sampling_fixture.step}
+        fixture = calculator.kinetics_data.sampling_fixture
+        json_step = {"step": fixture.n_step}
         # print("json_step:", json_step)
         return json_step
 
