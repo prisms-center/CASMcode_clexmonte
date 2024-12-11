@@ -7,17 +7,17 @@ requires = [
     "ninja",
     "pybind11>=2.8.0",
     "libcasm-global>=2.0.5",
-    "libcasm-xtal>=2.0a11",
-    "libcasm-composition>=2.0a3",
-    "libcasm-clexulator>=2.0a5",
-    "libcasm-configuration>=2.0a5",
-    "libcasm-monte>=2.0a2",
+    "libcasm-xtal>=2.0a12",
+    "libcasm-composition>=2.0a4",
+    "libcasm-clexulator>=2.0a7",
+    "libcasm-configuration>=2.0a6",
+    "libcasm-monte>=2.0a3",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "libcasm-clexmonte"
-version = "2.0a2"
+version = "2.0a3"
 authors = [
   { name="CASM developers", email="casm-developers@lists.engr.ucsb.edu" },
 ]
@@ -34,11 +34,11 @@ classifiers = [
 ]
 dependencies = [
     "libcasm-global>=2.0.5",
-    "libcasm-xtal>=2.0a11",
-    "libcasm-composition>=2.0a3",
-    "libcasm-clexulator>=2.0a5",
-    "libcasm-configuration>=2.0a5",
-    "libcasm-monte>=2.0a2",
+    "libcasm-xtal>=2.0a12",
+    "libcasm-composition>=2.0a4",
+    "libcasm-clexulator>=2.0a7",
+    "libcasm-configuration>=2.0a6",
+    "libcasm-monte>=2.0a3",
     "numpy",
 ]
 

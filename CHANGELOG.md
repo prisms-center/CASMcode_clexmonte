@@ -6,10 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## Unreleased
+## [2.0a3] - 2024-12-11
 
 ### Added
 
+- Added "kinetic" MonteCalculator method for kinetic Monte Carlo simulations.
+- Added setters to SamplingFixtureParams for setting sub-object parameters to make it easier to set parameters in a single line.
 - Added selected event data sampling for KMC simulations.
 - Added CASM::clexmonte::AllowedEventList and related classes so that all possible events do not need to be added to the KMC event selector. 
 - Added CASM::clexmonte::EventDataSummary and libcasm.clexmonte.MonteEventDataSummary to summarize event data for KMC simulations.
@@ -19,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The AllowedEventList method is made the default for the "kinetic" MonteCalculator method. The event data type can be selected using the `params` argument to the MonteCalculator constructor.
 - Changed the enforce_composition method to avoid unnecessarily re-calcuating the composition at each step.
+
 
 ## [2.0a2] - 2024-07-17
 
