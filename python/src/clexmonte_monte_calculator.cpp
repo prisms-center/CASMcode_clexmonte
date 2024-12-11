@@ -1208,6 +1208,10 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                               R"pbdoc(
       Summarizes MonteEventData
 
+      .. rubric:: Special Methods
+
+      - ``print(event_data_summary)``: Pretty-print the summary
+
       )pbdoc");
 
   pyMonteCalculator
@@ -1220,20 +1224,15 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           method : str
               Monte Carlo method name. The options are:
 
-              - "semigrand_canonical": `Semi-grand canonical ensemble <todo>`_.
-                Input states require `"temperature"` and `"param_chem_pot"`
-                conditions.
-              - "canonical": `Canonical ensemble <todo>`_.
+              - "semigrand_canonical": Metropolis algorithm in the semi-grand
+                canonical ensemble. Input states require `"temperature"` and
+                `"param_chem_pot"` conditions.
+              - "canonical": Metropolis algorithm in the canonical ensemble.
                 Input states require `"temperature"` and one of
                 `"param_composition"` or `"mol_composition"` conditions.
-              - TODO "lte": `Low-temperature expansion <todo>`_, for the
-                semi-grand canonical ensemble
-              - "kinetic": `Kinetic Monte Carlo <todo>`_. Input states require
+              - "kinetic": Kinetic Monte Carlo method. Input states require
                 `"temperature"` and one of `"param_composition"` or
                 `"mol_composition"` conditions.
-              - TODO "flex": Allows a range of custom potentials, including
-                composition and order parameter variance-constrained potentials,
-                and correlation-matching potentials
 
           system : libcasm.clexmonte.System
               Cluster expansion model system data. The required data depends on
@@ -1242,11 +1241,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           params: Optional[dict] = None
               Monte Carlo calculation method parameters. Expected values
-              depends on the calculation method. Options, with links to
-              parameter documentation and examples, include:
-
-              - "enumeration": `Save states <todo>`_ encountered during the
-                calculation.
+              depends on the calculation method.
 
           )pbdoc",
            py::arg("method"), py::arg("system"),
@@ -1507,12 +1502,13 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
            py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
       .def_readwrite("sampling_functions", &calculator_type::sampling_functions,
                      R"pbdoc(
-          libcasm.monte.StateSamplingFunctionMap: Sampling functions
+          libcasm.monte.sampling.StateSamplingFunctionMap: Sampling functions
           )pbdoc")
       .def_readwrite("json_sampling_functions",
                      &calculator_type::json_sampling_functions,
                      R"pbdoc(
-          libcasm.monte.jsonStateSamplingFunctionMap: JSON sampling functions
+          libcasm.monte.sampling.jsonStateSamplingFunctionMap: JSON sampling
+          functions
           )pbdoc")
       .def_readwrite("analysis_functions", &calculator_type::analysis_functions,
                      R"pbdoc(
@@ -1525,7 +1521,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def_property_readonly("selected_event", &calculator_type::selected_event,
                              R"pbdoc(
-          Optional[libcasm.monte.sampling.SelectedEvent]: If applicable, will
+          Optional[libcasm.clexmonte.SelectedEvent]: If applicable, will
           be set to provide information about the last selected event.
 
           If applicable for a particular calculator method, this will be set
@@ -2065,7 +2061,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           Returns
           -------
-          self: libcasm.clexmonte.SelectedEventFunctionParams
+          self: libcasm.monte.sampling.SelectedEventFunctionParams
               To allow chaining multiple calls, `self` is returned
           )pbdoc",
           py::arg("jumps_per_position_sample") = 1,
@@ -2086,7 +2082,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           Returns
           -------
-          self: libcasm.clexmonte.SelectedEventFunctionParams
+          self: libcasm.monte.sampling.SelectedEventFunctionParams
               To allow chaining multiple calls, `self` is returned
           )pbdoc")
       .def(
@@ -2122,7 +2118,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           Returns
           -------
-          self: libcasm.clexmonte.SelectedEventFunctionParams
+          self: libcasm.monte.sampling.SelectedEventFunctionParams
               To allow chaining multiple calls, `self` is returned
           )pbdoc",
           py::arg("name"), py::arg("order") = std::nullopt)
@@ -2178,7 +2174,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           Returns
           -------
-          self: libcasm.clexmonte.SelectedEventFunctionParams
+          self: libcasm.monte.sampling.SelectedEventFunctionParams
               To allow chaining multiple calls, `self` is returned
           )pbdoc",
           py::arg("name"), py::arg("tol") = std::nullopt,

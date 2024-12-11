@@ -126,6 +126,7 @@ class FixedConfigGenerator:
 
     @staticmethod
     def methodname() -> str:
+        """Returns the method name "fixed" """
         return "fixed"
 
     def to_dict(

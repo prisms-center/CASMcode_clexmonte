@@ -210,6 +210,8 @@ class IncrementalConditionsStateGenerator:
 
     @staticmethod
     def methodname() -> str:
+        """Returns the method name "incremental" """
+
         return "incremental"
 
     def to_dict(
