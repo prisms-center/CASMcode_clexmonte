@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_clexulator/dist
-          key: ${{ runner.os }}-libcasm-clexulator-v2-0a5
+          key: ${{ runner.os }}-libcasm-clexulator-v2-0a7
 
       ### libcasm-configuration ###
       - name: restore libcasm-configuration cache
@@ -69,7 +69,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_configuration/dist
-          key: ${{ runner.os }}-libcasm-configuration-v2-0a5
+          key: ${{ runner.os }}-libcasm-configuration-v2-0a6
 
       ### libcasm-monte ###
       - name: restore libcasm-monte cache
