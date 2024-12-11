@@ -3,6 +3,7 @@
 
 #include <map>
 #include <numeric>
+#include <optional>
 #include <vector>
 
 #include "casm/clexmonte/events/ImpactTable.hh"
