@@ -45,7 +45,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_composition/dist
-          key: ${{ runner.os }}-libcasm-composition-v2-0a3
+          key: ${{ runner.os }}-libcasm-composition-v2-0a4
 
       ### libcasm-xtal ###
       - name: restore libcasm-xtal cache
