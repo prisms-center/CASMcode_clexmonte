@@ -155,19 +155,27 @@ void KMCTestSystem::copy_local_clexulator(fs::path src_basis_sets_dir,
 ///   basis_sets/bset.<bset_name>/<i>/<project_name>_Clexulator_<bset_name>_<i>.cc
 ///   - Equivalents info:
 ///   basis_sets/bset.<bset_name>/equivalents_info.json
+///   - Basis info:
+///   basis_sets/bset.<bset_name>/basis.json
 /// - Assumes ECI files are: events/event.<bset_name>/eci.json
 /// - Assumes Event files are: events/event.<bset_name>/event.json
 void KMCTestSystem::set_local_basis_set(std::string bset_name) {
   fs::path source_relpath = fs::path("basis_sets") / ("bset." + bset_name) /
                             (project_name + "_Clexulator_" + bset_name + ".cc");
+  fs::path basis_relpath =
+      fs::path("basis_sets") / ("bset." + bset_name) / "basis.json";
   fs::path equivalents_info_relpath =
       fs::path("basis_sets") / ("bset." + bset_name) / "equivalents_info.json";
 
   copy_local_clexulator(test_data_dir / "basis_sets", test_dir / "basis_sets",
                         bset_name, project_name + "_Clexulator");
+  fs::copy_file(test_data_dir / basis_relpath, test_dir / basis_relpath,
+                copy_options);
   fs::copy_file(test_data_dir / equivalents_info_relpath,
                 test_dir / equivalents_info_relpath, copy_options);
 
+  json["kwargs"]["system"]["local_basis_sets"][bset_name]["basis"] =
+      (test_dir / basis_relpath).string();
   json["kwargs"]["system"]["local_basis_sets"][bset_name]["source"] =
       (test_dir / source_relpath).string();
   json["kwargs"]["system"]["local_basis_sets"][bset_name]["equivalents_info"] =
