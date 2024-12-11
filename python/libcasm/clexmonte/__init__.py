@@ -47,6 +47,9 @@ from ._FixedConfigGenerator import (
 from ._IncrementalConditionsStateGenerator import (
     IncrementalConditionsStateGenerator,
 )
+from ._MonteCalculator import (
+    print_selected_event_functions,
+)
 from ._RunData import (
     RunData,
     RunDataOutputParams,
