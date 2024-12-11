@@ -33,6 +33,10 @@ CASM::clexmonte::BaseMonteCalculator *make_SemiGrandCanonicalCalculator();
 /// \brief Returns a clexmonte::BaseMonteCalculator* owning a
 /// CanonicalCalculator
 CASM::clexmonte::BaseMonteCalculator *make_CanonicalCalculator();
+
+/// \brief Returns a clexmonte::BaseMonteCalculator* owning a
+/// NfoldCalculator
+CASM::clexmonte::BaseMonteCalculator *make_NfoldCalculator();
 }
 
 /// CASM - Python binding code
@@ -86,6 +90,15 @@ std::shared_ptr<clexmonte::MonteCalculator> make_shared_CanonicalCalculator(
       lib);
 }
 
+std::shared_ptr<clexmonte::MonteCalculator> make_shared_NfoldCalculator(
+    jsonParser const &params, std::shared_ptr<system_type> system) {
+  std::shared_ptr<RuntimeLibrary> lib = nullptr;
+  return clexmonte::make_monte_calculator(
+      params, system,
+      std::unique_ptr<clexmonte::BaseMonteCalculator>(make_NfoldCalculator()),
+      lib);
+}
+
 std::shared_ptr<clexmonte::StateData> make_state_data(
     std::shared_ptr<system_type> system, state_type &state,
     monte::OccLocation *occ_location) {
@@ -105,6 +118,9 @@ std::shared_ptr<clexmonte::MonteCalculator> make_monte_calculator(
     return make_shared_SemiGrandCanonicalCalculator(_params, system);
   } else if (method == "canonical") {
     return make_shared_CanonicalCalculator(_params, system);
+  } else if (method == "nfold") {
+    return make_shared_NfoldCalculator(_params, system);
+
   } else {
     std::stringstream msg;
     msg << "Error in make_monte_calculator: method='" << method
