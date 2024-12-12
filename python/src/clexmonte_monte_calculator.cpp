@@ -1899,8 +1899,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
             // This makes:
             // - a lookup table for prim_event_index -> partition index
             // - a vector of partition names
-            clexmonte::SelectedEventInfo info(
-                self.event_data().prim_event_list());
+            clexmonte::SelectedEventInfo info(self.prim_event_list());
             if (partition_type == "by_type") {
               info.make_indices_by_type();
             } else if (partition_type == "by_equivalent_index") {

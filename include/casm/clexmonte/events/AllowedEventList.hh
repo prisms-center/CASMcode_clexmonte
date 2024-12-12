@@ -53,7 +53,10 @@ struct AllowedEventData {
 ///
 class AllowedEventMap {
  public:
-  AllowedEventMap(bool use_map_index = true) : m_use_map_index(use_map_index) {}
+  AllowedEventMap(bool use_map_index = true)
+      : m_use_map_index(use_map_index),
+        m_n_assigned(0),
+        m_has_new_events(false) {}
 
   Index n_total() const { return m_events.size(); }
 

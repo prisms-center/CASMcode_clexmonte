@@ -94,7 +94,12 @@ class MonteEventList {
   }
 
   /// The number of events
-  Index size() const { return m_data->n_events(); }
+  Index size() const {
+    if (!m_data) {
+      throw std::runtime_error("Error in MonteEventList::size: No data");
+    }
+    return m_data->n_events();
+  }
 
   /// The current total event rate
   double total_rate() const { return m_data->total_rate(); }

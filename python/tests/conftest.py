@@ -33,9 +33,10 @@ def _win32_longpath(path):
 
 @pytest.fixture(scope="session")
 def session_shared_datadir(tmpdir_factory):
-    original_shared_path = pathlib.Path(os.path.realpath(__file__)).parent / "data"
+    tests_path = pathlib.Path(os.path.realpath(__file__)).parent
+    original_shared_path = tests_path / "data"
     # session_temp_path = tmpdir_factory.mktemp("session_data")
-    session_temp_path = original_shared_path / "tmp"
+    session_temp_path = tests_path / "data.tmp"
     shutil.copytree(
         _win32_longpath(original_shared_path),
         _win32_longpath(str(session_temp_path)),

@@ -212,6 +212,15 @@ class MonteCalculator {
     return MonteEventData(m_calc->event_data, m_lib);
   }
 
+  std::vector<clexmonte::PrimEventData> const &prim_event_list() {
+    if (m_calc->event_data == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::prim_event_list: Event data does not "
+          "exist.");
+    }
+    return m_calc->event_data->prim_event_list;
+  }
+
   /// Set selected event data collection paramters
   void set_selected_event_function_params(
       std::shared_ptr<monte::SelectedEventFunctionParams>

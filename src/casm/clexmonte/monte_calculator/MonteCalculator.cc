@@ -195,7 +195,7 @@ state_type const &get_state(
 
 std::vector<PrimEventData> const &get_prim_event_list(
     std::shared_ptr<MonteCalculator> const &calculation) {
-  return calculation->event_data().prim_event_list();
+  return calculation->prim_event_list();
 }
 
 /// \brief Make temporary monte::OccLocation if necessary
