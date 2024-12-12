@@ -198,7 +198,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_configuration/dist
-          key: ${{ runner.os }}-libcasm-configuration-v2-0a6
+          key: ${{ runner.os }}-libcasm-configuration-v2-0a7
 
       - name: checkout libcasm-configuration
         if: steps.cache-libcasm-configuration-restore.outputs.cache-hit != 'true'
@@ -206,7 +206,7 @@ jobs:
         with:
           repository: prisms-center/CASMcode_configuration
           path: CASMcode_configuration
-          ref: v2.0a6
+          ref: v2.0a7
 
       - name: make configuration
         if: steps.cache-libcasm-configuration-restore.outputs.cache-hit != 'true'

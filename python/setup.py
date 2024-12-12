@@ -107,7 +107,7 @@ setup(
         "libcasm-xtal>=2.0a12",
         "libcasm-composition>=2.0a4",
         "libcasm-clexulator>=2.0a7",
-        "libcasm-configuration>=2.0a6",
+        "libcasm-configuration>=2.0a7",
         "libcasm-monte>=2.0a3",
     ],
     ext_modules=ext_modules,

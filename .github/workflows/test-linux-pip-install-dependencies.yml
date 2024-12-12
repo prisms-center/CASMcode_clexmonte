@@ -102,13 +102,13 @@ jobs:
         with:
           repository: prisms-center/CASMcode_configuration
           path: CASMcode_configuration
-          ref: v2.0a6
+          ref: v2.0a7
 
       - name: test libcasm-configuration
         shell: bash
         run: |
           cd CASMcode_configuration
-          pip install libcasm-configuration==2.0a6
+          pip install libcasm-configuration==2.0a7
           pip install -r test_requirements.txt
           python -m pytest -rsap python/tests
 
