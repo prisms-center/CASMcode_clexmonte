@@ -41,14 +41,72 @@ std::shared_ptr<InputParser<RequiredType>> subparse_from_file(
   if (!fs::exists(resolved_path)) {
     parser.insert_error(option, "Error: file not found.");
     jsonParser json;
-    return std::make_shared<InputParser<RequiredType>>(
+    auto subparser = std::make_shared<InputParser<RequiredType>>(
         json, std::forward<Args>(args)...);
+    return subparser;
   }
   jsonParser json{resolved_path};
   auto subparser = std::make_shared<InputParser<RequiredType>>(
       json, std::forward<Args>(args)...);
+
+  auto &log = CASM::log();
+  if (!subparser->valid()) {
+    log << std::endl;
+    log << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    log << "~~~  Failed parsing input file  ~~~" << std::endl;
+    log << std::endl;
+    log << "file: " << resolved_path << std::endl;
+    log << std::endl;
+    print_errors(*subparser, log, "Error Summary");
+    log << std::endl;
+    if (subparser->all_warnings().size()) {
+      print_warnings(*subparser, log, "Warning Summary");
+      log << std::endl;
+    }
+    if (json.is_obj()) {
+      jsonParser report = make_report(*subparser);
+      log.indent() << report << std::endl << std::endl;
+    }
+
+    parser.insert_error(
+        option, "Error: Failed to parse file: " + resolved_path.string());
+    for (auto const &error : subparser->all_errors()) {
+      for (auto const &msg : error.second) {
+        parser.insert_error(option, "@(/" + error.first.string() + "): " + msg);
+      }
+    }
+    for (auto const &warning : subparser->all_warnings()) {
+      for (auto const &msg : warning.second) {
+        parser.insert_warning(option,
+                              "@(/" + warning.first.string() + "): " + msg);
+      }
+    }
+  }
+  if (subparser->all_warnings().size()) {
+    log << std::endl;
+    log << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    log << "~~~ Warnings parsing input file ~~~" << std::endl;
+    log << std::endl;
+    log << "file: " << resolved_path << std::endl;
+    log << std::endl;
+    print_warnings(*subparser, log, "Warning Summary");
+    log << std::endl;
+    if (json.is_obj()) {
+      jsonParser report = make_report(*subparser);
+      log.indent() << report << std::endl << std::endl;
+    }
+
+    parser.insert_warning(
+        option, "Warning: warnings for file: " + resolved_path.string());
+    for (auto const &warning : subparser->all_warnings()) {
+      for (auto const &msg : warning.second) {
+        parser.insert_warning(option,
+                              "@(/" + warning.first.string() + "): " + msg);
+      }
+    }
+  }
+
   subparser->type_name = CASM::type_name<RequiredType>();
-  parser.insert(parser.relpath(option), subparser);
   return subparser;
 }
 
