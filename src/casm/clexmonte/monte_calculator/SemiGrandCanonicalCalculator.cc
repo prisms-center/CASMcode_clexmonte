@@ -141,9 +141,7 @@ class SemiGrandCanonicalPotential : public BaseMontePotential {
           "Error in SemiGrandCanonicalPotential: param_chem_pot size error");
     }
 
-    //    exchange_chem_pot =
-    //        make_exchange_chemical_potential(param_chem_pot,
-    //        composition_converter);
+    matrix_R_transpose = composition_converter.dparam_dmol();
 
     delta_N.resize(composition_converter.components().size());
   }

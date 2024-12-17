@@ -5,6 +5,13 @@ All notable changes to `libcasm-clexmonte` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed a bug that gave the wrong change in potential energy during semi-grand canonical Monte Carlo simulations. The bug was introduced in v2.0a3 only and is fixed in v2.0a4.
+- Fixed parsing of other files listed in an input file, such as a coefficients file listed in a System input file. Now, errors and warnings for the file being parsed are properly shown.
+
 
 ## [2.0a3] - 2024-12-12
 
