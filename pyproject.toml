@@ -74,7 +74,7 @@ test-requires = "pytest pytest-datadir pytest-helpers-namespace"
 test-command = [
     "export CASM_PREFIX=$(python -m libcasm.casmglobal --prefix)",
     "echo $CASM_PREFIX",
-    "pytest -rsap {project}/python/tests",
+    "pytest -rsap -s {project}/python/tests",
 ]
 
 [tool.cibuildwheel.macos]
