@@ -5,6 +5,17 @@ All notable changes to `libcasm-clexmonte` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Added `verbose` argument to `System.from_dict` to print messages during parsing.
+
+### Fixed
+
+- Fix for unuseful error messages when `System.from_dict` failed to load a local basis set.
+
+
 ## [2.0a4] - 2024-12-17
 
 ### Fixed
