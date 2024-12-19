@@ -936,12 +936,15 @@ PYBIND11_MODULE(_clexmonte_system, m) {
       //
       .def_static(
           "from_dict",
-          [](const nlohmann::json &data,
-             std::vector<std::string> _search_path) {
+          [](const nlohmann::json &data, std::vector<std::string> _search_path,
+             bool verbose) {
+            // print errors and warnings to sys.stdout
+            py::scoped_ostream_redirect redirect;
+
             jsonParser json{data};
             std::vector<fs::path> search_path(_search_path.begin(),
                                               _search_path.end());
-            InputParser<clexmonte::System> parser(json, search_path);
+            InputParser<clexmonte::System> parser(json, search_path, verbose);
             std::runtime_error error_if_invalid{
                 "Error in libcasm.clexmonte.System.from_dict"};
             report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
@@ -959,8 +962,12 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           search_path: list[str] = []
               Relative file paths included in `data` are searched for relative
               to the paths specified by `search_path`.
+          verbose: bool = False
+              Print progress statements during parsing for debugging purposes.
+
           )pbdoc",
-          py::arg("data"), py::arg("search_path") = std::vector<std::string>())
+          py::arg("data"), py::arg("search_path") = std::vector<std::string>(),
+          py::arg("verbose") = false)
       .def("make_default_configuration", &clexmonte::make_default_configuration,
            R"pbdoc(
           Construct a default configuration in a specified supercell
