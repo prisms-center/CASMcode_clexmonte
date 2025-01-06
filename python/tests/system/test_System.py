@@ -1,3 +1,6 @@
+import io
+from contextlib import redirect_stdout
+
 import libcasm.clusterography as casmclust
 import libcasm.configuration as casmconfig
 import libcasm.occ_events as occ_events
@@ -45,8 +48,19 @@ def test_System_from_dict_1(FCCBinaryVacancy_system_data, session_shared_datadir
     assert isinstance(system.prim_neighbor_list, PrimNeighborList)
 
 
-def test_System_1(FCCBinaryVacancy_System):
-    system = FCCBinaryVacancy_System
+def test_System_from_dict_1_verbose(
+    FCCBinaryVacancy_system_data, session_shared_datadir
+):
+    f = io.StringIO()
+    with redirect_stdout(f):
+        system = System.from_dict(
+            data=FCCBinaryVacancy_system_data,
+            search_path=[str(session_shared_datadir / "FCC_binary_vacancy")],
+            verbose=True,
+        )
+    out = f.getvalue()
+    assert 'Parsing required "prim"...' in out
+
     assert isinstance(system, System)
     assert isinstance(system.xtal_prim, xtal.Prim)
     assert isinstance(system.prim, casmconfig.Prim)
@@ -56,11 +70,8 @@ def test_System_1(FCCBinaryVacancy_System):
     assert isinstance(system.prim_neighbor_list, PrimNeighborList)
 
 
-def test_System_from_dict_2(FCCBinaryVacancy_system_data, session_shared_datadir):
-    system = System.from_dict(
-        data=FCCBinaryVacancy_system_data,
-        search_path=[str(session_shared_datadir / "FCC_binary_vacancy")],
-    )
+def test_System_1(FCCBinaryVacancy_System):
+    system = FCCBinaryVacancy_System
     assert isinstance(system, System)
     assert isinstance(system.xtal_prim, xtal.Prim)
     assert isinstance(system.prim, casmconfig.Prim)
@@ -76,6 +87,7 @@ def test_kmc_System_from_dict_1(
     system = System.from_dict(
         data=FCCBinaryVacancy_kmc_system_data,
         search_path=[str(session_shared_datadir / "FCC_binary_vacancy")],
+        verbose=False,
     )
     assert isinstance(system, System)
     assert isinstance(system.xtal_prim, xtal.Prim)

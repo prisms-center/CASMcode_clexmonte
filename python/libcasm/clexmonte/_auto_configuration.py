@@ -1,4 +1,5 @@
 """Find minimum potential configurations"""
+
 from collections.abc import Iterable
 from typing import Optional, Union
 

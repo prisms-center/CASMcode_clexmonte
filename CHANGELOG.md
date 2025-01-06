@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `verbose` argument to `System.from_dict` to print messages during parsing.
 - Added `System.basis_set_name`, `System.local_basis_set_name`, `System.prototype_event`, and `libcasm.clexmonte.make_system_event_info` to get event info and support LocalConfiguration construction from SelectedEvent info.
 - Added `SelectedEvent.to_dict` and `SelectedEvent.__repr__` methods.
 - Added `MonteCalculator.event_info` attribute to store shared event info used for constructing and transforming LocalConfiguration.
@@ -18,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed MonteCalculator to a Python class that inherits from a C++ class, allowing for more flexibility in the Python interface.
 - Moved `libcasm.clexmonte.print_selected_event_functions` to `MonteCalculator.print_selected_event_functions`.
+
+### Fixed
+
+- Fix for unuseful error messages when `System.from_dict` failed to load a local basis set.
 
 
 ## [2.0a4] - 2024-12-17

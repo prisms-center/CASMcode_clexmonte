@@ -33,7 +33,8 @@ struct OccEventTypeData;
 struct System;
 
 /// \brief Parse System from JSON
-void parse(InputParser<System> &parser, std::vector<fs::path> search_path);
+void parse(InputParser<System> &parser, std::vector<fs::path> search_path,
+           bool verbose = false);
 
 }  // namespace clexmonte
 }  // namespace CASM

@@ -34,8 +34,8 @@
       "coefficients": "formation_energy_eci.json"
     }
   },
-  "event_system": "kmc_events/event_system.json",
-  "kmc_events": {
+  "_event_system": "kmc_events/event_system.json",
+  "_kmc_events": {
     "A_Va_1NN": {
       "coefficients": {
         "freq": "kmc_events/event.A_Va_1NN/freq_eci.json",
@@ -53,7 +53,7 @@
       "local_basis_set": "B_Va_1NN"
     }
   },
-  "local_basis_sets": {
+  "_local_basis_sets": {
     "A_Va_1NN": {
       "equivalents_info": "basis_sets/bset.A_Va_1NN/equivalents_info.json",
       "source": "basis_sets/bset.A_Va_1NN/FCC_binary_vacancy_Clexulator_A_Va_1NN.cc",
@@ -65,18 +65,12 @@
       "basis": "basis_sets/bset.B_Va_1NN/basis.json"
     }
   },
-  "additional_params": {
+  "_additional_params": {
     "local_orbit_composition": {
       "A_Va_1NN": {
         "local_basis_set": "A_Va_1NN",
         "orbits": [1, 2, 3],
         "combine_orbits": true
-      }
-    },
-    "local_corr": {
-      "Va": {
-        "local_basis_set": "A_Va_1NN",
-        "allowed_occ": ["Va"]
       }
     }
   }
