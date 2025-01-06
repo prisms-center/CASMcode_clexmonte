@@ -137,5 +137,31 @@ void from_json(clexmonte::EventFilterGroup &filter, jsonParser const &json) {
   filter = std::move(*parser.value);
 }
 
+jsonParser &to_json(
+    clexmonte::SelectedEvent const &selected_event, jsonParser &json,
+    std::optional<std::reference_wrapper<occ_events::OccSystem const>>
+        event_system,
+    occ_events::OccEventOutputOptions const &options) {
+  json.put_obj();
+  json["event_id"] = selected_event.event_id;
+  json["event_index"] = selected_event.event_index;
+  json["total_rate"] = selected_event.total_rate;
+  json["time_increment"] = selected_event.time_increment;
+
+  if (selected_event.prim_event_data) {
+    to_json(*selected_event.prim_event_data, json["prim_event_data"],
+            event_system, options);
+  }
+
+  if (selected_event.event_data) {
+    to_json(*selected_event.event_data, json["event_data"]);
+  }
+
+  if (selected_event.event_state) {
+    to_json(*selected_event.event_state, json["event_state"]);
+  }
+  return json;
+}
+
 }  // namespace clexmonte
 }  // namespace CASM

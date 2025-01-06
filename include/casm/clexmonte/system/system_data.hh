@@ -177,6 +177,9 @@ struct LocalMultiClexData {
 ///   EquivalentsInfo::equivalent_generating_ops should be used
 ///   to construct the equivalent events.
 struct OccEventTypeData {
+  /// \brief The prototype event
+  occ_events::OccEvent prototype_event;
+
   /// \brief Vector of symmetrically equivalent events
   ///
   /// For consistency between local basis set and the equivalent events,

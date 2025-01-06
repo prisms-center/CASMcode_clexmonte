@@ -14,6 +14,7 @@ struct EventState;
 struct EventData;
 struct PrimEventData;
 struct EventFilterGroup;
+struct SelectedEvent;
 
 // -- EventState --
 
@@ -60,6 +61,15 @@ jsonParser &to_json(clexmonte::EventFilterGroup const &filter,
 void parse(InputParser<clexmonte::EventFilterGroup> &parser);
 
 void from_json(clexmonte::EventFilterGroup &filter, jsonParser const &json);
+
+// -- SelectedEvent --
+
+jsonParser &to_json(
+    clexmonte::SelectedEvent const &selected_event, jsonParser &json,
+    std::optional<std::reference_wrapper<occ_events::OccSystem const>>
+        event_system,
+    occ_events::OccEventOutputOptions const &options =
+        occ_events::OccEventOutputOptions());
 
 }  // namespace clexmonte
 }  // namespace CASM

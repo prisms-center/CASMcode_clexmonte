@@ -5,6 +5,21 @@ All notable changes to `libcasm-clexmonte` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Added `System.basis_set_name`, `System.local_basis_set_name`, `System.prototype_event`, and `libcasm.clexmonte.make_system_event_info` to get event info and support LocalConfiguration construction from SelectedEvent info.
+- Added `SelectedEvent.to_dict` and `SelectedEvent.__repr__` methods.
+- Added `MonteCalculator.event_info` attribute to store shared event info used for constructing and transforming LocalConfiguration.
+- Added `MonteCalculator.make_local_configuration` to construct a LocalConfiguration from the current calculator state and current SelectedEvent.
+ 
+### Changed
+
+- Changed MonteCalculator to a Python class that inherits from a C++ class, allowing for more flexibility in the Python interface.
+- Moved `libcasm.clexmonte.print_selected_event_functions` to `MonteCalculator.print_selected_event_functions`.
+
+
 ## [2.0a4] - 2024-12-17
 
 ### Fixed

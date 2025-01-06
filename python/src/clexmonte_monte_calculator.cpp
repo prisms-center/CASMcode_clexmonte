@@ -631,7 +631,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc");
 
   py::class_<calculator_type, std::shared_ptr<calculator_type>>
-      pyMonteCalculator(m, "MonteCalculator",
+      pyMonteCalculator(m, "MonteCalculatorCore",
                         R"pbdoc(
       Interface for running Monte Carlo calculations
       )pbdoc");
@@ -1052,7 +1052,61 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           functions, after the event is selected, the state of the selected
           event will be calculated and this will have a value; otherwise it
           will be None.
-          )pbdoc");
+          )pbdoc")
+      .def(
+          "to_dict",
+          [](clexmonte::SelectedEvent const &self,
+             std::optional<std::reference_wrapper<occ_events::OccSystem const>>
+                 system,
+             bool include_cluster, bool include_cluster_occupation,
+             bool include_event_invariants) -> nlohmann::json {
+            jsonParser json;
+            occ_events::OccEventOutputOptions opt;
+            opt.include_cluster = include_cluster;
+            opt.include_cluster_occupation = include_cluster_occupation;
+            opt.include_event_invariants = include_event_invariants;
+            to_json(self, json, system, opt);
+            return static_cast<nlohmann::json>(json);
+          },
+          R"pbdoc(
+          Represent the SelectedEvent as a Python dict
+
+          Parameters
+          ----------
+          event_system : Optional[libcasm.occ_events.OccSystem] = None
+              A :class:`~libcasm.occ_events.OccSystem`. Providing `event_system`
+              allows output of more event information, including occupant and
+              atom names, cluster information, and symmetry information.
+
+          include_cluster: bool = True
+              If True, also include the event cluster sites
+
+          include_cluster_occupation: bool = True
+              If True, also include the event initial and final cluster
+              occupation
+
+          include_event_invariants: bool = True
+              If True, also include event invariants: number of trajectories,
+              number of each occupant type, and site distances
+
+          Returns
+          -------
+          data : dict
+              The SelectedEvent as a Python dict
+          )pbdoc",
+          py::arg("event_system") = std::nullopt,
+          py::arg("include_cluster") = true,
+          py::arg("include_cluster_occupation") = true,
+          py::arg("include_event_invariants") = true)
+      .def("__repr__",
+           [](clexmonte::SelectedEvent const &self) -> nlohmann::json {
+             std::stringstream ss;
+             jsonParser json;
+             occ_events::OccEventOutputOptions opt;
+             to_json(self, json, std::nullopt, opt);
+             ss << json;
+             return ss.str();
+           });
 
   py::class_<clexmonte::MonteEventList>(m, "MonteEventList",
                                         R"pbdoc(

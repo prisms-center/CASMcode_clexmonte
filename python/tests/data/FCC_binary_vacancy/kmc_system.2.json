@@ -1,0 +1,69 @@
+{
+  "prim": {
+    "basis": [
+      {
+        "coordinate": [0.0, 0.0, 0.0],
+        "occupants": ["A", "B", "Va"]
+      }
+    ],
+    "coordinate_mode": "Fractional",
+    "lattice_vectors": [
+      [0.0, 2.0, 2.0],
+      [2.0, 0.0, 2.0],
+      [2.0, 2.0, 0.0]
+    ],
+    "title": "FCC_binary_vacancy"
+  },
+  "composition_axes": {
+    "a": [0.000000000000, 1.000000000000, 0.000000000000],
+    "b": [0.000000000000, 0.000000000000, 1.000000000000],
+    "components": ["A", "B", "Va"],
+    "independent_compositions": 2,
+    "mol_formula": "A(1-a-b)B(a)Va(b)",
+    "origin": [1.000000000000, 0.000000000000, 0.000000000000],
+    "param_formula": "a(0.333333-0.333333A+0.666667B-0.333333Va)b(0.333333-0.333333A-0.333333B+0.666667Va)"
+  },
+  "basis_sets": {
+    "default": {
+      "source": "basis_sets/bset.default/FCC_binary_vacancy_Clexulator_default.cc",
+      "basis": "basis_sets/bset.default/basis.json"
+    }
+  },
+  "clex": {
+    "formation_energy": {
+      "basis_set": "default",
+      "coefficients": "formation_energy_eci.2.json"
+    }
+  },
+  "event_system": "kmc_events/event_system.json",
+  "kmc_events": {
+    "A_Va_1NN": {
+      "coefficients": {
+        "freq": "kmc_events/event.A_Va_1NN/freq_eci.json",
+        "kra": "kmc_events/event.A_Va_1NN/kra_eci.json"
+      },
+      "event": "kmc_events/event.A_Va_1NN/event.json",
+      "local_basis_set": "A_Va_1NN"
+    },
+    "B_Va_1NN": {
+      "coefficients": {
+        "freq": "kmc_events/event.B_Va_1NN/freq_eci.json",
+        "kra": "kmc_events/event.B_Va_1NN/kra_eci.json"
+      },
+      "event": "kmc_events/event.B_Va_1NN/event.json",
+      "local_basis_set": "B_Va_1NN"
+    }
+  },
+  "local_basis_sets": {
+    "A_Va_1NN": {
+      "basis": "basis_sets/bset.A_Va_1NN/basis.json",
+      "equivalents_info": "basis_sets/bset.A_Va_1NN/equivalents_info.json",
+      "source": "basis_sets/bset.A_Va_1NN/FCC_binary_vacancy_Clexulator_A_Va_1NN.cc"
+    },
+    "B_Va_1NN": {
+      "basis": "basis_sets/bset.B_Va_1NN/basis.json",
+      "equivalents_info": "basis_sets/bset.B_Va_1NN/equivalents_info.json",
+      "source": "basis_sets/bset.B_Va_1NN/FCC_binary_vacancy_Clexulator_B_Va_1NN.cc"
+    }
+  }
+}

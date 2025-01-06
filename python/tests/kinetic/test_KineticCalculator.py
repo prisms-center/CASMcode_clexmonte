@@ -8,6 +8,9 @@ import libcasm.clexmonte as clexmonte
 import libcasm.monte.events as monte_events
 import libcasm.monte.sampling as sampling
 import libcasm.xtal as xtal
+from libcasm.local_configuration import (
+    LocalConfiguration,
+)
 
 
 def test_constructors_1(FCCBinaryVacancy_kmc_System):
@@ -267,11 +270,11 @@ def test_print_selected_event_functions(FCCBinaryVacancy_kmc_System):
         system=system,
     )
 
-    clexmonte.print_selected_event_functions(calculator)
+    calculator.print_selected_event_functions()
 
     f = io.StringIO()
     with redirect_stdout(f):
-        clexmonte.print_selected_event_functions(calculator)
+        calculator.print_selected_event_functions()
     out = f.getvalue()
     assert "local_orbit_composition.A_Va_1NN-1:" in out
     assert "local_orbit_composition.A_Va_1NN-2:" in out
@@ -324,6 +327,12 @@ def test_run_fixture_2_collect_event_data(FCCBinaryVacancy_kmc_System, tmp_path)
     print()
 
     # TODO: SelectedEventFunctionParams to/from dict parsing test
+    selected_event_function_params_in = sampling.SelectedEventFunctionParams.from_dict(
+        data
+    )
+    assert isinstance(
+        selected_event_function_params_in, sampling.SelectedEventFunctionParams
+    )
 
     # construct default sampling fixture parameters
     kinetics = calculator.make_default_sampling_fixture_params(
@@ -487,3 +496,214 @@ def test_event_data_summary(FCCBinaryVacancy_kmc_System):
         assert key in keys
 
     print("DONE\n\n")
+
+
+def test_SelectedEvent_data(FCCBinaryVacancy_kmc_System_2, tmp_path):
+    # A system with formation_energy_eci.2.json chosen to have events with no barriers
+    system = FCCBinaryVacancy_kmc_System_2
+    output_dir = tmp_path / "output"
+
+    # construct a semi-grand canonical MonteCalculator
+    calculator = clexmonte.MonteCalculator(
+        method="kinetic",
+        system=system,
+        params={
+            "allow_events_with_no_barrier": True,
+        },
+    )
+    calculator.collect("selected_event.by_equivalent_index")
+    calculator.collect("dE_activated.by_type", bin_width=0.01)
+
+    # construct default sampling fixture parameters
+    kinetics = calculator.make_default_sampling_fixture_params(
+        label="kinetics",
+        output_dir=str(output_dir),
+        write_observations=True,
+    )
+    kinetics.sample_by_step()
+    kinetics.set_max_count(100)
+    # kinetics.converge("clex.formation_energy", abs=1e-3)
+
+    selected_events = []
+
+    def print_selected_event_f():
+        # Want to print event info? Do something like this:
+        # selected_event = calculator.selected_event
+        # is_normal = selected_event.event_state.is_normal
+        # dE_activated = selected_event.event_state.dE_activated
+        # dE_final = selected_event.event_state.dE_final
+        # print("~~~")
+        # print("dE_activated:", dE_activated)
+        # print("dE_final:", dE_final)
+        # print("is_normal:", is_normal)
+        # print("event_type_name:", event_type_name)
+        # print(selected_event.prim_event_data)
+        # print(selected_event.event_state)
+        # print(selected_event.event_data)
+        # print(selected_event)
+
+        selected_event = calculator.selected_event
+
+        # check PrimEventData data:
+        data = selected_event.prim_event_data.to_dict()
+        assert isinstance(data, dict)
+
+        f = io.StringIO()
+        with redirect_stdout(f):
+            print(selected_event.prim_event_data)
+        out = f.getvalue()
+        assert "sites" in out
+
+        # check EventData data:
+        data = selected_event.event_data.to_dict()
+        assert isinstance(data, dict)
+
+        f = io.StringIO()
+        with redirect_stdout(f):
+            print(selected_event.event_data)
+        out = f.getvalue()
+        assert "unitcell_index" in out
+
+        # check EventState data:
+        data = selected_event.event_state.to_dict()
+        assert isinstance(data, dict)
+
+        f = io.StringIO()
+        with redirect_stdout(f):
+            print(selected_event.event_state)
+        out = f.getvalue()
+        assert "dE_activated" in out
+
+        # check SelectedEvent data:
+        data = selected_event.to_dict()
+        assert isinstance(data, dict)
+
+        f = io.StringIO()
+        with redirect_stdout(f):
+            print(selected_event)
+        out = f.getvalue()
+        assert "time_increment" in out
+
+        selected_events.append(data)
+
+    calculator.add_generic_function(
+        name="print_event_state",
+        description="Print information about the selected event state",
+        requires_event_state=False,
+        function=print_selected_event_f,
+        order=0,
+    )
+    calculator.evaluate("print_event_state")
+
+    # construct the initial state:
+    # start from the default configuration
+    # and modify to match mol_composition=[0.899, 0.1, 0.001]
+    initial_state, motif = clexmonte.make_canonical_initial_state(
+        calculator=calculator,
+        conditions={
+            "temperature": 1200.0,
+            # one of param/mol composition is needed
+            # "param_composition": [0.0, 0.0],
+            "mol_composition": [0.899, 0.1, 0.001],
+        },
+        min_volume=1000,
+    )
+
+    # Run
+    calculator.run_fixture(
+        state=initial_state,
+        sampling_fixture_params=kinetics,
+    )
+
+    assert len(selected_events) == 100
+    for x in selected_events:
+        assert isinstance(x, dict)
+        assert "event_data" in x
+        assert "event_id" in x
+        assert "event_index" in x
+        assert "event_state" in x
+        assert "prim_event_data" in x
+        assert "time_increment" in x
+        assert "total_rate" in x
+
+
+def test_write_LocalConfiguration(FCCBinaryVacancy_kmc_System_2, tmp_path):
+    """Test writing LocalConfiguration using selected event data"""
+
+    # A system with formation_energy_eci.2.json chosen to have events with no barriers
+    system = FCCBinaryVacancy_kmc_System_2
+    output_dir = tmp_path / "output"
+
+    # construct a semi-grand canonical MonteCalculator
+    calculator = clexmonte.MonteCalculator(
+        method="kinetic",
+        system=system,
+        params={
+            "allow_events_with_no_barrier": True,
+        },
+    )
+    calculator.collect("selected_event.by_equivalent_index")
+    calculator.collect("dE_activated.by_type", bin_width=0.01)
+
+    # construct default sampling fixture parameters
+    kinetics = calculator.make_default_sampling_fixture_params(
+        label="kinetics",
+        output_dir=str(output_dir),
+        write_observations=True,
+    )
+    kinetics.sample_by_step()
+    kinetics.set_max_count(100)
+    # kinetics.converge("clex.formation_energy", abs=1e-3)
+
+    sampled_local_configs = []
+
+    def print_selected_event_f():
+        # Only want barrier-less events? Do something like this:
+        # selected_event = calculator.selected_event
+        # if selected_event.event_state.is_normal:
+        #     return
+
+        # check make_local_configuration:
+        x = calculator.make_local_configuration()
+        sampled_local_configs.append(x)
+
+        print("# sampled:", len(sampled_local_configs))
+        print("local_configuration:")
+        print(x)
+
+    calculator.add_generic_function(
+        name="print_event_state",
+        description="Print information about the selected event state",
+        requires_event_state=False,
+        function=print_selected_event_f,
+        order=0,
+    )
+    calculator.evaluate("print_event_state")
+
+    # construct the initial state:
+    # start from the default configuration
+    # and modify to match mol_composition=[0.899, 0.1, 0.001]
+    initial_state, motif = clexmonte.make_canonical_initial_state(
+        calculator=calculator,
+        conditions={
+            "temperature": 1200.0,
+            # one of param/mol composition is needed
+            # "param_composition": [0.0, 0.0],
+            "mol_composition": [0.899, 0.1, 0.001],
+        },
+        min_volume=1000,
+    )
+
+    # Run
+    calculator.run_fixture(
+        state=initial_state,
+        sampling_fixture_params=kinetics,
+    )
+
+    # Check the sampled local configurations
+    assert len(sampled_local_configs) == 100
+    for x in sampled_local_configs:
+        assert isinstance(x, LocalConfiguration)
+        assert x.configuration is not None
+        assert x.pos is not None
+        assert x.event_info is not None

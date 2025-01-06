@@ -14,7 +14,6 @@ from ._clexmonte_monte_calculator import (
     EventID,
     EventState,
     KineticsData,
-    MonteCalculator,
     MonteEventData,
     MonteEventDataSummary,
     MonteEventList,
@@ -48,9 +47,12 @@ from ._IncrementalConditionsStateGenerator import (
     IncrementalConditionsStateGenerator,
 )
 from ._MonteCalculator import (
-    print_selected_event_functions,
+    MonteCalculator,
 )
 from ._RunData import (
     RunData,
     RunDataOutputParams,
+)
+from ._system_methods import (
+    make_system_event_info,
 )

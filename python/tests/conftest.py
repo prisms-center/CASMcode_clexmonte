@@ -90,6 +90,20 @@ def FCCBinaryVacancy_kmc_System(
 
 
 @pytest.fixture
+def FCCBinaryVacancy_kmc_System_2(session_shared_datadir):
+    """A KMC system with formation_energy_eci.2.json chosen to have events with no
+    barriers
+    """
+    path = session_shared_datadir / "FCC_binary_vacancy" / "kmc_system.2.json"
+    with open(path, "r") as f:
+        kmc_system_data = json.load(f)
+    return System.from_dict(
+        data=kmc_system_data,
+        search_path=[str(session_shared_datadir / "FCC_binary_vacancy")],
+    )
+
+
+@pytest.fixture
 def Clex_ZrO_Occ_system_data(session_shared_datadir):
     path = session_shared_datadir / "Clex_ZrO_Occ" / "system.json"
     with open(path, "r") as f:

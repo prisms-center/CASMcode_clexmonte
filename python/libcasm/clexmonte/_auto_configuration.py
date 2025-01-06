@@ -9,10 +9,10 @@ import libcasm.configuration as casmconfig
 import libcasm.monte as monte
 import libcasm.xtal as xtal
 
-from ._clexmonte_monte_calculator import MonteCalculator
 from ._clexmonte_state import (
     MonteCarloState,
 )
+from ._MonteCalculator import MonteCalculator
 
 
 def scale_supercell(

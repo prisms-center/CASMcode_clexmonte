@@ -169,14 +169,14 @@ bool parse_event(
 
   // construct event_data using default constructor
   OccEventTypeData curr_event_type_data;
+  curr_event_type_data.prototype_event = *event_subparser->value;
   curr_event_type_data.local_multiclex_name = event_name;
 
   // generate equivalent events
-  occ_events::OccEvent const &event = *event_subparser->value;
   EquivalentsInfo const &info =
       equivalents_info.at(curr_local_multiclex.local_basis_set_name);
-  curr_event_type_data.events =
-      make_equivalents(event, info, occevent_symgroup_rep);
+  curr_event_type_data.events = make_equivalents(
+      curr_event_type_data.prototype_event, info, occevent_symgroup_rep);
 
   // double-check consistency of event phenomenal clusters and
   // the local basis set phenomenal clusters

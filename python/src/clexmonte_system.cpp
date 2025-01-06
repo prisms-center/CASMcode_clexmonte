@@ -43,6 +43,76 @@ std::vector<std::string> get_keys(std::map<std::string, T> map) {
   return keys;
 }
 
+std::string resolve_basis_set_name(clexmonte::System const &self,
+                                   std::string key, std::stringstream &msg) {
+  std::string basis_set_name;
+  if (self.basis_sets.count(key)) {
+    basis_set_name = key;
+    msg << "found basis_set=" << key;
+  } else if (self.clex_data.count(key)) {
+    basis_set_name = self.clex_data.at(key).basis_set_name;
+    msg << "found clex=" << key;
+  } else if (self.multiclex_data.count(key)) {
+    basis_set_name = self.multiclex_data.at(key).basis_set_name;
+    msg << "found multiclex=" << key;
+  } else {
+    msg << "key=" << key
+        << " could not be resolved as a basis set, cluster expansion, "
+           "or multi-cluster expansion";
+    throw std::runtime_error(msg.str());
+  }
+
+  if (!self.basis_sets.count(basis_set_name)) {
+    msg << ", but a basis set with basis_set_name=" << basis_set_name
+        << " does not exist in the system.";
+    throw std::runtime_error(msg.str());
+  }
+
+  return basis_set_name;
+}
+
+std::string resolve_local_basis_set_name(clexmonte::System const &self,
+                                         std::string key,
+                                         std::stringstream &msg) {
+  std::string local_basis_set_name;
+  if (self.local_basis_sets.count(key)) {
+    local_basis_set_name = key;
+    msg << "found local_basis_set=" << key;
+  } else if (self.local_clex_data.count(key)) {
+    local_basis_set_name = self.local_clex_data.at(key).local_basis_set_name;
+    msg << "found local_clex=" << key;
+  } else if (self.local_multiclex_data.count(key)) {
+    local_basis_set_name =
+        self.local_multiclex_data.at(key).local_basis_set_name;
+    msg << "found local_multiclex=" << key;
+  } else if (self.event_type_data.count(key)) {
+    std::string local_multiclex_name =
+        self.event_type_data.at(key).local_multiclex_name;
+    msg << "found event_type_name=" << key;
+    if (self.local_multiclex_data.count(local_multiclex_name)) {
+      local_basis_set_name = self.local_multiclex_data.at(local_multiclex_name)
+                                 .local_basis_set_name;
+      msg << ", and local_multiclex_name=" << local_multiclex_name;
+    } else {
+      msg << ", but no local_multiclex_name=" << local_multiclex_name;
+      throw std::runtime_error(msg.str());
+    }
+  } else {
+    msg << "key=" << key
+        << " could not be resolved as a local basis set, local cluster "
+           "expansion, local multi-cluster expansion, or event type name";
+    throw std::runtime_error(msg.str());
+  }
+
+  if (!self.local_basis_sets.count(local_basis_set_name)) {
+    msg << ", but a local basis set with local_basis_set_name="
+        << local_basis_set_name << " does not exist in the system.";
+    throw std::runtime_error(msg.str());
+  }
+
+  return local_basis_set_name;
+}
+
 }  // namespace CASMpy
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
@@ -571,6 +641,30 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               property values.
           )pbdoc",
           py::arg("state"), py::arg("key"))
+      .def(
+          "basis_set_name",
+          [](clexmonte::System const &self, std::string key) {
+            std::stringstream msg;
+            msg << "Basis set name not found: ";
+
+            return resolve_basis_set_name(self, key, msg);
+          },
+          R"pbdoc(
+          Get the basis set name for a cluster expansion or multi-cluster
+          expansion.
+
+          Parameters
+          ----------
+          key : str
+              A cluster expansion name or multi-cluster expansion name.
+
+          Returns
+          -------
+          basis_set_name : str
+              The basis set name for the specified cluster expansion or
+              multi-cluster expansion.
+          )pbdoc",
+          py::arg("key"))
       //
       .def_property_readonly(
           "dof_space_keys",
@@ -713,9 +807,45 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           libcasm.occ_events.OccSystem: Index conversion tables used for KMC events.
           )pbdoc")
       .def(
+          "local_basis_set_name",
+          [](clexmonte::System const &self, std::string key) {
+            std::stringstream msg;
+            msg << "Local basis set name not found: ";
+
+            return resolve_local_basis_set_name(self, key, msg);
+          },
+          R"pbdoc(
+          Get the local basis set name for a local cluster expansion,
+          local multi-cluster expansion, or event type.
+
+          Parameters
+          ----------
+          key : str
+              A local cluster expansion name, local multi-cluster expansion
+              name, or event type name.
+
+          Returns
+          -------
+          local_basis_set_name : str
+              The local basis set name for the specified local cluster
+              expansion basis set.
+          )pbdoc",
+          py::arg("key"))
+      .def(
           "equivalents_info",
           [](clexmonte::System const &self, std::string key) {
-            auto const &info = self.equivalents_info.at(key);
+            std::stringstream msg;
+            msg << "Equivalents info not found: ";
+
+            std::string local_basis_set_name =
+                resolve_local_basis_set_name(self, key, msg);
+
+            if (!self.equivalents_info.count(local_basis_set_name)) {
+              msg << ", but no equivalents_info for local_basis_set_name="
+                  << local_basis_set_name;
+              throw std::runtime_error(msg.str());
+            }
+            auto const &info = self.equivalents_info.at(local_basis_set_name);
             return py::make_tuple(info.phenomenal_clusters,
                                   info.equivalent_generating_op_indices,
                                   info.translations);
@@ -726,7 +856,8 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           Parameters
           ----------
           key : str
-              The local basis set name
+              The local basis set name, local cluster expansion name, local
+              multi-cluster expansion name, or event type name.
 
           Returns
           -------
@@ -765,6 +896,25 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           R"pbdoc(
           list[str]: The list of event type names
           )pbdoc")
+      .def(
+          "prototype_event",
+          [](clexmonte::System const &self, std::string event_type_name) {
+            return self.event_type_data.at(event_type_name).prototype_event;
+          },
+          R"pbdoc(
+          Get the prototype OccEvent for a particular event type
+
+          Parameters
+          ----------
+          event_type_name: str
+              The name of the event type
+
+          Returns
+          -------
+          prototype_event : libcasm.occ_events.OccEvent
+              The prototype event for the specified event type.
+          )pbdoc",
+          py::arg("event_type_name"))
       .def(
           "events",
           [](clexmonte::System const &self, std::string event_type_name) {
