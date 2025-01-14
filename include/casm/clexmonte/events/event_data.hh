@@ -69,6 +69,8 @@ struct PrimEventData {
   std::vector<int> occ_final;
 };
 
+std::string name(PrimEventData const &prim_event_data);
+
 /// \brief Data structure specifying information about the impact of a possible
 ///     event. Used to construct impact tables.
 struct EventImpactInfo {

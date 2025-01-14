@@ -406,6 +406,8 @@ void KineticCalculator::set_event_data(std::shared_ptr<engine_type> engine) {
 /// \brief Perform a single run, evolving current state
 void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
                             run_manager_type<engine_type> &run_manager) {
+  Log &log = CASM::log();
+
   if (run_manager.sampling_fixtures.size() == 0) {
     throw std::runtime_error(
         "Error in KineticCalculator::run: "
@@ -426,12 +428,12 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   // - Throw if this->state_data is null
   // - Constructs this->event_data->event_selector
   // - Calculates all rates
-  std::cout << "Setting event data ... " << std::endl;
+  log.indent() << "Setting event data ... " << std::endl;
   this->set_event_data(run_manager.engine);
-  std::cout << "Setting event data ... DONE" << std::endl << std::endl;
+  log.indent() << "Setting event data ... DONE" << std::endl << std::endl;
 
   // Construct EventDataSummary
-  std::cout << "Generating event data summary ... " << std::endl;
+  log.indent() << "Generating event data summary ... " << std::endl;
   MonteEventData monte_event_data(this->event_data, nullptr);
   double energy_bin_width = 0.1;
   double freq_bin_width = 0.1;
@@ -440,9 +442,9 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   EventDataSummary event_data_summary(this->state_data, monte_event_data,
                                       energy_bin_width, freq_bin_width,
                                       rate_bin_width);
-  std::cout << "Generating event data summary ... DONE" << std::endl
-            << std::endl;
-  print(std::cout, event_data_summary);
+  log.indent() << "Generating event data summary ... DONE" << std::endl
+               << std::endl;
+  print(log, event_data_summary);
 
   if (event_data_summary.n_events_allowed == 0) {
     throw std::runtime_error("Error: Cannot run. No allowed events.");

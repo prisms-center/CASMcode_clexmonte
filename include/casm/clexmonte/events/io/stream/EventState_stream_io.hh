@@ -4,19 +4,22 @@
 #include <iostream>
 
 namespace CASM {
+
+class Log;
+
 namespace clexmonte {
 
 struct EventState;
 struct EventData;
 struct PrimEventData;
 
-void print(std::ostream &out, EventState const &event_state);
+void print(Log &log, EventState const &event_state);
 
-void print(std::ostream &out, EventState const &event_state,
+void print(Log &log, EventState const &event_state,
            PrimEventData const &prim_event_data);
 
-void print(std::ostream &out, EventState const &event_state,
-           EventData const &event_data, PrimEventData const &prim_event_data);
+void print(Log &log, EventState const &event_state, EventData const &event_data,
+           PrimEventData const &prim_event_data);
 
 }  // namespace clexmonte
 }  // namespace CASM

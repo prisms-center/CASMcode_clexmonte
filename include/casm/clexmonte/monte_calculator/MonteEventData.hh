@@ -7,6 +7,8 @@
 
 namespace CASM {
 
+class Log;
+
 size_t memory_used(bool resident = false);
 std::string convert_size(size_t size_bytes);
 
@@ -312,7 +314,7 @@ struct EventDataSummary {
   void _add_stats(EventID const &id, EventState const &state);
 };
 
-void print(std::ostream &out, EventDataSummary const &event_data_summary);
+void print(Log &log, EventDataSummary const &event_data_summary);
 
 }  // namespace clexmonte
 

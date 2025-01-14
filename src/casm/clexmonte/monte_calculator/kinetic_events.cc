@@ -7,6 +7,7 @@
 #include "casm/clexmonte/events/io/stream/EventState_stream_io.hh"
 #include "casm/clexmonte/misc/to_json.hh"
 #include "casm/clexmonte/state/Configuration.hh"
+#include "casm/clexmonte/state/io/json/State_json_io.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/configuration/Configuration.hh"
 #include "casm/crystallography/io/UnitCellCoordIO.hh"
@@ -124,7 +125,8 @@ namespace {
 void print_no_barrier_warning(Log &event_log, EventState const &event_state,
                               EventData const &event_data,
                               PrimEventData const &prim_event_data) {
-  event_log << "## WARNING: EVENT WITH NO BARRIER ###################\n"
+  event_log << "\n"
+               "## WARNING: EVENT WITH NO BARRIER ###################\n"
                "#                                                   #\n"
                "# Events with no barrier are treated as having a    #\n"
                "# rate equal to the attempt frequency.              #\n"
@@ -133,8 +135,9 @@ void print_no_barrier_warning(Log &event_log, EventState const &event_state,
                "#                                                   #\n"
                "# Event info:                                       #\n"
             << std::endl;
-  print(event_log.ostream(), event_state, event_data, prim_event_data);
-  event_log << "#                                                   #\n"
+  print(event_log, event_state, event_data, prim_event_data);
+  event_log << "\n"
+               "#                                                   #\n"
                "#####################################################\n"
             << std::endl;
 }
@@ -467,6 +470,12 @@ AllowedKineticEventData<EventSelectorType, DebugMode>::AllowedKineticEventData(
         "prim event list is empty.");
   }
 
+  if constexpr (DebugMode) {
+    Log &log = CASM::log();
+    log.custom("Prim event list");
+    log.indent() << qto_json(prim_event_list) << std::endl << std::endl;
+  }
+
   prim_impact_info_list = clexmonte::make_prim_impact_info_list(
       *system, prim_event_list, {"formation_energy"});
 }
@@ -482,28 +491,6 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
     std::shared_ptr<StateData> _state_data,
     std::optional<std::vector<EventFilterGroup>> _event_filters,
     std::shared_ptr<engine_type> engine) {
-  if constexpr (DebugMode) {
-    Log &log = CASM::log();
-    log.custom("Update AllowedKineticEventData");
-    log.indent() << "- prim_event_list:" << std::endl;
-    log.increase_indent();
-    int i = 0;
-    for (auto const &prim_event_data : prim_event_list) {
-      log.indent() << "- " << i << ": " << prim_event_data.event_type_name
-                   << "." << prim_event_data.equivalent_index;
-      if (prim_event_data.is_forward) {
-        log << " (forward)";
-      } else {
-        log << " (reverse)";
-      }
-      log << std::endl;
-      ++i;
-    }
-    log.decrease_indent();
-    log << std::endl;
-    log.end_section();
-  }
-
   random_generator = std::make_shared<lotto::RandomGenerator>(engine);
   state_data = _state_data;
 
@@ -519,6 +506,12 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
   // Current state info
   state_type const &state = *state_data->state;
   monte::OccLocation const &occ_location = *state_data->occ_location;
+
+  if constexpr (DebugMode) {
+    Log &log = CASM::log();
+    log.custom("Monte Carlo State");
+    log.indent() << qto_json(state) << std::endl << std::endl;
+  }
 
   // These are constructed/re-constructed so cluster expansions point
   // at the current state
@@ -539,19 +532,13 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
   if constexpr (DebugMode) {
     Log &log = CASM::log();
     log.custom("Event list summary");
-    log.indent() << "- n_total=" << event_list->allowed_event_map.n_assigned()
-                 << std::endl;
-    log.indent() << "- n_assigned="
+    log.indent() << "- Event list container size: "
+                 << event_list->allowed_event_map.n_total() << std::endl;
+    log.indent() << "- Number of events: "
                  << event_list->allowed_event_map.n_assigned() << std::endl;
     log << std::endl;
     log.end_section();
   }
-
-  //  if (event_list->allowed_event_map.n_assigned() == 0) {
-  //    throw std::runtime_error(
-  //        "Error constructing event list: "
-  //        "no allowed events.");
-  //  }
 
   // Construct AllowedEventCalculator
   event_calculator = std::make_shared<AllowedEventCalculator>(
@@ -664,6 +651,7 @@ void AllowedKineticEventData<EventSelectorType,
                  << this->event_selector_type_str() << "\"" << std::endl;
     log.indent() << "- size=" << event_list->allowed_event_map.events().size()
                  << std::endl;
+    log.indent() << "- Constructing event selector..." << std::endl;
   }
 
   // Make event selector
@@ -673,6 +661,7 @@ void AllowedKineticEventData<EventSelectorType,
 
   if constexpr (DebugMode) {
     Log &log = CASM::log();
+    log.indent() << "- Constructing event selector... DONE" << std::endl;
     log.indent() << "- total_rate=" << this->event_selector->total_rate()
                  << std::endl;
     log << std::endl;
@@ -703,6 +692,17 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::select_event(
     }
   }
 
+  if constexpr (DebugMode) {
+    Log &log = CASM::log();
+    log.custom("Event list summary");
+    log.indent() << "- Event list container size: "
+                 << event_list->allowed_event_map.n_total() << std::endl;
+    log.indent() << "- Number of events: "
+                 << event_list->allowed_event_map.n_assigned() << std::endl;
+    log << std::endl;
+    log.end_section();
+  }
+
   // The function `only_select_event` does the following:
   // - Updates rates of events impacted by the *last* selected event (if there
   //   was a previous selection)
@@ -731,6 +731,12 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::select_event(
     Log &log = CASM::log();
     log.custom("Selected event");
 
+    prim_event_calculators.at(event_id.prim_event_index)
+        .calculate_event_state(m_event_state, event_data.unitcell_index,
+                               event_data.event.linear_site_index,
+                               prim_event_data);
+    selected_event.event_state = &m_event_state;
+
     // get ijk
     auto const &unitcell_index_converter =
         state_data->occ_location->convert().unitcell_index_converter();
@@ -738,29 +744,32 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::select_event(
     jsonParser ijk_json;
     to_json(ijk, ijk_json, jsonParser::as_array());
 
-    log.indent() << "- event_id.prim_event_index=" << event_id.prim_event_index
-                 << std::endl;
-    log.indent() << "- event_id.unitcell_index=" << event_id.unitcell_index
-                 << " (" << ijk_json << ")" << std::endl;
-    log.indent() << "- linear_site_indices="
-                 << qto_json(event_data.event.linear_site_index) << std::endl;
-    log.indent() << "- sites (relative)=" << std::endl;
-    log.increase_indent();
-    for (auto const &site : prim_event_data.sites) {
-      log.indent() << "- " << qto_json(site) << std::endl;
+    // format output
+    {
+      jsonParser tjson;
+      to_json(selected_event, tjson, *get_event_system(*system));
+
+      // Add event position
+      jsonParser ajson;
+      ajson["unitcell_index"] = event_data.unitcell_index;
+      ajson["unitcell_ijk"] = ijk_json;
+
+      ajson["event_sites_relative"] = jsonParser::array();
+      for (auto const &site : prim_event_data.sites) {
+        ajson["event_sites_relative"].push_back(qto_json(site));
+      }
+
+      ajson["event_sites_absolute"] = jsonParser::array();
+      for (auto const &site : prim_event_data.sites) {
+        ajson["event_sites_absolute"].push_back(qto_json(site + ijk));
+      }
+      tjson["event_position"] = ajson;
+
+      // Add Monte Carlo state
+      tjson["state"] = *state_data->state;
+
+      log << tjson << std::endl << std::endl;
     }
-    log.decrease_indent();
-    log.indent() << "- sites (absolute)=" << std::endl;
-    log.increase_indent();
-    for (auto const &site : prim_event_data.sites) {
-      log.indent() << "- " << qto_json(site + ijk) << std::endl;
-    }
-    log.decrease_indent();
-    log.indent() << "- prim_event_data=" << qto_json(prim_event_data)
-                 << std::endl;
-    log.indent() << "- total_rate=" << selected_event.total_rate << std::endl;
-    log.indent() << "- time_increment=" << selected_event.time_increment
-                 << std::endl;
   }
 
   if (!allow_events_with_no_barrier && event_calculator->n_not_normal.size()) {
@@ -774,17 +783,10 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::select_event(
                                event_data.event.linear_site_index,
                                prim_event_data);
     selected_event.event_state = &m_event_state;
-
-    if constexpr (DebugMode) {
-      Log &log = CASM::log();
-      log.indent() << "- requires_event_state=true" << std::endl;
-      log.indent() << "- event_state=" << qto_json(m_event_state) << std::endl;
-    }
   }
 
   if constexpr (DebugMode) {
     Log &log = CASM::log();
-    log << std::endl;
     log.end_section();
   }
 }

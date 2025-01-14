@@ -1146,9 +1146,8 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path,
                 10000 /* max_size */));
       } else {
         log.indent() << "- All orbits are empty: not constructing "
-                     << event_type_name + "-all"
-                     << " or " << event_type_name + "-all-combined"
-                     << std::endl;
+                     << event_type_name + "-all" << " or "
+                     << event_type_name + "-all-combined" << std::endl;
       }
 
       log.decrease_indent();
@@ -1164,13 +1163,7 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path,
       log.increase_indent();
       for (auto const &prim_event_data : system.prim_event_list) {
         log.indent() << "- " << prim_event_data.prim_event_index << ": "
-                     << prim_event_data.event_type_name + "." +
-                            std::to_string(prim_event_data.equivalent_index);
-        if (prim_event_data.is_forward) {
-          log << " (forward)" << std::endl;
-        } else {
-          log << " (reverse)" << std::endl;
-        }
+                     << name(prim_event_data) << std::endl;
       }
       log.decrease_indent();
     }
