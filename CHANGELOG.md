@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed MonteCalculator to a Python class that inherits from a C++ class, allowing for more flexibility in the Python interface.
 - Moved `libcasm.clexmonte.print_selected_event_functions` to `MonteCalculator.print_selected_event_functions`.
+- Enable surpressing "kinetic" MonteCalculator output by reducing verbosity to "quiet".
 
 ### Fixed
 

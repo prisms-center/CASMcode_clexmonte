@@ -428,6 +428,7 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   // - Throw if this->state_data is null
   // - Constructs this->event_data->event_selector
   // - Calculates all rates
+  log.begin_section<Log::standard>();
   log.indent() << "Setting event data ... " << std::endl;
   this->set_event_data(run_manager.engine);
   log.indent() << "Setting event data ... DONE" << std::endl << std::endl;
@@ -444,7 +445,8 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
                                       rate_bin_width);
   log.indent() << "Generating event data summary ... DONE" << std::endl
                << std::endl;
-  print(log, event_data_summary);
+  log.end_section();
+  print<Log::standard>(log, event_data_summary);
 
   if (event_data_summary.n_events_allowed == 0) {
     throw std::runtime_error("Error: Cannot run. No allowed events.");
@@ -607,7 +609,7 @@ void KineticCalculator::_reset() {
   CASM::log().set_verbosity(this->verbosity_level);
 
   auto &log = CASM::log();
-  log.read("KineticCalculator parameters");
+  log.read<Log::standard>("KineticCalculator parameters");
   log.indent() << "verbosity=" << this->verbosity_level << std::endl;
 
   // "mol_composition_tol": float, default=CASM::TOL
