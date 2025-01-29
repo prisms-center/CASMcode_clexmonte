@@ -56,8 +56,8 @@ KineticCalculator::KineticCalculator()
           {},                    // required_local_multiclex,
           {},                    // required_dof_spaces,
           {},                    // required_params,
-          {"verbosity", "mol_composition_tol", "event_data_type",
-           "event_selector_type", "impact_table_type",
+          {"verbosity", "print_event_data_summary", "mol_composition_tol",
+           "event_data_type", "event_selector_type", "impact_table_type",
            "allow_events_with_no_barrier", "assign_allowed_events_only",
            "selected_event_data"},  // optional_params,
           true,                     // time_sampling_allowed,
@@ -431,22 +431,24 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   std::cout << "Setting event data ... DONE" << std::endl << std::endl;
 
   // Construct EventDataSummary
-  std::cout << "Generating event data summary ... " << std::endl;
-  MonteEventData monte_event_data(this->event_data, nullptr);
-  double energy_bin_width = 0.1;
-  double freq_bin_width = 0.1;
-  double rate_bin_width = 0.1;
+  if (this->print_event_data_summary) {
+    std::cout << "Generating event data summary ... " << std::endl;
+    MonteEventData monte_event_data(this->event_data, nullptr);
+    double energy_bin_width = 0.1;
+    double freq_bin_width = 0.1;
+    double rate_bin_width = 0.1;
 
-  EventDataSummary event_data_summary(this->state_data, monte_event_data,
-                                      energy_bin_width, freq_bin_width,
-                                      rate_bin_width);
-  std::cout << "Generating event data summary ... DONE" << std::endl
-            << std::endl;
-  print(std::cout, event_data_summary);
-
-  if (event_data_summary.n_events_allowed == 0) {
-    throw std::runtime_error("Error: Cannot run. No allowed events.");
+    EventDataSummary event_data_summary(this->state_data, monte_event_data,
+                                        energy_bin_width, freq_bin_width,
+                                        rate_bin_width);
+    std::cout << "Generating event data summary ... DONE" << std::endl
+              << std::endl;
+    print(std::cout, event_data_summary);
   }
+
+  //  if (event_data_summary.n_events_allowed == 0) {
+  //    throw std::runtime_error("Error: Cannot run. No allowed events.");
+  //  }
 
   // Construct KMCData
   this->kmc_data = std::make_shared<kmc_data_type>();
@@ -607,6 +609,12 @@ void KineticCalculator::_reset() {
   auto &log = CASM::log();
   log.read("KineticCalculator parameters");
   log.indent() << "verbosity=" << this->verbosity_level << std::endl;
+
+  // "print_event_data_summary": bool, default=false
+  this->print_event_data_summary = false;
+  parser.optional(this->print_event_data_summary, "print_event_data_summary");
+  log.indent() << "print_event_data_summary=" << std::boolalpha
+               << this->print_event_data_summary << std::endl;
 
   // "mol_composition_tol": float, default=CASM::TOL
   this->mol_composition_tol = CASM::TOL;

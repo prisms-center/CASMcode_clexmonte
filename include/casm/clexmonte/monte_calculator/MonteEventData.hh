@@ -151,6 +151,15 @@ class MonteEventData {
     return m_data->kra_coefficients(prim_event_index);
   }
 
+  // -- Custom event state calculation --
+
+  /// Set custom event state calculation functions
+  void set_custom_event_state_calculation(
+      std::string const &event_type_name,
+      CustomEventStateCalculationFunction f) {
+    m_data->set_custom_event_state_calculation(event_type_name, f);
+  }
+
   // -- Event list --
 
   /// Get EventID

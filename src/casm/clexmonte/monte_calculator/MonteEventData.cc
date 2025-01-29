@@ -207,9 +207,30 @@ void EventDataSummary::_add_stats(EventID const &id, EventState const &state) {
   if (!state.is_allowed) {
     return;
   }
-
   int t = to_event_type[id.prim_event_index];
   int e = to_equivalent_index[id.prim_event_index];
+
+  if (state.freq <= 0.0) {
+    std::stringstream msg;
+    std::string event_type_name = type_key(id);
+
+    msg << "Error in EventDataSummary: ";
+    msg << "state.is_allowed=true && state.freq <= 0.0, ";
+    msg << "for event=" << event_type_name << "." << e << " ";
+    msg << "(state.freq=" << state.freq << ") ";
+    throw std::runtime_error(msg.str());
+  }
+
+  if (state.rate <= 0.0) {
+    std::stringstream msg;
+    std::string event_type_name = type_key(id);
+
+    msg << "Error in EventDataSummary: ";
+    msg << "state.is_allowed=true && state.rate <= 0.0, ";
+    msg << "for event=" << event_type_name << "." << e << " ";
+    msg << "(state.rate=" << state.rate << ")";
+    throw std::runtime_error(msg.str());
+  }
 
   // order determined by constructor
   int i = 0;

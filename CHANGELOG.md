@@ -14,11 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `SelectedEvent.to_dict` and `SelectedEvent.__repr__` methods.
 - Added `MonteCalculator.event_info` attribute to store shared event info used for constructing and transforming LocalConfiguration.
 - Added `MonteCalculator.make_local_configuration` to construct a LocalConfiguration from the current calculator state and current SelectedEvent.
+- Added `EventStateCalculator` and `MonteEventData.set_custom_event_state_calculation`
+- Added `"print_event_data_summary"` MonteCalculator parameter to select whether to print the event data summary.
  
 ### Changed
 
 - Changed MonteCalculator to a Python class that inherits from a C++ class, allowing for more flexibility in the Python interface.
 - Moved `libcasm.clexmonte.print_selected_event_functions` to `MonteCalculator.print_selected_event_functions`.
+- Changed `PrimEventData.sites` type to `SiteVector`
+- Changed `PrimEventData.occ_init` and `PrimEventData.occ_final` type to `IntVector`
+- Changed `EventState` attributes from `readonly` to `readwrite`.
+- Changed `"kinetic"` MonteCalculator to not print the event data summary by default
 
 ### Fixed
 

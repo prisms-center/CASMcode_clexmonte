@@ -131,6 +131,9 @@ class KineticCalculator : public BaseMonteCalculator {
   // Event filters
   std::optional<std::vector<EventFilterGroup>> event_filters;
 
+  // Print event data summary (default=false)
+  bool print_event_data_summary = false;
+
   // Type of impact table:
   // - Only takes effect if event_data_type is `default_memory`
   // - If true: somewhat higher memory use; somewhat faster impact list

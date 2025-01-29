@@ -21,104 +21,6 @@ namespace CASM {
 namespace clexmonte {
 namespace kinetic_2 {
 
-/// \brief Constructor
-EventStateCalculator::EventStateCalculator(std::shared_ptr<system_type> _system,
-                                           std::string _event_type_name)
-    : m_system(_system), m_event_type_name(_event_type_name) {}
-
-/// \brief Reset pointer to state currently being calculated
-void EventStateCalculator::set(state_type const *state) {
-  // supercell-specific
-  m_state = state;
-  if (m_state == nullptr) {
-    throw std::runtime_error(
-        "Error setting EventStateCalculator state: state is empty");
-  }
-  m_temperature = &m_state->conditions.scalar_values.at("temperature");
-  m_formation_energy_clex = get_clex(*m_system, *m_state, "formation_energy");
-
-  // set and validate event clex
-  LocalMultiClexData event_local_multiclex_data =
-      get_local_multiclex_data(*m_system, m_event_type_name);
-  m_event_clex = get_local_multiclex(*m_system, *m_state, m_event_type_name);
-  m_event_values.resize(m_event_clex->coefficients().size());
-  std::map<std::string, Index> _glossary =
-      event_local_multiclex_data.coefficients_glossary;
-
-  auto _check_coeffs = [&](Index &coeff_index, std::string key) {
-    if (!_glossary.count(key)) {
-      std::stringstream ss;
-      ss << "Error constructing " << m_event_type_name
-         << " EventStateCalculator: No " << key << " cluster expansion";
-      throw std::runtime_error(ss.str());
-    }
-    coeff_index = _glossary.at(key);
-    if (coeff_index < 0 || coeff_index >= m_event_clex->coefficients().size()) {
-      std::stringstream ss;
-      ss << "Error constructing " << m_event_type_name
-         << " EventStateCalculator: " << key << " index out of range";
-      throw std::runtime_error(ss.str());
-    }
-  };
-  _check_coeffs(m_kra_index, "kra");
-  _check_coeffs(m_freq_index, "freq");
-}
-
-/// \brief Pointer to current state
-state_type const *EventStateCalculator::state() const { return m_state; }
-
-/// \brief Current state's reciprocal temperature
-double EventStateCalculator::beta() const {
-  return 1.0 / (CASM::KB * *this->m_temperature);
-}
-
-/// \brief Calculate the state of an event
-void EventStateCalculator::calculate_event_state(
-    EventState &state, Index unitcell_index,
-    std::vector<Index> const &linear_site_index,
-    PrimEventData const &prim_event_data) const {
-  clexulator::ConfigDoFValues const *dof_values =
-      m_formation_energy_clex->get();
-
-  // Check if event is allowed based on the current occupation
-  state.is_allowed =
-      event_is_allowed(linear_site_index, *dof_values, prim_event_data);
-  if (!state.is_allowed) {
-    state.rate = 0.0;
-    return;
-  }
-
-  // calculate change in energy to final state
-  //  state.dE_final = m_formation_energy_clex->occ_delta_value(
-  //      event_data.event.linear_site_index, prim_event_data.occ_final);
-
-  // calculate change in energy to final state
-  // - and save pointer to delta correlations
-  state.formation_energy_delta_corr =
-      &m_formation_energy_clex->correlations().occ_delta(
-          linear_site_index, prim_event_data.occ_final);
-  state.dE_final = m_formation_energy_clex->coefficients() *
-                   (*state.formation_energy_delta_corr);
-
-  // calculate KRA and attempt frequency
-  // - add save pointer to local correlations
-  state.local_corr = &m_event_clex->correlations().local(
-      unitcell_index, prim_event_data.equivalent_index);
-  for (int i = 0; i < m_event_clex->coefficients().size(); ++i) {
-    m_event_values(i) = m_event_clex->coefficients()[i] * (*state.local_corr);
-  }
-  state.Ekra = m_event_values[m_kra_index];
-  state.freq = m_event_values[m_freq_index];
-
-  // calculate energy in activated state, check if "normal", calculate rate
-  state.dE_activated = state.dE_final * 0.5 + state.Ekra;
-  state.is_normal =
-      (state.dE_activated > 0.0) && (state.dE_activated > state.dE_final);
-  if (state.dE_activated < state.dE_final) state.dE_activated = state.dE_final;
-  if (state.dE_activated < 0.0) state.dE_activated = 0.0;
-  state.rate = state.freq * exp(-this->beta() * state.dE_activated);
-}
-
 namespace {
 
 void print_no_barrier_warning(Log &event_log, EventState const &event_state,
@@ -249,6 +151,14 @@ void CompleteKineticEventData<DebugMode>::update(
       prim_event_calculators.emplace_back(system,
                                           prim_event_data.event_type_name);
       prim_event_calculators.back().set(&state);
+
+      // Set a custom event state calculation function if it exists:
+      auto it = custom_event_state_calculation_f.find(
+          prim_event_data.event_type_name);
+      if (it != custom_event_state_calculation_f.end()) {
+        prim_event_calculators.back().set_custom_event_state_calculation(
+            it->second);
+      }
     }
 
     // Construct CompleteEventList
@@ -447,7 +357,7 @@ AllowedKineticEventData<EventSelectorType, DebugMode>::AllowedKineticEventData(
         << std::endl;
     log << "- event_selector_type=\"" << this->event_selector_type_str() << "\""
         << std::endl;
-    log << "- assigned_allowed_events_only=" << std::boolalpha
+    log << "- assign_allowed_events_only=" << std::boolalpha
         << assign_allowed_events_only << std::endl;
     log << std::endl;
     log.end_section();
@@ -527,6 +437,14 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
     prim_event_calculators.emplace_back(system,
                                         prim_event_data.event_type_name);
     prim_event_calculators.back().set(&state);
+
+    // Set a custom event state calculation function if it exists:
+    auto it =
+        custom_event_state_calculation_f.find(prim_event_data.event_type_name);
+    if (it != custom_event_state_calculation_f.end()) {
+      prim_event_calculators.back().set_custom_event_state_calculation(
+          it->second);
+    }
   }
 
   // Construct AllowedEventList
@@ -539,7 +457,7 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
   if constexpr (DebugMode) {
     Log &log = CASM::log();
     log.custom("Event list summary");
-    log.indent() << "- n_total=" << event_list->allowed_event_map.n_assigned()
+    log.indent() << "- n_reserved=" << event_list->allowed_event_map.n_total()
                  << std::endl;
     log.indent() << "- n_assigned="
                  << event_list->allowed_event_map.n_assigned() << std::endl;
@@ -559,7 +477,8 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
 
   // Make event selector
   // - This calculates all rates at construction
-  make_event_selector();
+  this->make_event_selector();
+  this->event_list->allowed_event_map.clear_has_new_events();
 }
 
 template <typename EventSelectorType, bool DebugMode>
@@ -662,8 +581,10 @@ void AllowedKineticEventData<EventSelectorType,
     log.custom("Make event selector");
     log.indent() << "- event_selector_type=\""
                  << this->event_selector_type_str() << "\"" << std::endl;
-    log.indent() << "- size=" << event_list->allowed_event_map.events().size()
+    log.indent() << "- n_reserved=" << event_list->allowed_event_map.n_total()
                  << std::endl;
+    log.indent() << "- n_assigned="
+                 << event_list->allowed_event_map.n_assigned() << std::endl;
   }
 
   // Make event selector

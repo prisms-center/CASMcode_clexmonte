@@ -168,7 +168,22 @@ def test_run_fixture_1_sample_state_data(FCCBinaryVacancy_kmc_System, tmp_path):
     calculator.collect("selected_event.by_equivalent_index")
 
     def print_step_f():
-        fixture = calculator.kinetics_data.sampling_fixture
+        kinetics_data = calculator.kinetics_data
+        assert isinstance(kinetics_data, clexmonte.KineticsData)
+
+        # Check unique_atom_id type
+        assert isinstance(kinetics_data.unique_atom_id, clexmonte.LongVector)
+
+        # Check prev_unique_atom_id type
+        prev_unique_atom_id = kinetics_data.prev_unique_atom_id
+        assert "kinetics" in prev_unique_atom_id
+        assert isinstance(prev_unique_atom_id["kinetics"], clexmonte.LongVector)
+
+        # Check atom_name_index_list type
+        assert isinstance(kinetics_data.atom_name_index_list, clexmonte.LongVector)
+
+        # Test returning a numpy array with the step number
+        fixture = kinetics_data.sampling_fixture
         # print("step:", step)
         return np.array([fixture.n_step])
 
@@ -707,3 +722,122 @@ def test_write_LocalConfiguration(FCCBinaryVacancy_kmc_System_2, tmp_path):
         assert x.configuration is not None
         assert x.pos is not None
         assert x.event_info is not None
+
+
+def test_custom_event_state_calculation_f(FCCBinaryVacancy_kmc_System_2, tmp_path):
+    """Test using custom event state calculation functions"""
+
+    # A system with formation_energy_eci.2.json chosen to have events with no barriers
+    system = FCCBinaryVacancy_kmc_System_2
+    output_dir = tmp_path / "output"
+
+    # construct a semi-grand canonical MonteCalculator
+    calculator = clexmonte.MonteCalculator(
+        method="kinetic",
+        system=system,
+        params={
+            "allow_events_with_no_barrier": True,
+            # "verbosity": "debug",
+        },
+    )
+    calculator.collect("selected_event.by_equivalent_index")
+    # calculator.collect("dE_activated.by_type", bin_width=0.01)
+
+    # construct default sampling fixture parameters
+    kinetics = calculator.make_default_sampling_fixture_params(
+        label="kinetics",
+        output_dir=str(output_dir),
+        write_observations=True,
+    )
+    kinetics.sample_by_step()
+    kinetics.set_max_count(100)
+    # kinetics.converge("clex.formation_energy", abs=1e-3)
+
+    n_event_calculations = 0
+
+    def event_state_calculation_f(
+        state: clexmonte.EventState,
+        event_state_calculator: clexmonte.EventStateCalculator,
+    ):
+        nonlocal n_event_calculations
+
+        n_event_calculations += 1
+
+        # print(f"CUSTOM EVENT STATE CALCULATION {n_event_calculations}")
+        #
+        # prim_event_data = event_state_calculator.curr_prim_event_data
+        # print(
+        #     "event_type_name:",
+        #     prim_event_data.event_type_name,
+        #     "unitcell_index:",
+        #     event_state_calculator.curr_unitcell_index,
+        #     "equivalent_index:",
+        #     prim_event_data.equivalent_index,
+        # )
+        event_state_calculator.set_default_event_state(state)
+        # print(
+        #     "dE_activated:",
+        #     state.dE_activated,
+        #     "dE_final:",
+        #     state.dE_final,
+        #     "is_normal:",
+        #     state.is_normal,
+        # )
+        # print(
+        #     "rate:",
+        #     state.rate,
+        # )
+        # print()
+        # sys.stdout.flush()
+
+    calculator.event_data.set_custom_event_state_calculation(
+        event_type_name="A_Va_1NN",
+        function=event_state_calculation_f,
+    )
+
+    calculator.event_data.set_custom_event_state_calculation(
+        event_type_name="B_Va_1NN",
+        function=event_state_calculation_f,
+    )
+
+    # Add a custom selected event function
+    n_selected_events = 0
+
+    def print_selected_event_f():
+        nonlocal n_selected_events
+        n_selected_events += 1
+        # print(f"Event was selected {n_selected_events}")
+
+    calculator.add_generic_function(
+        name="print_selected_event_f",
+        description="Print information about the selected event state",
+        requires_event_state=False,
+        function=print_selected_event_f,
+        order=0,
+    )
+    calculator.evaluate("print_selected_event_f")
+
+    # construct the initial state:
+    # start from the default configuration
+    # and modify to match mol_composition=[0.899, 0.1, 0.001]
+    initial_state, motif = clexmonte.make_canonical_initial_state(
+        calculator=calculator,
+        conditions={
+            "temperature": 1200.0,
+            # one of param/mol composition is needed
+            # "param_composition": [0.0, 0.0],
+            "mol_composition": [0.899, 0.1, 0.001],
+        },
+        min_volume=1000,
+    )
+
+    # Run
+    calculator.run_fixture(
+        state=initial_state,
+        sampling_fixture_params=kinetics,
+    )
+
+    # n_event_calculations is incremented for every allowed event rate update...
+    # so at least 100
+    assert n_event_calculations == 1200
+    assert n_selected_events == 100

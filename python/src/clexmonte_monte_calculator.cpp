@@ -67,6 +67,31 @@ typedef monte::ResultsAnalysisFunction<config_type, statistics_type>
 typedef monte::ResultsAnalysisFunctionMap<config_type, statistics_type>
     analysis_function_map_type;
 
+template <typename T>
+py::list as_py_list(const std::vector<T> &vec) {
+  py::list py_list;
+  for (const auto &item : vec) {
+    py_list.append(item);
+  }
+  return py_list;
+}
+
+std::vector<int> as_vector_int(py::list py_list) {
+  std::vector<int> vec;
+  for (const auto &item : py_list) {
+    vec.push_back(py::cast<int>(item));
+  }
+  return vec;
+}
+
+std::vector<Index> as_vector_index(py::list py_list) {
+  std::vector<Index> vec;
+  for (const auto &item : py_list) {
+    vec.push_back(py::cast<Index>(item));
+  }
+  return vec;
+}
+
 clexmonte::MontePotential make_potential(
     std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type &state) {
   // print errors and warnings to sys.stdout
@@ -255,6 +280,9 @@ std::shared_ptr<sampling_fixture_type> monte_calculator_run_fixture(
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
+PYBIND11_MAKE_OPAQUE(std::vector<int>);
+PYBIND11_MAKE_OPAQUE(std::vector<CASM::Index>);
+PYBIND11_MAKE_OPAQUE(std::vector<CASM::xtal::UnitCellCoord>);
 PYBIND11_MAKE_OPAQUE(CASM::monte::SamplerMap);
 PYBIND11_MAKE_OPAQUE(CASM::monte::jsonSamplerMap);
 PYBIND11_MAKE_OPAQUE(CASM::monte::StateSamplingFunctionMap);
@@ -275,6 +303,10 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
   py::module::import("libcasm.clexmonte._clexmonte_system");
   py::module::import("libcasm.clexmonte._clexmonte_state");
   py::module::import("libcasm.clexmonte._clexmonte_run_management");
+
+  py::bind_vector<std::vector<int>>(m, "IntVector");
+  py::bind_vector<std::vector<Index>>(m, "LongVector");
+  py::bind_vector<std::vector<xtal::UnitCellCoord>>(m, "SiteVector");
 
   py::class_<clexmonte::StateData, std::shared_ptr<clexmonte::StateData>>(
       m, "StateData",
@@ -579,7 +611,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           "unique_atom_id",
           &clexmonte::BaseMonteCalculator::kmc_data_type::unique_atom_id,
           R"pbdoc(
-          list[int]: Unique atom ID for each atom currently in the system.
+          LongVector: Unique atom ID for each atom currently in the system.
 
           The ID ``unique_atom_id[l]`` is the unique atom ID for the atom at the
           position given by ``atom_positions_cart[:,l]``.
@@ -588,7 +620,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           "prev_unique_atom_id",
           &clexmonte::BaseMonteCalculator::kmc_data_type::prev_unique_atom_id,
           R"pbdoc(
-          dict[str, list[int]]: Unique atom ID for each atom at last sample, by
+          dict[str, LongVector]: Unique atom ID for each atom at last sample, by
           sampling fixture label.
 
           The ID ``prev_unique_atom_id[label][l]`` is the unique atom ID for the
@@ -598,7 +630,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           "atom_name_index_list",
           &clexmonte::BaseMonteCalculator::kmc_data_type::atom_name_index_list,
           R"pbdoc(
-          list[int]: Set this to hold atom name indices for each column of the
+          LongVector: Set this to hold atom name indices for each column of the
           atom position matrices.
 
           When sampling, this will hold the atom name index for each column of
@@ -680,9 +712,9 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           Parameters
           ----------
-          linear_site_index: list[int]
+          linear_site_index: LongVector
               The linear site indices of the sites changing occupation
-          new_occ: list[int]
+          new_occ: IntVector
               The new occupation indices on the sites.
 
           Returns
@@ -720,23 +752,17 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                     R"pbdoc(
           libcasm.occ_events.OccEvent: Event definition
           )pbdoc")
-      .def(
-          "sites", [](clexmonte::PrimEventData &self) { return self.sites; },
-          R"pbdoc(
-          list[:class:`~libcasm.xtal.IntegralSiteCoordinate`]: Event sites,
-          relative to origin unit cell
+      .def_readonly("sites", &clexmonte::PrimEventData::sites,
+                    R"pbdoc(
+          SiteVector: Event sites, relative to origin unit cell
           )pbdoc")
-      .def(
-          "occ_init",
-          [](clexmonte::PrimEventData &self) { return self.occ_init; },
-          R"pbdoc(
-          list[int]: Initial site occupation
+      .def_readonly("occ_init", &clexmonte::PrimEventData::occ_init,
+                    R"pbdoc(
+          IntVector: Initial site occupation
           )pbdoc")
-      .def(
-          "occ_final",
-          [](clexmonte::PrimEventData &self) { return self.occ_final; },
-          R"pbdoc(
-          list[int]: final site occupation
+      .def_readonly("occ_final", &clexmonte::PrimEventData::occ_final,
+                    R"pbdoc(
+          IntVector: Final site occupation
           )pbdoc")
       .def(
           "to_dict",
@@ -886,7 +912,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                                         error_if_invalid);
             return (*event_id_parser.value);
           },
-          "Construct an EventID from a Python dict.");
+          "Construct an EventID from a Python dict.", py::arg("data"));
 
   py::class_<clexmonte::EventData>(m, "EventData",
                                    R"pbdoc(
@@ -930,8 +956,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                                     R"pbdoc(
       Data calculated for a single event in a single state
       )pbdoc")
-      .def_readonly("is_allowed", &clexmonte::EventState::is_allowed,
-                    R"pbdoc(
+      .def_readwrite("is_allowed", &clexmonte::EventState::is_allowed,
+                     R"pbdoc(
           bool: True if event is allowed given current configuration; False otherwise.
           )pbdoc")
       .def_property_readonly(
@@ -947,6 +973,10 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           R"pbdoc(
           numpy.ndarray[numpy.float[corr_size,]]: Change in formation energy
           correlations if event occurs.
+
+          This is a readonly property that is only set by the default
+          event state calculation method. If it has not been set, attempting to
+          access it will raise an exception.
           )pbdoc")
       .def_property_readonly(
           "local_corr",
@@ -961,31 +991,42 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           R"pbdoc(
           numpy.ndarray[numpy.float[corr_size,]]: Local correlations for current
           event neighborhood.
+
+          This is a readonly property that is only set by the default
+          event state calculation method. If it has not been set, attempting to
+          access it will raise an exception.
           )pbdoc")
-      .def_readonly("is_normal", &clexmonte::EventState::is_normal,
-                    R"pbdoc(
-          bool: An event is "normal" if `dE_activated` > 0.0 and
-          `dE_activated` > `dE_final`.
+      .def_readwrite("is_normal", &clexmonte::EventState::is_normal,
+                     R"pbdoc(
+          bool: A flag that indicates an event is allowed based on the current
+          occupation, but the event rate model is giving an invalid result.
+
+          For the default event state calculation method, an event is “normal”
+          if `dE_activated > 0.0` and `dE_activated > dE_final`. Depending on
+          settings, a non-normal event may be disallowed, allowed, or may cause
+          the simulation to stop with an exception. If the simulation is allowed
+          to continue, the number of non-normal events is tracked by type and
+          reported at the end of a simulation.
           )pbdoc")
-      .def_readonly("dE_final", &clexmonte::EventState::dE_final,
-                    R"pbdoc(
+      .def_readwrite("dE_final", &clexmonte::EventState::dE_final,
+                     R"pbdoc(
           float: Final state energy, relative to initial state.
           )pbdoc")
-      .def_readonly("Ekra", &clexmonte::EventState::Ekra,
-                    R"pbdoc(
-          float: KRA energy.
+      .def_readwrite("Ekra", &clexmonte::EventState::Ekra,
+                     R"pbdoc(
+          float: KRA energy (eV).
           )pbdoc")
-      .def_readonly("dE_activated", &clexmonte::EventState::dE_activated,
-                    R"pbdoc(
+      .def_readwrite("dE_activated", &clexmonte::EventState::dE_activated,
+                     R"pbdoc(
           float: Activated state energy, relative to initial state
           )pbdoc")
-      .def_readonly("freq", &clexmonte::EventState::freq,
-                    R"pbdoc(
-          float: Attempt frequency
+      .def_readwrite("freq", &clexmonte::EventState::freq,
+                     R"pbdoc(
+          float: Attempt frequency (1/s)
           )pbdoc")
-      .def_readonly("rate", &clexmonte::EventState::rate,
-                    R"pbdoc(
-          float: Event rate
+      .def_readwrite("rate", &clexmonte::EventState::rate,
+                     R"pbdoc(
+          float: Event rate (1/s)
           )pbdoc")
       .def(
           "to_dict",
@@ -1002,6 +1043,112 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
         ss << json;
         return ss.str();
       });
+
+  /// An interface to clexmonte::EventStateCalculator
+  py::class_<clexmonte::EventStateCalculator,
+             std::shared_ptr<clexmonte::EventStateCalculator>>(
+      m, "EventStateCalculator",
+      R"pbdoc(
+      Interface for calculating event state properties
+
+      Notes
+      -----
+
+      - EventStateCalculator is provided as an argument to custom event state
+        calculation functions.
+      - No constructor is provided
+
+      )pbdoc")
+      .def_property_readonly("state",
+                             &CASM::clexmonte::EventStateCalculator::state,
+                             py::return_value_policy::reference, R"pbdoc(
+          libcasm.clexmonte.MonteCarloState: The current state.
+          )pbdoc")
+      .def_property_readonly(
+          "temperature", &CASM::clexmonte::EventStateCalculator::temperature,
+          R"pbdoc(
+          float: The current temperature (K).
+          )pbdoc")
+      .def_property_readonly("beta",
+                             &CASM::clexmonte::EventStateCalculator::beta,
+                             R"pbdoc(
+          float: The inverse temperature, :math:`\beta = \frac{1}{k_{B}T}`.
+          )pbdoc")
+      .def_property_readonly(
+          "curr_unitcell_index",
+          &CASM::clexmonte::EventStateCalculator::curr_unitcell_index,
+          R"pbdoc(
+          int: The current unit cell index.
+          )pbdoc")
+      .def_property_readonly(
+          "curr_linear_site_index",
+          &CASM::clexmonte::EventStateCalculator::curr_linear_site_index,
+          py::return_value_policy::reference, R"pbdoc(
+          LongVector: The current linear site index of sites that change during
+          the event.
+          )pbdoc")
+      .def_property_readonly(
+          "curr_prim_event_data",
+          &CASM::clexmonte::EventStateCalculator::curr_prim_event_data,
+          py::return_value_policy::reference, R"pbdoc(
+          libcasm.clexmonte.PrimEventData: The current primitive event data.
+          )pbdoc")
+      .def("set_default_event_state",
+           &CASM::clexmonte::EventStateCalculator::set_default_event_state,
+           R"pbdoc(
+          Set the event state using the default calculation method.
+
+          Parameters
+          ----------
+          event_state : libcasm.clexmonte.EventState
+              The event state to set. After calling this function, the
+              event state will be updated with the calculated properties,
+              including the `formation_energy_delta_corr` and `local_corr`
+              properties.
+          )pbdoc",
+           py::arg("event_state"))
+      .def_property_readonly(
+          "formation_energy_clex",
+          &CASM::clexmonte::EventStateCalculator::formation_energy_clex,
+          R"pbdoc(
+          libcasm.clexulator.ClusterExpansion: The formation energy cluster expansion.
+          )pbdoc")
+      .def_property_readonly(
+          "formation_energy_coefficients",
+          &CASM::clexmonte::EventStateCalculator::formation_energy_coefficients,
+          R"pbdoc(
+          libcasm.clexulator.SparseCoefficients: The formation energy coefficients.
+          )pbdoc")
+      .def_property_readonly("event_clex",
+                             &CASM::clexmonte::EventStateCalculator::event_clex,
+                             R"pbdoc(
+          libcasm.clexulator.MultiLocalClusterExpansion: The event multi-local
+          cluster expansion.
+          )pbdoc")
+      .def_property_readonly("kra_index",
+                             &CASM::clexmonte::EventStateCalculator::kra_index,
+                             R"pbdoc(
+          int: The index of the KRA value in the event multi-local cluster
+          expansion output.
+          )pbdoc")
+      .def_property_readonly("freq_index",
+                             &CASM::clexmonte::EventStateCalculator::freq_index,
+                             R"pbdoc(
+          int: The index of the attempt frequency value in the event multi-local
+          cluster expansion output.
+          )pbdoc")
+      .def_property_readonly(
+          "freq_coefficients",
+          &CASM::clexmonte::EventStateCalculator::freq_coefficients,
+          R"pbdoc(
+          libcasm.clexulator.SparseCoefficients: The attempt frequency coefficients.
+          )pbdoc")
+      .def_property_readonly(
+          "kra_coefficients",
+          &CASM::clexmonte::EventStateCalculator::kra_coefficients,
+          R"pbdoc(
+          libcasm.clexulator.SparseCoefficients: The KRA coefficients.
+          )pbdoc");
 
   py::class_<clexmonte::SelectedEvent,
              std::shared_ptr<clexmonte::SelectedEvent>>(m, "SelectedEvent",
@@ -1205,7 +1352,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               The event data structure that can used to apply the event to the current
               configuration's occupant location list. The reference is valid until the
               next call to this function.
-          )pbdoc")
+          )pbdoc",
+           py::arg("id"))
       .def("event_rate", &clexmonte::MonteEventData::event_rate,
            R"pbdoc(
           Return the current rate for a specific event, as stored in the event list
@@ -1254,7 +1402,113 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           impacted_events: list[libcasm.clexmonte.EventID]
               The EventID for events that must be updated.
           )pbdoc",
-           py::arg("id"));
+           py::arg("id"))
+      .def("set_custom_event_state_calculation",
+           &clexmonte::MonteEventData::set_custom_event_state_calculation,
+           R"pbdoc(
+          Set a custom event state calculation function
+
+          .. rubric:: Calculating the event state
+
+          For the KMC implementation to function property, the following
+          properties of :class:`~libcasm.clexmonte.EventState` must be set for
+          KMC to work properly:
+
+          - `EventState.is_allowed`: Set to True if the event is allowed given
+            the current configuration; set to False otherwise. For some event list
+            implementations, events are added to the event list if they are
+            allowed and removed if they are not allowed.
+          - `EventState.rate`: The event rate (:math:`s^{-1}`). If the event is
+            not allowed, the event rate must still be set to 0.0 for some event
+            list implementations to work correctly.
+          - `EventState.is_normal`: A flag that indicates an event is allowed
+            based on the current occupation, but the event rate model is giving
+            an invalid result. For the default event state calculation
+            method, an event is “normal” if `dE_activated > 0.0` and
+            `dE_activated > dE_final`. Depending on settings, a non-normal
+            event may cause the simulation to stop with an exception, be
+            disallowed, or allowed. If the simulation is allowed to continue,
+            the number of non-normal events is tracked by type and reported at
+            the end of a simulation.
+
+          Other event state properties are optional.
+
+          The default event state calculation function calculates event state
+          properties as if by:
+
+          .. code-block:: python
+
+              import libcasm.clexmonte as clexmonte
+
+              def default_event_state_calculation(
+                  event_state: clexmonte.EventState,
+                  event_state_calculator: clexmonte.EventStateCalculator,
+              ):
+                  s = event_state
+                  c = event_state_calculator
+
+                  # Calculate change in formation energy
+                  s.dE_final = c.formation_energy_clex.multi_occ_delta_value(
+                      linear_site_index=c.curr_linear_site_index(),
+                      new_occ=c.curr_prim_event_data().occ_final,
+                  )
+
+                  # Calculate Ekra and attempt frequency
+                  event_clex_values = c.event_clex.value(
+                      unitcell_index=c.curr_unitcell_index(),
+                      equivalent_index=c.curr_prim_event_data().equivalent_index,
+                  )
+                  s.freq = event_clex_values[c.freq_index]
+                  s.Ekra = event_clex_values[c.kra_index]
+
+                  # Calculate activated state energy
+                  s.dE_activated = s.dE_final * 0.5 + s.Ekra
+
+                  # Check for barrier-less events
+                  s.is_normal =
+                      (s.dE_activated > 0.0) and (s.dE_activated > s.dE_final)
+                  if (s.dE_activated < s.dE_final):
+                      s.dE_activated = s.dE_final;
+                  if (s.dE_activated < 0.0):
+                      s.dE_activated = 0.0;
+
+                  # Calculate rate
+                  s.rate = s.freq * np.exp(-s.dE_activated * c.beta)
+
+          Additionally, the default event state calculation function sets the
+          `formation_energy_delta_corr` and `local_corr` properties of the
+          event state.
+
+
+          .. rubric:: Disallowing events
+
+          The custom event state calculation function is only called if the
+          event is allowed based on the current occupation (in other words, the
+          event is allowed if the event definition is consistent with the
+          occupation in the current state). The function does
+          not need to modify the `event_state.is_allowed` attribute, which
+          will always be set to `True` if the function is called.
+
+          The function may make further checks and disallow the event by setting
+          `event_state.is_allowed = False` and `event_state.rate = 0.0`. In this
+          case, other event state properties are not required to be set.
+
+          Parameters
+          ----------
+          event_type_name: str
+              The type of events to use the custom event state calculation
+              function for.
+
+          function: Callable[[EventState, EventStateCalculator], None]
+              A function with signature
+              `def f(event_state: EventState, event_state_calculator: EventStateCalculator) -> None`
+              that sets the event state for a proposed event. The
+              :class:`EventStateCalculator` provides the type and location of
+              the proposed event and access to the default formation energy,
+              kra, and attempt frequency cluster expansions.
+
+          )pbdoc",
+           py::arg("event_type_name"), py::arg("function"));
 
   py::class_<clexmonte::EventDataSummary,
              std::shared_ptr<clexmonte::EventDataSummary>>
@@ -1676,7 +1930,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def(
           "add_discrete_vector_int_function",
           [](calculator_type &self, std::string name, std::string description,
-             std::vector<Index> shape, bool requires_event_state,
+             /*std::vector<Index>*/ py::typing::List<int> _shape,
+             bool requires_event_state,
              std::function<Eigen::VectorXl()> function,
              std::function<bool()> has_value_function,
              std::optional<std::vector<std::string>> component_names,
@@ -1697,6 +1952,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                   "Error in MonteCalculator.add_discrete_vector_int_function: "
                   "selected_event_functions == None");
             }
+
+            std::vector<Index> shape = as_vector_index(_shape);
 
             // -- End validation --
 
@@ -1797,7 +2054,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def(
           "add_discrete_vector_float_function",
           [](calculator_type &self, std::string name, std::string description,
-             std::vector<Index> shape, bool requires_event_state,
+             /*std::vector<Index>*/ py::typing::List<int> _shape,
+             bool requires_event_state,
              std::function<Eigen::VectorXd()> function,
              std::function<bool()> has_value_function,
              std::optional<std::vector<std::string>> component_names,
@@ -1820,6 +2078,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                   "MonteCalculator.add_discrete_vector_float_function: "
                   "selected_event_functions == None");
             }
+
+            std::vector<Index> shape = as_vector_index(_shape);
 
             // -- End validation --
 
@@ -2247,7 +2507,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           Update :py:attr:`selected_event_function_params` to remove the name of a
           function that will be evaluated to collect data for each selected
           event, and to remove all custom settings.
-          )pbdoc")
+          )pbdoc",
+          py::arg("name"))
       .def_property_readonly("selected_event_data",
                              &calculator_type::selected_event_data,
                              R"pbdoc(

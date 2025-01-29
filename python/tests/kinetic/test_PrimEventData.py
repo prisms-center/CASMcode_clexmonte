@@ -33,9 +33,9 @@ def test_PrimEventData_1(FCCBinaryVacancy_kmc_System):
     assert prim_event_data.event == system.events("A_Va_1NN")[0]
     assert prim_event_data.is_forward is True
     assert prim_event_data.prim_event_index == 0
-    assert prim_event_data.occ_init() == [0, 2]
-    assert prim_event_data.occ_final() == [2, 0]
-    sites = prim_event_data.sites()
+    assert list(prim_event_data.occ_init) == [0, 2]
+    assert list(prim_event_data.occ_final) == [2, 0]
+    sites = prim_event_data.sites
     assert len(sites) == 2
     for site in sites:
         assert isinstance(site, xtal.IntegralSiteCoordinate)
@@ -46,8 +46,8 @@ def test_PrimEventData_1(FCCBinaryVacancy_kmc_System):
     assert prim_event_data.event == system.events("A_Va_1NN")[0].copy_reverse()
     assert prim_event_data.is_forward is False
     assert prim_event_data.prim_event_index == 1
-    assert prim_event_data.occ_init() == [2, 0]
-    assert prim_event_data.occ_final() == [0, 2]
+    assert list(prim_event_data.occ_init) == [2, 0]
+    assert list(prim_event_data.occ_final) == [0, 2]
 
     # -- check PrimEventData 2 --
     prim_event_data = event_data.prim_event_list[2]
@@ -57,9 +57,9 @@ def test_PrimEventData_1(FCCBinaryVacancy_kmc_System):
     assert prim_event_data.event == system.events("A_Va_1NN")[1]
     assert prim_event_data.is_forward is True
     assert prim_event_data.prim_event_index == 2
-    assert prim_event_data.occ_init() == [0, 2]
-    assert prim_event_data.occ_final() == [2, 0]
-    sites = prim_event_data.sites()
+    assert list(prim_event_data.occ_init) == [0, 2]
+    assert list(prim_event_data.occ_final) == [2, 0]
+    sites = prim_event_data.sites
     assert len(sites) == 2
     for site in sites:
         assert isinstance(site, xtal.IntegralSiteCoordinate)
@@ -72,9 +72,9 @@ def test_PrimEventData_1(FCCBinaryVacancy_kmc_System):
     assert prim_event_data.event == system.events("B_Va_1NN")[0]
     assert prim_event_data.is_forward is True
     assert prim_event_data.prim_event_index == 12
-    assert prim_event_data.occ_init() == [1, 2]
-    assert prim_event_data.occ_final() == [2, 1]
-    sites = prim_event_data.sites()
+    assert list(prim_event_data.occ_init) == [1, 2]
+    assert list(prim_event_data.occ_final) == [2, 1]
+    sites = prim_event_data.sites
     assert len(sites) == 2
     for site in sites:
         assert isinstance(site, xtal.IntegralSiteCoordinate)
