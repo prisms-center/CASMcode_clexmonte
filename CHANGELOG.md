@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix for unuseful error messages when `System.from_dict` failed to load a local basis set.
+- Fixed setting `begin` parameter in `SamplingFixtureParams.sample_by_X` functions.
 
 
 ## [2.0a4] - 2024-12-17
