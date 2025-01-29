@@ -5,6 +5,17 @@
 namespace CASM {
 namespace clexmonte {
 
+std::string name(PrimEventData const &prim_event_data) {
+  std::string name = prim_event_data.event_type_name + "." +
+                     std::to_string(prim_event_data.equivalent_index);
+  if (prim_event_data.is_forward) {
+    name += " (forward)";
+  } else {
+    name += " (reverse)";
+  }
+  return name;
+}
+
 SelectedEventInfo::SelectedEventInfo(
     std::vector<PrimEventData> const &_prim_event_list)
     : prim_event_list(_prim_event_list),

@@ -1,11 +1,14 @@
 #ifndef CASM_clexmonte_MonteEventData
 #define CASM_clexmonte_MonteEventData
 
+#include "casm/casm_io/Log.hh"
 #include "casm/clexmonte/monte_calculator/BaseMonteEventData.hh"
 #include "casm/clexmonte/monte_calculator/StateData.hh"
 #include "casm/monte/sampling/SelectedEventFunctions.hh"
 
 namespace CASM {
+
+class Log;
 
 size_t memory_used(bool resident = false);
 std::string convert_size(size_t size_bytes);
@@ -321,7 +324,8 @@ struct EventDataSummary {
   void _add_stats(EventID const &id, EventState const &state);
 };
 
-void print(std::ostream &out, EventDataSummary const &event_data_summary);
+template <int VerbosityLevel>
+void print(Log &log, EventDataSummary const &event_data_summary);
 
 }  // namespace clexmonte
 
@@ -335,6 +339,124 @@ jsonParser &to_json(clexmonte::EventDataSummary::FloatCountByType const &count,
 
 jsonParser &to_json(clexmonte::EventDataSummary const &event_data_summary,
                     jsonParser &json);
+
+}  // namespace CASM
+
+// --- Implementation ---
+
+namespace CASM {
+namespace clexmonte {
+
+template <int VerbosityLevel = Log::standard>
+void print(Log &log, EventDataSummary const &event_data_summary) {
+  EventDataSummary const &x = event_data_summary;
+  log.begin_section<VerbosityLevel>();
+  log.indent() << "Event data summary:\n";
+  log.indent() << "- Number of unitcells = " << x.state_data->n_unitcells
+               << std::endl;
+  // Number of events
+  log.indent() << "- Number of events (total) = " << x.n_events_allowed
+               << std::endl;
+  log.indent() << "- Number of events (by type):" << std::endl;
+  for (auto const &pair : x.equiv_keys_by_type) {
+    std::string event_type_name = pair.first;
+    log.indent() << "  - " << event_type_name << " = "
+                 << x.n_allowed.by_type.at(event_type_name);
+    if (x.n_not_normal.by_type.at(event_type_name) != 0.0) {
+      log.indent() << " (** not_normal = "
+                   << x.n_not_normal.by_type.at(event_type_name) << " **)";
+    }
+    log.indent() << std::endl;
+
+    for (auto const &equiv_key : pair.second) {
+      Index equivalent_index = equiv_key.second;
+      log.indent() << "    - " << event_type_name << "." << equivalent_index
+                   << " = " << x.n_allowed.by_equivalent_index.at(equiv_key);
+      if (x.n_not_normal.by_equivalent_index.at(equiv_key) != 0.0) {
+        log.indent() << " (** not_normal = "
+                     << x.n_not_normal.by_equivalent_index.at(equiv_key)
+                     << " **)";
+      }
+      log.indent() << std::endl;
+    }
+  }
+  // Rate info:
+  log.indent() << "- Event rate (total) (1/s) = " << x.total_rate << std::endl;
+  log.indent() << "- Event rate (by type) (1/s):" << std::endl;
+  for (auto const &pair : x.equiv_keys_by_type) {
+    std::string event_type_name = pair.first;
+    log.indent() << "  - " << event_type_name << " = "
+                 << x.rate.by_type.at(event_type_name) << std::endl;
+
+    for (auto const &equiv_key : pair.second) {
+      Index equivalent_index = equiv_key.second;
+      log.indent() << "    - " << event_type_name << "." << equivalent_index
+                   << " = " << x.rate.by_equivalent_index.at(equiv_key)
+                   << std::endl;
+    }
+  }
+  log.indent() << "- Mean time increment (total) (s) = "
+               << x.mean_time_increment << std::endl;
+  log.indent() << "- Mean time increment (by type) (s):" << std::endl;
+  for (auto const &pair : x.equiv_keys_by_type) {
+    std::string event_type_name = pair.first;
+    log.indent() << "  - " << event_type_name << " = "
+                 << 1.0 / x.rate.by_type.at(event_type_name) << std::endl;
+
+    for (auto const &equiv_key : pair.second) {
+      Index equivalent_index = equiv_key.second;
+      log.indent() << "    - " << event_type_name << "." << equivalent_index
+                   << " = " << 1.0 / x.rate.by_equivalent_index.at(equiv_key)
+                   << std::endl;
+    }
+  }
+  // Memory usage:
+  log.indent() << "- Memory used (RAM) = "
+               << convert_size(x.resident_bytes_used) << std::endl;
+  log.indent() << "- Event list size = " << x.event_list_size << std::endl;
+  // Impact neighborhood sizes:
+  log.indent() << "- Impact neighborhood sizes (#sites): total (Ef / Ekra / "
+                  "freq)"
+               << std::endl;
+  for (auto const &pair : x.neighborhood_size_total) {
+    std::string event_type_name = pair.first;
+    log.indent() << "  - " << event_type_name << " = " << pair.second << " ("
+                 << x.neighborhood_size_formation_energy.at(event_type_name)
+                 << " / " << x.neighborhood_size_kra.at(event_type_name)
+                 << " / " << x.neighborhood_size_freq.at(event_type_name) << ")"
+                 << std::endl;
+  }
+  // Impact table:
+  log.indent() << "- Impact number (occurring type -> impacted type) "
+                  "(Avg. # over allowed events):"
+               << std::endl;
+  for (auto const &pair : x.equiv_keys_by_type) {
+    std::string event_type_name = pair.first;
+    log.indent() << "  - " << event_type_name << " = ";
+    for (auto const &pair2 : x.impact_table.by_type.at(event_type_name)) {
+      log.indent() << pair2.second / x.n_allowed.by_type.at(event_type_name)
+                   << " ";
+    }
+    log.indent() << std::endl;
+
+    for (auto const &equiv_key : pair.second) {
+      Index equivalent_index = equiv_key.second;
+      log.indent() << "    - " << event_type_name << "." << equivalent_index
+                   << " = ";
+      for (auto const &pair2 :
+           x.impact_table.by_equivalent_index.at(equiv_key)) {
+        log.indent() << pair2.second /
+                            x.n_allowed.by_equivalent_index.at(equiv_key)
+                     << " ";
+      }
+      log.indent() << std::endl;
+    }
+  }
+  log.indent() << std::endl;
+  log.end_section();
+}
+
+}  // namespace clexmonte
 
 }  // namespace CASM
 

@@ -1331,6 +1331,33 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           instances of each event, including forward and reverse events separately,
           associated with origin primitive cell.
           )pbdoc")
+      .def(
+          "prim_event_required_update_neighborhood",
+          [](clexmonte::MonteEventData &self, int prim_event_index) {
+            auto const &neighborhood = self.prim_impact_info_list()
+                                           .at(prim_event_index)
+                                           .required_update_neighborhood;
+            return std::vector<xtal::UnitCellCoord>(neighborhood.begin(),
+                                                    neighborhood.end());
+          },
+          R"pbdoc(
+          The set of sites for which a change in DoF results in a change in the
+          propensity of a specified event associated with origin primitive cell.
+
+          Parameters
+          ----------
+          prim_event_index: int
+              Index specifying an event in
+              :py:attr:`MonteEventData.prim_event_list <libcasm.clexmonte.MonteEventData.prim_event_list>`.
+
+          Returns
+          -------
+          neighborhood: list[libcasm.xtal.IntegralSiteCoordinate]
+              The set of sites for which a change in DoF results in a change in
+              the propensity of the specified event associated with origin
+              primitive cell.
+          )pbdoc",
+          py::arg("prim_event_index"))
       .def_property_readonly("event_list",
                              &clexmonte::MonteEventData::event_list,
                              R"pbdoc(
@@ -2724,9 +2751,9 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
            })
       .def("__str__",
            [](clexmonte::EventDataSummary const &event_data_summary) {
-             std::stringstream ss;
-             print(ss, event_data_summary);
-             return ss.str();
+             OStringStreamLog log;
+             print(log, event_data_summary);
+             return log.ss().str();
            })
       .def(
           "to_dict",

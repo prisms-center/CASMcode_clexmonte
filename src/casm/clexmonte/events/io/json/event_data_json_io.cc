@@ -85,6 +85,13 @@ jsonParser &to_json(
   return json;
 }
 
+jsonParser &to_json(EventImpactInfo const &impact, jsonParser &json) {
+  json.put_obj();
+  json["phenomenal_sites"] = impact.phenomenal_sites;
+  json["required_update_neighborhood"] = impact.required_update_neighborhood;
+  return json;
+}
+
 jsonParser &to_json(clexmonte::EventID const &event_id, jsonParser &json) {
   json["unitcell_index"] = event_id.unitcell_index;
   json["prim_event_index"] = event_id.prim_event_index;

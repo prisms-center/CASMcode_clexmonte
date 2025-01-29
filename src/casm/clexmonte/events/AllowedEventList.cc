@@ -121,7 +121,7 @@ std::vector<Index> const &AllowedEventList::make_impact_list(
     // approach 1: include assigned events,
     // and only assign new events that are allowed
 
-    std::vector<Index> linear_site_index;
+    static std::vector<Index> linear_site_index;
     for (auto const &event_id : impacted_event_ids) {
       // check if already assigned
       auto it = this->allowed_event_map.find(event_id);

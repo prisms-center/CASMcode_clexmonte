@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `MonteCalculator.make_local_configuration` to construct a LocalConfiguration from the current calculator state and current SelectedEvent.
 - Added `EventStateCalculator` and `MonteEventData.set_custom_event_state_calculation`
 - Added `"print_event_data_summary"` MonteCalculator parameter to select whether to print the event data summary.
+- Added `libcasm.clexmonte.site_iterators` to use help use OccLocation more easily.
  
 ### Changed
 
@@ -25,10 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed `PrimEventData.occ_init` and `PrimEventData.occ_final` type to `IntVector`
 - Changed `EventState` attributes from `readonly` to `readwrite`.
 - Changed `"kinetic"` MonteCalculator to not print the event data summary by default
+- Enable surpressing "kinetic" MonteCalculator output by reducing verbosity to "quiet".
 
 ### Fixed
 
 - Fix for unuseful error messages when `System.from_dict` failed to load a local basis set.
+- Fixed setting `begin` parameter in `SamplingFixtureParams.sample_by_X` functions.
 
 
 ## [2.0a4] - 2024-12-17

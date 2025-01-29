@@ -13,6 +13,7 @@ struct EventID;
 struct EventState;
 struct EventData;
 struct PrimEventData;
+struct EventImpactInfo;
 struct EventFilterGroup;
 struct SelectedEvent;
 
@@ -44,6 +45,10 @@ jsonParser &to_json(
         event_system,
     occ_events::OccEventOutputOptions const &options =
         occ_events::OccEventOutputOptions());
+
+// -- EventImpactInfo --
+
+jsonParser &to_json(EventImpactInfo const &impact, jsonParser &json);
 
 // -- EventID --
 

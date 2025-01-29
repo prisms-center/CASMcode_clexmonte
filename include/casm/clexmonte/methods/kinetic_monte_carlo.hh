@@ -49,15 +49,199 @@ void kinetic_monte_carlo_v2(
 template <bool Debug, int size = 50>
 void begin_section(const std::string &message) {
   if constexpr (Debug) {
-    std::cout << "## " << message << " "
-              << std::string(size - 4 - message.size(), '#') << std::endl;
+    Log &log = CASM::log();
+    log.indent() << "## " << message << " "
+                 << std::string(size - 4 - message.size(), '#') << std::endl;
   }
 }
 
 template <bool Debug, int size = 50>
 void end_section() {
   if constexpr (Debug) {
-    std::cout << std::string(size, '#') << std::endl << std::endl;
+    Log &log = CASM::log();
+    log.indent() << std::string(size, '#') << std::endl << std::endl;
+  }
+}
+
+template <bool Debug, int size = 50>
+void debug_collect(monte::SelectedEventDataCollector const &collector) {
+  if constexpr (Debug) {
+    Log &log = CASM::log();
+
+    jsonParser json;
+
+    // Discrete vector int data
+    log.custom("Discrete vector int functions");
+    json["discrete_vector_int_functions"].put_obj();
+    for (auto const &f : collector.discrete_vector_int_f) {
+      log.indent() << "- function: " << f.name << std::endl;
+      jsonParser &tjson = json["discrete_vector_int_functions"][f.name];
+      log.increase_indent();
+
+      // Check if function requires event state
+      bool requires_event_state = f.requires_event_state;
+      log.indent() << "- requires_event_state: " << requires_event_state
+                   << std::endl;
+      tjson["requires_event_state"] = requires_event_state;
+
+      // Check if function has value in current state
+      bool has_value = f.has_value();
+      log.indent() << "- has_value: " << has_value << std::endl;
+      tjson["has_value"] = has_value;
+
+      // If function has a value, evaluate it
+      if (has_value) {
+        Eigen::VectorXl value = f.function();
+        to_json(f.shape, tjson["shape"]);
+        to_json(f.component_names, tjson["component_names"]);
+        to_json(value, tjson["value"], jsonParser::as_array());
+        log.indent() << "- shape: " << tjson["shape"] << std::endl;
+        log.indent() << "- component_names: " << tjson["component_names"]
+                     << std::endl;
+        log.indent() << "- value: " << tjson["value"] << std::endl;
+
+        if (f.value_labels.has_value()) {
+          auto const &value_to_label = f.value_labels.value();
+          if (value_to_label.count(value)) {
+            to_json(value_to_label.at(value), tjson["label"]);
+            log.indent() << "- label: " << tjson["label"] << std::endl;
+          }
+        }
+      }
+      log.decrease_indent();
+    }
+    if (collector.discrete_vector_int_f.empty()) {
+      log.indent() << "- no functions" << std::endl;
+    }
+    log << std::endl;
+
+    // Discrete vector float data
+    log.custom("Discrete vector float functions");
+    json["discrete_vector_float_functions"].put_obj();
+    for (auto const &f : collector.discrete_vector_float_f) {
+      log.indent() << "- function: " << f.name << std::endl;
+      jsonParser &tjson = json["discrete_vector_float_functions"][f.name];
+      log.increase_indent();
+
+      // Check if function requires event state
+      bool requires_event_state = f.requires_event_state;
+      log.indent() << "- requires_event_state: " << requires_event_state
+                   << std::endl;
+      tjson["requires_event_state"] = requires_event_state;
+
+      // Check if function has value in current state
+      bool has_value = f.has_value();
+      log.indent() << "- has_value: " << has_value << std::endl;
+      tjson["has_value"] = has_value;
+
+      // If function has a value, evaluate it
+      if (has_value) {
+        Eigen::VectorXd value = f.function();
+        to_json(f.shape, tjson["shape"]);
+        to_json(f.component_names, tjson["component_names"]);
+        to_json(value, tjson["value"], jsonParser::as_array());
+        log.indent() << "- shape: " << tjson["shape"] << std::endl;
+        log.indent() << "- component_names: " << tjson["component_names"]
+                     << std::endl;
+        log.indent() << "- value: " << tjson["value"] << std::endl;
+
+        if (f.value_labels.has_value()) {
+          auto const &value_to_label = f.value_labels.value();
+          if (value_to_label.count(value)) {
+            to_json(value_to_label.at(value), tjson["label"]);
+            log.indent() << "- label: " << tjson["label"] << std::endl;
+          }
+        }
+      }
+      log.decrease_indent();
+    }
+    if (collector.discrete_vector_float_f.empty()) {
+      log.indent() << "- no functions" << std::endl;
+    }
+    log << std::endl;
+
+    // Continuous 1d data
+    log.custom("Continuous 1d functions");
+    json["continuous_1d_functions"].put_obj();
+    for (auto const &f : collector.continuous_1d_f) {
+      log.indent() << "- function: " << f.name << std::endl;
+      jsonParser &tjson = json["continuous_1d_functions"][f.name];
+      log.increase_indent();
+
+      // Check if function requires event state
+      bool requires_event_state = f.requires_event_state;
+      log.indent() << "- requires_event_state: " << requires_event_state
+                   << std::endl;
+      tjson["requires_event_state"] = requires_event_state;
+
+      // partition index
+      int partition = f.partition();
+      log.indent() << "- partition index: " << partition << std::endl;
+      tjson["partition_index"] = partition;
+
+      // validate partition index
+      if (partition < 0 || partition >= f.partition_names.size()) {
+        std::stringstream ss;
+        ss << "Error: partition index (=" << partition << ") out of range.";
+        throw std::runtime_error(ss.str());
+      }
+
+      // partition name
+      std::string partition_name = f.partition_names[partition];
+      log.indent() << "- partition name: " << partition_name << std::endl;
+      tjson["partition_name"] = partition_name;
+
+      // value
+      double value = f.function();
+      log.indent() << "- value: " << value << std::endl;
+      tjson["value"] = value;
+
+      log.decrease_indent();
+    }
+    if (collector.continuous_1d_f.empty()) {
+      log.indent() << "- no functions" << std::endl;
+    }
+    log << std::endl;
+
+    // Generic functions
+    log.custom("Generic functions");
+    for (auto const &f : collector.generic_f) {
+      log.indent() << "- function: " << f.name << std::endl;
+      jsonParser &tjson = json["generic_functions"][f.name];
+      log.increase_indent();
+
+      // Check function evaluation order
+      Index order = f.order;
+      log.indent() << "- order: " << order << std::endl;
+      tjson["order"] = order;
+
+      // Check if function requires event state
+      bool requires_event_state = f.requires_event_state;
+      log.indent() << "- requires_event_state: " << requires_event_state
+                   << std::endl;
+      tjson["requires_event_state"] = requires_event_state;
+
+      // Check if function has value in current state
+      bool has_value = f.has_value();
+      log.indent() << "- has_value: " << has_value << std::endl;
+      tjson["has_value"] = has_value;
+
+      // If function has a value, evaluate it
+      if (has_value) {
+        bool completed = true;
+        log.indent() << "- completed: " << true << std::endl;
+        tjson["completed"] = true;
+      }
+
+      log.decrease_indent();
+    }
+    if (collector.generic_f.empty()) {
+      log.indent() << "- no functions" << std::endl;
+    }
+    log << std::endl;
+
+    log.custom("JSON Summary");
+    log.indent() << json << std::endl << std::endl;
   }
 }
 
@@ -215,12 +399,22 @@ void kinetic_monte_carlo_v2(
   // - If the sample count is n, then the state after the n-th step/pass is
   //   sampled.
   begin_section<DebugMode>("Sample by count, if due");
-  run_manager.sample_data_by_count_if_due(state, pre_sample_action,
-                                          post_sample_action);
+  run_manager.template sample_data_by_count_if_due<DebugMode>(
+      state, pre_sample_action, post_sample_action);
   end_section<DebugMode>();
 
   begin_section<DebugMode, 80>("Check for completion");
   while (!run_manager.is_complete()) {
+    // Debug - Write completion check results
+    if constexpr (DebugMode) {
+      Log &log = CASM::log();
+      jsonParser json;
+      for (auto &fixture_ptr : run_manager.sampling_fixtures) {
+        to_json(fixture_ptr->completion_check_results(),
+                json[fixture_ptr->label()]);
+      }
+      log << json << std::endl << std::endl;
+    }
     end_section<DebugMode, 80>();
 
     begin_section<DebugMode>("Write status, if due");
@@ -232,7 +426,8 @@ void kinetic_monte_carlo_v2(
     //   there was a previous event)
     // - Updates the total rate
     // - Chooses an event and time increment (does not apply event)
-    // - Sets a list of impacted events by the chosen event that will be updated
+    // - Sets a list of impacted events by the chosen event that will be
+    // updated
     //   on the next iteration
     // - If `requires_event_state` is true, then the event state is calculated
     //   for the selected event
@@ -248,25 +443,48 @@ void kinetic_monte_carlo_v2(
     // - If the sample time is exactly equal to the event time (should be
     //   vanishingly rare), then the state before the event occurs is sampled.
     begin_section<DebugMode>("Sample by time, if due");
-    run_manager.sample_data_by_time_if_due(event_time, state, pre_sample_action,
-                                           post_sample_action);
+    run_manager.template sample_data_by_time_if_due<DebugMode>(
+        event_time, state, pre_sample_action, post_sample_action);
     end_section<DebugMode>();
 
     // Set time -- for all fixtures and kmc_data
     begin_section<DebugMode>("Update time");
     run_manager.set_time(event_time);
     kmc_data.time = event_time;
+    if constexpr (DebugMode) {
+      Log &log = CASM::log();
+      log.indent() << "- time: " << kmc_data.time << std::endl << std::endl;
+    }
     end_section<DebugMode>();
 
     // Increment count -- for all fixtures
     begin_section<DebugMode>("Update step / pass / count");
     run_manager.increment_step();
     run_manager.increment_n_accept();
+    if constexpr (DebugMode) {
+      Log &log = CASM::log();
+
+      for (auto &fixture_ptr : run_manager.sampling_fixtures) {
+        auto const &counter = fixture_ptr->counter();
+        log.indent() << "- sampling fixture: " << fixture_ptr->label()
+                     << std::endl;
+        log.increase_indent();
+        log.indent() << "- step: " << counter.step << std::endl;
+        log.indent() << "- pass: " << counter.pass << std::endl;
+        log.indent() << "- count: " << counter.count << std::endl;
+        log.indent() << "- time: " << counter.time << std::endl;
+        log.indent() << "- n_accept: " << counter.n_accept << std::endl;
+        log.indent() << "- n_reject: " << counter.n_reject << std::endl;
+        log.decrease_indent();
+      }
+      log.indent() << "- time: " << kmc_data.time << std::endl << std::endl;
+    }
     end_section<DebugMode>();
 
     // Collect selected event data
     begin_section<DebugMode>("Evaluate selected event functions");
     if (collect_selected_event_data) {
+      debug_collect<DebugMode>(collector.value());
       collector->collect();
     }
     end_section<DebugMode>();
@@ -286,11 +504,21 @@ void kinetic_monte_carlo_v2(
     // - If the sample count is n, then the state after the n-th step/pass is
     //   sampled.
     begin_section<DebugMode>("Sample by count, if due");
-    run_manager.sample_data_by_count_if_due(state, pre_sample_action,
-                                            post_sample_action);
+    run_manager.template sample_data_by_count_if_due<DebugMode>(
+        state, pre_sample_action, post_sample_action);
     end_section<DebugMode>();
 
     begin_section<DebugMode, 80>("Check for completion");
+  }
+  // Debug - Write completion check results
+  if constexpr (DebugMode) {
+    Log &log = CASM::log();
+    jsonParser json;
+    for (auto &fixture_ptr : run_manager.sampling_fixtures) {
+      to_json(fixture_ptr->completion_check_results(),
+              json[fixture_ptr->label()]);
+    }
+    log << json << std::endl << std::endl;
   }
   end_section<DebugMode, 80>();
 

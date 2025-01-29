@@ -975,9 +975,9 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
             self.sampling_params.sample_method =
                 sample_method_from_string(method);
             if (method == "log") {
-              begin = begin.value_or(0.0);
+              self.sampling_params.begin = begin.value_or(0.0);
             } else {
-              begin = begin.value_or(period);
+              self.sampling_params.begin = begin.value_or(period);
             }
             self.sampling_params.period = period;
             self.sampling_params.sample_method =
@@ -1033,9 +1033,9 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
             self.sampling_params.sample_method =
                 sample_method_from_string(method);
             if (method == "log") {
-              begin = begin.value_or(0.0);
+              self.sampling_params.begin = begin.value_or(0.0);
             } else {
-              begin = begin.value_or(period);
+              self.sampling_params.begin = begin.value_or(period);
             }
             self.sampling_params.period = period;
             self.sampling_params.base = base;
@@ -1089,9 +1089,9 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
             self.sampling_params.sample_method =
                 sample_method_from_string(method);
             if (method == "log") {
-              begin = begin.value_or(0.0);
+              self.sampling_params.begin = begin.value_or(0.0);
             } else {
-              begin = begin.value_or(period);
+              self.sampling_params.begin = begin.value_or(period);
             }
             self.sampling_params.period = period;
             self.sampling_params.base = base;
