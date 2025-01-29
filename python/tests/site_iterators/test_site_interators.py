@@ -25,7 +25,7 @@ def add_sampler(
     )
 
     def _function():
-        configuration = calculator.state_data.state.configuration
+        # configuration = calculator.state_data.state.configuration
 
         # occ_location = calculator.state_data.occ_location
         # print()

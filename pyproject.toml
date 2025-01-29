@@ -49,6 +49,7 @@ Repository = "https://github.com/prisms-center/CASMcode_clexmonte"
 
 [tool.ruff.lint]
 select = ["NPY201", "E", "F", "I"]
+ignore = ["E741"] # ambiguous variable name - let's allow `l`
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]

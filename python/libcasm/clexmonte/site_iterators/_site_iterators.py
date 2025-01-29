@@ -179,7 +179,10 @@ class SiteInfo:
                 "must be provided."
             )
 
-    def set_l(self, l: int):
+    def set_l(
+        self,
+        l: int,
+    ):
         """Set the linear site index, :math:`l`, for the current site, and use it to
         set `mol_id`.
 
@@ -343,7 +346,8 @@ class SiteInfo:
 
     @property
     def occupant(self):
-        """libcasm.xtal.Occupant: The current occupant at the current site, :math:`l`."""
+        """libcasm.xtal.Occupant: The current occupant at the current site,
+        :math:`l`."""
         return self.convert.species_index_to_occupant(self.mol.species_index)
 
     @property
@@ -386,9 +390,11 @@ class SiteInfo:
 
         The `unique_atom_id` differs from the `atom_id` for KMC simulations which allow
         deposition / dissolution type events and is the key used for the
-        :func:`OccLoation.atom_info_initial <libcasm.monte.events.OccLocation.atom_info_initial>`
+        :func:`OccLoation.atom_info_initial
+        <libcasm.monte.events.OccLocation.atom_info_initial>`
         and
-        :func:`OccLoation.atom_info_final <libcasm.monte.events.OccLocation.atom_info_final>`
+        :func:`OccLoation.atom_info_final
+        <libcasm.monte.events.OccLocation.atom_info_final>`
         data.
         """
         return self.occ_location.unique_atom_id[self.atom_id]
@@ -477,8 +483,8 @@ class CompleteSiteIterator:
         """Optional[libcasm.monte.events.OccLocation]: The occupant location list."""
 
         self.calculator = calculator
-        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to obtain
-        the occupant location list. """
+        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to 
+        obtain the occupant location list. """
 
     def __iter__(self):
         """Yield :class:`~libcasm.clexmonte.SiteInfo` for all sites in the system"""
@@ -538,8 +544,8 @@ class SublatticeSiteIterator:
         """Optional[libcasm.monte.events.OccLocation]: The occupant location list."""
 
         self.calculator = calculator
-        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to obtain
-        the occupant location list. """
+        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to 
+        obtain the occupant location list. """
 
     def __iter__(self):
         """Yield :class:`~libcasm.clexmonte.SiteInfo` for the requested sites"""
@@ -602,8 +608,8 @@ class AsymmetricUnitSiteIterator:
         """Optional[libcasm.monte.events.OccLocation]: The occupant location list."""
 
         self.calculator = calculator
-        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to obtain
-        the occupant location list. """
+        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to 
+        obtain the occupant location list. """
 
     def __iter__(self):
         """Yield :class:`~libcasm.clexmonte.SiteInfo` for the requested sites"""
@@ -663,8 +669,8 @@ class OccCandidateSiteIterator:
         """Optional[libcasm.monte.events.OccLocation]: The occupant location list."""
 
         self.calculator = calculator
-        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to obtain
-        the occupant location list. """
+        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to 
+        obtain the occupant location list. """
 
     def __iter__(self):
         """Yield :class:`~libcasm.clexmonte.SiteInfo` for the requested sites"""
@@ -677,7 +683,6 @@ class OccCandidateSiteIterator:
         # `candidate_index`: index into list of OccCandidate corresponding to
         # the (species index, asym unit index)
         for candidate_index in self.candidate_indices:
-
             # Current size of the list occupants corresponding to
             # `candidate_index`-th OccCandidate
             n = self.occ_location.cand_size_by_candidate_index(candidate_index)
@@ -747,8 +752,8 @@ class ChemicalTypeSiteIterator:
         """Optional[libcasm.monte.events.OccLocation]: The occupant location list."""
 
         self.calculator = calculator
-        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to obtain
-        the occupant location list. """
+        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to 
+        obtain the occupant location list. """
 
     def __iter__(self):
         """Yield :class:`~libcasm.clexmonte.SiteInfo` for the requested occupant"""
@@ -819,8 +824,8 @@ class OccupantTypeSiteIterator:
         """Optional[libcasm.monte.events.OccLocation]: The occupant location list."""
 
         self.calculator = calculator
-        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to obtain
-        the occupant location list. """
+        """Optional[libcasm.clexmonte.MonteCalculator]: The MonteCalculator used to 
+        obtain the occupant location list. """
 
     def __iter__(self):
         """Yield :class:`~libcasm.clexmonte.SiteInfo` for the requested occupants"""
