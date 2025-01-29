@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `SelectedEvent.to_dict` and `SelectedEvent.__repr__` methods.
 - Added `MonteCalculator.event_info` attribute to store shared event info used for constructing and transforming LocalConfiguration.
 - Added `MonteCalculator.make_local_configuration` to construct a LocalConfiguration from the current calculator state and current SelectedEvent.
+- Added `libcasm.clexmonte.site_iterators` to use help use OccLocation more easily.
  
 ### Changed
 

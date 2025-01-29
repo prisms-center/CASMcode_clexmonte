@@ -100,6 +100,7 @@ setup(
     packages=[
         "libcasm",
         "libcasm.clexmonte",
+        "libcasm.clexmonte.site_iterators",
     ],
     install_requires=[
         "pybind11",
