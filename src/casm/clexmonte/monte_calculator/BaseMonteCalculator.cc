@@ -1,5 +1,6 @@
-
 #include "casm/clexmonte/monte_calculator/BaseMonteCalculator.hh"
+
+#include "casm/clexmonte/misc/check_params.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -28,7 +29,11 @@ BaseMonteCalculator::BaseMonteCalculator(
       time_sampling_allowed(_time_sampling_allowed),
       update_atoms(_update_atoms),
       save_atom_info(_save_atom_info),
-      is_multistate_method(_is_multistate_method) {}
+      is_multistate_method(_is_multistate_method) {
+  // Use the RandomNumberGenerator default constructor to make a
+  // RandomNumberEngine seeded by std::random_device.
+  engine = monte::RandomNumberGenerator().engine;
+}
 
 BaseMonteCalculator::~BaseMonteCalculator() {}
 
@@ -100,31 +105,7 @@ void BaseMonteCalculator::_check_system() const {
 ///   required_params or optional_params sets
 ///
 void BaseMonteCalculator::_check_params() const {
-  for (auto key : this->required_params) {
-    if (!params.contains(key)) {
-      std::stringstream msg;
-      msg << "Error: Missing required parameter '" << key << "'.";
-      throw std::runtime_error(msg.str());
-    }
-  }
-
-  auto &log = CASM::log();
-  for (auto it = params.begin(); it != params.end(); ++it) {
-    std::string key = it.name();
-    if (key.empty()) {
-      std::stringstream msg;
-      msg << "Error: Empty parameter key.";
-      throw std::runtime_error(msg.str());
-    }
-    if (key[0] == '_') {
-      continue;
-    }
-    if (!this->required_params.count(key) &&
-        !this->optional_params.count(key)) {
-      log.indent() << "Warning: Unknown parameter '" << key << "'."
-                   << std::endl;
-    }
-  }
+  check_params(params, this->required_params, this->optional_params);
 }
 
 /// \brief Clone the BaseMonteCalculator

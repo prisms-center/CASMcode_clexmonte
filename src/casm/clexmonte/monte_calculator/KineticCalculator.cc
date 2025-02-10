@@ -2,6 +2,7 @@
 
 #include "casm/casm_io/json/InputParser_impl.hh"
 #include "casm/clexmonte/events/io/json/event_data_json_io.hh"
+#include "casm/clexmonte/misc/check_params.hh"
 #include "casm/clexmonte/misc/to_json.hh"
 #include "casm/clexmonte/monte_calculator/MonteEventData.hh"
 #include "casm/clexmonte/monte_calculator/analysis_functions.hh"
@@ -20,6 +21,29 @@
 namespace CASM {
 namespace clexmonte {
 namespace kinetic_2 {
+
+namespace {
+
+template <int verbosity_level, typename T, typename U>
+void read_option_with_verbosity(ParentInputParser &parser, Log &log, T &param,
+                                fs::path option, U const &default_value) {
+  param = default_value;
+  parser.optional(param, option);
+
+  log.begin_section<verbosity_level>();
+  log.indent() << option.string() << "=" << std::boolalpha << param
+               << std::endl;
+  log.end_section();
+}
+
+template <typename T, typename U>
+void read_option(ParentInputParser &parser, Log &log, T &param, fs::path option,
+                 U const &default_value) {
+  read_option_with_verbosity<Log::standard>(parser, log, param, option,
+                                            default_value);
+}
+
+}  // namespace
 
 KineticPotential::KineticPotential(std::shared_ptr<StateData> _state_data)
     : BaseMontePotential(_state_data),
@@ -57,8 +81,8 @@ KineticCalculator::KineticCalculator()
           {},                    // required_dof_spaces,
           {},                    // required_params,
           {"verbosity", "print_event_data_summary", "mol_composition_tol",
-           "event_data_type", "event_selector_type", "impact_table_type",
-           "allow_events_with_no_barrier", "assign_allowed_events_only",
+           "event_data_type", "event_selector_type", "abnormal_event_handling",
+           "impact_table_type", "assign_allowed_events_only",
            "selected_event_data"},  // optional_params,
           true,                     // time_sampling_allowed,
           true,                     // update_atoms,
@@ -378,11 +402,10 @@ void KineticCalculator::set_state_and_potential(
 /// Notes:
 /// - Validates this->state_data is not null
 /// - Validates this->state_data->occ_location is not null
-///
-/// \param engine The random number generator engine used to select events
-///     and timesteps. If nullptr, a new engine is constructed,
-///     seeded by std::random_device
-void KineticCalculator::set_event_data(std::shared_ptr<engine_type> engine) {
+/// - Uses this->engine for the event selector
+/// - Resets the `n_encountered_abnormal` and `n_selected_abnormal`
+///   counters.
+void KineticCalculator::set_event_data() {
   if (this->state_data == nullptr) {
     throw std::runtime_error(
         "Error in KineticCalculator::set_event_data: "
@@ -400,13 +423,19 @@ void KineticCalculator::set_event_data(std::shared_ptr<engine_type> engine) {
   }
 
   // Currently, event_filters are only set at _reset() by reading from params
-  this->event_data->update(this->state_data, event_filters, engine);
+  this->event_data->update(this->state_data, event_filters, this->engine);
 }
 
 /// \brief Perform a single run, evolving current state
 void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
                             run_manager_type<engine_type> &run_manager) {
   Log &log = CASM::log();
+
+  if (run_manager.engine == nullptr) {
+    throw std::runtime_error(
+        "Error in KineticCalculator::run: run_manager.engine==nullptr");
+  }
+  this->engine = run_manager.engine;
 
   if (run_manager.sampling_fixtures.size() == 0) {
     throw std::runtime_error(
@@ -430,7 +459,7 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   // - Calculates all rates
   log.begin_section<Log::standard>();
   log.indent() << "Setting event data ... " << std::endl;
-  this->set_event_data(run_manager.engine);
+  this->set_event_data();
   log.indent() << "Setting event data ... DONE" << std::endl << std::endl;
 
   // Construct EventDataSummary
@@ -503,30 +532,48 @@ void KineticCalculator::run(state_type &state, monte::OccLocation &occ_location,
   //                                  set_selected_event_f, collector,
   //                                  run_manager, event_system);
 
-  // Warn if events with no barrier were encountered
-  check_n_not_normal(this->event_data->n_not_normal());
+  // Warn if abnormal events were encountered or selected
+  check_n_encountered_abnormal(this->event_data->n_encountered_abnormal);
+  check_n_selected_abnormal(this->event_data->n_selected_abnormal);
 }
 
-/// \brief Print a warning to std::cerr if events with no barrier were
+/// \brief Print a warning to std::cerr if abnormal events were
 ///     encountered
-void KineticCalculator::check_n_not_normal(
-    std::map<std::string, Index> const &n_not_normal) const {
-  if (n_not_normal.empty()) {
+void KineticCalculator::check_n_encountered_abnormal(
+    std::map<std::string, Index> const &n_encountered_abnormal) const {
+  if (n_encountered_abnormal.empty()) {
+    return;
+  }
+  Log &log = CASM::err_log();
+  log << "## WARNING: ENCOUNTERED ABNORMAL EVENTS #############\n"
+         "#                                                   #\n"
+         "# Number encountered by type:                       #\n";
+  for (auto const &pair : n_encountered_abnormal) {
+    log << "  - " << pair.first << ": " << pair.second << "\n";
+  }
+  log << "#                                                   #\n"
+         "#####################################################\n"
+      << std::endl;
+}
+
+/// \brief Print a warning to std::cerr if abnormal events were
+///     encountered
+void KineticCalculator::check_n_selected_abnormal(
+    std::map<std::string, Index> const &n_selected_abnormal) const {
+  if (n_selected_abnormal.empty()) {
     return;
   }
 
-  std::cerr << "## WARNING: EVENTS WITH NO BARRIER ##################\n"
-               "#                                                   #\n"
-               "# Events with no barrier are treated as having a    #\n"
-               "# rate equal to the attempt frequency.              #\n"
-               "#                                                   #\n"
-               "# Number encountered by type:                       #\n";
-  for (auto const &pair : n_not_normal) {
-    std::cerr << "  - " << pair.first << ": " << pair.second << "\n";
+  Log &log = CASM::err_log();
+  log << "## WARNING: SELECTED ABNORMAL EVENTS ################\n"
+         "#                                                   #\n"
+         "# Number selected by type:                          #\n";
+  for (auto const &pair : n_selected_abnormal) {
+    log << "  - " << pair.first << ": " << pair.second << "\n";
   }
-  std::cerr << "#                                                   #\n"
-               "#####################################################\n"
-            << std::endl;
+  log << "#                                                   #\n"
+         "#####################################################\n"
+      << std::endl;
 }
 
 /// \brief Perform a single run, evolving one or more states
@@ -547,7 +594,7 @@ void KineticCalculator::make_complete_event_data_impl() {
   }
 
   this->event_data = std::make_shared<CompleteKineticEventData<DebugMode>>(
-      system, event_filters, allow_events_with_no_barrier);
+      system, event_filters, event_data_options);
 }
 
 template <bool DebugMode>
@@ -559,29 +606,34 @@ void KineticCalculator::make_allowed_event_data_impl() {
     log << std::endl;
   }
 
-  // current testing does not show this to be helpful - fix to false
-  bool use_map_index = false;
+  typedef AllowedEventCalculator<DebugMode> event_calculator_type;
 
   if (this->event_selector_type ==
       kinetic_event_selector_type::vector_sum_tree) {
-    this->event_data = std::make_shared<AllowedKineticEventData<
-        vector_sum_tree_event_selector_type, DebugMode>>(
-        system, allow_events_with_no_barrier, use_map_index,
-        use_neighborlist_impact_table, assign_allowed_events_only);
+    typedef vector_sum_tree_event_selector_type<event_calculator_type>
+        event_selector_type;
+
+    this->event_data = std::make_shared<
+        AllowedKineticEventData<event_selector_type, DebugMode>>(
+        system, event_data_options);
 
   } else if (this->event_selector_type ==
              kinetic_event_selector_type::sum_tree) {
+    typedef sum_tree_event_selector_type<event_calculator_type>
+        event_selector_type;
+
     this->event_data = std::make_shared<
-        AllowedKineticEventData<sum_tree_event_selector_type, DebugMode>>(
-        system, allow_events_with_no_barrier, use_map_index,
-        use_neighborlist_impact_table, assign_allowed_events_only);
+        AllowedKineticEventData<event_selector_type, DebugMode>>(
+        system, event_data_options);
 
   } else if (this->event_selector_type ==
              kinetic_event_selector_type::direct_sum) {
+    typedef direct_sum_event_selector_type<event_calculator_type>
+        event_selector_type;
+
     this->event_data = std::make_shared<
-        AllowedKineticEventData<direct_sum_event_selector_type, DebugMode>>(
-        system, allow_events_with_no_barrier, use_map_index,
-        use_neighborlist_impact_table, assign_allowed_events_only);
+        AllowedKineticEventData<event_selector_type, DebugMode>>(
+        system, event_data_options);
 
   } else {
     throw std::runtime_error(
@@ -672,16 +724,7 @@ void KineticCalculator::_reset() {
           "event_filters are not supported by event_data_type 'default'");
     }
 
-  } /* else if (event_data_type_str == "low_memory") { // not currently used
-    this->event_data_type = kinetic_event_data_type::low_memory;
-
-    if (event_filters.has_value()) {
-      parser.insert_error(
-          "event_data_type",
-          "event_filters are not supported by event_data_type 'low_memory'");
-    }
-  } */
-  else {
+  } else {
     parser.insert_error("event_data_type",
                         "Invalid event_data_type: " + event_data_type_str);
   }
@@ -711,29 +754,71 @@ void KineticCalculator::_reset() {
                                                    event_selector_type_str);
   }
 
-  /// Read "impact_table_type" (optional, only takes affect for "low_memory")
-  this->use_neighborlist_impact_table = true;
+  // -- Abnormal event handling
+  fs::path base("abnormal_event_handling");
+  check_params(params[base], {} /*required_params*/,
+               {"output_dir", "tol", "encountered_events",
+                "selected_events"} /*optional_params*/,
+               base);
+  read_option(parser, log, this->event_data_options.output_dir,
+              base / "output_dir", fs::path("output"));
+
+  read_option(parser, log, this->event_data_options.local_corr_compare_tol,
+              base / "tol", CASM::TOL);
+
+  // -- Encountered events
+  check_params(params[base]["encountered_events"], {} /*required_params*/,
+               {"warn", "throw", "n_write", "disallow"} /*optional_params*/,
+               base / "encountered_events");
+  read_option(parser, log,
+              this->event_data_options.warn_if_encountered_event_is_abnormal,
+              base / "encountered_events" / "warn", true);
+
+  read_option(parser, log,
+              this->event_data_options.throw_if_encountered_event_is_abnormal,
+              base / "encountered_events" / "throw", true);
+
+  read_option(parser, log,
+              this->event_data_options.n_write_if_encountered_event_is_abnormal,
+              base / "encountered_events" / "n_write", 100);
+
+  read_option(
+      parser, log,
+      this->event_data_options.disallow_if_encountered_event_is_abnormal,
+      base / "encountered_events" / "disallow", false);
+
+  // -- Selected events
+  check_params(params[base]["selected_events"], {} /*required_params*/,
+               {"warn", "throw", "n_write", "disallow"} /*optional_params*/,
+               base / "selected_events");
+  read_option(parser, log,
+              this->event_data_options.warn_if_selected_event_is_abnormal,
+              base / "selected_events" / "warn", true);
+
+  read_option(parser, log,
+              this->event_data_options.throw_if_selected_event_is_abnormal,
+              base / "selected_events" / "throw", true);
+
+  read_option(parser, log,
+              this->event_data_options.n_write_if_encountered_event_is_abnormal,
+              base / "selected_events" / "n_write", 100);
+
+  // Read "impact_table_type" (optional, only takes affect for "low_memory")
+  this->event_data_options.use_neighborlist_impact_table = true;
   std::string impact_table_type_str = "neighborlist";
   parser.optional(impact_table_type_str, "impact_table_type");
   if (impact_table_type_str == "neighborlist") {
-    this->use_neighborlist_impact_table = true;
+    this->event_data_options.use_neighborlist_impact_table = true;
     log.indent() << "impact_table_type="
                  << "\"neighborlist\"" << std::endl;
   } else if (impact_table_type_str == "relative") {
-    this->use_neighborlist_impact_table = false;
+    this->event_data_options.use_neighborlist_impact_table = false;
     log.indent() << "impact_table_type="
                  << "\"relative\"" << std::endl;
   } else {
     parser.insert_error("impact_table_type",
                         "Invalid impact_table_type: " + impact_table_type_str);
   }
-
-  // Read "allow_events_with_no_barrier"
-  // - true or false (default)
-  this->allow_events_with_no_barrier = false;
-  parser.optional(allow_events_with_no_barrier, "allow_events_with_no_barrier");
-  log.indent() << "allow_events_with_no_barrier=" << std::boolalpha
-               << this->allow_events_with_no_barrier << std::endl;
 
   // Read "assign_allowed_events_only"
   //
@@ -743,11 +828,10 @@ void KineticCalculator::_reset() {
   ///     Otherwise, assign all potentially impacted events to the event list
   ///     (whether they are allowed will still be checked during the rate
   ///     calculation).
-  this->assign_allowed_events_only = true;
-  parser.optional(assign_allowed_events_only, "assign_allowed_events_only");
-  log.indent() << "assign_allowed_events_only=" << std::boolalpha
-               << this->assign_allowed_events_only << std::endl
-               << std::endl;
+  read_option(parser, log, this->event_data_options.assign_allowed_events_only,
+              "assign_allowed_events_only", true);
+
+  log << std::endl;
   log.end_section();
 
   std::stringstream ss;

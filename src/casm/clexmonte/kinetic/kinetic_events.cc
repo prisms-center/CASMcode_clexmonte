@@ -133,7 +133,7 @@ CompleteEventCalculator::CompleteEventCalculator(
       prim_event_calculators(_prim_event_calculators),
       event_list(_event_list),
       event_log(_event_log),
-      not_normal_count(0) {}
+      abnormal_count(0) {}
 
 /// \brief Get CASM::monte::OccEvent corresponding to given event ID
 double CompleteEventCalculator::calculate_rate(EventID const &id) {
@@ -152,7 +152,7 @@ double CompleteEventCalculator::calculate_rate(EventID const &id) {
     event_log << "---" << std::endl;
     print(event_log.ostream(), event_state, event_data, prim_event_data);
     event_log << std::endl;
-    ++not_normal_count;
+    ++abnormal_count;
   }
 
   return event_state.rate;

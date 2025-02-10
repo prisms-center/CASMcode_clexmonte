@@ -107,7 +107,7 @@ struct CompleteEventCalculator {
   EventState event_state;
 
   /// \brief Count not-normal events
-  Index not_normal_count;
+  Index abnormal_count;
 
   CompleteEventCalculator(
       std::vector<PrimEventData> const &_prim_event_list,

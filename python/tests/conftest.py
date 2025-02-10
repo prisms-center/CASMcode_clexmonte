@@ -7,13 +7,9 @@ import sys
 
 import pytest
 
+import libcasm.clexmonte as clexmonte
+import libcasm.composition as casmcomp
 import libcasm.xtal as xtal
-from libcasm.clexmonte import (
-    System,
-)
-from libcasm.composition import (
-    CompositionConverter,
-)
 
 
 def _win32_longpath(path):
@@ -66,14 +62,14 @@ def FCCBinaryVacancy_xtal_prim(FCCBinaryVacancy_system_data):
 
 @pytest.fixture
 def FCCBinaryVacancy_CompositionConverter(FCCBinaryVacancy_system_data):
-    return CompositionConverter.from_dict(
+    return casmcomp.CompositionConverter.from_dict(
         FCCBinaryVacancy_system_data["composition_axes"]
     )
 
 
 @pytest.fixture
 def FCCBinaryVacancy_System(FCCBinaryVacancy_system_data, session_shared_datadir):
-    return System.from_dict(
+    return clexmonte.System.from_dict(
         data=FCCBinaryVacancy_system_data,
         search_path=[str(session_shared_datadir / "FCC_binary_vacancy")],
     )
@@ -83,7 +79,7 @@ def FCCBinaryVacancy_System(FCCBinaryVacancy_system_data, session_shared_datadir
 def FCCBinaryVacancy_kmc_System(
     FCCBinaryVacancy_kmc_system_data, session_shared_datadir
 ):
-    return System.from_dict(
+    return clexmonte.System.from_dict(
         data=FCCBinaryVacancy_kmc_system_data,
         search_path=[str(session_shared_datadir / "FCC_binary_vacancy")],
     )
@@ -97,7 +93,7 @@ def FCCBinaryVacancy_kmc_System_2(session_shared_datadir):
     path = session_shared_datadir / "FCC_binary_vacancy" / "kmc_system.2.json"
     with open(path, "r") as f:
         kmc_system_data = json.load(f)
-    return System.from_dict(
+    return clexmonte.System.from_dict(
         data=kmc_system_data,
         search_path=[str(session_shared_datadir / "FCC_binary_vacancy")],
     )
@@ -115,10 +111,30 @@ def Clex_ZrO_Occ_system_data(session_shared_datadir):
 
 @pytest.fixture
 def Clex_ZrO_Occ_System(Clex_ZrO_Occ_system_data, session_shared_datadir):
-    return System.from_dict(
+    return clexmonte.System.from_dict(
         data=Clex_ZrO_Occ_system_data,
         search_path=[str(session_shared_datadir / "Clex_ZrO_Occ")],
     )
+
+
+@pytest.helpers.register
+class CalculatorTestRunner:
+    """A class to help with testing MonteCalculators."""
+
+    def __init__(
+        self,
+        system: clexmonte.System,
+        method: str,
+        params: dict,
+        output_dir: pathlib.Path,
+    ):
+        self.system = system
+        self.output_dir = output_dir
+        self.calculator = clexmonte.MonteCalculator(
+            method=method,
+            system=system,
+            params=params,
+        )
 
 
 @pytest.helpers.register

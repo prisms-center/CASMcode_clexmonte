@@ -6,6 +6,7 @@
 #include "casm/clexulator/Clexulator.hh"
 #include "casm/clexulator/NeighborList.hh"
 #include "casm/configuration/Prim.hh"
+#include "casm/configuration/clusterography/io/json/EquivalentsInfo_json_io.hh"
 #include "casm/configuration/clusterography/io/json/IntegralCluster_json_io.hh"
 #include "casm/configuration/clusterography/orbits.hh"
 #include "casm/configuration/sym_info/unitcellcoord_sym_info.hh"
@@ -84,6 +85,19 @@ void parse(InputParser<BasisSetClusterInfo> &parser, config::Prim const &prim) {
     curr.orbits.push_back(make_prim_periodic_orbit(prototype, generating_rep));
   }
   parser.value = std::make_unique<BasisSetClusterInfo>(curr);
+}
+
+/// \brief Output minimal "equivalents info" to JSON
+jsonParser &to_json(EquivalentsInfo const &equivalents_info, jsonParser &json,
+                    xtal::BasicStructure const &prim) {
+  // Using CASM::clust::EquivalentsInfo here to avoid duplicating the
+  // to_json function
+  clust::EquivalentsInfo _info;
+  _info.phenomenal_clusters = equivalents_info.phenomenal_clusters;
+  _info.equivalent_generating_op_indices =
+      equivalents_info.equivalent_generating_op_indices;
+  to_json(_info, json, prim);
+  return json;
 }
 
 /// \brief Parse equivalents_info.json

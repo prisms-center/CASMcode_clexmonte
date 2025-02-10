@@ -400,18 +400,27 @@ class CanonicalCalculator : public BaseMonteCalculator {
 
   /// \brief Set event data (includes calculating all rates), using current
   /// state data
-  void set_event_data(std::shared_ptr<engine_type> engine) override {
+  void set_event_data() override {
     throw std::runtime_error(
         "Error in CanonicalCalculator::set_event_data: not valid");
   }
 
   /// \brief Perform a single run, evolving current state
+  ///
+  /// Notes:
+  /// - state and occ_location are evolved and end in modified states
+  /// - if run_manager.engine != nullptr, set this->engine = run_manager.engine
   void run(state_type &state, monte::OccLocation &occ_location,
            run_manager_type<engine_type> &run_manager) override {
     // Set state data and construct potential calculator
     this->set_state_and_potential(state, &occ_location);
 
     // Random number generator
+    if (run_manager.engine == nullptr) {
+      throw std::runtime_error(
+          "Error in CanonicalCalculator::run: run_manager.engine==nullptr");
+    }
+    this->engine = run_manager.engine;
     monte::RandomNumberGenerator<engine_type> random_number_generator(
         run_manager.engine);
 

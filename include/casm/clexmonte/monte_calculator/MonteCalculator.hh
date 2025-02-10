@@ -43,7 +43,7 @@ class MontePotential {
 /// \brief Wrapper for Monte Carlo calculations implementations
 class MonteCalculator {
  public:
-  typedef std::mt19937_64 engine_type;
+  typedef default_engine_type engine_type;
   typedef monte::KMCData<config_type, statistics_type, engine_type>
       kmc_data_type;
 
@@ -240,7 +240,7 @@ class MonteCalculator {
 
   /// \brief Set event data (includes calculating all rates), using current
   /// state data
-  void set_event_data(std::shared_ptr<engine_type> engine) {
+  void set_event_data() {
     if (m_calc->state_data == nullptr) {
       throw std::runtime_error(
           "Error in MonteCalculator::set_event_data: State data is not "
@@ -254,7 +254,29 @@ class MonteCalculator {
           "event data, call `set_state_and_potential` with an occupant "
           "location list first.");
     }
-    m_calc->set_event_data(engine);
+    m_calc->set_event_data();
+  }
+
+  // --- Set backup random number engine: ---
+
+  /// \brief Set the random number engine
+  /// \param engine The new random number engine. An exception is raised if
+  ///     `engine` is null.
+  void set_engine(std::shared_ptr<engine_type> engine) {
+    if (engine == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::set_engine: engine is null.");
+    }
+    m_calc->engine = engine;
+  }
+
+  /// Random number engine access (not null)
+  std::shared_ptr<engine_type> engine() {
+    if (m_calc->engine == nullptr) {
+      throw std::runtime_error(
+          "Error in MonteCalculator::engine: engine is null");
+    }
+    return m_calc->engine;
   }
 
   // --- Set when `run` is called: ---
@@ -383,14 +405,16 @@ class MonteCalculator {
 /// \brief MonteCalculator factory function
 std::shared_ptr<MonteCalculator> make_monte_calculator(
     jsonParser const &params, std::shared_ptr<system_type> system,
+    std::shared_ptr<MonteCalculator::engine_type> engine,
     std::unique_ptr<BaseMonteCalculator> base_calculator,
     std::shared_ptr<RuntimeLibrary> lib);
 
 /// \brief MonteCalculator factory function, from source
 std::shared_ptr<MonteCalculator> make_monte_calculator_from_source(
-    fs::path dirpath, std::string calculator_name, jsonParser const &params,
-    std::shared_ptr<system_type> system, std::string compile_options,
-    std::string so_options);
+    fs::path dirpath, std::string calculator_name,
+    std::shared_ptr<system_type> system, jsonParser const &params,
+    std::shared_ptr<MonteCalculator::engine_type> engine,
+    std::string compile_options, std::string so_options);
 
 Eigen::VectorXd scalar_conditions(
     std::shared_ptr<MonteCalculator> const &calculation, std::string key);

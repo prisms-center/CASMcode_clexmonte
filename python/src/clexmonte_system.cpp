@@ -1161,6 +1161,10 @@ PYBIND11_MODULE(_clexmonte_system, m) {
               local DoF components), and empty conditions.
           )pbdoc",
            py::arg("transformation_matrix_to_super"))
+      .def_readonly("supercells", &clexmonte::System::supercells, R"pbdoc(
+          libcasm.configuration.SupercellSet: Shares supercells used for
+          MonteCarloState.
+          )pbdoc")
       .def_property_readonly(
           "additional_params",
           [](clexmonte::System const &self) {

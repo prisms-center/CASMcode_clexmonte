@@ -7,6 +7,7 @@
 #include "casm/clexmonte/events/event_data.hh"
 #include "casm/clexmonte/system/System.hh"
 #include "casm/monte/methods/kinetic_monte_carlo.hh"
+#include "casm/monte/misc/LexicographicalCompare.hh"
 #include "casm/monte/sampling/SelectedEventFunctions.hh"
 
 namespace CASM {
@@ -171,11 +172,159 @@ class EventStateCalculator {
   mutable PrimEventData const *m_prim_event_data;
 };
 
+/// \brief A function to control what happens when an abnormal event is
+///     encountered or selected
+typedef std::function<void(
+    Index n_abnormal_events, /*of the current type*/
+    std::reference_wrapper<EventState> event_state,
+    std::reference_wrapper<EventData const> event_data,
+    std::reference_wrapper<PrimEventData const> prim_event_data,
+    std::reference_wrapper<state_type const> state)>
+    AbnormalEventHandlingFunction;
+
+/// \brief A default AbnormalEventHandlingFunction
+///
+/// Options:
+/// - Print a warning message the first time an abnormal event of a
+///   particular type is encountered or selected
+/// - Throw an exception when an abnormal event is encountered or
+///   selected
+/// - Disallow the event when an abnormal event is encountered
+/// - Write the local configuration and event state to file when an
+///   abnormal event is encountered or selected. The file is named
+///   "selected_abnormal_events.jsonl" or "encountered_abnormal_events.jsonl".
+///   The format is a "JSON Lines" format, where each line is a JSON object.
+///   This is slightly less convenient for reading, but can be written to by
+///   just appending.
+struct BasicAbnormalEventHandler {
+  BasicAbnormalEventHandler(std::string _event_kind, bool _do_throw,
+                            bool _do_warn, bool _disallow, Index _n_write,
+                            std::optional<fs::path> _output_dir, double _tol);
+
+  /// \brief Check if abnormal events are handled or not based on the
+  /// constructor parameters - if not, might be able to avoid re-calculating
+  /// event rates when events are selected
+  bool handling_on() {
+    return (m_do_warn || m_do_throw || m_n_write > 0 || m_disallow);
+  }
+
+  /// \brief Handle an abnormal event
+  void operator()(Index n_abnormal_events,
+                  std::reference_wrapper<EventState> event_state,
+                  std::reference_wrapper<EventData const> event_data,
+                  std::reference_wrapper<PrimEventData const> prim_event_data,
+                  std::reference_wrapper<state_type const> state);
+
+ private:
+  /// \brief One of "encountered" or "selected"
+  std::string m_event_kind;
+
+  /// \brief If true, throw an exception when an abnormal event is
+  ///     encountered or selected
+  bool m_do_throw;
+
+  /// \brief If true, warn when an abnormal event is encountered or
+  ///     selected
+  bool m_do_warn;
+
+  /// \brief If true, disallow the event when an abnormal event is
+  ///     encountered (not valid for `m_event_kind`=="selected")
+  bool m_disallow;
+
+  /// \brief If >0, write the event to file when an abnormal event is
+  ///     encountered or selected, up to `m_n_write` times, only including the
+  ///     local configurations for which the local_corr are unique
+  int m_n_write;
+
+  /// \brief Output directory
+  fs::path m_output_dir;
+
+  /// \brief Log for warning messages (CASM::err_log())
+  monte::MethodLog m_event_log;
+
+  /// \brief Tolerance for local_corr comparison (CASM::TOL)
+  double m_tol;
+
+  /// \brief Local correlations, by event type name, of local configurations
+  ///     that have already been written to file
+  std::map<std::string,
+           std::set<Eigen::VectorXd, monte::FloatLexicographicalCompare>>
+      m_local_corr;
+
+  /// \brief File to write local configurations to
+  fs::path m_local_configurations_file;
+
+  /// \brief Read local_corr from an existing file
+  void _read_local_corr();
+};
+
+struct EventDataOptions {
+  /// \brief Output directory (default="output")
+  fs::path output_dir;
+
+  /// \brief Tolerance for local_corr comparison (default=CASM::TOL)
+  double local_corr_compare_tol;
+
+  /// \brief If true (default), print a warning message when abnormal events
+  ///     are encountered.
+  bool warn_if_encountered_event_is_abnormal = true;
+
+  /// \brief If true (default), throw an exception when abnormal events
+  ///     are encountered.
+  bool throw_if_encountered_event_is_abnormal = true;
+
+  /// \brief If true (default), set EventState.rate=0.0 for abnormal events.
+  bool disallow_if_encountered_event_is_abnormal = false;
+
+  /// \brief If true (default), write local configurations to file when abnormal
+  ///     events are encountered, up to this number.
+  Index n_write_if_encountered_event_is_abnormal = 100;
+
+  /// \brief If true (default), print a warning message when abnormal events
+  ///     are selected.
+  bool warn_if_selected_event_is_abnormal = true;
+
+  /// \brief If true (default), throw an exception when abnormal events
+  ///     are selected.
+  bool throw_if_selected_event_is_abnormal = true;
+
+  /// \brief If true (default), write local configurations to file when
+  ///     abnormal events are selected, up to this number.
+  Index n_write_if_selected_event_is_abnormal = 100;
+
+  // --- AllowedEventData options ---
+
+  /// \brief If true, use the map index for the AllowedEventMap; If
+  /// false (default), use the vector index
+  ///
+  /// The map index is lower memory, but may be slower; The vector index is
+  /// higher memory, but may be faster.
+  ///
+  /// Note: current testing does not show this to be helpful - fix to false
+  bool use_map_index = false;
+
+  /// \brief If true (default), use the neighborlist impact table; else use the
+  /// relative impact table
+  ///
+  /// Type of impact table:
+  /// - Only takes effect for AllowedKineticEventData (event_data_type=default)
+  /// - If true: somewhat higher memory use; somewhat faster impact list
+  /// - If false: somewhat lower memory use; somewhat slower impact list
+  bool use_neighborlist_impact_table = true;
+
+  /// \brief If true (default) check if potentially impacted events are allowed
+  ///     and only assign them to the event list if they are. Otherwise,
+  ///     assign all potentially impacted events to the event list (whether they
+  ///     are allowed will still be checked during the rate calculation).
+  ///
+  bool assign_allowed_events_only = true;
+};
+
 /// \brief Base class to provide access to event data for a Monte Carlo
 /// simulation
 class BaseMonteEventData {
  public:
-  typedef std::mt19937_64 engine_type;
+  typedef default_engine_type engine_type;
   typedef monte::KMCData<config_type, statistics_type, engine_type>
       kmc_data_type;
   typedef clexmonte::run_manager_type<engine_type> run_manager_type;
@@ -197,6 +346,46 @@ class BaseMonteEventData {
   std::map<std::string, CustomEventStateCalculationFunction>
       custom_event_state_calculation_f;
 
+  /// Function to handle encountered abnormal events
+  AbnormalEventHandlingFunction encountered_abnormal_event_handling_f;
+
+  /// \brief If true, the selected abnormal event handling function
+  /// is activated
+  bool encountered_abnormal_event_handling_on = false;
+
+  /// Function to handle selected abnormal events
+  AbnormalEventHandlingFunction selected_abnormal_event_handling_f;
+
+  /// \brief If true, the selected abnormal event handling function
+  /// is activated
+  bool selected_abnormal_event_handling_on = false;
+
+  /// \brief Count not-normal events (key == event_type_name; value == count)
+  ///
+  /// An "encounter" with a "not normal" event occurs when (i) the event state
+  /// calculation is performed and (ii) the configuration allows the event to
+  /// be possible and (iii) there is no barrier between the initial and final
+  /// states.
+  ///
+  /// Note that the KMC implementation may require re-calculating the
+  /// rates when the local environment impacts whether the event is possible
+  /// the event rate changes, or for other implementation-specific reasons
+  /// such as the event list size changing, or for performing an exploration of
+  /// the local energy landscape.
+  std::map<std::string, Index> n_encountered_abnormal;
+
+  /// \brief Count not-normal events (key == event_type_name; value == count)
+  ///
+  /// Counts how many "selected" events (used to update the configuration)
+  /// are "not normal" (meaning there is no barrier between the initial and
+  /// final states).
+  std::map<std::string, Index> n_selected_abnormal;
+
+  // -- Options --
+
+  /// \brief Various options, that control event handling (if applicable)
+  virtual EventDataOptions const &event_data_options() const = 0;
+
   // -- System data --
 
   /// Get the formation energy coefficients
@@ -211,7 +400,7 @@ class BaseMonteEventData {
   virtual clexulator::SparseCoefficients const &kra_coefficients(
       Index prim_event_index) const = 0;
 
-  // -- Update and run --
+  // -- Customize event state calculation and handling functions --
 
   /// \brief Set a custom event state calculation function
   void set_custom_event_state_calculation(
@@ -221,11 +410,38 @@ class BaseMonteEventData {
   }
 
   /// \brief Erase a custom event state calculation function
-  void erase_custom_event_state_calculation(
-      std::string const &event_type_name,
-      CustomEventStateCalculationFunction f) {
+  void set_custom_event_state_calculation_off(
+      std::string const &event_type_name) {
     custom_event_state_calculation_f.erase(event_type_name);
   }
+
+  /// \brief Set the encountered abnormal event handling function
+  void set_encountered_abnormal_event_handling(
+      AbnormalEventHandlingFunction handling_f) {
+    encountered_abnormal_event_handling_f = handling_f;
+    encountered_abnormal_event_handling_on = true;
+  }
+
+  /// \brief Turn off encountered abnormal event handling
+  void set_encountered_abnormal_event_handling_off() {
+    encountered_abnormal_event_handling_f = nullptr;
+    encountered_abnormal_event_handling_on = false;
+  }
+
+  /// \brief Set the selected abnormal event handling function
+  void set_selected_abnormal_event_handling(
+      AbnormalEventHandlingFunction handling_f) {
+    selected_abnormal_event_handling_f = handling_f;
+    selected_abnormal_event_handling_on = true;
+  }
+
+  /// \brief Turn off selected abnormal event handling
+  void set_selected_abnormal_event_handling_off() {
+    selected_abnormal_event_handling_f = nullptr;
+    selected_abnormal_event_handling_on = false;
+  }
+
+  // -- Update and run --
 
   virtual void update(
       std::shared_ptr<StateData> _state_data,
@@ -243,9 +459,6 @@ class BaseMonteEventData {
   /// Select an event to apply
   virtual void select_event(SelectedEvent &selected_event,
                             bool requires_event_state) = 0;
-
-  /// Return number of events calculated with no barrier, by type
-  virtual std::map<std::string, Index> const &n_not_normal() const = 0;
 
   // -- Event list summary info --
 

@@ -13,6 +13,7 @@
 #include "casm/monte/ValueMap.hh"
 #include "casm/monte/methods/kinetic_monte_carlo.hh"
 #include "casm/monte/run_management/ResultsAnalysisFunction.hh"
+#include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/run_management/SamplingFixture.hh"
 #include "casm/monte/sampling/SelectedEventFunctions.hh"
 
@@ -45,7 +46,7 @@ class BaseMontePotential {
 /// \brief Implements semi-grand canonical Monte Carlo calculations
 class BaseMonteCalculator {
  public:
-  typedef std::mt19937_64 engine_type;
+  typedef default_engine_type engine_type;
   typedef monte::KMCData<config_type, statistics_type, engine_type>
       kmc_data_type;
 
@@ -66,6 +67,9 @@ class BaseMonteCalculator {
   virtual ~BaseMonteCalculator();
 
   // --- Set at construction: ---
+
+  /// The random number engine (not null)
+  std::shared_ptr<engine_type> engine;
 
   /// Calculator name
   std::string calculator_name;
@@ -201,7 +205,7 @@ class BaseMonteCalculator {
 
   /// \brief Set event data (includes calculating all rates), using current
   /// state data
-  virtual void set_event_data(std::shared_ptr<engine_type> engine) = 0;
+  virtual void set_event_data() = 0;
 
   // --- Set when `run` is called: ---
 
@@ -216,6 +220,10 @@ class BaseMonteCalculator {
   // --- Run method: ---
 
   /// \brief Perform a single run, evolving current state
+  ///
+  /// Notes:
+  /// - state and occ_location are evolved and end in modified states
+  /// - if run_manager.engine != nullptr, set this->engine = run_manager.engine
   virtual void run(state_type &state, monte::OccLocation &occ_location,
                    run_manager_type<engine_type> &run_manager) = 0;
 

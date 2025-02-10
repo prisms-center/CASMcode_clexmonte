@@ -414,7 +414,7 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
 
   /// \brief Set event data (includes calculating all rates), using current
   /// state data
-  void set_event_data(std::shared_ptr<engine_type> engine) override {
+  void set_event_data() override {
     throw std::runtime_error(
         "Error in SemiGrandCanonicalCalculator::set_event_data: not valid");
   }
@@ -434,6 +434,12 @@ class SemiGrandCanonicalCalculator : public BaseMonteCalculator {
         };
 
     // Random number generator
+    if (run_manager.engine == nullptr) {
+      throw std::runtime_error(
+          "Error in SemiGrandCanonicalCalculator::run: "
+          "run_manager.engine==nullptr");
+    }
+    this->engine = run_manager.engine;
     monte::RandomNumberGenerator<engine_type> random_number_generator(
         run_manager.engine);
 

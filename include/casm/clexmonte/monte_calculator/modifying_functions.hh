@@ -85,10 +85,8 @@ inline StateModifyingFunction make_enforce_composition_f(
 
         Eigen::VectorXd target_mol_composition =
             get_mol_composition(system, state.conditions);
-        // Random number generator (seed from random_device)
-        /// TODO: get random engine from somewhere?
         monte::RandomNumberGenerator<BaseMonteCalculator::engine_type>
-            random_number_generator;
+            random_number_generator(calculation->engine());
         clexmonte::enforce_composition(get_occupation(state),
                                        target_mol_composition,
                                        get_composition_calculator(system),

@@ -35,7 +35,7 @@ namespace py = pybind11;
 namespace CASMpy {
 
 using namespace CASM;
-typedef std::mt19937_64 engine_type;
+typedef clexmonte::default_engine_type engine_type;
 
 monte::ValueMap from_variant_type(
     std::variant<monte::ValueMap, nlohmann::json, py::none> const &x) {
@@ -185,6 +185,12 @@ PYBIND11_MODULE(_clexmonte_state, m) {
          libcasm.monte.ValueMap: Properties of the state, if provided by the \
          Monte Carlo calculation method.
          )pbdoc")
+      .def(
+          "copy",
+          [](clexmonte::state_type const &self) {
+            return clexmonte::state_type(self);
+          },
+          "Create a copy of the MonteCarloState.")
       .def("__copy__",
            [](clexmonte::state_type const &self) {
              return clexmonte::state_type(self);

@@ -77,12 +77,15 @@ std::shared_ptr<RuntimeLibrary> make_shared_runtime_lib(
 /// \param params Calculation method parameters, as specified by the
 ///     particular calculation type
 /// \param system System data
+/// \param engine A random number engine. If not null, it is set for the
+///     the resulting MonteCalculator.
 /// \param base_calculator The underlying calculator implementation instance
 /// \param lib If the `base_calculator` is from a runtime library, it should be
 ///     provided. Otherwise, give nullptr.
 /// \return The std::shared_ptr<MonteCalculator>
 std::shared_ptr<MonteCalculator> make_monte_calculator(
     jsonParser const &params, std::shared_ptr<system_type> system,
+    std::shared_ptr<MonteCalculator::engine_type> engine,
     std::unique_ptr<BaseMonteCalculator> base_calculator,
     std::shared_ptr<RuntimeLibrary> lib) {
   std::shared_ptr<MonteCalculator> calculator =
@@ -90,6 +93,11 @@ std::shared_ptr<MonteCalculator> make_monte_calculator(
 
   /// Pass parameters and system data.
   calculator->reset(params, system);
+
+  /// Set the random number engine
+  if (engine != nullptr) {
+    calculator->set_engine(engine);
+  }
 
   /// Add standard Selected event functions
   std::optional<monte::SelectedEventFunctions> x =
@@ -113,10 +121,29 @@ std::shared_ptr<MonteCalculator> make_monte_calculator(
 }
 
 /// \brief MonteCalculator factory function, from source
+///
+/// \param dirpath Location of directory containing source file
+/// \param calculator_name Expect source file named `<calculator_name>.cc` and
+///     an extern "C" function named `make_<calculator_name>` which takes no
+///     arguments and returns the calculator as a `BaseMonteCalculator*`.
+/// \param system System data
+/// \param params Calculation method parameters, which are method specific.
+/// \param engine A random number engine. If null, a new one seeded by
+///     std::random_device is constructed.
+/// \param compile_options Compiler options used to compile the MonteCalculator
+///     source file, if it is not yet compiled. Example:
+///     "g++ -O3 -Wall -fPIC --std=c++17 -I/path/to/include "
+/// \param so_options Compiler options used to compile the MonteCalculator
+///     shared object file, if it is not yet compiled. Example:
+///     "g++ -shared -L/path/to/lib -lcasm_clexmonte "
+///
+/// \return The std::shared_ptr<MonteCalculator>
+///
 std::shared_ptr<MonteCalculator> make_monte_calculator_from_source(
-    fs::path dirpath, std::string calculator_name, jsonParser const &params,
-    std::shared_ptr<system_type> system, std::string compile_options,
-    std::string so_options) {
+    fs::path dirpath, std::string calculator_name,
+    std::shared_ptr<system_type> system, jsonParser const &params,
+    std::shared_ptr<MonteCalculator::engine_type> engine,
+    std::string compile_options, std::string so_options) {
   // Construct the RuntimeLibrary
   std::shared_ptr<RuntimeLibrary> lib;
   try {
@@ -136,12 +163,13 @@ std::shared_ptr<MonteCalculator> make_monte_calculator_from_source(
   factory = lib->get_function<clexmonte::BaseMonteCalculator *(void)>(
       "make_" + calculator_name);
 
-  // Use the factory to construct the BaseMonteCalculator
+  // Use the factory to construct the BaseMonteCalculator (with default random
+  // number engine)
   std::unique_ptr<clexmonte::BaseMonteCalculator> base(factory());
 
   // Then use `make_monte_calculator` to construct a shared MonteCalculator, set
   // parameters, and add standard sampling functions
-  return make_monte_calculator(params, system, std::move(base), lib);
+  return make_monte_calculator(params, system, engine, std::move(base), lib);
 }
 
 Eigen::VectorXd scalar_conditions(

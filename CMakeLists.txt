@@ -138,6 +138,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/methods/kinetic_monte_carlo.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/methods/occupation_metropolis.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/Matrix3lCompare.hh
+  ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/check_params.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/diffusion_calculations.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/eigen.hh
   ${PROJECT_SOURCE_DIR}/include/casm/clexmonte/misc/parse_array.hh

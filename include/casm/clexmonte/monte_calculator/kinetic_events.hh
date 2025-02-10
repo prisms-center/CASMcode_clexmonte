@@ -7,6 +7,7 @@
 #include "casm/clexmonte/events/lotto.hh"
 #include "casm/clexmonte/monte_calculator/BaseMonteEventData.hh"
 #include "casm/clexmonte/monte_calculator/StateData.hh"
+#include "casm/monte/MethodLog.hh"
 
 namespace CASM {
 namespace clexmonte {
@@ -20,6 +21,7 @@ namespace kinetic_2 {
 /// - Expected to be constructed as shared_ptr
 /// - Mostly holds references to external data structures
 /// - Stores one `EventState` which is used to perform the calculations
+template <bool DebugMode>
 struct CompleteEventCalculator {
   /// \brief Prim event list
   std::vector<PrimEventData> const &prim_event_list;
@@ -30,21 +32,26 @@ struct CompleteEventCalculator {
   /// \brief Complete event list
   std::map<EventID, EventData> const &event_list;
 
-  /// \brief Write to warn about non-normal events
-  Log &event_log;
-
   // Note: to keep all event state calculations, comment out this:
   /// \brief Holds last calculated event state
   EventState event_state;
 
+  /// \brief If true, handle abnormal events using `handling_f`
+  bool abnormal_event_handling_on;
+
+  /// \brief An abnormal event handling function
+  AbnormalEventHandlingFunction handling_f;
+
   /// \brief Count not-normal events (key == event_type_name; value == count)
-  std::map<std::string, Index> n_not_normal;
+  std::map<std::string, Index> &n_encountered_abnormal;
 
   CompleteEventCalculator(
       std::vector<PrimEventData> const &_prim_event_list,
       std::vector<EventStateCalculator> const &_prim_event_calculators,
       std::map<EventID, EventData> const &_event_list,
-      Log &_event_log = CASM::err_log());
+      bool _abnormal_event_handling_on,
+      AbnormalEventHandlingFunction _handling_f,
+      std::map<std::string, Index> &_n_encountered_abnormal);
 
   /// \brief Update `event_state` for event `id` in the current state and
   /// return the event rate
@@ -65,23 +72,25 @@ struct CompleteEventCalculator {
 template <bool DebugMode>
 class CompleteKineticEventData : public BaseMonteEventData {
  public:
-  typedef std::mt19937_64 engine_type;
-  typedef lotto::RejectionFreeEventSelector<EventID, CompleteEventCalculator,
-                                            engine_type>
+  typedef default_engine_type engine_type;
+  typedef lotto::RejectionFreeEventSelector<
+      EventID, CompleteEventCalculator<DebugMode>, engine_type>
       event_selector_type;
 
   CompleteKineticEventData(
       std::shared_ptr<system_type> _system,
       std::optional<std::vector<EventFilterGroup>> _event_filters,
-      bool _allow_events_with_no_barrier);
+      EventDataOptions _options);
 
   // -- Options --
 
-  /// \brief If false (default), events with no barrier are not allowed and
-  /// an exception is thrown by `select_event` if one was encountered when
-  /// calculating rates in the preceding step. If true, events with no barrier
-  /// are allowed with rate 1.0 and warning messages are written.
-  bool allow_events_with_no_barrier = false;
+  /// \brief Various options, that control event handling (if applicable)
+  const EventDataOptions options;
+
+  /// \brief Various options, that control event handling (if applicable)
+  EventDataOptions const &event_data_options() const override {
+    return this->options;
+  }
 
   // --- BaseMonteEventData data ---
 
@@ -119,7 +128,7 @@ class CompleteKineticEventData : public BaseMonteEventData {
   clexmonte::CompleteEventList event_list;
 
   /// Calculator for KMC event selection
-  std::shared_ptr<CompleteEventCalculator> event_calculator;
+  std::shared_ptr<CompleteEventCalculator<DebugMode>> event_calculator;
 
   /// Event selector
   std::shared_ptr<event_selector_type> event_selector;
@@ -167,7 +176,7 @@ class CompleteKineticEventData : public BaseMonteEventData {
     return *it;
   }
 
-  CompleteEventCalculator &_event_calculator() const {
+  CompleteEventCalculator<DebugMode> &_event_calculator() const {
     if (!event_calculator) {
       throw std::runtime_error(
           "Error in CompleteKineticEventData: Event calculator not set");
@@ -211,11 +220,6 @@ class CompleteKineticEventData : public BaseMonteEventData {
   ///     selected event
   void select_event(SelectedEvent &selected_event,
                     bool requires_event_state) override;
-
-  /// Return number of events calculated with no barrier, by type
-  std::map<std::string, Index> const &n_not_normal() const override {
-    return _event_calculator().n_not_normal;
-  }
 
   // -- Event list summary info --
 
@@ -351,6 +355,7 @@ class CompleteKineticEventData : public BaseMonteEventData {
 /// - Expected to be constructed as shared_ptr
 /// - Mostly holds references to external data structures
 /// - Stores one `EventState` which is used to perform the calculations
+template <bool DebugMode>
 struct AllowedEventCalculator {
   /// \brief Prim event list
   std::vector<PrimEventData> const &prim_event_list;
@@ -361,20 +366,23 @@ struct AllowedEventCalculator {
   /// \brief Allowed event list
   AllowedEventList &event_list;
 
-  /// \brief Write to warn about non-normal events
-  Log &event_log;
-
   // Note: to keep all event state calculations, comment out this:
   /// \brief Holds last calculated event state
   EventState event_state;
 
-  /// \brief Count not-normal events (key == event_type_name; value == count)
-  std::map<std::string, Index> n_not_normal;
+  /// \brief If true, handle abnormal events using `handling_f`
+  bool abnormal_event_handling_on;
 
-  /// \brief Event site linear indices
-  ///
-  /// Used temporarily to calculate event state
-  std::vector<Index> linear_site_index;
+  /// \brief An abnormal event handling function
+  AbnormalEventHandlingFunction handling_f;
+
+  /// \brief Count not-normal events (key == event_type_name; value == count)
+  std::map<std::string, Index> &n_encountered_abnormal;
+
+  //  /// \brief Event site linear indices
+  //  ///
+  //  /// Used temporarily to calculate event state
+  //  std::vector<Index> linear_site_index;
 
   /// \brief Event data
   ///
@@ -385,7 +393,9 @@ struct AllowedEventCalculator {
   AllowedEventCalculator(
       std::vector<PrimEventData> const &_prim_event_list,
       std::vector<EventStateCalculator> const &_prim_event_calculators,
-      AllowedEventList &_event_list, Log &_event_log = CASM::err_log());
+      AllowedEventList &_event_list, bool _abnormal_event_handling_on,
+      AbnormalEventHandlingFunction _handling_f,
+      std::map<std::string, Index> &_n_encountered_abnormal);
 
   /// \brief Update `event_state` for event `event_index` in the current state
   /// and return the event rate; if the event is no longer allowed, free the
@@ -411,20 +421,23 @@ enum class kinetic_event_selector_type {
   direct_sum,
 };
 
-typedef lotto::VectorRejectionFreeEventSelector<Index, AllowedEventCalculator,
-                                                std::mt19937_64,
-                                                GetImpactFromAllowedEventList>
-    vector_sum_tree_event_selector_type;
+template <typename AllowedEventCalculatorType>
+using vector_sum_tree_event_selector_type =
+    lotto::VectorRejectionFreeEventSelector<Index, AllowedEventCalculatorType,
+                                            default_engine_type,
+                                            GetImpactFromAllowedEventList>;
 
-typedef lotto::RejectionFreeEventSelector<Index, AllowedEventCalculator,
-                                          std::mt19937_64,
-                                          GetImpactFromAllowedEventList>
-    sum_tree_event_selector_type;
+template <typename AllowedEventCalculatorType>
+using sum_tree_event_selector_type =
+    lotto::RejectionFreeEventSelector<Index, AllowedEventCalculatorType,
+                                      default_engine_type,
+                                      GetImpactFromAllowedEventList>;
 
-typedef lotto::DirectSumRejectionFreeEventSelector<
-    Index, AllowedEventCalculator, std::mt19937_64,
-    GetImpactFromAllowedEventList>
-    direct_sum_event_selector_type;
+template <typename AllowedEventCalculatorType>
+using direct_sum_event_selector_type =
+    lotto::DirectSumRejectionFreeEventSelector<
+        Index, AllowedEventCalculatorType, default_engine_type,
+        GetImpactFromAllowedEventList>;
 
 /// \brief Data for kinetic Monte Carlo events
 ///
@@ -440,40 +453,22 @@ typedef lotto::DirectSumRejectionFreeEventSelector<
 template <typename EventSelectorType, bool DebugMode>
 class AllowedKineticEventData : public BaseMonteEventData {
  public:
-  typedef std::mt19937_64 engine_type;
+  typedef default_engine_type engine_type;
+  typedef AllowedEventCalculator<DebugMode> event_calculator_type;
   typedef EventSelectorType event_selector_type;
 
   AllowedKineticEventData(std::shared_ptr<system_type> _system,
-                          bool _allow_events_with_no_barrier = false,
-                          bool _use_map_index = true,
-                          bool _use_neighborlist_impact_table = true,
-                          bool _assign_allowed_events_only = true);
+                          EventDataOptions _options);
 
   // -- Options --
 
-  /// \brief If false (default), events with no barrier are not allowed and
-  /// an exception is thrown by `select_event` if one was encountered when
-  /// calculating rates in the preceding step. If true, events with no barrier
-  /// are allowed with rate 1.0 and warning messages are written.
-  const bool allow_events_with_no_barrier;
+  /// \brief Various options, that control event handling (if applicable)
+  const EventDataOptions options;
 
-  /// \brief If true (default), use the map index for the AllowedEventMap; If
-  /// false, use the vector index
-  ///
-  /// The map index is lower memory, but may be slower; The vector index is
-  /// higher memory, but may be faster.
-  const bool use_map_index;
-
-  /// \brief If true (default), use the neighborlist impact table; else use the
-  /// relative impact table
-  const bool use_neighborlist_impact_table;
-
-  /// \brief If true (default) check if potentially impacted events are allowed
-  ///     and only assign them to the event list if they are. Otherwise,
-  ///     assign all potentially impacted events to the event list (whether they
-  ///     are allowed will still be checked during the rate calculation).
-  ///
-  const bool assign_allowed_events_only;
+  /// \brief Various options, that control event handling (if applicable)
+  EventDataOptions const &event_data_options() const override {
+    return this->options;
+  }
 
   // --- BaseMonteEventData data ---
 
@@ -511,7 +506,7 @@ class AllowedKineticEventData : public BaseMonteEventData {
   std::shared_ptr<clexmonte::AllowedEventList> event_list;
 
   /// Calculator for KMC event selection
-  std::shared_ptr<AllowedEventCalculator> event_calculator;
+  std::shared_ptr<event_calculator_type> event_calculator;
 
   // -- Event selector options --
 
@@ -574,7 +569,7 @@ class AllowedKineticEventData : public BaseMonteEventData {
     return std::distance(list.allowed_event_map.events().begin(), it);
   }
 
-  AllowedEventCalculator &_event_calculator() const {
+  event_calculator_type &_event_calculator() const {
     if (!event_calculator) {
       throw std::runtime_error(
           "Error in AllowedKineticEventData: Event calculator not set");
@@ -618,11 +613,6 @@ class AllowedKineticEventData : public BaseMonteEventData {
   ///     selected event
   void select_event(SelectedEvent &selected_event,
                     bool requires_event_state) override;
-
-  /// Return number of events calculated with no barrier, by type
-  std::map<std::string, Index> const &n_not_normal() const override {
-    return _event_calculator().n_not_normal;
-  }
 
   // -- Event list summary info --
 

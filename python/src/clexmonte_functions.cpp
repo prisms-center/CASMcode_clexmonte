@@ -26,7 +26,7 @@ namespace py = pybind11;
 namespace CASMpy {
 
 using namespace CASM;
-typedef std::mt19937_64 engine_type;
+typedef clexmonte::default_engine_type engine_type;
 
 }  // namespace CASMpy
 

@@ -11,6 +11,10 @@ template <typename T>
 class InputParser;
 class jsonParser;
 
+namespace xtal {
+class BasicStructure;
+}
+
 namespace clexulator {
 class Clexulator;
 }
@@ -27,6 +31,10 @@ struct LocalOrbitCompositionCalculatorData;
 
 /// \brief Parse BasisSetClusterInfo from a bspecs.json / eci.json file
 void parse(InputParser<BasisSetClusterInfo> &parser, config::Prim const &prim);
+
+/// \brief Output minimal "equivalents info" to JSON
+jsonParser &to_json(EquivalentsInfo const &equivalents_info, jsonParser &json,
+                    xtal::BasicStructure const &prim);
 
 /// \brief Parse EquivalentsInfo from JSON
 void parse(InputParser<EquivalentsInfo> &parser, config::Prim const &prim);

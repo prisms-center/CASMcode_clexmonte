@@ -94,7 +94,7 @@ class KineticCalculator : public BaseMonteCalculator {
 
   /// \brief Set event data (includes calculating all rates), using current
   /// state data
-  void set_event_data(std::shared_ptr<engine_type> engine) override;
+  void set_event_data() override;
 
   /// \brief Perform a single run, evolving current state
   void run(state_type &state, monte::OccLocation &occ_location,
@@ -107,10 +107,15 @@ class KineticCalculator : public BaseMonteCalculator {
 
   // --- KineticCalculator specific functions ---
 
-  /// \brief Print a warning to std::cerr if events with no barrier were
+  /// \brief Print a warning to std::cerr if abnormal events were
   ///     encountered
-  void check_n_not_normal(
-      std::map<std::string, Index> const &n_not_normal) const;
+  void check_n_encountered_abnormal(
+      std::map<std::string, Index> const &n_encountered_abnormal) const;
+
+  /// \brief Print a warning to std::cerr if abnormal events were
+  ///     selected
+  void check_n_selected_abnormal(
+      std::map<std::string, Index> const &n_selected_abnormal) const;
 
   // --- Parameters ---
 
@@ -134,24 +139,8 @@ class KineticCalculator : public BaseMonteCalculator {
   // Print event data summary (default=false)
   bool print_event_data_summary = false;
 
-  // Type of impact table:
-  // - Only takes effect if event_data_type is `default_memory`
-  // - If true: somewhat higher memory use; somewhat faster impact list
-  // - If false: somewhat lower memory use; somewhat slower impact list
-  bool use_neighborlist_impact_table = true;
-
-  // If true, events without barriers are allowed with warning messages;
-  // If false (default), an exception is thrown at the `select_event` step of
-  // a run if an event without a barrier is encountered
-  bool allow_events_with_no_barrier = false;
-
-  /// If true (default) check if potentially impacted events are allowed
-  /// and only assign them to the event list if they are (adds an
-  /// additional check, but may reduce the size of the event list).
-  /// Otherwise, assign all potentially impacted events to the event list
-  /// (whether they are allowed will still be checked during the rate
-  /// calculation).
-  bool assign_allowed_events_only = true;
+  // Various options for event list implementation and event handling
+  EventDataOptions event_data_options;
 
   /// \brief Reset the derived Monte Carlo calculator
   void _reset() override;

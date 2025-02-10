@@ -34,7 +34,7 @@ namespace CASMpy {
 using namespace CASM;
 
 // used for libcasm.clexmonte:
-typedef std::mt19937_64 engine_type;
+typedef clexmonte::default_engine_type engine_type;
 typedef monte::RandomNumberGenerator<engine_type> generator_type;
 typedef clexmonte::config_type config_type;
 typedef clexmonte::state_type state_type;
@@ -1560,8 +1560,9 @@ PYBIND11_MODULE(_clexmonte_run_management, m) {
 
           Parameters
           ----------
-          engine : libcasm.monte.RandomNumberEngine
-              Random number generation engine
+          engine: libcasm.monte.RandomNumberEngine
+              Random number generation engine to be used by
+              :class:`~libcasm.clexmonte.MonteCalculator`.
           sampling_fixture_params: list[SamplingFixtureParams]
               Sampling fixture parameters, specifying what to sample, when, and
               how to check for completion.

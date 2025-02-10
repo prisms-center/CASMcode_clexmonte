@@ -1,10 +1,15 @@
 #include "casm/clexmonte/monte_calculator/BaseMonteEventData.hh"
 
+// #include "casm/casm_io/SafeOfstream.hh"
 #include "casm/clexmonte/definitions.hh"
 #include "casm/clexmonte/events/event_methods.hh"
+#include "casm/clexmonte/events/io/json/event_data_json_io.hh"
 #include "casm/clexmonte/state/Configuration.hh"
 #include "casm/clexmonte/system/System.hh"
+// #include "casm/clexmonte/system/io/json/system_data_json_io.hh"
 #include "casm/configuration/Configuration.hh"
+#include "casm/configuration/io/json/Configuration_json_io.hh"
+// #include "casm/configuration/occ_events/io/json/OccEvent_json_io.hh"
 #include "casm/monte/run_management/State.hh"
 
 namespace CASM {
@@ -148,6 +153,225 @@ void EventStateCalculator::_default_event_state_calculation(
   if (state.dE_activated < 0.0) state.dE_activated = 0.0;
 
   state.rate = state.freq * exp(-this->beta() * state.dE_activated);
+}
+
+namespace {
+
+/// \brief Create JSON object for local configuration and event data
+///
+/// Format:
+/// \code
+/// "local_configuration": libcasm.local_configuration.LocalConfiguration
+/// \endcode
+///
+jsonParser local_configuration_to_json(state_type const &state,
+                                       EventState const &event_state,
+                                       EventData const &event_data,
+                                       PrimEventData const &prim_event_data) {
+  jsonParser local_config_json;
+  bool write_prim_basis = false;
+  to_json(state.configuration, local_config_json["configuration"],
+          write_prim_basis);
+  local_config_json["pos"] = std::vector<Index>(
+      {event_data.unitcell_index, prim_event_data.equivalent_index});
+  return local_config_json;
+}
+
+/// \brief Create JSON object for local configuration and event data
+///
+/// Format:
+///
+/// \code
+/// {
+///   "event_state": libcasm.clexmonte.EventState
+///   "unitcell_index": int
+///   "linear_site_index": list[int]
+///   "prim_event_data": libcasm.clexmonte.PrimEventData
+/// }
+/// \endcode
+jsonParser event_to_json(state_type const &state, EventState const &event_state,
+                         EventData const &event_data,
+                         PrimEventData const &prim_event_data) {
+  jsonParser event_json;
+  to_json(event_state, event_json["event_state"]);
+  event_json["unitcell_index"] = event_data.unitcell_index;
+  event_json["linear_site_index"] = event_data.event.linear_site_index;
+  to_json(prim_event_data, event_json["prim_event_data"]);
+  return event_json;
+}
+
+}  // namespace
+
+/// \brief Constructor
+///
+/// \param _event_kind One of "encountered" or "selected"
+/// \param _do_throw If true, throw an exception when an abnormal event
+///     is encountered or selected
+/// \param _do_warn If true, warn when an abnormal event is encountered
+///     or selected
+/// \param _disallow If true, disallow the event when an abnormal event
+///     is encountered (not valid for `m_event_kind`=="selected")
+/// \param _n_write If >0, write the event to file when an event without
+///     barrier is encountered or selected, up to `m_n_write` times, only
+///     including the local configurations for which the local_corr are unique
+/// \param _output_dir Output directory
+/// \param _tol Tolerance for local_corr comparison
+///
+BasicAbnormalEventHandler::BasicAbnormalEventHandler(
+    std::string _event_kind, bool _do_throw, bool _do_warn, bool _disallow,
+    Index _n_write, std::optional<fs::path> _output_dir, double _tol)
+    : m_event_kind(_event_kind),
+      m_do_throw(_do_throw),
+      m_do_warn(_do_warn),
+      m_disallow(_disallow),
+      m_n_write(_n_write),
+      m_output_dir(_output_dir.value_or("output")),
+      m_tol(_tol) {
+  if (m_event_kind != "encountered" && m_event_kind != "selected") {
+    throw std::runtime_error(
+        "Error in BasicAbnormalEventHandler: event_kind must be "
+        "'encountered' or 'selected'");
+  }
+  if (m_disallow && m_event_kind == "selected") {
+    throw std::runtime_error(
+        "Error in BasicAbnormalEventHandler: for `event_kind`=="
+        "\"selected\", `disallow` cannot be true");
+  }
+
+  m_local_configurations_file =
+      m_output_dir / (m_event_kind + "_abnormal_events.jsonl");
+
+  if (m_n_write > 0) {
+    _read_local_corr();
+  }
+
+  m_event_log.log = CASM::err_log();
+}
+
+/// \brief Handle an abnormal event
+///
+/// \param n_abnormal_events Number of events without barrier of the
+///     current event type
+/// \param event_state Event state
+/// \param event_data Event data
+/// \param prim_event_data Prim event data
+/// \param state Current state
+///
+void BasicAbnormalEventHandler::operator()(
+    Index n_abnormal_events, std::reference_wrapper<EventState> event_state,
+    std::reference_wrapper<EventData const> event_data,
+    std::reference_wrapper<PrimEventData const> prim_event_data,
+    std::reference_wrapper<state_type const> state) {
+  // Warning message ----------------------------------------------------
+  if (m_do_warn && n_abnormal_events == 1) {
+    Log &log = m_event_log.log;
+    log << "\n";
+    if (m_event_kind == "selected") {
+      log << "## WARNING: SELECTED ABNORMAL EVENT #################\n"
+             "#                                                   #\n"
+             "# - The event was selected.                         #\n"
+             "#                                                   #\n";
+    } else {
+      log << "## WARNING: ENCOUNTERED ABNORMAL EVENT ##############\n"
+             "#                                                   #\n"
+             "# - The event was encountered when calculating      #\n"
+             "#   event rates.                                    #\n"
+             "# - The event might not be selected.                #\n"
+             "#                                                   #\n";
+    }
+
+    log << "# This warning is only printed once per event type. #\n"
+           "#                                                   #\n"
+           "# Event info:                                       #\n";
+
+    jsonParser event_json =
+        event_to_json(state.get(), event_state.get(), event_data.get(),
+                      prim_event_data.get());
+
+    log << event_json << "\n"
+        << "#                                                   #\n"
+           "#####################################################\n"
+        << std::endl;
+  }
+
+  // Write local configuration --------------------------------------------
+
+  // Write up to `n_write` selected events of each type
+  // to "selected_abnormal_events.jsonl" file
+  std::string const &event_type_name = prim_event_data.get().event_type_name;
+
+  auto local_corr_it = m_local_corr.find(event_type_name);
+  if (local_corr_it == m_local_corr.end()) {
+    monte::FloatLexicographicalCompare compare(m_tol);
+    local_corr_it = m_local_corr.emplace(event_type_name, compare).first;
+  }
+
+  if (local_corr_it->second.size() < m_n_write) {
+    Eigen::VectorXd const *local_corr = event_state.get().local_corr;
+    if (local_corr == nullptr) {
+      throw std::runtime_error(
+          "Error in BasicAbnormalEventHandler: local_corr==nullptr");
+    }
+
+    auto result = local_corr_it->second.insert(*local_corr);
+    if (result.second) {
+      jsonParser json;
+      json["local_configuration"] =
+          local_configuration_to_json(state.get(), event_state.get(),
+                                      event_data.get(), prim_event_data.get());
+      json["event"] = event_to_json(state.get(), event_state.get(),
+                                    event_data.get(), prim_event_data.get());
+
+      // Append `json` to file on a new line:
+      fs::create_directories(m_output_dir);
+      std::ofstream file(m_local_configurations_file, std::ios::app);
+      json.print(file, -1 /*indent=-1 -> no new lines*/);
+      file << "\n";
+    }
+  }
+
+  // Throw --------------------------------------------
+  if (m_do_throw) {
+    throw std::runtime_error("Error: " + m_event_kind +
+                             " abnormal event, which is not allowed.");
+  }
+
+  // Disallow --------------------------------------------
+  if (m_disallow) {
+    event_state.get().rate = 0.0;
+  }
+}
+
+/// \brief Read local_corr from an existing file
+void BasicAbnormalEventHandler::_read_local_corr() {
+  // Read existing file, if it exists:
+  if (fs::exists(m_local_configurations_file)) {
+    std::ifstream ifs(m_local_configurations_file);
+    // Read each line as a separate JSON object:
+    std::string line;
+    Index i_line = 0;
+    while (std::getline(ifs, line)) {
+      jsonParser json = jsonParser::parse(line);
+      ParentInputParser parser(json);
+
+      std::string event_type_name;
+      parser.require(event_type_name,
+                     fs::path("event") / "prim_event_data" / "event_type_name");
+
+      Eigen::VectorXd local_corr;
+      parser.require(local_corr,
+                     fs::path("event") / "event_state" / "local_corr");
+
+      auto local_corr_it = m_local_corr.find(event_type_name);
+      if (local_corr_it == m_local_corr.end()) {
+        monte::FloatLexicographicalCompare compare(m_tol);
+        local_corr_it = m_local_corr.emplace(event_type_name, compare).first;
+      }
+      local_corr_it->second.insert(local_corr);
+
+      i_line += 1;
+    }
+  }
 }
 
 }  // namespace clexmonte

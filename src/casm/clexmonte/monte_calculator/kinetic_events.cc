@@ -1,5 +1,6 @@
 #include "casm/clexmonte/monte_calculator/kinetic_events.hh"
 
+#include "casm/casm_io/SafeOfstream.hh"
 #include "casm/casm_io/container/json_io.hh"
 #include "casm/casm_io/container/stream_io.hh"
 #include "casm/clexmonte/definitions.hh"
@@ -24,42 +25,67 @@ namespace kinetic_2 {
 
 namespace {
 
-void print_no_barrier_warning(Log &event_log, EventState const &event_state,
-                              EventData const &event_data,
-                              PrimEventData const &prim_event_data) {
-  event_log << "\n"
-               "## WARNING: EVENT WITH NO BARRIER ###################\n"
-               "#                                                   #\n"
-               "# Events with no barrier are treated as having a    #\n"
-               "# rate equal to the attempt frequency.              #\n"
-               "#                                                   #\n"
-               "# This warning is only printed once per event type. #\n"
-               "#                                                   #\n"
-               "# Event info:                                       #\n"
-            << std::endl;
-  print(event_log, event_state, event_data, prim_event_data);
-  event_log << "\n"
-               "#                                                   #\n"
-               "#####################################################\n"
-            << std::endl;
+template <bool DebugMode>
+bool check_requires_event_state(
+    std::optional<monte::SelectedEventDataCollector> &collector,
+    bool selected_abnormal_event_handling_on) {
+  bool requires_event_state =
+      (collector.has_value() && collector->requires_event_state) ||
+      selected_abnormal_event_handling_on;
+
+  if constexpr (DebugMode) {
+    Log &log = CASM::log();
+    log.custom(
+        "Check if event selection requires re-calculating the event state:");
+
+    // Check 1a: Selected event functions exist
+    log.indent() << "- Selected event functions exist=" << std::boolalpha
+                 << collector.has_value() << std::endl;
+
+    // Check 1b: Selected event functions require event state
+    if (collector.has_value()) {
+      log.indent() << "- Selected event functions require event state="
+                   << std::boolalpha << collector->requires_event_state
+                   << std::endl;
+    }
+
+    // Check 2:
+    log.indent() << "- selected_abnormal_event_handling_on=" << std::boolalpha
+                 << selected_abnormal_event_handling_on << std::endl;
+
+    // Result:
+    log.indent() << "- Event selection requires re-calculating the event state="
+                 << std::boolalpha << requires_event_state << std::endl
+                 << std::endl;
+    log.end_section();
+  }
+
+  return requires_event_state;
 }
 
 }  // namespace
 
 // -- CompleteKineticEventData --
 
-CompleteEventCalculator::CompleteEventCalculator(
+template <bool DebugMode>
+CompleteEventCalculator<DebugMode>::CompleteEventCalculator(
     std::vector<PrimEventData> const &_prim_event_list,
     std::vector<EventStateCalculator> const &_prim_event_calculators,
-    std::map<EventID, EventData> const &_event_list, Log &_event_log)
+    std::map<EventID, EventData> const &_event_list,
+    bool _abnormal_event_handling_on, AbnormalEventHandlingFunction _handling_f,
+    std::map<std::string, Index> &_n_encountered_abnormal)
     : prim_event_list(_prim_event_list),
       prim_event_calculators(_prim_event_calculators),
       event_list(_event_list),
-      event_log(_event_log) {}
+      abnormal_event_handling_on(_abnormal_event_handling_on),
+      handling_f(_handling_f),
+      n_encountered_abnormal(_n_encountered_abnormal) {}
 
 /// \brief Update `event_state` for event `id` in the current state and
 /// return the event rate
-double CompleteEventCalculator::calculate_rate(EventID const &id) {
+
+template <bool DebugMode>
+double CompleteEventCalculator<DebugMode>::calculate_rate(EventID const &id) {
   EventData const &event_data = event_list.at(id);
   PrimEventData const &prim_event_data =
       prim_event_list.at(id.prim_event_index);
@@ -73,14 +99,27 @@ double CompleteEventCalculator::calculate_rate(EventID const &id) {
   // ---
   // can check event state and handle non-normal event states here
   // ---
-  if (event_state.is_allowed && !event_state.is_normal) {
-    Index &n = n_not_normal[prim_event_data.event_type_name];
+  if (abnormal_event_handling_on) {
+    if (event_state.is_allowed && !event_state.is_normal) {
+      if constexpr (DebugMode) {
+        Log &log = CASM::log();
+        log.custom("Handle encountered abnormal event...");
+        log.indent() << "- event_type_name=" << prim_event_data.event_type_name
+                     << std::endl;
+        log.indent() << "Handling encountered abnormal event..." << std::endl;
+      }
+      Index &n = n_encountered_abnormal[prim_event_data.event_type_name];
+      n += 1;
+      handling_f(n, event_state, event_data, prim_event_data,
+                 *prim_event_calculators.at(id.prim_event_index).state());
 
-    if (n == 0) {
-      print_no_barrier_warning(event_log, event_state, event_data,
-                               prim_event_data);
+      if constexpr (DebugMode) {
+        Log &log = CASM::log();
+        log.indent() << "Handling encountered abnormal event... DONE"
+                     << std::endl;
+        log.end_section();
+      }
     }
-    n += 1;
   }
 
   return event_state.rate;
@@ -90,9 +129,15 @@ template <bool DebugMode>
 CompleteKineticEventData<DebugMode>::CompleteKineticEventData(
     std::shared_ptr<system_type> _system,
     std::optional<std::vector<EventFilterGroup>> _event_filters,
-    bool _allow_events_with_no_barrier)
-    : allow_events_with_no_barrier(_allow_events_with_no_barrier),
+    EventDataOptions _options)
+    : options(_options),
       transformation_matrix_to_super(Eigen::Matrix3l::Zero(3, 3)) {
+  if constexpr (DebugMode) {
+    Log &log = CASM::log();
+    log.custom("Construct CompleteKineticEventData");
+    log.end_section();
+  }
+
   system = _system;
   if (!is_clex_data(*system, "formation_energy")) {
     throw std::runtime_error(
@@ -103,8 +148,13 @@ CompleteKineticEventData<DebugMode>::CompleteKineticEventData(
   prim_event_list = clexmonte::make_prim_event_list(*system);
   if (prim_event_list.empty()) {
     throw std::runtime_error(
-        "Error constructing AllowedKineticEventData: "
+        "Error constructing CompleteKineticEventData: "
         "prim event list is empty.");
+  }
+  if constexpr (DebugMode) {
+    Log &log = CASM::log();
+    log.custom("Prim event list");
+    log.indent() << qto_json(prim_event_list) << std::endl << std::endl;
   }
 
   prim_impact_info_list = clexmonte::make_prim_impact_info_list(
@@ -113,6 +163,24 @@ CompleteKineticEventData<DebugMode>::CompleteKineticEventData(
   if (_event_filters.has_value()) {
     event_filters = _event_filters.value();
   }
+
+  set_encountered_abnormal_event_handling(BasicAbnormalEventHandler(
+      "encountered" /*std::string _event_kind*/,
+      options.throw_if_encountered_event_is_abnormal /*bool _do_throw*/,
+      options.warn_if_encountered_event_is_abnormal /*bool _do_warn*/,
+      options.disallow_if_encountered_event_is_abnormal /*bool _disallow*/,
+      options.n_write_if_encountered_event_is_abnormal /*int _n_write*/,
+      options.output_dir /*fs::path _output_dir*/,
+      options.local_corr_compare_tol /*double _tol*/));
+
+  set_selected_abnormal_event_handling(BasicAbnormalEventHandler(
+      "selected" /*std::string _event_kind*/,
+      options.throw_if_selected_event_is_abnormal /*bool _do_throw*/,
+      options.warn_if_selected_event_is_abnormal /*bool _do_warn*/,
+      false /*bool _disallow*/,
+      options.n_write_if_selected_event_is_abnormal /*int _n_write*/,
+      options.output_dir /*fs::path _output_dir*/,
+      options.local_corr_compare_tol /*double _tol*/));
 }
 
 /// \brief Update for given state, conditions, occupants, event filters
@@ -120,9 +188,11 @@ CompleteKineticEventData<DebugMode>::CompleteKineticEventData(
 /// Notes:
 /// - This constructs the complete event list and impact table, and constructs
 ///   the event selector, which calculates all event rates.
-/// - If there are no event filters and the supercell remains unchanged from the
-///   previous update, then the event list and impact table are not
+/// - If there are no event filters and the supercell remains unchanged from
+///   the previous update, then the event list and impact table are not
 ///   re-constructed, but the event rates are still re-calculated.
+/// - Resets the `n_encountered_abnormal` and `n_selected_abnormal`
+///   counters.
 template <bool DebugMode>
 void CompleteKineticEventData<DebugMode>::update(
     std::shared_ptr<StateData> _state_data,
@@ -141,7 +211,6 @@ void CompleteKineticEventData<DebugMode>::update(
     for (auto &event_state_calculator : prim_event_calculators) {
       event_state_calculator.set(&state);
     }
-    event_calculator->n_not_normal.clear();
   } else {
     if (_event_filters.has_value()) {
       event_filters = _event_filters.value();
@@ -168,9 +237,29 @@ void CompleteKineticEventData<DebugMode>::update(
     event_list = clexmonte::make_complete_event_list(
         prim_event_list, prim_impact_info_list, occ_location, event_filters);
 
+    // Reset "not normal" event counters
+    n_encountered_abnormal.clear();
+    n_selected_abnormal.clear();
+
     // Construct CompleteEventCalculator
-    event_calculator = std::make_shared<CompleteEventCalculator>(
-        prim_event_list, prim_event_calculators, event_list.events);
+    if (encountered_abnormal_event_handling_on == true &&
+        encountered_abnormal_event_handling_f == nullptr) {
+      throw std::runtime_error(
+          "Error in CompleteKineticEventData::update: "
+          "encountered_abnormal_event_handling_on == true && "
+          "encountered_abnormal_event_handling_f == nullptr");
+    }
+    if (selected_abnormal_event_handling_on == true &&
+        selected_abnormal_event_handling_f == nullptr) {
+      throw std::runtime_error(
+          "Error in CompleteKineticEventData::update: "
+          "selected_abnormal_event_handling_on == true && "
+          "selected_abnormal_event_handling_f == nullptr");
+    }
+    event_calculator = std::make_shared<CompleteEventCalculator<DebugMode>>(
+        prim_event_list, prim_event_calculators, event_list.events,
+        encountered_abnormal_event_handling_on,
+        encountered_abnormal_event_handling_f, n_encountered_abnormal);
 
     transformation_matrix_to_super = get_transformation_matrix_to_super(state);
   }
@@ -195,8 +284,8 @@ void CompleteKineticEventData<DebugMode>::run(
     run_manager_type &run_manager,
     std::shared_ptr<occ_events::OccSystem> event_system) {
   // Function to set selected event
-  bool requires_event_state =
-      collector.has_value() && collector->requires_event_state;
+  bool requires_event_state = check_requires_event_state<DebugMode>(
+      collector, this->selected_abnormal_event_handling_on);
   auto set_selected_event_f = [=](SelectedEvent &selected_event) {
     this->select_event(selected_event, requires_event_state);
   };
@@ -232,35 +321,58 @@ void CompleteKineticEventData<DebugMode>::select_event(
   selected_event.event_data = &event_data;
   selected_event.prim_event_data = &prim_event_data;
 
-  if (!allow_events_with_no_barrier && event_calculator->n_not_normal.size()) {
-    throw std::runtime_error(
-        "Error: Encountered event with no barrier, which is not allowed.");
-  }
-
   if (requires_event_state) {
-    prim_event_calculators.at(event_id.prim_event_index)
-        .calculate_event_state(m_event_state, event_data.unitcell_index,
-                               event_data.event.linear_site_index,
-                               prim_event_data);
+    EventStateCalculator &prim_event_calculator =
+        prim_event_calculators.at(event_id.prim_event_index);
+    prim_event_calculator.calculate_event_state(
+        m_event_state, event_data.unitcell_index,
+        event_data.event.linear_site_index, prim_event_data);
     selected_event.event_state = &m_event_state;
+
+    if (selected_abnormal_event_handling_on && !m_event_state.is_normal) {
+      if constexpr (DebugMode) {
+        Log &log = CASM::log();
+        log.custom("Handle selected abnormal event...");
+        log.indent() << "- event_type_name=" << prim_event_data.event_type_name
+                     << std::endl;
+        log.indent() << "Handling selected abnormal event ..." << std::endl;
+      }
+      Index &n = n_selected_abnormal[prim_event_data.event_type_name];
+      n += 1;
+      selected_abnormal_event_handling_f(n, m_event_state, event_data,
+                                         prim_event_data,
+                                         *prim_event_calculator.state());
+
+      if constexpr (DebugMode) {
+        Log &log = CASM::log();
+        log.indent() << "Handling selected abnormal event... DONE" << std::endl;
+        log.end_section();
+      }
+    }
   }
 }
 
 // -- AllowedKineticEventData --
 
-AllowedEventCalculator::AllowedEventCalculator(
+template <bool DebugMode>
+AllowedEventCalculator<DebugMode>::AllowedEventCalculator(
     std::vector<PrimEventData> const &_prim_event_list,
     std::vector<EventStateCalculator> const &_prim_event_calculators,
-    AllowedEventList &_event_list, Log &_event_log)
+    AllowedEventList &_event_list, bool _abnormal_event_handling_on,
+    AbnormalEventHandlingFunction _handling_f,
+    std::map<std::string, Index> &_n_encountered_abnormal)
     : prim_event_list(_prim_event_list),
       prim_event_calculators(_prim_event_calculators),
       event_list(_event_list),
-      event_log(_event_log) {}
+      abnormal_event_handling_on(_abnormal_event_handling_on),
+      handling_f(_handling_f),
+      n_encountered_abnormal(_n_encountered_abnormal) {}
 
 /// \brief Update `event_state` for event `event_index` in the current state
 /// and return the event rate; if the event is no longer allowed, free the
 /// event.
-double AllowedEventCalculator::calculate_rate(Index event_index) {
+template <bool DebugMode>
+double AllowedEventCalculator<DebugMode>::calculate_rate(Index event_index) {
   AllowedEventData const &allowed_event_data =
       event_list.allowed_event_map.events()[event_index];
   // EventID original_event_id = allowed_event_data.event_id;
@@ -281,34 +393,49 @@ double AllowedEventCalculator::calculate_rate(Index event_index) {
 
 /// \brief Update `event_state` for any event `event_id` in the current state
 /// and return the event rate
-double AllowedEventCalculator::calculate_rate(EventID const &event_id) {
+template <bool DebugMode>
+double AllowedEventCalculator<DebugMode>::calculate_rate(
+    EventID const &event_id) {
   Index prim_event_index = event_id.prim_event_index;
   PrimEventData const &prim_event_data =
       this->prim_event_list[prim_event_index];
-  Index unitcell_index = event_id.unitcell_index;
+  event_data.unitcell_index = event_id.unitcell_index;
 
   // set linear_site_index
-  set_event_linear_site_index(linear_site_index, unitcell_index,
-                              event_list.neighbor_index[prim_event_index],
-                              *event_list.supercell_nlist);
+  set_event_linear_site_index(
+      event_data.event.linear_site_index, event_data.unitcell_index,
+      event_list.neighbor_index[prim_event_index], *event_list.supercell_nlist);
 
   // calculate event state
   prim_event_calculators.at(prim_event_index)
-      .calculate_event_state(event_state, unitcell_index, linear_site_index,
+      .calculate_event_state(event_state, event_data.unitcell_index,
+                             event_data.event.linear_site_index,
                              prim_event_data);
 
   // ---
   // can check event state and handle non-normal event states here
   // ---
-  if (event_state.is_allowed && !event_state.is_normal) {
-    Index &n = n_not_normal[prim_event_data.event_type_name];
+  if (abnormal_event_handling_on) {
+    if (event_state.is_allowed && !event_state.is_normal) {
+      if constexpr (DebugMode) {
+        Log &log = CASM::log();
+        log.custom("Handle encountered abnormal event...");
+        log.indent() << "- event_type_name=" << prim_event_data.event_type_name
+                     << std::endl;
+        log.indent() << "Handling encountered abnormal event..." << std::endl;
+      }
+      Index &n = n_encountered_abnormal[prim_event_data.event_type_name];
+      n += 1;
+      handling_f(n, event_state, event_data, prim_event_data,
+                 *prim_event_calculators.at(prim_event_index).state());
 
-    if (n == 0) {
-      set_event_data(event_id);
-      print_no_barrier_warning(event_log, event_state, event_data,
-                               prim_event_data);
+      if constexpr (DebugMode) {
+        Log &log = CASM::log();
+        log.indent() << "Handling encountered abnormal event... DONE"
+                     << std::endl;
+        log.end_section();
+      }
     }
-    n += 1;
   }
 
   return event_state.rate;
@@ -316,13 +443,16 @@ double AllowedEventCalculator::calculate_rate(EventID const &event_id) {
 
 /// \brief Set `event_data` for event `event_index`, returning a reference
 /// which is valid until the next call to this method
-EventData const &AllowedEventCalculator::set_event_data(Index event_index) {
+template <bool DebugMode>
+EventData const &AllowedEventCalculator<DebugMode>::set_event_data(
+    Index event_index) {
   return set_event_data(event_list.allowed_event_map.event_id(event_index));
 }
 
 /// \brief Set `event_data` for any event `event_id`, returning a reference
 /// which is valid until the next call to this method
-EventData const &AllowedEventCalculator::set_event_data(
+template <bool DebugMode>
+EventData const &AllowedEventCalculator<DebugMode>::set_event_data(
     EventID const &event_id) {
   Index prim_event_index = event_id.prim_event_index;
   PrimEventData const &prim_event_data =
@@ -343,26 +473,22 @@ EventData const &AllowedEventCalculator::set_event_data(
 
 template <typename EventSelectorType, bool DebugMode>
 AllowedKineticEventData<EventSelectorType, DebugMode>::AllowedKineticEventData(
-    std::shared_ptr<system_type> _system, bool _allow_events_with_no_barrier,
-    bool _use_map_index, bool _use_neighborlist_impact_table,
-    bool _assign_allowed_events_only)
-    : allow_events_with_no_barrier(_allow_events_with_no_barrier),
-      use_map_index(_use_map_index),
-      use_neighborlist_impact_table(_use_neighborlist_impact_table),
-      assign_allowed_events_only(_assign_allowed_events_only) {
+    std::shared_ptr<system_type> _system, EventDataOptions _options)
+    : options(_options) {
   if constexpr (DebugMode) {
     Log &log = CASM::log();
     log.custom("Construct AllowedKineticEventData");
-    log << "Event data and selection:" << std::endl;
-    log << "- impact_table_type="
-        << (use_neighborlist_impact_table ? std::string("\"neighborlist\"")
-                                          : std::string("\"relative\""))
-        << std::endl;
-    log << "- event_selector_type=\"" << this->event_selector_type_str() << "\""
-        << std::endl;
-    log << "- assign_allowed_events_only=" << std::boolalpha
-        << assign_allowed_events_only << std::endl;
-    log << std::endl;
+    log.indent() << "Event data and selection:" << std::endl;
+    log.indent() << "- impact_table_type="
+                 << (options.use_neighborlist_impact_table
+                         ? std::string("\"neighborlist\"")
+                         : std::string("\"relative\""))
+                 << std::endl;
+    log.indent() << "- event_selector_type=\""
+                 << this->event_selector_type_str() << "\"" << std::endl;
+    log.indent() << "- assign_allowed_events_only=" << std::boolalpha
+                 << options.assign_allowed_events_only << std::endl;
+    log.indent() << std::endl;
     log.end_section();
   }
 
@@ -379,7 +505,6 @@ AllowedKineticEventData<EventSelectorType, DebugMode>::AllowedKineticEventData(
         "Error constructing AllowedKineticEventData: "
         "prim event list is empty.");
   }
-
   if constexpr (DebugMode) {
     Log &log = CASM::log();
     log.custom("Prim event list");
@@ -388,6 +513,32 @@ AllowedKineticEventData<EventSelectorType, DebugMode>::AllowedKineticEventData(
 
   prim_impact_info_list = clexmonte::make_prim_impact_info_list(
       *system, prim_event_list, {"formation_energy"});
+
+  BasicAbnormalEventHandler encountered_abnormal_event_handling_f(
+      "encountered", options.throw_if_encountered_event_is_abnormal,
+      options.warn_if_encountered_event_is_abnormal,
+      options.disallow_if_encountered_event_is_abnormal,
+      options.n_write_if_encountered_event_is_abnormal, options.output_dir,
+      options.local_corr_compare_tol);
+  set_encountered_abnormal_event_handling(
+      encountered_abnormal_event_handling_f);
+  this->encountered_abnormal_event_handling_on =
+      encountered_abnormal_event_handling_f.handling_on();
+
+  BasicAbnormalEventHandler selected_abnormal_event_handling_f(
+      "selected", options.throw_if_selected_event_is_abnormal,
+      options.warn_if_selected_event_is_abnormal, false,
+      options.n_write_if_selected_event_is_abnormal, options.output_dir,
+      options.local_corr_compare_tol);
+  set_selected_abnormal_event_handling(selected_abnormal_event_handling_f);
+  this->selected_abnormal_event_handling_on =
+      selected_abnormal_event_handling_f.handling_on();
+
+  if constexpr (DebugMode) {
+    Log &log = CASM::log();
+    log.indent() << "Construct AllowedKineticEventData: DONE" << std::endl
+                 << std::endl;
+  }
 }
 
 /// \brief Update for given state, conditions, occupants, event filters
@@ -396,6 +547,8 @@ AllowedKineticEventData<EventSelectorType, DebugMode>::AllowedKineticEventData(
 /// - This constructs the complete event list and impact table, and constructs
 ///   the event selector, which calculates all event rates.
 /// - Event filters are ignored (with a warning). This is a TODO feature.
+/// - Resets the `n_encountered_abnormal` and `n_selected_abnormal`
+///   counters.
 template <typename EventSelectorType, bool DebugMode>
 void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
     std::shared_ptr<StateData> _state_data,
@@ -444,8 +597,9 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
   event_list = std::make_shared<clexmonte::AllowedEventList>(
       prim_event_list, prim_impact_info_list, get_dof_values(state),
       occ_location, get_prim_neighbor_list(*system),
-      get_supercell_neighbor_list(*system, state), use_map_index,
-      use_neighborlist_impact_table, assign_allowed_events_only);
+      get_supercell_neighbor_list(*system, state), options.use_map_index,
+      options.use_neighborlist_impact_table,
+      options.assign_allowed_events_only);
 
   if constexpr (DebugMode) {
     Log &log = CASM::log();
@@ -458,9 +612,29 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
     log.end_section();
   }
 
+  // Reset "not normal" event counters
+  n_encountered_abnormal.clear();
+  n_selected_abnormal.clear();
+
   // Construct AllowedEventCalculator
-  event_calculator = std::make_shared<AllowedEventCalculator>(
-      prim_event_list, prim_event_calculators, *event_list);
+  if (encountered_abnormal_event_handling_on == true &&
+      encountered_abnormal_event_handling_f == nullptr) {
+    throw std::runtime_error(
+        "Error in AllowedKineticEventData::update: "
+        "encountered_abnormal_event_handling_on == true && "
+        "encountered_abnormal_event_handling_f == nullptr");
+  }
+  if (selected_abnormal_event_handling_on == true &&
+      selected_abnormal_event_handling_f == nullptr) {
+    throw std::runtime_error(
+        "Error in AllowedKineticEventData::update: "
+        "selected_abnormal_event_handling_on == true && "
+        "selected_abnormal_event_handling_f == nullptr");
+  }
+  event_calculator = std::make_shared<AllowedEventCalculator<DebugMode>>(
+      prim_event_list, prim_event_calculators, *event_list,
+      encountered_abnormal_event_handling_on,
+      encountered_abnormal_event_handling_f, n_encountered_abnormal);
 
   // Make event selector
   // - This calculates all rates at construction
@@ -476,8 +650,8 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::run(
     run_manager_type &run_manager,
     std::shared_ptr<occ_events::OccSystem> event_system) {
   // Function to set selected event
-  bool requires_event_state =
-      collector.has_value() && collector->requires_event_state;
+  bool requires_event_state = check_requires_event_state<DebugMode>(
+      collector, this->selected_abnormal_event_handling_on);
   auto set_selected_event_f = [=](SelectedEvent &selected_event) {
     this->select_event(selected_event, requires_event_state);
   };
@@ -495,59 +669,88 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::run(
 
 // -- EventSelectorType specializations --
 namespace {
-template <typename EventSelectorType>
-std::string event_selector_type_str_impl();
 
-template <>
-std::string event_selector_type_str_impl<sum_tree_event_selector_type>() {
-  return "sum_tree";
-}
+/// \brief Template class to specialize the implementation of the
+///     `make_event_selector` function and `type_str` function
+template <typename EventSelectorType, bool DebugMode>
+struct event_selector_impl;
 
-template <>
-std::string
-event_selector_type_str_impl<vector_sum_tree_event_selector_type>() {
-  return "vector_sum_tree";
-}
+/// "sum_tree" event selector
+template <bool DebugMode>
+struct event_selector_impl<
+    sum_tree_event_selector_type<AllowedEventCalculator<DebugMode>>,
+    DebugMode> {
+  typedef AllowedEventCalculator<DebugMode> event_calculator_type;
+  typedef sum_tree_event_selector_type<event_calculator_type>
+      event_selector_type;
 
-template <>
-std::string event_selector_type_str_impl<direct_sum_event_selector_type>() {
-  return "direct_sum";
-}
+  /// \brief Return "sum_tree"
+  static std::string type_str() { return "sum_tree"; }
 
-template <typename EventSelectorType>
+  /// \brief Construct the "sum_tree" event selector
+  static std::shared_ptr<event_selector_type> make_event_selector(
+      std::shared_ptr<event_calculator_type> event_calculator,
+      std::shared_ptr<AllowedEventList> event_list,
+      std::shared_ptr<lotto::RandomGenerator> random_generator) {
+    return std::make_shared<event_selector_type>(
+        event_calculator, event_list->allowed_event_map.event_index_list(),
+        GetImpactFromAllowedEventList(event_list), random_generator);
+  }
+};
+
+/// "vector_sum_tree" event selector
+template <bool DebugMode>
+struct event_selector_impl<
+    vector_sum_tree_event_selector_type<AllowedEventCalculator<DebugMode>>,
+    DebugMode> {
+  typedef AllowedEventCalculator<DebugMode> event_calculator_type;
+  typedef vector_sum_tree_event_selector_type<event_calculator_type>
+      event_selector_type;
+
+  /// \brief Return "vector_sum_tree"
+  static std::string type_str() { return "vector_sum_tree"; }
+
+  /// \brief Construct the "sum_tree" event selector
+  static std::shared_ptr<event_selector_type> make_event_selector(
+      std::shared_ptr<event_calculator_type> event_calculator,
+      std::shared_ptr<AllowedEventList> event_list,
+      std::shared_ptr<lotto::RandomGenerator> random_generator) {
+    return std::make_shared<event_selector_type>(
+        event_calculator, event_list->allowed_event_map.events().size(),
+        GetImpactFromAllowedEventList(event_list), random_generator);
+  }
+};
+
+/// "direct_sum" event selector
+template <bool DebugMode>
+struct event_selector_impl<
+    direct_sum_event_selector_type<AllowedEventCalculator<DebugMode>>,
+    DebugMode> {
+  typedef AllowedEventCalculator<DebugMode> event_calculator_type;
+  typedef direct_sum_event_selector_type<event_calculator_type>
+      event_selector_type;
+
+  /// \brief Return "direct_sum"
+  static std::string type_str() { return "direct_sum"; }
+
+  /// \brief Construct the "direct_sum" event selector
+  static std::shared_ptr<event_selector_type> make_event_selector(
+      std::shared_ptr<event_calculator_type> event_calculator,
+      std::shared_ptr<AllowedEventList> event_list,
+      std::shared_ptr<lotto::RandomGenerator> random_generator) {
+    return std::make_shared<event_selector_type>(
+        event_calculator, event_list->allowed_event_map.events().size(),
+        GetImpactFromAllowedEventList(event_list), random_generator);
+  }
+};
+
+template <typename EventSelectorType, bool DebugMode>
 std::shared_ptr<EventSelectorType> make_event_selector_impl(
-    std::shared_ptr<AllowedEventCalculator> event_calculator,
-    std::shared_ptr<AllowedEventList> event_list,
-    std::shared_ptr<lotto::RandomGenerator> random_generator);
-
-template <>
-std::shared_ptr<sum_tree_event_selector_type> make_event_selector_impl(
-    std::shared_ptr<AllowedEventCalculator> event_calculator,
+    std::shared_ptr<AllowedEventCalculator<DebugMode>> event_calculator,
     std::shared_ptr<AllowedEventList> event_list,
     std::shared_ptr<lotto::RandomGenerator> random_generator) {
-  return std::make_shared<sum_tree_event_selector_type>(
-      event_calculator, event_list->allowed_event_map.event_index_list(),
-      GetImpactFromAllowedEventList(event_list), random_generator);
-}
-
-template <>
-std::shared_ptr<vector_sum_tree_event_selector_type> make_event_selector_impl(
-    std::shared_ptr<AllowedEventCalculator> event_calculator,
-    std::shared_ptr<AllowedEventList> event_list,
-    std::shared_ptr<lotto::RandomGenerator> random_generator) {
-  return std::make_shared<vector_sum_tree_event_selector_type>(
-      event_calculator, event_list->allowed_event_map.events().size(),
-      GetImpactFromAllowedEventList(event_list), random_generator);
-}
-
-template <>
-std::shared_ptr<direct_sum_event_selector_type> make_event_selector_impl(
-    std::shared_ptr<AllowedEventCalculator> event_calculator,
-    std::shared_ptr<AllowedEventList> event_list,
-    std::shared_ptr<lotto::RandomGenerator> random_generator) {
-  return std::make_shared<direct_sum_event_selector_type>(
-      event_calculator, event_list->allowed_event_map.events().size(),
-      GetImpactFromAllowedEventList(event_list), random_generator);
+  return event_selector_impl<EventSelectorType, DebugMode>::make_event_selector(
+      event_calculator, event_list, random_generator);
 }
 
 }  // namespace
@@ -556,7 +759,7 @@ std::shared_ptr<direct_sum_event_selector_type> make_event_selector_impl(
 template <typename EventSelectorType, bool DebugMode>
 std::string AllowedKineticEventData<
     EventSelectorType, DebugMode>::event_selector_type_str() const {
-  return event_selector_type_str_impl<EventSelectorType>();
+  return event_selector_impl<EventSelectorType, DebugMode>::type_str();
 }
 
 /// \brief Constructs `event_selector`; must be called after `update`
@@ -577,7 +780,7 @@ void AllowedKineticEventData<EventSelectorType,
 
   // Make event selector
   // - This calculates all rates at construction
-  event_selector = make_event_selector_impl<EventSelectorType>(
+  event_selector = make_event_selector_impl<EventSelectorType, DebugMode>(
       event_calculator, event_list, random_generator);
 
   if constexpr (DebugMode) {
@@ -652,12 +855,6 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::select_event(
     Log &log = CASM::log();
     log.custom("Selected event");
 
-    prim_event_calculators.at(event_id.prim_event_index)
-        .calculate_event_state(m_event_state, event_data.unitcell_index,
-                               event_data.event.linear_site_index,
-                               prim_event_data);
-    selected_event.event_state = &m_event_state;
-
     // get ijk
     auto const &unitcell_index_converter =
         state_data->occ_location->convert().unitcell_index_converter();
@@ -693,17 +890,60 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::select_event(
     }
   }
 
-  if (!allow_events_with_no_barrier && event_calculator->n_not_normal.size()) {
-    throw std::runtime_error(
-        "Error: Encountered event with no barrier, which is not allowed.");
-  }
-
   if (requires_event_state) {
-    prim_event_calculators.at(event_id.prim_event_index)
-        .calculate_event_state(m_event_state, event_data.unitcell_index,
-                               event_data.event.linear_site_index,
-                               prim_event_data);
+    if constexpr (DebugMode) {
+      Log &log = CASM::log();
+      log.indent() << "- Selected event state calculation required=true"
+                   << std::endl;
+      log.indent() << "- Event state calculation..." << std::endl;
+    }
+
+    EventStateCalculator &prim_event_calculator =
+        prim_event_calculators.at(event_id.prim_event_index);
+    prim_event_calculator.calculate_event_state(
+        m_event_state, event_data.unitcell_index,
+        event_data.event.linear_site_index, prim_event_data);
     selected_event.event_state = &m_event_state;
+
+    if constexpr (DebugMode) {
+      Log &log = CASM::log();
+      log.indent() << "- Event state calculation... DONE" << std::endl
+                   << std::endl;
+
+      jsonParser event_json;
+      to_json(m_event_state, event_json["event_state"]);
+      event_json["unitcell_index"] = event_data.unitcell_index;
+      event_json["linear_site_index"] = event_data.event.linear_site_index;
+      to_json(prim_event_data, event_json["prim_event_data"]);
+      log << event_json << std::endl << std::endl;
+    }
+
+    if (selected_abnormal_event_handling_on && !m_event_state.is_normal) {
+      if constexpr (DebugMode) {
+        Log &log = CASM::log();
+        log.custom("Handle selected abnormal event...");
+        log.indent() << "- event_type_name=" << prim_event_data.event_type_name
+                     << std::endl;
+        log.indent() << "Handling selected abnormal event ..." << std::endl;
+      }
+      Index &n = n_selected_abnormal[prim_event_data.event_type_name];
+      n += 1;
+      selected_abnormal_event_handling_f(n, m_event_state, event_data,
+                                         prim_event_data,
+                                         *prim_event_calculator.state());
+
+      if constexpr (DebugMode) {
+        Log &log = CASM::log();
+        log.indent() << "Handling selected abnormal event... DONE" << std::endl;
+        log.end_section();
+      }
+    }
+  } else {
+    if constexpr (DebugMode) {
+      Log &log = CASM::log();
+      log.indent() << "- Selected event state calculation required=false"
+                   << std::endl;
+    }
   }
 
   if constexpr (DebugMode) {
@@ -716,17 +956,21 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::select_event(
 
 // DebugMode=false
 template class CompleteKineticEventData<false>;
-template class AllowedKineticEventData<vector_sum_tree_event_selector_type,
-                                       false>;
-template class AllowedKineticEventData<sum_tree_event_selector_type, false>;
-template class AllowedKineticEventData<direct_sum_event_selector_type, false>;
+template class AllowedKineticEventData<
+    vector_sum_tree_event_selector_type<AllowedEventCalculator<false>>, false>;
+template class AllowedKineticEventData<
+    sum_tree_event_selector_type<AllowedEventCalculator<false>>, false>;
+template class AllowedKineticEventData<
+    direct_sum_event_selector_type<AllowedEventCalculator<false>>, false>;
 
 // DebugMode=true
 template class CompleteKineticEventData<true>;
-template class AllowedKineticEventData<vector_sum_tree_event_selector_type,
-                                       true>;
-template class AllowedKineticEventData<sum_tree_event_selector_type, true>;
-template class AllowedKineticEventData<direct_sum_event_selector_type, true>;
+template class AllowedKineticEventData<
+    vector_sum_tree_event_selector_type<AllowedEventCalculator<true>>, true>;
+template class AllowedKineticEventData<
+    sum_tree_event_selector_type<AllowedEventCalculator<true>>, true>;
+template class AllowedKineticEventData<
+    direct_sum_event_selector_type<AllowedEventCalculator<true>>, true>;
 
 }  // namespace kinetic_2
 }  // namespace clexmonte

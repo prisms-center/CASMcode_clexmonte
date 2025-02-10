@@ -126,6 +126,11 @@ class MonteEventData {
   /// The system
   std::shared_ptr<system_type> system() const { return m_data->system; }
 
+  /// Output directory
+  fs::path const &output_dir() const {
+    return m_data->event_data_options().output_dir;
+  }
+
   /// The `prim events`, one translationally distinct instance
   /// of each event, associated with origin primitive cell
   std::vector<clexmonte::PrimEventData> const &prim_event_list() const {
@@ -154,13 +159,58 @@ class MonteEventData {
     return m_data->kra_coefficients(prim_event_index);
   }
 
-  // -- Custom event state calculation --
+  // -- Custom event state calculation and handling functions --
 
   /// Set custom event state calculation functions
   void set_custom_event_state_calculation(
       std::string const &event_type_name,
       CustomEventStateCalculationFunction f) {
     m_data->set_custom_event_state_calculation(event_type_name, f);
+  }
+
+  /// Set custom event state calculation functions off
+  void set_custom_event_state_calculation_off(
+      std::string const &event_type_name) {
+    m_data->set_custom_event_state_calculation_off(event_type_name);
+  }
+
+  /// \brief Set the encountered abnormal event handling function
+  void set_encountered_abnormal_event_handling(
+      AbnormalEventHandlingFunction handling_f) {
+    m_data->set_encountered_abnormal_event_handling(handling_f);
+  }
+
+  /// \brief Turn off the encountered abnormal event handling function
+  void set_encountered_abnormal_event_handling_off() {
+    m_data->set_encountered_abnormal_event_handling_off();
+  }
+
+  /// \brief Set the selected abnormal event handling function
+  void set_selected_abnormal_event_handling(
+      AbnormalEventHandlingFunction handling_f) {
+    m_data->set_selected_abnormal_event_handling(handling_f);
+  }
+
+  /// \brief Turn off the selected abnormal event handling function
+  void set_selected_abnormal_event_handling_off() {
+    m_data->set_selected_abnormal_event_handling_off();
+  }
+
+  /// \brief Turn off both the encountered and selected abnormal event
+  /// handling functions
+  void set_abnormal_event_handling_off() {
+    m_data->set_encountered_abnormal_event_handling_off();
+    m_data->set_selected_abnormal_event_handling_off();
+  }
+
+  /// Return number of encountered abnormal events calculated, by type
+  std::map<std::string, Index> const &n_encountered_abnormal() {
+    return m_data->n_encountered_abnormal;
+  }
+
+  /// Return number of selected abnormal events, by type
+  std::map<std::string, Index> const &n_selected_abnormal() const {
+    return m_data->n_selected_abnormal;
   }
 
   // -- Event list --
@@ -283,14 +333,14 @@ struct EventDataSummary {
 
   Index n_events_allowed;
   Index n_events_possible;
-  Index n_not_normal_total;
+  Index n_abnormal_total;
   Index event_list_size;
   double total_rate;
   double mean_time_increment;
 
   IntCountByType n_possible;
   IntCountByType n_allowed;
-  IntCountByType n_not_normal;
+  IntCountByType n_abnormal;
 
   FloatCountByType rate;
 
@@ -362,9 +412,9 @@ void print(Log &log, EventDataSummary const &event_data_summary) {
     std::string event_type_name = pair.first;
     log.indent() << "  - " << event_type_name << " = "
                  << x.n_allowed.by_type.at(event_type_name);
-    if (x.n_not_normal.by_type.at(event_type_name) != 0.0) {
-      log.indent() << " (** not_normal = "
-                   << x.n_not_normal.by_type.at(event_type_name) << " **)";
+    if (x.n_abnormal.by_type.at(event_type_name) != 0.0) {
+      log.indent() << " (** abnormal = "
+                   << x.n_abnormal.by_type.at(event_type_name) << " **)";
     }
     log.indent() << std::endl;
 
@@ -372,9 +422,9 @@ void print(Log &log, EventDataSummary const &event_data_summary) {
       Index equivalent_index = equiv_key.second;
       log.indent() << "    - " << event_type_name << "." << equivalent_index
                    << " = " << x.n_allowed.by_equivalent_index.at(equiv_key);
-      if (x.n_not_normal.by_equivalent_index.at(equiv_key) != 0.0) {
-        log.indent() << " (** not_normal = "
-                     << x.n_not_normal.by_equivalent_index.at(equiv_key)
+      if (x.n_abnormal.by_equivalent_index.at(equiv_key) != 0.0) {
+        log.indent() << " (** abnormal = "
+                     << x.n_abnormal.by_equivalent_index.at(equiv_key)
                      << " **)";
       }
       log.indent() << std::endl;

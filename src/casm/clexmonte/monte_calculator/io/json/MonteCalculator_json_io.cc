@@ -33,6 +33,8 @@ fs::path resolve_path(fs::path p, std::vector<fs::path> search_path) {
 /// \param system System data
 /// \param params Calculation method parameters, as specified by the
 ///     particular calculation type
+/// \param engine A random number engine. If null, a new one seeded by
+///     std::random_device is constructed.
 /// \param search_path Paths besides the current working directory to look for
 ///     a MonteCalculator source file.
 ///
@@ -52,6 +54,7 @@ fs::path resolve_path(fs::path p, std::vector<fs::path> search_path) {
 ///     "g++ -shared -L/path/to/lib -lcasm_clexmonte "
 void parse(InputParser<std::shared_ptr<MonteCalculator>> &parser,
            std::shared_ptr<System> &system, jsonParser const &params,
+           std::shared_ptr<MonteCalculator::engine_type> engine,
            std::vector<fs::path> search_path) {
   // parse "source"
   std::string _calculator_src;
@@ -120,7 +123,7 @@ void parse(InputParser<std::shared_ptr<MonteCalculator>> &parser,
   if (parser.valid()) {
     parser.value = std::make_unique<std::shared_ptr<MonteCalculator>>(
         make_monte_calculator_from_source(
-            calculator_dirpath, calculator_name, params, system,
+            calculator_dirpath, calculator_name, system, params, engine,
             calculator_compile_options, calculator_so_options));
   }
 }

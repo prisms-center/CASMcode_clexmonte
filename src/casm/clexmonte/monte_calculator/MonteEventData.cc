@@ -53,8 +53,8 @@ EventDataSummary::EventDataSummary(
     n_allowed.by_type[type] = 0.0;
     n_allowed.by_equivalent_index[equiv] = 0.0;
 
-    n_not_normal.by_type[type] = 0.0;
-    n_not_normal.by_equivalent_index[equiv] = 0.0;
+    n_abnormal.by_type[type] = 0.0;
+    n_abnormal.by_equivalent_index[equiv] = 0.0;
 
     rate.by_type[type] = 0.0;
     rate.by_equivalent_index[equiv] = 0.0;
@@ -72,7 +72,7 @@ EventDataSummary::EventDataSummary(
 
   n_events_allowed = 0;
   n_events_possible = 0;
-  n_not_normal_total = 0;
+  n_abnormal_total = 0;
   event_list_size = event_data.event_list().size();
   total_rate = event_data.event_list().total_rate();
   mean_time_increment = 1.0 / total_rate;
@@ -139,9 +139,9 @@ void EventDataSummary::_add_count(EventID const &id, EventState const &state) {
     n_allowed.by_type[type] += increment;
     n_allowed.by_equivalent_index[equiv] += increment;
     if (!state.is_normal) {
-      n_not_normal.by_type[type] += increment;
-      n_not_normal.by_equivalent_index[equiv] += increment;
-      n_not_normal_total += increment;
+      n_abnormal.by_type[type] += increment;
+      n_abnormal.by_equivalent_index[equiv] += increment;
+      n_abnormal_total += increment;
     }
   }
   rate.by_type[type] += state.rate;
@@ -311,9 +311,9 @@ jsonParser &to_json(clexmonte::EventDataSummary const &event_data_summary,
   json["event_list_size"] = x.event_list_size;
 
   // Number of events without barrier, by type
-  to_json(x.n_not_normal, json["n_events_with_no_barrier"]);
+  to_json(x.n_abnormal, json["n_abnormal_events"]);
 
-  json["n_events_with_no_barrier"]["total"] = x.n_not_normal_total;
+  json["n_abnormal_events"]["total"] = x.n_abnormal_total;
 
   // Event rate sum, by type
   to_json(x.rate, json["rate"]);

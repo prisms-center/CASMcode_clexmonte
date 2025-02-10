@@ -4,6 +4,7 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 #include <pybind11/stl_bind.h>
 
 // nlohmann::json binding
@@ -50,7 +51,7 @@ namespace CASMpy {
 using namespace CASM;
 
 // used for libcasm.clexmonte:
-typedef std::mt19937_64 engine_type;
+typedef clexmonte::default_engine_type engine_type;
 typedef monte::RandomNumberGenerator<engine_type> generator_type;
 typedef clexmonte::MonteCalculator calculator_type;
 typedef clexmonte::MontePotential potential_type;
@@ -114,7 +115,7 @@ std::shared_ptr<clexmonte::EventDataSummary> make_event_data_summary(
 
 clexmonte::MonteEventData make_event_data(
     std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type &state,
-    std::shared_ptr<engine_type> engine, monte::OccLocation *occ_location) {
+    monte::OccLocation *occ_location) {
   // print errors and warnings to sys.stdout
   py::scoped_ostream_redirect redirect;
   calculator->set_state_and_potential(state, occ_location);
@@ -122,38 +123,8 @@ clexmonte::MonteEventData make_event_data(
     calculator->state_data()->owned_occ_location =
         calculator->make_occ_location();
   }
-  calculator->set_event_data(engine);
+  calculator->set_event_data();
   return calculator->event_data();
-}
-
-std::shared_ptr<clexmonte::MonteCalculator>
-make_shared_SemiGrandCanonicalCalculator(jsonParser const &params,
-                                         std::shared_ptr<system_type> system) {
-  std::shared_ptr<RuntimeLibrary> lib = nullptr;
-  return clexmonte::make_monte_calculator(
-      params, system,
-      std::unique_ptr<clexmonte::BaseMonteCalculator>(
-          make_SemiGrandCanonicalCalculator()),
-      lib);
-}
-
-std::shared_ptr<clexmonte::MonteCalculator> make_shared_CanonicalCalculator(
-    jsonParser const &params, std::shared_ptr<system_type> system) {
-  std::shared_ptr<RuntimeLibrary> lib = nullptr;
-  return clexmonte::make_monte_calculator(
-      params, system,
-      std::unique_ptr<clexmonte::BaseMonteCalculator>(
-          make_CanonicalCalculator()),
-      lib);
-}
-
-std::shared_ptr<clexmonte::MonteCalculator> make_shared_KineticCalculator(
-    jsonParser const &params, std::shared_ptr<system_type> system) {
-  std::shared_ptr<RuntimeLibrary> lib = nullptr;
-  return clexmonte::make_monte_calculator(
-      params, system,
-      std::unique_ptr<clexmonte::BaseMonteCalculator>(make_KineticCalculator()),
-      lib);
 }
 
 std::shared_ptr<clexmonte::StateData> make_state_data(
@@ -164,7 +135,7 @@ std::shared_ptr<clexmonte::StateData> make_state_data(
 
 std::shared_ptr<clexmonte::MonteCalculator> make_monte_calculator(
     std::string method, std::shared_ptr<system_type> system,
-    std::optional<nlohmann::json> params) {
+    std::optional<nlohmann::json> params, std::shared_ptr<engine_type> engine) {
   // print errors and warnings to sys.stdout
   py::scoped_ostream_redirect redirect;
   jsonParser _params = jsonParser::object();
@@ -173,23 +144,28 @@ std::shared_ptr<clexmonte::MonteCalculator> make_monte_calculator(
     _params = json;
   }
 
+  typedef std::unique_ptr<clexmonte::BaseMonteCalculator> base_calculator_type;
+  base_calculator_type base_calculator;
+  std::shared_ptr<RuntimeLibrary> lib = nullptr;
   if (method == "semigrand_canonical") {
-    return make_shared_SemiGrandCanonicalCalculator(_params, system);
+    base_calculator = base_calculator_type(make_SemiGrandCanonicalCalculator());
   } else if (method == "canonical") {
-    return make_shared_CanonicalCalculator(_params, system);
+    base_calculator = base_calculator_type(make_CanonicalCalculator());
   } else if (method == "kinetic") {
-    return make_shared_KineticCalculator(_params, system);
+    base_calculator = base_calculator_type(make_KineticCalculator());
   } else {
     std::stringstream msg;
     msg << "Error in make_monte_calculator: method='" << method
         << "' is not recognized";
     throw std::runtime_error(msg.str());
   }
+  return clexmonte::make_monte_calculator(_params, system, engine,
+                                          std::move(base_calculator), lib);
 }
 
 std::shared_ptr<clexmonte::MonteCalculator> make_custom_monte_calculator(
     std::shared_ptr<system_type> system, std::string source,
-    std::optional<nlohmann::json> params,
+    std::optional<nlohmann::json> params, std::shared_ptr<engine_type> engine,
     std::optional<std::string> compile_options,
     std::optional<std::string> so_options,
     std::optional<std::vector<std::string>> search_path) {
@@ -220,7 +196,7 @@ std::shared_ptr<clexmonte::MonteCalculator> make_custom_monte_calculator(
     }
   }
   InputParser<std::shared_ptr<clexmonte::MonteCalculator>> parser(
-      json, system, _params, _search_path);
+      json, system, _params, engine, _search_path);
   std::runtime_error error_if_invalid{
       "Error in libcasm.clexmonte.make_monte_calculator"};
   report_and_throw_if_invalid(parser, CASM::log(), error_if_invalid);
@@ -261,9 +237,7 @@ std::shared_ptr<sampling_fixture_type> monte_calculator_run_fixture(
   // print errors and warnings to sys.stdout
   py::scoped_ostream_redirect redirect;
   if (!engine) {
-    engine = std::make_shared<engine_type>();
-    std::random_device device;
-    engine->seed(device());
+    engine = self.engine();
   }
   std::vector<sampling_fixture_params_type> _sampling_fixture_params;
   _sampling_fixture_params.push_back(sampling_fixture_params);
@@ -876,7 +850,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           [](clexmonte::EventID const &self) {
             return clexmonte::EventID(self);
           },
-          "Represent the EventID as a Python dict.")
+          "Create a copy of the EventID.")
       .def("__copy__",
            [](clexmonte::EventID const &self) {
              return clexmonte::EventID(self);
@@ -1275,6 +1249,175 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::keep_alive<
               0, 1>() /* Essential: keep object alive while iterator exists */);
 
+  py::class_<clexmonte::BasicAbnormalEventHandler>(
+      m, "BasicAbnormalEventHandler", R"pbdoc(
+      Function object for handling abnormal events
+
+      Events are typically labeled normal (using
+      :py:attr:`EventState.is_normal <libcasm.clexmonte.EventState.is_normal>`)
+      if there is an activation barrier between the initial and final states
+      and abnormal otherwise. BasicAbnormalEventHandler can be used to control
+      what happens (warn, throw, write, disallow) when abnormal events are
+      encountered or selected.
+
+      .. rubric:: Local configurations
+
+      The local configurations of events without a barrier are written
+      to files named ``"{event_kind}_abnormal_events.jsonl"`` in the directory
+      specified by the `output_dir` constructor parameter. The `n_write`
+      constructor parameter controls the maximum number of each event type
+      written in these files. Once the maximum number is reached additional
+      local configurations are not written. Local configurations are only
+      written for events with local correlations that are distinct from all
+      those that have previously be written.
+
+      The format is a "JSON Lines" file, which is a text file with one JSON
+      object per line. Each JSON object is a dictionary with a
+      "local_configuration" attribute and an "event" attribute. The file can
+      be read using TODO to construct a
+      :class:`~libcasm.local_configuration.LocalConfigurationList` and a list
+      of the corresponding event data for each event type.
+
+      The event data has the format:
+
+      .. code-block:: Python
+
+          {
+              "event_state": <EventState dict>,
+              "unitcell_index": int,
+              "linear_site_index": list[int],
+              "prim_event_data": <PrimEventData dict>,
+          }
+
+
+      .. rubric:: Special Methods
+
+      BasicAbnormalEventHandler has a call operator with the following
+      signature:
+
+      .. code-block:: python
+
+          import libcasm.clexmonte as clexmonte
+
+          def encountered_abnormal_event_handling_f(
+              n_abnormal_events: int,
+              event_state: clexmonte.EventState,
+              event_data: clexmonte.EventData,
+              prim_event_data: clexmonte.PrimEventData,
+              state: clexmonte.MonteCarloState,
+          ) -> None:
+              """Handle an encountered abnormal event
+
+              Parameters
+              ----------
+              n_abnormal_events: int
+                  The number of abnormal events so far of the same event type as
+                  the current event (as specified by
+                  `prim_event_data.event_type_name`). This is used to, for example,
+                  only print a warning message the first time a particular type of
+                  event is encountered or selected. It will either be the number
+                  encountered or selected, depending on if this method is being
+                  used to handle encountered or selected events. This is not
+                  mutable.
+              event_state: clexmonte.EventState
+                  The event state calculated for the current event.
+                  This parameter is mutable, and the function may
+                  disallow the event by setting
+                  `event_state.rate = 0.0`.
+              event_data: clexmonte.EventData
+                  Provides the unit cell location of the current
+                  event, linear site indices, and initial and
+                  final occupation. This is not mutable.
+              prim_event_data: clexmonte.PrimEventData
+                  Provides the translationally invariant event
+                  data, such as the event type name and equivalent
+                  index. This is not mutable.
+              state: clexmonte.MonteCarloState
+                  The current Monte Carlo simulation state. This
+                  is not mutable.
+              """
+              ... Handle the abnormal event ...
+              return None
+
+      )pbdoc")
+      .def(py::init<std::string, bool, bool, bool, Index,
+                    std::optional<fs::path>, double>(),
+           R"pbdoc(
+          .. rubric:: Constructor
+
+          Parameters
+          ----------
+          event_kind : str
+              One of "encountered" or "selected". Used to set the wording used
+              for messages and the file name for output of local configurations.
+          do_throw : bool
+              If `True`, throw an exception when called.
+          do_warn : bool
+              If `True`, print a warning message the first time this is called
+              for each event type (as determined by the event type name).
+          disallow : bool
+              If `True`, set the event rate to 0.0 when called. This can
+              only be used for `event_kind` equal to `"encountered"`.
+          n_write : int = 100
+              The maximum number of local configurations of each type to write
+              to file.
+          output_dir: Optional[pathlib.Path] = None
+              Directory in which write results. If None, uses ``"output"``.
+              The local configurations of abnormal events are written
+              to files named ``"{event_kind}_abnormal_events.jsonl"`` in this
+              directory. The format is a "JSON Lines" file, which is a text
+              file with one JSON object per line.
+          tol: float = libcasm.casmglobal.TOL
+              The tolerance used to compare local correlations when deciding
+              if events are unique.
+
+          )pbdoc",
+           py::arg("event_kind"), py::arg("do_throw"), py::arg("do_warn"),
+           py::arg("disallow"), py::arg("n_write") = 100,
+           py::arg("output_dir") = std::nullopt, py::arg("tol") = CASM::TOL)
+      .def(
+          "__call__",
+          [](clexmonte::BasicAbnormalEventHandler &f, Index n_abnormal_events,
+             std::reference_wrapper<clexmonte::EventState> event_state,
+             std::reference_wrapper<clexmonte::EventData const> event_data,
+             std::reference_wrapper<clexmonte::PrimEventData const>
+                 prim_event_data,
+             std::reference_wrapper<clexmonte::state_type const> state) {
+            f(n_abnormal_events, event_state, event_data, prim_event_data,
+              state);
+          },
+          R"pbdoc(
+          Handle an abnormal event
+
+          Parameters
+          ----------
+          n_abnormal_events: int
+              The number of abnormal events so far of the same event type as
+              the current event (as specified by
+              `prim_event_data.event_type_name`). This is used to, for example,
+              only print a warning message the first time a particular type of
+              event is encountered or selected. It will either be the number
+              encountered or selected, depending on if this method is being
+              used to handle encountered or selected events. This is not
+              mutable.
+          event_state: clexmonte.EventState
+              The event state calculated for the current event.
+              This parameter is mutable, and the function may
+              disallow the event by setting
+              `event_state.rate = 0.0`.
+          event_data: clexmonte.EventData
+              Provides the unit cell location of the current
+              event, linear site indices, and initial and
+              final occupation. This is not mutable.
+          prim_event_data: clexmonte.PrimEventData
+              Provides the translationally invariant event
+              data, such as the event type name and equivalent
+              index. This is not mutable.
+          state: clexmonte.MonteCarloState
+              The current Monte Carlo simulation state. This
+              is not mutable.
+          )pbdoc");
+
   py::class_<clexmonte::MonteEventData>(m, "MonteEventData",
                                         R"pbdoc(
       Interface to event data
@@ -1296,7 +1439,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                       state=state,
                       occ_location=occ_location,
                   )
-              calculator.set_event_data(engine=engine)
+              calculator.set_event_data()
               event_data = calculator.event_data
 
 
@@ -1307,9 +1450,6 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           state : libcasm.clexmonte.MonteCarloState
               The state events are constructed for. The calculator's state data
               and potential will be set to point to this state.
-          engine: Optional[libcasm.monte.RandomNumberEngine] = None
-              Optional random number engine to use. If None, one is constructed and
-              seeded from std::random_device.
           occ_location: Optional[libcasm.monte.events.OccLocation] = None
               Current occupant location list. If provided, the user is
               responsible for ensuring it is up-to-date with the current
@@ -1318,8 +1458,13 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               state data will be set to point to this occupant location list.
 
           )pbdoc",
-           py::arg("calculator"), py::arg("state"), py::arg("engine") = nullptr,
+           py::arg("calculator"), py::arg("state"),
            py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+      .def_property_readonly("output_dir",
+                             &clexmonte::MonteEventData::output_dir,
+                             R"pbdoc(
+          pathlib.Path: Output directory for event data.
+          )pbdoc")
       .def_property_readonly(
           "prim_event_list",
           [](clexmonte::MonteEventData &self)
@@ -1512,13 +1657,12 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           The custom event state calculation function is only called if the
           event is allowed based on the current occupation (in other words, the
           event is allowed if the event definition is consistent with the
-          occupation in the current state). The function does
-          not need to modify the `event_state.is_allowed` attribute, which
-          will always be set to `True` if the function is called.
+          occupation in the current state). The function may disallow the event
+          by setting `event_state.rate = 0.0`. The function does not need to
+          modify the `event_state.is_allowed` attribute, which will always be
+          set to `True` if the function is called. Other event state properties
+          are not required to be set.
 
-          The function may make further checks and disallow the event by setting
-          `event_state.is_allowed = False` and `event_state.rate = 0.0`. In this
-          case, other event state properties are not required to be set.
 
           Parameters
           ----------
@@ -1535,7 +1679,128 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               kra, and attempt frequency cluster expansions.
 
           )pbdoc",
-           py::arg("event_type_name"), py::arg("function"));
+           py::arg("event_type_name"), py::arg("function"))
+      .def("set_custom_event_state_calculation_off",
+           &clexmonte::MonteEventData::set_custom_event_state_calculation_off,
+           R"pbdoc(
+           Reset event state calculation to the default method for a particular
+           event type
+
+           Parameters
+           ----------
+           event_type_name: str
+               The type of events to reset to use the default event state
+               calculation method.
+
+           )pbdoc",
+           py::arg("event_type_name"))
+      .def("set_encountered_abnormal_event_handling",
+           &clexmonte::MonteEventData::set_encountered_abnormal_event_handling,
+           R"pbdoc(
+          Set a custom handling function for encountered abnormal events
+
+          .. rubric:: Handling encountered abnormal events
+
+          Events are "encountered" whenever the (i) the event state
+          calculation is performed and (ii) the event is consistent with the
+          current configuration. Note that a KMC implementation requires
+          calculating the rates at the beginning of a simulation and when the
+          occurance of one event impacts other events, but it can also happen
+          for other implementation-specific reasons such as the event list size
+          changing.
+
+          For the default event state calculation method, an event is “normal”
+          if there is an activation barrier between the initial and final
+          states. This is the case if `dE_activated > 0.0` and
+          `dE_activated > dE_final`. When there is no barrier, different ways
+          of handling the event may be desirable. The "kinetic" MonteCalculator
+          has some default options (see TODO) for handling encountered abnormal
+          events, and this method provides a mechanism for setting a
+          user-specified handling function.
+
+          The custom handling function should have same signature as the
+          :class:`~libcasm.clexmonte.BasicAbnormalEventHandler` call
+          operator.
+
+          .. rubric:: Disallowing events
+
+          The custom event handling function is only called if the
+          event is allowed based on the current occupation (in other words, the
+          event is allowed if the event definition is consistent with the
+          occupation in the current state). The function may disallow the event
+          by setting `event_state.rate = 0.0`. The function does not need to
+          modify the `event_state.is_allowed` attribute, which will always be
+          set to `True` if the function is called. Other event state properties
+          are not required to be set.
+
+
+          Parameters
+          ----------
+          function: Callable[[int, EventState, EventData, PrimEventData, MonteCarloState], None]
+              A custom function for handling encountered abnormal events.
+
+          )pbdoc",
+           py::arg("function"))
+      .def("set_encountered_abnormal_event_handling_off",
+           &clexmonte::MonteEventData::
+               set_encountered_abnormal_event_handling_off,
+           R"pbdoc(
+          Turn off handling of encountered abnormal events (do not warn,
+          throw, disallow, or write local configurations).
+          )pbdoc")
+      .def("set_selected_abnormal_event_handling",
+           &clexmonte::MonteEventData::set_selected_abnormal_event_handling,
+           R"pbdoc(
+          Set a custom handling function for selected abnormal events
+
+          .. rubric:: Handling selected abnormal events
+
+          Once the KMC algorithm selects an event it must be applied, but
+          this function allows users to customize data collection about
+          selected events without a barrier, separately from a generic
+          selected event function.
+
+          For the default event state calculation method, an event is “normal”
+          if there is an activation barrier between the initial and final
+          states. This is the case if `dE_activated > 0.0` and
+          `dE_activated > dE_final`. When there is no barrier, different ways
+          of handling the event may be desirable. The "kinetic" MonteCalculator
+          has some default options (see TODO) for handling abnormal events,
+          and this method provides a mechanism for setting a
+          user-specified handling function.
+
+          The custom handling function should have same signature as the
+          :class:`~libcasm.clexmonte.BasicAbnormalEventHandler` call
+          operator.
+
+          Parameters
+          ----------
+          function: Callable[[int, EventState, EventData, PrimEventData, MonteCarloState], None]
+              A custom function for handling selected abnormal events.
+          )pbdoc",
+           py::arg("function"))
+      .def("set_selected_abnormal_event_handling_off",
+           &clexmonte::MonteEventData::set_selected_abnormal_event_handling_off,
+           R"pbdoc(
+          Turn off handling of selected abnormal events (do not warn,
+          throw, or write local configurations).
+          )pbdoc")
+      .def("set_abnormal_event_handling_off",
+           &clexmonte::MonteEventData::set_abnormal_event_handling_off,
+           R"pbdoc(
+          Turn off handling of both encountered and selected abnormal events
+          (do not warn, throw, disallow, or write local configurations).
+          )pbdoc")
+      .def_property_readonly("n_encountered_abnormal",
+                             &clexmonte::MonteEventData::n_encountered_abnormal,
+                             R"pbdoc(
+          dict[str,int]: The number of encountered abnormal events of each type.
+          )pbdoc")
+      .def_property_readonly("n_selected_abnormal",
+                             &clexmonte::MonteEventData::n_selected_abnormal,
+                             R"pbdoc(
+          dict[str,int]: The number of selected abnormal events of each type.
+          )pbdoc");
 
   py::class_<clexmonte::EventDataSummary,
              std::shared_ptr<clexmonte::EventDataSummary>>
@@ -1578,9 +1843,13 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               Monte Carlo calculation method parameters. Expected values
               depends on the calculation method.
 
+          engine: Optional[libcasm.monte.RandomNumberEngine] = None
+              Optional random number engine to use. If None, one is constructed and
+              seeded from std::random_device.
+
           )pbdoc",
            py::arg("method"), py::arg("system"),
-           py::arg("params") = std::nullopt)
+           py::arg("params") = std::nullopt, py::arg("engine") = nullptr)
       .def(
           "make_default_sampling_fixture_params",
           [](std::shared_ptr<calculator_type> &self, std::string label,
@@ -1761,6 +2030,11 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               state's occupation.
 
           )pbdoc")
+      .def_property("engine", &calculator_type::engine,
+                    &calculator_type::set_engine,
+                    R"pbdoc(
+          libcasm.monte.RandomNumberEngine: The random number engine.
+          )pbdoc")
       .def("set_event_data", &calculator_type::set_event_data,
            R"pbdoc(
           Set event data (includes calculating all rates), using current state data
@@ -1772,6 +2046,9 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
             using :func:`~libcasm.clexmonte.MonteCalculator.set_state_and_potential`,
             and make and set an occupant location list using
             :func:`~libcasm.clexmonte.MonteCalculator.make_occ_location`.
+          - After calling, the calculator's event data will be set and can be
+            accessed outside of the `run` method.
+          - Uses the current random number engine when constructing
 
 
           Parameters
@@ -1782,18 +2059,24 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               engine will be shared. If None, then a new
               :class:`~libcasm.monte.RandomNumberEngine` will be constructed and
               seeded using std::random_device.
-          )pbdoc",
-           py::arg("engine") = std::shared_ptr<engine_type>())
+          )pbdoc")
       .def("run", &monte_calculator_run,
            R"pbdoc(
           Perform a single run, evolving the input state
+
+          Notes
+          -----
+          - An effect of calling this function is that it sets
+            :py:attr:`MonteCalculator.engine <libcasm.clexmonte.MonteCalculator.engine>`
+            as if by ``self.engine = run_manager.engine``.
 
           Parameters
           ----------
           state : libcasm.clexmonte.MonteCarloState
               The input state.
           run_manager: libcasm.clexmonte.RunManager
-              Specifies sampling and convergence criteria and collects results
+              Specifies sampling and convergence criteria, provides the random
+              number engine, and collects results.
           occ_location: Optional[libcasm.monte.events.OccLocation] = None
               Current occupant location list. If provided, the user is
               responsible for ensuring it is up-to-date with the current
@@ -1818,8 +2101,9 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           sampling_fixture_params: libcasm.clexmonte.SamplingFixtureParams
               Specifies sampling and convergence criteria and collects results.
           engine: Optional[libcasm.monte.RandomNumberEngine] = None
-              Optional random number engine to use. If None, one is constructed and
-              seeded from std::random_device.
+              Optional random number engine to use. If None, the current engine
+              :py:attr:`MonteCalculator.engine <libcasm.clexmonte.MonteCalculator.engine>`
+              is used. If provided, the current engine is replaced.
           occ_location: Optional[libcasm.monte.events.OccLocation] = None
               Current occupant location list. If provided, the user is
               responsible for ensuring it is up-to-date with the current
@@ -2556,6 +2840,11 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def_property_readonly("system", &calculator_type::system, R"pbdoc(
           System : System data.
           )pbdoc")
+      .def_property_readonly("params", &calculator_type::params, R"pbdoc(
+          dict: Monte Carlo calculation method parameters.
+
+          Expected values depend on the calculation method.
+          )pbdoc")
       .def_property_readonly("time_sampling_allowed",
                              &calculator_type::time_sampling_allowed, R"pbdoc(
           bool : True if this calculation allows time-based sampling; \
@@ -2613,7 +2902,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               - "n_events": The number of events in the current
                 state in total, by event type, and by event type and
                 equivalent event index.
-              - "n_events_with_no_barrier": The number of events in the
+              - "n_abnormal_events": The number of events in the
                 current state with no barrier (using the current model
                 parameters) in total, by event type, and by event type and
                 equivalent event index.
@@ -2672,11 +2961,11 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           params: Optional[dict] = None
               Monte Carlo calculation method parameters. Expected values
-              depends on the calculation method. Options, with links to
-              parameter documentation and examples, include:
+              depends on the calculation method.
 
-              - "enumeration": `Save states <todo>`_ encountered during the
-                calculation.
+          engine: Optional[libcasm.monte.RandomNumberEngine] = None
+              Optional random number engine to use. If None, one is constructed and
+              seeded from std::random_device.
 
           compile_options: Optional[str] = None
               Options used to compile the MonteCalculator source file, if it is not yet
@@ -2716,6 +3005,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           )pbdoc",
         py::arg("system"), py::arg("source"), py::arg("params") = std::nullopt,
+        py::arg("engine") = std::nullopt,
         py::arg("compile_options") = std::nullopt,
         py::arg("so_options") = std::nullopt,
         py::arg("search_path") = std::nullopt);
@@ -2776,7 +3066,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               - "n_events": The number of events in the current
                 state in total, by event type, and by event type and
                 equivalent event index.
-              - "n_events_with_no_barrier": The number of events in the
+              - "n_abnormal_events": The number of events in the
                 current state with no barrier (using the current model
                 parameters) in total, by event type, and by event type and
                 equivalent event index.
