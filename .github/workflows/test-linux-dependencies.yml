@@ -198,7 +198,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_configuration/dist
-          key: ${{ runner.os }}-libcasm-configuration-v2-0a7
+          key: ${{ runner.os }}-libcasm-configuration-v2-0a8
 
       - name: checkout libcasm-configuration
         if: steps.cache-libcasm-configuration-restore.outputs.cache-hit != 'true'
@@ -206,7 +206,7 @@ jobs:
         with:
           repository: prisms-center/CASMcode_configuration
           path: CASMcode_configuration
-          ref: v2.0a7
+          ref: v2.0a8
 
       - name: make configuration
         if: steps.cache-libcasm-configuration-restore.outputs.cache-hit != 'true'
@@ -231,7 +231,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_monte/dist
-          key: ${{ runner.os }}-libcasm-monte-v2-0a3
+          key: ${{ runner.os }}-libcasm-monte-v2-0a5
 
       - name: checkout libcasm-monte
         if: steps.cache-libcasm-monte-restore.outputs.cache-hit != 'true'
@@ -239,7 +239,7 @@ jobs:
         with:
           repository: prisms-center/CASMcode_monte
           path: CASMcode_monte
-          ref: v2.0a3
+          ref: v2.0a5
 
       - name: make monte
         if: steps.cache-libcasm-monte-restore.outputs.cache-hit != 'true'

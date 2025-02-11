@@ -1,6 +1,6 @@
 import os
 
-__version__ = "2.0a4"
+__version__ = "2.0a5"
 
 # Available at setup time due to pyproject.toml
 from pybind11.setup_helpers import Pybind11Extension, build_ext
@@ -108,8 +108,8 @@ setup(
         "libcasm-xtal>=2.0a12",
         "libcasm-composition>=2.0a4",
         "libcasm-clexulator>=2.0a7",
-        "libcasm-configuration>=2.0a7",
-        "libcasm-monte>=2.0a3",
+        "libcasm-configuration>=2.0a8",
+        "libcasm-monte>=2.0a5",
     ],
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext},
