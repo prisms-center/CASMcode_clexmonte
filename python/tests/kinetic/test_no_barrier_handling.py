@@ -1,9 +1,14 @@
 import contextlib
+import io
 
 import numpy as np
 import pytest
 
 import libcasm.clexmonte as clexmonte
+from libcasm.local_configuration import (
+    LocalConfiguration,
+    LocalConfigurationList,
+)
 
 CalculatorTestRunner = pytest.helpers.CalculatorTestRunner
 
@@ -169,60 +174,75 @@ def add_initial_state(
     return runner
 
 
+def summarize(local_configurations, event_data):
+    for event_type_name in local_configurations:
+        _event_data = event_data[event_type_name]
+        print(f"Event type name: {event_type_name}")
+        if len(_event_data) == 0:
+            print("- No abnormal events")
+        else:
+            for i, entry in enumerate(_event_data):
+                s = entry.get("event_state")
+                print(
+                    f"- {i}: ",
+                    f"Ekra={s['Ekra']:.6f}",
+                    f"dE_final={s['dE_final']:.6f}",
+                    f"dE_activated= {s['dE_activated']:.6f}",
+                )
+        print()
+
+
+def assert_no_encountered_warnings(output: str):
+    """Asserts that no warnings were printed to stdout."""
+    msg = "## WARNING: ENCOUNTERED ABNORMAL EVENT ##############"
+    assert msg not in output
+
+
+def assert_has_encountered_warnings(output: str):
+    """Asserts that no warnings were printed to stdout."""
+    msg = "## WARNING: ENCOUNTERED ABNORMAL EVENT ##############"
+    assert msg in output
+
+
+def assert_no_selected_warnings(output: str):
+    """Asserts that no warnings were printed to stdout."""
+    msg = "## WARNING: SELECTED ABNORMAL EVENT #################"
+    assert msg not in output
+
+
+def assert_has_selected_warnings(output: str):
+    """Asserts that no warnings were printed to stdout."""
+    msg = "## WARNING: SELECTED ABNORMAL EVENT #################"
+    assert msg in output
+
+
+def is_encountered_exception(msg: str):
+    expected_msg = "Error: encountered abnormal event, which is not allowed."
+    return expected_msg in msg
+
+
+def is_selected_exception(msg: str):
+    expected_msg = "Error: selected abnormal event, which is not allowed."
+    return expected_msg in msg
+
+
 def run_test(
     runner: CalculatorTestRunner,
     temperature: float,
     mol_composition: list,
     seed: int,
-    expect_set_event_data_exception: bool,
-    expect_run_fixture_exception: bool,
-    expected_n_event_calculations: int,
-    expected_n_encountered_abnormal: dict,
-    expected_n_selected_abnormal: dict,
-    expected_n_write_encountered: int,
-    expected_n_write_selected: int,
+    warn_if_encountered_event_is_abnormal: bool,
+    throw_if_encountered_event_is_abnormal: bool,
+    disallow_if_encountered_event_is_abnormal: bool,
+    n_write_if_encountered_event_is_abnormal: int,
+    warn_if_selected_event_is_abnormal: bool,
+    throw_if_selected_event_is_abnormal: bool,
+    n_write_if_selected_event_is_abnormal: int,
+    max_n_attempts: int = 10,
 ):
-    """Runs the test with the given parameters.
-
-    Parameters
-    ----------
-    runner: CalculatorTestRunner
-        The runner object with the MonteCalculator.
-
-    params: dict
-        The parameters to set in the calculator.
-
-    temperature: float
-        The temperature to set in the initial state.
-
-    mol_composition: list
-        The mol composition to set in the initial state.
-
-    seed: int
-        The seed to set in the calculator.
-
-    expect_set_event_data_exception: bool, optional
-        Whether to expect an exception when calling `set_event_data`.
-        Default is True.
-
-    expect_run_fixture_exception: bool, optional
-        Whether to expect an exception when calling `run_fixture`.
-        Default is True.
-
-    expected_n_event_calculations: int, optional
-        The expected number of event calculations.
-        Default is 100.
-
-    expected_n_encountered_abnormal: dict, optional
-        The expected number of encountered abnormal events, by event type, from
-        `runner.calculator.event_data.n_encountered_abnormal`.
-        Default is {}.
-
-    expected_n_selected_abnormal: dict, optional
-        The expected number of selected abnormal events, by event type, from
-        `runner.calculator.event_data.n_selected_abnormal`.
-        Default is {}.
-    """
+    """Runs the test once with the given parameters and checks if behavior is consistent
+    with options (assumes there is no guarantee that abnormal events are encountered
+    or selected)."""
     runner = setup_1(runner)
     runner.calculator.engine.seed(seed)
     runner = add_initial_state(
@@ -235,113 +255,158 @@ def run_test(
 
     print(f"Test output dir: {runner.output_dir}\n")
 
-    if expect_set_event_data_exception:
-        # Calculate event rates - expect an exception due to an abnormal event
-        with pytest.raises(Exception):
-            runner.calculator.set_event_data()
+    n_encountered_exception = 0
+    n_selected_exception = 0
+    n_write_encountered = 0
+    n_write_selected = 0
 
-    elif expect_run_fixture_exception:
+    n_attempts = 0
+    while True:
+        threw_encountered_exception = False
+        threw_selected_exception = False
+
         # Run - expect an exception due to an abnormal event
-        with pytest.raises(Exception):
-            runner.calculator.run_fixture(
-                state=runner.state,
-                sampling_fixture_params=runner.kinetics_params,
-            )
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
+            try:
+                runner.calculator.run_fixture(
+                    state=runner.state,
+                    sampling_fixture_params=runner.kinetics_params,
+                )
 
-    else:
-        # Run - expect an exception due to an abnormal event
-        runner.calculator.run_fixture(
-            state=runner.state,
-            sampling_fixture_params=runner.kinetics_params,
-        )
+            except Exception as e:
+                if is_encountered_exception(str(e)):
+                    threw_encountered_exception = True
+                    n_encountered_exception += 1
+                elif is_selected_exception(str(e)):
+                    threw_selected_exception = True
+                    n_selected_exception += 1
+        output = f.getvalue()
+        # print("!!!!")
+        # print(output)
+        # print("!!!!")
 
-    event_data = runner.calculator.event_data
+        event_data = runner.calculator.event_data
+        n_encountered_abnormal = event_data.n_encountered_abnormal
+        n_encountered_abnormal_sum = sum(n_encountered_abnormal.values())
+        n_selected_abnormal = event_data.n_selected_abnormal
+        n_selected_abnormal_sum = sum(n_selected_abnormal.values())
 
-    assert runner.n_event_calculations == expected_n_event_calculations
-    assert event_data.n_encountered_abnormal == expected_n_encountered_abnormal
-    assert event_data.n_selected_abnormal == expected_n_selected_abnormal
+        # -- Check warnings --
+        if not warn_if_encountered_event_is_abnormal:
+            assert_no_encountered_warnings(output)
+        elif n_encountered_abnormal_sum > 0:
+            assert_has_encountered_warnings(output)
+        if not warn_if_selected_event_is_abnormal:
+            assert_no_selected_warnings(output)
+        elif n_selected_abnormal_sum > 0:
+            assert_has_selected_warnings(output)
 
-    # --- Test the abnormal_events jsonl files were written ---
+        # -- Check throws --
+        if not throw_if_encountered_event_is_abnormal:
+            assert not threw_encountered_exception
+        elif n_encountered_abnormal_sum > 0:
+            assert threw_encountered_exception
+        if not throw_if_selected_event_is_abnormal:
+            assert not threw_selected_exception
+        elif n_selected_abnormal_sum > 0:
+            assert threw_selected_exception
 
-    if expected_n_write_encountered or expected_n_write_selected:
-        assert runner.output_dir.exists()
+        # -- Check disallows --
+        if disallow_if_encountered_event_is_abnormal:
+            assert n_selected_abnormal_sum == 0
+            assert not threw_selected_exception
 
-        for event_type, expected_count in [
-            ("encountered_abnormal_events.jsonl", expected_n_write_encountered),
-            ("selected_abnormal_events.jsonl", expected_n_write_selected),
-        ]:
-            file = runner.output_dir / event_type
-            if expected_count != 0:
-                assert file.exists()
+        # --- Check for abnormal_events jsonl files ---
+        # - Note: these files should be appended as multiple runs are done, but
+        #   always only include LocalConfiguration with unique correlations
+        file = runner.output_dir / "encountered_abnormal_events.jsonl"
+        if n_write_if_encountered_event_is_abnormal > 0:
+            if file.exists():
+                lines = 0
+                with open(file, "r") as f:
+                    for line in f:
+                        lines += 1
+                n_write_encountered = lines
 
+                assert lines <= n_write_if_encountered_event_is_abnormal
+        else:
+            assert not file.exists()
+
+        file = runner.output_dir / "selected_abnormal_events.jsonl"
+        if n_write_if_selected_event_is_abnormal > 0:
+            if file.exists():
                 with open(file, "r") as f:
                     lines = 0
                     for line in f:
                         lines += 1
+                n_write_selected = lines
 
-                assert lines == expected_count
+                assert lines <= n_write_if_selected_event_is_abnormal
+        else:
+            assert not file.exists()
 
-            else:
-                assert not file.exists()
+        # --- Test the read_abnormal_events function ---
 
-    # --- Test the read_abnormal_events function ---
+        def _checks(n, local_configurations, event_data, n_expected, which):
+            if n_expected == 0:
+                assert n is None
+                return
 
-    def _summarize(local_configurations, event_data):
-        for event_type_name in local_configurations:
-            _event_data = event_data[event_type_name]
-            print(f"Event type name: {event_type_name}")
-            if len(_event_data) == 0:
-                print("- No abnormal events")
-            else:
-                for i, entry in enumerate(_event_data):
-                    s = entry.get("event_state")
-                    print(
-                        f"- {i}: ",
-                        f"Ekra={s['Ekra']:.6f}",
-                        f"dE_final={s['dE_final']:.6f}",
-                        f"dE_activated= {s['dE_activated']:.6f}",
-                    )
-            print()
+            assert n == n_expected
+            for event_type_name in local_configurations:
+                assert event_type_name in event_data
+                _local_config_list = local_configurations[event_type_name]
+                assert isinstance(_local_config_list, LocalConfigurationList)
+                _event_data = event_data[event_type_name]
+                assert len(_local_config_list) == len(_event_data)
 
-    # which=="all"
-    calculator = runner.calculator
-    n, local_configurations, event_data = calculator.read_abnormal_events()
-    if expected_n_write_encountered + expected_n_write_selected == 0:
-        assert n is None
-    else:
-        assert n == expected_n_write_encountered + expected_n_write_selected
-    # print("all:")
-    # _summarize(local_configurations, event_data)
+                # Check types, dict contents, and check for unique local corr
+                # (but same local config may exist in the "encountered" and "selected"
+                # lists" so skip which=="any")
+                local_corr_list = list()
+                for lc, s in zip(_local_config_list, _event_data):
+                    assert isinstance(lc, LocalConfiguration)
+                    assert isinstance(s, dict)
+                    assert "event_state" in s
+                    assert "prim_event_data" in s
 
-    # which=="encountered"
-    n, local_configurations, event_data = calculator.read_abnormal_events(
-        which="encountered",
-    )
-    if expected_n_write_encountered == 0:
-        assert n is None
-    else:
-        assert n == expected_n_write_encountered
-    # print("encountered:")
-    # _summarize(local_configurations, event_data)
+                    if which == "any":
+                        continue
+                    local_corr_i = np.array(s["event_state"]["local_corr"])
+                    for local_corr_j in local_corr_list:
+                        assert not np.allclose(local_corr_i, local_corr_j, atol=1e-5)
 
-    # which=="selected"
-    n, local_configurations, event_data = calculator.read_abnormal_events(
-        which="selected",
-    )
-    if expected_n_write_selected == 0:
-        assert n is None
-    else:
-        assert n == expected_n_write_selected
-    # print("selected:")
-    # _summarize(local_configurations, event_data)
+                    local_corr_list.append(local_corr_i)
+
+        # which=="all"
+        calculator = runner.calculator
+        n, local_configurations, event_data = calculator.read_abnormal_events()
+        n_expected = n_write_encountered + n_write_selected
+        _checks(n, local_configurations, event_data, n_expected, which="any")
+
+        # which=="encountered"
+        n, local_configurations, event_data = calculator.read_abnormal_events(
+            which="encountered",
+        )
+        n_expected = n_write_encountered
+        _checks(n, local_configurations, event_data, n_expected, which="encountered")
+
+        # which=="selected"
+        n, local_configurations, event_data = calculator.read_abnormal_events(
+            which="selected",
+        )
+        n_expected = n_write_selected
+        _checks(n, local_configurations, event_data, n_expected, which="selected")
+
+        n_attempts += 1
+
+        if n_attempts == max_n_attempts:
+            break
 
 
 def test_abnormal_event_handling_1a(FCCBinaryVacancy_kmc_System_2, tmp_path):
-    """Test the default handling of abnormal events.
-
-    Seed = 699, mol_composition=[0.799, 0.2, 0.001],
-    for an initial state that has an abnormal event.
-    """
+    """Test the default handling of abnormal events."""
     with contextlib.chdir(tmp_path):
         run_test(
             runner=CalculatorTestRunner(
@@ -355,14 +420,15 @@ def test_abnormal_event_handling_1a(FCCBinaryVacancy_kmc_System_2, tmp_path):
             ),
             temperature=1200.0,
             mol_composition=[0.799, 0.2, 0.001],
-            seed=699,
-            expect_set_event_data_exception=True,
-            expect_run_fixture_exception=True,
-            expected_n_event_calculations=3,
-            expected_n_encountered_abnormal={"B_Va_1NN": 1},
-            expected_n_selected_abnormal={},
-            expected_n_write_encountered=1,
-            expected_n_write_selected=0,
+            seed=0,
+            warn_if_encountered_event_is_abnormal=True,
+            throw_if_encountered_event_is_abnormal=True,
+            disallow_if_encountered_event_is_abnormal=False,
+            n_write_if_encountered_event_is_abnormal=100,
+            warn_if_selected_event_is_abnormal=True,
+            throw_if_selected_event_is_abnormal=True,
+            n_write_if_selected_event_is_abnormal=100,
+            max_n_attempts=10,
         )
 
 
@@ -390,21 +456,22 @@ def test_abnormal_event_handling_1b(FCCBinaryVacancy_kmc_System_2, tmp_path):
             ),
             temperature=1200.0,
             mol_composition=[0.799, 0.2, 0.001],
-            seed=699,
-            expect_set_event_data_exception=False,
-            expect_run_fixture_exception=True,
-            expected_n_event_calculations=98423,
-            expected_n_encountered_abnormal={"B_Va_1NN": 209},
-            expected_n_selected_abnormal={"B_Va_1NN": 1},
-            expected_n_write_encountered=27,
-            expected_n_write_selected=1,
+            seed=0,
+            warn_if_encountered_event_is_abnormal=True,
+            throw_if_encountered_event_is_abnormal=False,
+            disallow_if_encountered_event_is_abnormal=False,
+            n_write_if_encountered_event_is_abnormal=100,
+            warn_if_selected_event_is_abnormal=True,
+            throw_if_selected_event_is_abnormal=True,
+            n_write_if_selected_event_is_abnormal=100,
+            max_n_attempts=10,
         )
 
 
 def test_abnormal_event_handling_1c(FCCBinaryVacancy_kmc_System_2, tmp_path):
     """Test only throw on selected abnormal events
 
-    with lower temperature - encountered but did not select an abnormal event
+    with lower temperature - more likely to encounter but never select an abnormal event
 
 
     Seed = 699, mol_composition=[0.799, 0.2, 0.001],
@@ -428,14 +495,15 @@ def test_abnormal_event_handling_1c(FCCBinaryVacancy_kmc_System_2, tmp_path):
             ),
             temperature=300.0,
             mol_composition=[0.799, 0.2, 0.001],
-            seed=699,
-            expect_set_event_data_exception=False,
-            expect_run_fixture_exception=False,
-            expected_n_event_calculations=1300000,
-            expected_n_encountered_abnormal={"B_Va_1NN": 1},
-            expected_n_selected_abnormal={},
-            expected_n_write_encountered=1,
-            expected_n_write_selected=0,
+            seed=0,
+            warn_if_encountered_event_is_abnormal=True,
+            throw_if_encountered_event_is_abnormal=False,
+            disallow_if_encountered_event_is_abnormal=False,
+            n_write_if_encountered_event_is_abnormal=100,
+            warn_if_selected_event_is_abnormal=True,
+            throw_if_selected_event_is_abnormal=True,
+            n_write_if_selected_event_is_abnormal=100,
+            max_n_attempts=10,
         )
 
 
@@ -466,12 +534,53 @@ def test_abnormal_event_handling_1d(FCCBinaryVacancy_kmc_System_2, tmp_path):
             ),
             temperature=1200.0,
             mol_composition=[0.799, 0.2, 0.001],
-            seed=699,
-            expect_set_event_data_exception=False,
-            expect_run_fixture_exception=False,
-            expected_n_event_calculations=1300000,
-            expected_n_encountered_abnormal={"B_Va_1NN": 39981},
-            expected_n_selected_abnormal={"B_Va_1NN": 48},
-            expected_n_write_encountered=100,
-            expected_n_write_selected=10,
+            seed=0,
+            warn_if_encountered_event_is_abnormal=True,
+            throw_if_encountered_event_is_abnormal=False,
+            disallow_if_encountered_event_is_abnormal=False,
+            n_write_if_encountered_event_is_abnormal=100,
+            warn_if_selected_event_is_abnormal=True,
+            throw_if_selected_event_is_abnormal=False,
+            n_write_if_selected_event_is_abnormal=100,
+            max_n_attempts=10,
+        )
+
+
+def test_abnormal_event_handling_1e(FCCBinaryVacancy_kmc_System_2, tmp_path):
+    """Test no throw on abnormal events
+
+    Seed = 699, mol_composition=[0.799, 0.2, 0.001],
+    for an initial state that has an abnormal event.
+    """
+
+    with contextlib.chdir(tmp_path):
+        run_test(
+            runner=CalculatorTestRunner(
+                system=FCCBinaryVacancy_kmc_System_2,
+                method="kinetic",
+                params={
+                    # "verbosity": "quiet",
+                    "abnormal_event_handling": {
+                        "encountered_events": {
+                            "throw": False,
+                            "disallow": True,
+                        },
+                        "selected_events": {
+                            "throw": True,
+                        },
+                    }
+                },
+                output_dir=tmp_path / "output",
+            ),
+            temperature=1200.0,
+            mol_composition=[0.799, 0.2, 0.001],
+            seed=0,
+            warn_if_encountered_event_is_abnormal=True,
+            throw_if_encountered_event_is_abnormal=False,
+            disallow_if_encountered_event_is_abnormal=True,
+            n_write_if_encountered_event_is_abnormal=100,
+            warn_if_selected_event_is_abnormal=True,
+            throw_if_selected_event_is_abnormal=True,
+            n_write_if_selected_event_is_abnormal=100,
+            max_n_attempts=10,
         )

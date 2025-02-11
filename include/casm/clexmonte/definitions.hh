@@ -6,6 +6,7 @@
 #include <string>
 
 #include "casm/monte/BasicStatistics.hh"
+#include "casm/monte/RandomNumberGenerator.hh"
 #include "casm/monte/definitions.hh"
 
 namespace CASM {
@@ -30,7 +31,8 @@ typedef System system_type;
 typedef config::Configuration config_type;
 typedef monte::BasicStatistics statistics_type;
 typedef monte::State<config_type> state_type;
-typedef std::mt19937_64 default_engine_type;
+// typedef std::mt19937_64 default_engine_type;
+typedef monte::default_engine_type default_engine_type;
 struct Conditions;
 
 // ### Sampling ###

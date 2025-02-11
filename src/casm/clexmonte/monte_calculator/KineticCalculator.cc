@@ -13,6 +13,7 @@
 #include "casm/clexmonte/monte_calculator/selected_event_functions.hh"
 #include "casm/clexmonte/run/functions.hh"
 #include "casm/configuration/io/json/Configuration_json_io.hh"
+#include "casm/misc/TypeInfo.hh"
 #include "casm/monte/events/OccEventProposal.hh"
 #include "casm/monte/run_management/RunManager.hh"
 #include "casm/monte/sampling/RequestedPrecisionConstructor.hh"

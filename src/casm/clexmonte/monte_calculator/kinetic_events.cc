@@ -72,7 +72,8 @@ CompleteEventCalculator<DebugMode>::CompleteEventCalculator(
     std::vector<PrimEventData> const &_prim_event_list,
     std::vector<EventStateCalculator> const &_prim_event_calculators,
     std::map<EventID, EventData> const &_event_list,
-    bool _abnormal_event_handling_on, AbnormalEventHandlingFunction _handling_f,
+    bool _abnormal_event_handling_on,
+    AbnormalEventHandlingFunction &_handling_f,
     std::map<std::string, Index> &_n_encountered_abnormal)
     : prim_event_list(_prim_event_list),
       prim_event_calculators(_prim_event_calculators),
@@ -273,7 +274,7 @@ void CompleteKineticEventData<DebugMode>::update(
           event_calculator,
           clexmonte::make_complete_event_id_list(n_unitcells, prim_event_list),
           event_list.impact_table,
-          std::make_shared<lotto::RandomGenerator>(engine));
+          std::make_shared<lotto::RandomGeneratorT<engine_type>>(engine));
 }
 
 template <bool DebugMode>
@@ -359,7 +360,7 @@ AllowedEventCalculator<DebugMode>::AllowedEventCalculator(
     std::vector<PrimEventData> const &_prim_event_list,
     std::vector<EventStateCalculator> const &_prim_event_calculators,
     AllowedEventList &_event_list, bool _abnormal_event_handling_on,
-    AbnormalEventHandlingFunction _handling_f,
+    AbnormalEventHandlingFunction &_handling_f,
     std::map<std::string, Index> &_n_encountered_abnormal)
     : prim_event_list(_prim_event_list),
       prim_event_calculators(_prim_event_calculators),
@@ -554,7 +555,8 @@ void AllowedKineticEventData<EventSelectorType, DebugMode>::update(
     std::shared_ptr<StateData> _state_data,
     std::optional<std::vector<EventFilterGroup>> _event_filters,
     std::shared_ptr<engine_type> engine) {
-  random_generator = std::make_shared<lotto::RandomGenerator>(engine);
+  random_generator =
+      std::make_shared<lotto::RandomGeneratorT<engine_type>>(engine);
   state_data = _state_data;
 
   // Warning if event_filters:
@@ -680,6 +682,7 @@ template <bool DebugMode>
 struct event_selector_impl<
     sum_tree_event_selector_type<AllowedEventCalculator<DebugMode>>,
     DebugMode> {
+  typedef default_engine_type engine_type;
   typedef AllowedEventCalculator<DebugMode> event_calculator_type;
   typedef sum_tree_event_selector_type<event_calculator_type>
       event_selector_type;
@@ -691,7 +694,7 @@ struct event_selector_impl<
   static std::shared_ptr<event_selector_type> make_event_selector(
       std::shared_ptr<event_calculator_type> event_calculator,
       std::shared_ptr<AllowedEventList> event_list,
-      std::shared_ptr<lotto::RandomGenerator> random_generator) {
+      std::shared_ptr<lotto::RandomGeneratorT<engine_type>> random_generator) {
     return std::make_shared<event_selector_type>(
         event_calculator, event_list->allowed_event_map.event_index_list(),
         GetImpactFromAllowedEventList(event_list), random_generator);
@@ -703,6 +706,7 @@ template <bool DebugMode>
 struct event_selector_impl<
     vector_sum_tree_event_selector_type<AllowedEventCalculator<DebugMode>>,
     DebugMode> {
+  typedef default_engine_type engine_type;
   typedef AllowedEventCalculator<DebugMode> event_calculator_type;
   typedef vector_sum_tree_event_selector_type<event_calculator_type>
       event_selector_type;
@@ -714,7 +718,7 @@ struct event_selector_impl<
   static std::shared_ptr<event_selector_type> make_event_selector(
       std::shared_ptr<event_calculator_type> event_calculator,
       std::shared_ptr<AllowedEventList> event_list,
-      std::shared_ptr<lotto::RandomGenerator> random_generator) {
+      std::shared_ptr<lotto::RandomGeneratorT<engine_type>> random_generator) {
     return std::make_shared<event_selector_type>(
         event_calculator, event_list->allowed_event_map.events().size(),
         GetImpactFromAllowedEventList(event_list), random_generator);
@@ -726,6 +730,7 @@ template <bool DebugMode>
 struct event_selector_impl<
     direct_sum_event_selector_type<AllowedEventCalculator<DebugMode>>,
     DebugMode> {
+  typedef default_engine_type engine_type;
   typedef AllowedEventCalculator<DebugMode> event_calculator_type;
   typedef direct_sum_event_selector_type<event_calculator_type>
       event_selector_type;
@@ -737,18 +742,18 @@ struct event_selector_impl<
   static std::shared_ptr<event_selector_type> make_event_selector(
       std::shared_ptr<event_calculator_type> event_calculator,
       std::shared_ptr<AllowedEventList> event_list,
-      std::shared_ptr<lotto::RandomGenerator> random_generator) {
+      std::shared_ptr<lotto::RandomGeneratorT<engine_type>> random_generator) {
     return std::make_shared<event_selector_type>(
         event_calculator, event_list->allowed_event_map.events().size(),
         GetImpactFromAllowedEventList(event_list), random_generator);
   }
 };
 
-template <typename EventSelectorType, bool DebugMode>
+template <typename EventSelectorType, typename EngineType, bool DebugMode>
 std::shared_ptr<EventSelectorType> make_event_selector_impl(
     std::shared_ptr<AllowedEventCalculator<DebugMode>> event_calculator,
     std::shared_ptr<AllowedEventList> event_list,
-    std::shared_ptr<lotto::RandomGenerator> random_generator) {
+    std::shared_ptr<lotto::RandomGeneratorT<EngineType>> random_generator) {
   return event_selector_impl<EventSelectorType, DebugMode>::make_event_selector(
       event_calculator, event_list, random_generator);
 }
@@ -780,8 +785,9 @@ void AllowedKineticEventData<EventSelectorType,
 
   // Make event selector
   // - This calculates all rates at construction
-  event_selector = make_event_selector_impl<EventSelectorType, DebugMode>(
-      event_calculator, event_list, random_generator);
+  event_selector =
+      make_event_selector_impl<EventSelectorType, engine_type, DebugMode>(
+          event_calculator, event_list, random_generator);
 
   if constexpr (DebugMode) {
     Log &log = CASM::log();

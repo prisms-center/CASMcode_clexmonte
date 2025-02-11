@@ -40,7 +40,7 @@ struct CompleteEventCalculator {
   bool abnormal_event_handling_on;
 
   /// \brief An abnormal event handling function
-  AbnormalEventHandlingFunction handling_f;
+  AbnormalEventHandlingFunction &handling_f;
 
   /// \brief Count not-normal events (key == event_type_name; value == count)
   std::map<std::string, Index> &n_encountered_abnormal;
@@ -50,7 +50,7 @@ struct CompleteEventCalculator {
       std::vector<EventStateCalculator> const &_prim_event_calculators,
       std::map<EventID, EventData> const &_event_list,
       bool _abnormal_event_handling_on,
-      AbnormalEventHandlingFunction _handling_f,
+      AbnormalEventHandlingFunction &_handling_f,
       std::map<std::string, Index> &_n_encountered_abnormal);
 
   /// \brief Update `event_state` for event `id` in the current state and
@@ -374,7 +374,7 @@ struct AllowedEventCalculator {
   bool abnormal_event_handling_on;
 
   /// \brief An abnormal event handling function
-  AbnormalEventHandlingFunction handling_f;
+  AbnormalEventHandlingFunction &handling_f;
 
   /// \brief Count not-normal events (key == event_type_name; value == count)
   std::map<std::string, Index> &n_encountered_abnormal;
@@ -394,7 +394,7 @@ struct AllowedEventCalculator {
       std::vector<PrimEventData> const &_prim_event_list,
       std::vector<EventStateCalculator> const &_prim_event_calculators,
       AllowedEventList &_event_list, bool _abnormal_event_handling_on,
-      AbnormalEventHandlingFunction _handling_f,
+      AbnormalEventHandlingFunction &_handling_f,
       std::map<std::string, Index> &_n_encountered_abnormal);
 
   /// \brief Update `event_state` for event `event_index` in the current state
@@ -494,7 +494,7 @@ class AllowedKineticEventData : public BaseMonteEventData {
   ///
   /// This is constructed at `update` and stored to allow re-building the
   /// the event selector with the same random number generator
-  std::shared_ptr<lotto::RandomGenerator> random_generator;
+  std::shared_ptr<lotto::RandomGeneratorT<engine_type>> random_generator;
 
   /// Functions for calculating event states, one for each prim event.
   /// This is supercell-specific, even though it is one per prim event,

@@ -95,8 +95,9 @@ std::vector<Index> as_vector_index(py::list py_list) {
 
 clexmonte::MontePotential make_potential(
     std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type &state) {
-  // print errors and warnings to sys.stdout
+  // print messages to sys.stdout, sys.stderr
   py::scoped_ostream_redirect redirect;
+  py::scoped_estream_redirect err_redirect;
   monte::OccLocation *occ_location = nullptr;
   calculator->set_state_and_potential(state, nullptr);
   return calculator->potential();
@@ -105,8 +106,9 @@ clexmonte::MontePotential make_potential(
 std::shared_ptr<clexmonte::EventDataSummary> make_event_data_summary(
     std::shared_ptr<clexmonte::MonteCalculator> calculator,
     double energy_bin_width, double freq_bin_width, double rate_bin_width) {
-  // print errors and warnings to sys.stdout
+  // print messages to sys.stdout, sys.stderr
   py::scoped_ostream_redirect redirect;
+  py::scoped_estream_redirect err_redirect;
 
   return std::make_shared<clexmonte::EventDataSummary>(
       calculator->state_data(), calculator->event_data(), energy_bin_width,
@@ -116,8 +118,9 @@ std::shared_ptr<clexmonte::EventDataSummary> make_event_data_summary(
 clexmonte::MonteEventData make_event_data(
     std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type &state,
     monte::OccLocation *occ_location) {
-  // print errors and warnings to sys.stdout
+  // print messages to sys.stdout, sys.stderr
   py::scoped_ostream_redirect redirect;
+  py::scoped_estream_redirect err_redirect;
   calculator->set_state_and_potential(state, occ_location);
   if (occ_location == nullptr) {
     calculator->state_data()->owned_occ_location =
@@ -136,8 +139,9 @@ std::shared_ptr<clexmonte::StateData> make_state_data(
 std::shared_ptr<clexmonte::MonteCalculator> make_monte_calculator(
     std::string method, std::shared_ptr<system_type> system,
     std::optional<nlohmann::json> params, std::shared_ptr<engine_type> engine) {
-  // print errors and warnings to sys.stdout
+  // print messages to sys.stdout, sys.stderr
   py::scoped_ostream_redirect redirect;
+  py::scoped_estream_redirect err_redirect;
   jsonParser _params = jsonParser::object();
   if (params.has_value()) {
     jsonParser json{static_cast<nlohmann::json const &>(params.value())};
@@ -169,8 +173,9 @@ std::shared_ptr<clexmonte::MonteCalculator> make_custom_monte_calculator(
     std::optional<std::string> compile_options,
     std::optional<std::string> so_options,
     std::optional<std::vector<std::string>> search_path) {
-  // print errors and warnings to sys.stdout
+  // print messages to sys.stdout, sys.stderr
   py::scoped_ostream_redirect redirect;
+  py::scoped_estream_redirect err_redirect;
   // fs::path dirpath, std::string calculator_name
 
   jsonParser _params = jsonParser::object();
@@ -209,6 +214,7 @@ std::shared_ptr<run_manager_type> monte_calculator_run(
     monte::OccLocation *occ_location) {
   // print errors and warnings to sys.stdout
   py::scoped_ostream_redirect redirect;
+  py::scoped_estream_redirect err_redirect;
 
   if (run_manager == nullptr) {
     throw std::runtime_error(
@@ -234,8 +240,9 @@ std::shared_ptr<sampling_fixture_type> monte_calculator_run_fixture(
     calculator_type &self, state_type &state,
     sampling_fixture_params_type &sampling_fixture_params,
     std::shared_ptr<engine_type> engine, monte::OccLocation *occ_location) {
-  // print errors and warnings to sys.stdout
+  // print messages to sys.stdout, sys.stderr
   py::scoped_ostream_redirect redirect;
+  py::scoped_estream_redirect err_redirect;
   if (!engine) {
     engine = self.engine();
   }
@@ -876,8 +883,9 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def_static(
           "from_dict",
           [](nlohmann::json const &data) {
-            // print errors and warnings to sys.stdout
+            // print messages to sys.stdout, sys.stderr
             py::scoped_ostream_redirect redirect;
+            py::scoped_estream_redirect err_redirect;
             jsonParser json{data};
             InputParser<clexmonte::EventID> event_id_parser(json);
             std::runtime_error error_if_invalid{

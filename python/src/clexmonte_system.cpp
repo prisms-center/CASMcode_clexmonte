@@ -294,8 +294,9 @@ PYBIND11_MODULE(_clexmonte_system, m) {
       .def(
           "basis_set_cluster_info",
           [](clexmonte::System &m, std::string key) -> py::tuple {
-            // print errors and warnings to sys.stdout
+            // print messages to sys.stdout, sys.stderr
             py::scoped_ostream_redirect redirect;
+            py::scoped_estream_redirect err_redirect;
 
             auto it = m.basis_set_cluster_info.find(key);
             if (it == m.basis_set_cluster_info.end()) {
@@ -356,8 +357,9 @@ PYBIND11_MODULE(_clexmonte_system, m) {
       .def(
           "local_basis_set_cluster_info",
           [](clexmonte::System &m, std::string key) -> py::tuple {
-            // print errors and warnings to sys.stdout
+            // print messages to sys.stdout, sys.stderr
             py::scoped_ostream_redirect redirect;
+            py::scoped_estream_redirect err_redirect;
             auto it = m.local_basis_set_cluster_info.find(key);
             if (it == m.local_basis_set_cluster_info.end()) {
               throw std::runtime_error(
@@ -1088,8 +1090,9 @@ PYBIND11_MODULE(_clexmonte_system, m) {
           "from_dict",
           [](const nlohmann::json &data, std::vector<std::string> _search_path,
              bool verbose) {
-            // print errors and warnings to sys.stdout
+            // print messages to sys.stdout, sys.stderr
             py::scoped_ostream_redirect redirect;
+            py::scoped_estream_redirect err_redirect;
 
             jsonParser json{data};
             std::vector<fs::path> search_path(_search_path.begin(),

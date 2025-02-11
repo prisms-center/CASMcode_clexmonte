@@ -32,7 +32,7 @@ BaseMonteCalculator::BaseMonteCalculator(
       is_multistate_method(_is_multistate_method) {
   // Use the RandomNumberGenerator default constructor to make a
   // RandomNumberEngine seeded by std::random_device.
-  engine = monte::RandomNumberGenerator().engine;
+  engine = monte::RandomNumberGenerator<engine_type>().engine;
 }
 
 BaseMonteCalculator::~BaseMonteCalculator() {}
