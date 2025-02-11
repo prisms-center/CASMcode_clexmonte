@@ -231,7 +231,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_monte/dist
-          key: ${{ runner.os }}-libcasm-monte-v2-0a5
+          key: ${{ runner.os }}-libcasm-monte-v2-0a6
 
       - name: checkout libcasm-monte
         if: steps.cache-libcasm-monte-restore.outputs.cache-hit != 'true'
@@ -239,7 +239,7 @@ jobs:
         with:
           repository: prisms-center/CASMcode_monte
           path: CASMcode_monte
-          ref: v2.0a5
+          ref: v2.0a6
 
       - name: make monte
         if: steps.cache-libcasm-monte-restore.outputs.cache-hit != 'true'

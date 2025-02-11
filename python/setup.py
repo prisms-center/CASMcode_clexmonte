@@ -109,7 +109,7 @@ setup(
         "libcasm-composition>=2.0a4",
         "libcasm-clexulator>=2.0a7",
         "libcasm-configuration>=2.0a8",
-        "libcasm-monte>=2.0a5",
+        "libcasm-monte>=2.0a6",
     ],
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext},
