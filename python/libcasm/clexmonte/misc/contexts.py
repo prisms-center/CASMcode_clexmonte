@@ -1,13 +1,12 @@
+import contextlib
 import io
 import os
 import pathlib
 import sys
 import typing
-from contextlib import contextmanager
-from io import StringIO
 
 
-@contextmanager
+@contextlib.contextmanager
 def working_dir(wd: typing.Union[str, pathlib.Path, None] = None):
     """
 
@@ -35,7 +34,7 @@ def working_dir(wd: typing.Union[str, pathlib.Path, None] = None):
         os.chdir(orig_wd)
 
 
-@contextmanager
+@contextlib.contextmanager
 def captured_output(wd: typing.Union[str, pathlib.Path, None] = None):
     """Capture standard output and error in StringIO objects.
 
@@ -59,7 +58,7 @@ def captured_output(wd: typing.Union[str, pathlib.Path, None] = None):
         The working directory to use while in context.
     """
     with working_dir(wd):
-        new_out, new_err = StringIO(), StringIO()
+        new_out, new_err = io.StringIO(), io.StringIO()
         old_out, old_err = sys.stdout, sys.stderr
         try:
             sys.stdout, sys.stderr = new_out, new_err
