@@ -6,6 +6,7 @@ setup(
     packages=[
         "libcasm",
         "libcasm.clexmonte",
+        "libcasm.clexmonte.misc",
         "libcasm.clexmonte.site_iterators",
     ],
     package_dir={"": "python"},

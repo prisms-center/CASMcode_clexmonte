@@ -5,6 +5,9 @@ import numpy as np
 import pytest
 
 import libcasm.clexmonte as clexmonte
+from libcasm.clexmonte.misc.contexts import (
+    working_dir,
+)
 from libcasm.local_configuration import (
     LocalConfiguration,
     LocalConfigurationList,
@@ -407,7 +410,7 @@ def run_test(
 
 def test_abnormal_event_handling_1a(FCCBinaryVacancy_kmc_System_2, tmp_path):
     """Test the default handling of abnormal events."""
-    with contextlib.chdir(tmp_path):
+    with working_dir(tmp_path):
         run_test(
             runner=CalculatorTestRunner(
                 system=FCCBinaryVacancy_kmc_System_2,
@@ -439,7 +442,7 @@ def test_abnormal_event_handling_1b(FCCBinaryVacancy_kmc_System_2, tmp_path):
     for an initial state that has an abnormal event.
     """
 
-    with contextlib.chdir(tmp_path):
+    with working_dir(tmp_path):
         run_test(
             runner=CalculatorTestRunner(
                 system=FCCBinaryVacancy_kmc_System_2,
@@ -477,7 +480,7 @@ def test_abnormal_event_handling_1c(FCCBinaryVacancy_kmc_System_2, tmp_path):
     Seed = 699, mol_composition=[0.799, 0.2, 0.001],
     for an initial state that has an abnormal event.
     """
-    with contextlib.chdir(tmp_path):
+    with working_dir(tmp_path):
         # Test only throw on selected abnormal events:
         run_test(
             runner=CalculatorTestRunner(
@@ -514,7 +517,7 @@ def test_abnormal_event_handling_1d(FCCBinaryVacancy_kmc_System_2, tmp_path):
     for an initial state that has an abnormal event.
     """
 
-    with contextlib.chdir(tmp_path):
+    with working_dir(tmp_path):
         run_test(
             runner=CalculatorTestRunner(
                 system=FCCBinaryVacancy_kmc_System_2,
@@ -553,7 +556,7 @@ def test_abnormal_event_handling_1e(FCCBinaryVacancy_kmc_System_2, tmp_path):
     for an initial state that has an abnormal event.
     """
 
-    with contextlib.chdir(tmp_path):
+    with working_dir(tmp_path):
         run_test(
             runner=CalculatorTestRunner(
                 system=FCCBinaryVacancy_kmc_System_2,

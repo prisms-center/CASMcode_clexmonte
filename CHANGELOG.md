@@ -17,8 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `EventStateCalculator` and `MonteEventData.set_custom_event_state_calculation`
 - Added `"print_event_data_summary"` MonteCalculator parameter to select whether to print the event data summary.
 - Added `libcasm.clexmonte.site_iterators` to use help use OccLocation more easily.
-- Added options for handling abnormal events (events with no energy barrier between the initial and final states). This includes the `abnormal_event_handling` option to the MonteCalculator constructor `params` argument, custom abnormal event handling functions for both encountered (calculated events that may not be selected) and selected events, writing and reading local configurations and event data for abnormal events.
+- Added options for handling abnormal events (events with no energy barrier between the initial and final states). This includes the `"abnormal_event_handling"` option and sub-options for the MonteCalculator constructor `params` argument, custom abnormal event handling functions for both encountered (calculated events that may not be selected) and selected events, writing and reading local configurations and event data for abnormal events (`MonteCalculator.read_abnormal_events`).
 - Added a random number engine to MonteCalculator, to enable control of the random number generator used by the `"enforce.composition"` method in `make_canonical_initial_state`, and to use as the default for `MonteCalculator.run_fixture` if no engine is given explicitly. The MonteCalculator engine is replaced by the `run_manager` engine when `MonteCalculator.run` is called. 
+- Added `libcasm.clexmonte.misc.contexts` to include a working directory context manager.
  
 ### Changed
 
