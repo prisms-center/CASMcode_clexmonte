@@ -374,7 +374,7 @@ struct EventDataSummary {
   void _add_stats(EventID const &id, EventState const &state);
 };
 
-template <int VerbosityLevel>
+template <int VerbosityLevel = Log::standard>
 void print(Log &log, EventDataSummary const &event_data_summary);
 
 }  // namespace clexmonte
@@ -397,7 +397,7 @@ jsonParser &to_json(clexmonte::EventDataSummary const &event_data_summary,
 namespace CASM {
 namespace clexmonte {
 
-template <int VerbosityLevel = Log::standard>
+template <int VerbosityLevel>
 void print(Log &log, EventDataSummary const &event_data_summary) {
   EventDataSummary const &x = event_data_summary;
   log.begin_section<VerbosityLevel>();
