@@ -8,7 +8,7 @@ import typing
 
 @contextlib.contextmanager
 def working_dir(wd: typing.Union[str, pathlib.Path, None] = None):
-    """
+    """Context manager for performing a task with a different working directory.
 
     .. rubric:: Usage
 
