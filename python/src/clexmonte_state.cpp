@@ -413,7 +413,7 @@ PYBIND11_MODULE(_clexmonte_state, m) {
               The primitive neighbor list.
           supercell_nlist : libcasm.clexulator.SuperNeighborList
               The supercell neighbor list.
-          supercell_index_converter : libcasm.xtal.UnitCellCoordIndexConverter
+          supercell_index_converter : libcasm.xtal.SiteIndexConverter
               The supercell index converter.
           composition_calculator : libcasm.composition.CompositionCalculator
               The composition calculator.
