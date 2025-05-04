@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_global/dist
-          key: ${{ runner.os }}-libcasm-global-v2-0-5
+          key: ${{ runner.os }}-libcasm-global-v2-0-6
 
       - name: checkout libcasm-global
         if: steps.cache-libcasm-global-restore.outputs.cache-hit != 'true'
@@ -32,7 +32,7 @@ jobs:
         with:
           repository: prisms-center/CASMcode_global
           path: CASMcode_global
-          ref: v2.0.5
+          ref: v2.0.6
 
       - name: make global
         if: steps.cache-libcasm-global-restore.outputs.cache-hit != 'true'
@@ -58,7 +58,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_composition/dist
-          key: ${{ runner.os }}-libcasm-composition-v2-0a4
+          key: ${{ runner.os }}-libcasm-composition-v2-0-0
 
       - name: checkout libcasm-composition
         if: steps.cache-libcasm-composition-restore.outputs.cache-hit != 'true'
@@ -66,7 +66,7 @@ jobs:
         with:
           repository: prisms-center/CASMcode_composition
           path: CASMcode_composition
-          ref: v2.0a4
+          ref: v2.0.0
 
       - name: make composition
         if: steps.cache-libcasm-composition-restore.outputs.cache-hit != 'true'
@@ -91,7 +91,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_crystallography/dist
-          key: ${{ runner.os }}-libcasm-xtal-v2-0a12
+          key: ${{ runner.os }}-libcasm-xtal-v2-0-0
 
       - name: checkout libcasm-xtal
         if: steps.cache-libcasm-xtal-restore.outputs.cache-hit != 'true'
@@ -99,7 +99,7 @@ jobs:
         with:
           repository: prisms-center/CASMcode_crystallography
           path: CASMcode_crystallography
-          ref: v2.0a12
+          ref: v2.0.0
 
       - name: make xtal
         if: steps.cache-libcasm-xtal-restore.outputs.cache-hit != 'true'
@@ -132,7 +132,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_mapping/dist
-          key: ${{ runner.os }}-libcasm-mapping-v2-0a6
+          key: ${{ runner.os }}-libcasm-mapping-v2-0-0
 
       - name: checkout libcasm-mapping
         if: steps.cache-libcasm-mapping-restore.outputs.cache-hit != 'true'
@@ -165,7 +165,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_clexulator/dist
-          key: ${{ runner.os }}-libcasm-clexulator-v2-0a7
+          key: ${{ runner.os }}-libcasm-clexulator-v2-0-0
 
       - name: checkout libcasm-clexulator
         if: steps.cache-libcasm-clexulator-restore.outputs.cache-hit != 'true'
@@ -173,7 +173,7 @@ jobs:
         with:
           repository: prisms-center/CASMcode_clexulator
           path: CASMcode_clexulator
-          ref: v2.0a7
+          ref: v2.0.0
 
       - name: make clexulator
         if: steps.cache-libcasm-clexulator-restore.outputs.cache-hit != 'true'
@@ -198,7 +198,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_configuration/dist
-          key: ${{ runner.os }}-libcasm-configuration-v2-0a8
+          key: ${{ runner.os }}-libcasm-configuration-v2-0-0
 
       - name: checkout libcasm-configuration
         if: steps.cache-libcasm-configuration-restore.outputs.cache-hit != 'true'
@@ -206,7 +206,7 @@ jobs:
         with:
           repository: prisms-center/CASMcode_configuration
           path: CASMcode_configuration
-          ref: v2.0a8
+          ref: v2.0.0
 
       - name: make configuration
         if: steps.cache-libcasm-configuration-restore.outputs.cache-hit != 'true'
@@ -231,7 +231,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: CASMcode_monte/dist
-          key: ${{ runner.os }}-libcasm-monte-v2-0a6
+          key: ${{ runner.os }}-libcasm-monte-v2-0-0
 
       - name: checkout libcasm-monte
         if: steps.cache-libcasm-monte-restore.outputs.cache-hit != 'true'
