@@ -6,18 +6,18 @@ requires = [
     "cmake>=3.20",
     "ninja",
     "pybind11>=2.8.0",
-    "libcasm-global>=2.0.6",
-    "libcasm-xtal>=2.0.0",
-    "libcasm-composition>=2.0.0",
-    "libcasm-clexulator>=2.0.0",
-    "libcasm-configuration>=2.0.0",
-    "libcasm-monte>=2.0.0",
+    "libcasm-global>=2.1.0",
+    "libcasm-xtal>=2.1.0",
+    "libcasm-composition>=2.1.0",
+    "libcasm-clexulator>=2.1.0",
+    "libcasm-configuration>=2.1.0",
+    "libcasm-monte>=2.1.0",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "libcasm-clexmonte"
-version = "2.0.0"
+version = "2.1.0"
 authors = [
   { name="CASM developers", email="casm-developers@lists.engr.ucsb.edu" },
 ]
@@ -32,12 +32,12 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "libcasm-global>=2.0.6",
-    "libcasm-xtal>=2.0.0",
-    "libcasm-composition>=2.0.0",
-    "libcasm-clexulator>=2.0.0",
-    "libcasm-configuration>=2.0.0",
-    "libcasm-monte>=2.0.0",
+    "libcasm-global>=2.1.0",
+    "libcasm-xtal>=2.1.0",
+    "libcasm-composition>=2.1.0",
+    "libcasm-clexulator>=2.1.0",
+    "libcasm-configuration>=2.1.0",
+    "libcasm-monte>=2.1.0",
     "numpy",
 ]
 
@@ -60,8 +60,6 @@ known-first-party = ["libcasm", "casm"]
 [tool.cibuildwheel]
 # Build for python3.9, 3.10, 3.11, 3.12, 3.13
 build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
-# Build for cpython only
-skip =  "pp*"
 
 # Checkout submodules
 before-all = "git submodule update --init --recursive"
@@ -85,6 +83,6 @@ repair-wheel-command = ""
 
 [tool.cibuildwheel.linux]
 # dependencies do not build for musl
-skip = ["pp* *musllinux*"]
+skip = ["*musllinux*"]
 
 repair-wheel-command = ""
