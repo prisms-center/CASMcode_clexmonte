@@ -1,0 +1,260 @@
+name: Build CASM dependencies on MacOS
+
+on:
+  workflow_call:
+
+jobs:
+  build-depends:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Set up requirements & configuration variables
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential cmake
+          pip install --upgrade pip wheel build
+
+      ### libcasm-global ###
+      - name: restore libcasm-global cache
+        id: cache-libcasm-global-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_global/dist
+          key: ${{ runner.os }}-libcasm-global-v2-1-0
+
+      - name: checkout libcasm-global
+        if: steps.cache-libcasm-global-restore.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: prisms-center/CASMcode_global
+          path: CASMcode_global
+          ref: v2.1.0
+
+      - name: make global
+        if: steps.cache-libcasm-global-restore.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd CASMcode_global
+          git submodule update --init --recursive
+          python -m build
+          pip install dist/*.whl
+          pip install -r test_requirements.txt
+          python -m pytest -rsap python/tests
+
+      - name: save libcasm-global cache
+        id: cache-libcasm-global-save
+        uses: actions/cache/save@v4
+        with:
+          path: CASMcode_global/dist
+          key: ${{ steps.cache-libcasm-global-restore.outputs.cache-primary-key }}
+
+      ### libcasm-composition ###
+      - name: restore libcasm-composition cache
+        id: cache-libcasm-composition-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_composition/dist
+          key: ${{ runner.os }}-libcasm-composition-v2-1-0
+
+      - name: checkout libcasm-composition
+        if: steps.cache-libcasm-composition-restore.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: prisms-center/CASMcode_composition
+          path: CASMcode_composition
+          ref: v2.1.0
+
+      - name: make composition
+        if: steps.cache-libcasm-composition-restore.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd CASMcode_composition
+          python -m build
+          pip install dist/*.whl
+          pip install -r test_requirements.txt
+          python -m pytest -rsap python/tests
+
+      - name: save libcasm-composition cache
+        id: cache-libcasm-composition-save
+        uses: actions/cache/save@v4
+        with:
+          path: CASMcode_composition/dist
+          key: ${{ steps.cache-libcasm-composition-restore.outputs.cache-primary-key }}
+
+      ### libcasm-xtal ###
+      - name: restore libcasm-xtal cache
+        id: cache-libcasm-xtal-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_crystallography/dist
+          key: ${{ runner.os }}-libcasm-xtal-v2-1-0
+
+      - name: checkout libcasm-xtal
+        if: steps.cache-libcasm-xtal-restore.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: prisms-center/CASMcode_crystallography
+          path: CASMcode_crystallography
+          ref: v2.1.0
+
+      - name: make xtal
+        if: steps.cache-libcasm-xtal-restore.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd CASMcode_crystallography
+          python -m build
+          pip install dist/*.whl
+          pip install -r test_requirements.txt
+          python -m pytest -rsap python/tests
+
+      - name: save libcasm-xtal cache
+        id: cache-libcasm-xtal-save
+        uses: actions/cache/save@v4
+        with:
+          path: CASMcode_crystallography/dist
+          key: ${{ steps.cache-libcasm-xtal-restore.outputs.cache-primary-key }}
+
+      ### environment ###
+      - name: set environment
+        shell: bash
+        run: |
+          echo "CASM_PREFIX=$(python -m libcasm.casmglobal --prefix)" >> "$GITHUB_ENV"
+          CASM_SOFLAGS="-shared -Wl,--no-as-needed"
+          echo "CASM_SOFLAGS=${CASM_SOFLAGS}" >> "$GITHUB_ENV"
+
+      ### libcasm-mapping ###
+      - name: restore libcasm-mapping cache
+        id: cache-libcasm-mapping-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_mapping/dist
+          key: ${{ runner.os }}-libcasm-mapping-v2-1-0
+
+      - name: checkout libcasm-mapping
+        if: steps.cache-libcasm-mapping-restore.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: prisms-center/CASMcode_mapping
+          path: CASMcode_mapping
+          ref: v2.1.0
+
+      - name: make mapping
+        if: steps.cache-libcasm-mapping-restore.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd CASMcode_mapping
+          python -m build
+          pip install dist/*.whl
+          pip install -r test_requirements.txt
+          python -m pytest -rsap python/tests
+
+      - name: save libcasm-mapping cache
+        id: cache-libcasm-mapping-save
+        uses: actions/cache/save@v4
+        with:
+          path: CASMcode_mapping/dist
+          key: ${{ steps.cache-libcasm-mapping-restore.outputs.cache-primary-key }}
+
+      ### libcasm-clexulator ###
+      - name: restore libcasm-clexulator cache
+        id: cache-libcasm-clexulator-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_clexulator/dist
+          key: ${{ runner.os }}-libcasm-clexulator-v2-1-0
+
+      - name: checkout libcasm-clexulator
+        if: steps.cache-libcasm-clexulator-restore.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: prisms-center/CASMcode_clexulator
+          path: CASMcode_clexulator
+          ref: v2.1.0
+
+      - name: make clexulator
+        if: steps.cache-libcasm-clexulator-restore.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd CASMcode_clexulator
+          python -m build
+          pip install dist/*.whl
+          pip install -r test_requirements.txt
+          python -m pytest -rsap python/tests
+
+      - name: save libcasm-clexulator cache
+        id: cache-libcasm-clexulator-save
+        uses: actions/cache/save@v4
+        with:
+          path: CASMcode_clexulator/dist
+          key: ${{ steps.cache-libcasm-clexulator-restore.outputs.cache-primary-key }}
+
+      ### libcasm-configuration ###
+      - name: restore libcasm-configuration cache
+        id: cache-libcasm-configuration-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_configuration/dist
+          key: ${{ runner.os }}-libcasm-configuration-v2-1-0
+
+      - name: checkout libcasm-configuration
+        if: steps.cache-libcasm-configuration-restore.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: prisms-center/CASMcode_configuration
+          path: CASMcode_configuration
+          ref: v2.1.0
+
+      - name: make configuration
+        if: steps.cache-libcasm-configuration-restore.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd CASMcode_configuration
+          python -m build
+          pip install dist/*.whl
+          pip install -r test_requirements.txt
+          python -m pytest -rsap python/tests
+
+      - name: save libcasm-configuration cache
+        id: cache-libcasm-configuration-save
+        uses: actions/cache/save@v4
+        with:
+          path: CASMcode_configuration/dist
+          key: ${{ steps.cache-libcasm-configuration-restore.outputs.cache-primary-key }}
+
+      ### libcasm-monte ###
+      - name: restore libcasm-monte cache
+        id: cache-libcasm-monte-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: CASMcode_monte/dist
+          key: ${{ runner.os }}-libcasm-monte-v2-1-0
+
+      - name: checkout libcasm-monte
+        if: steps.cache-libcasm-monte-restore.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: prisms-center/CASMcode_monte
+          path: CASMcode_monte
+          ref: v2.1.0
+
+      - name: make monte
+        if: steps.cache-libcasm-monte-restore.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd CASMcode_monte
+          python -m build
+          pip install dist/*.whl
+          pip install -r test_requirements.txt
+          python -m pytest -rsap python/tests
+
+      - name: save libcasm-monte cache
+        id: cache-libcasm-monte-save
+        uses: actions/cache/save@v4
+        with:
+          path: CASMcode_monte/dist
+          key: ${{ steps.cache-libcasm-monte-restore.outputs.cache-primary-key }}
+
