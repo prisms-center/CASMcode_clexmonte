@@ -25,11 +25,11 @@ jobs:
 
       - name: Set up requirements & configuration variables
         run: |
-          sudo apt-get update
-          sudo apt-get install build-essential cmake
+          brew update
+          brew install cmake
           pip install --upgrade pip wheel
           git submodule update --init --recursive
-          echo "SKBUILD_BUILD_OPTIONS=${{ env.SKBUILD_BUILD_OPTIONS }}" >> "$GITHUB_ENV"
+          pip install -r test_requirements.txt
 
       ### libcasm-global ###
       - name: restore libcasm-global cache

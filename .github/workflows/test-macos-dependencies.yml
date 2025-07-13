@@ -14,8 +14,8 @@ jobs:
 
       - name: Set up requirements & configuration variables
         run: |
-          sudo apt-get update
-          sudo apt-get install build-essential cmake
+          brew update
+          brew install cmake
           pip install --upgrade pip wheel build
 
       ### libcasm-global ###
@@ -123,8 +123,6 @@ jobs:
         shell: bash
         run: |
           echo "CASM_PREFIX=$(python -m libcasm.casmglobal --prefix)" >> "$GITHUB_ENV"
-          CASM_SOFLAGS="-shared -Wl,--no-as-needed"
-          echo "CASM_SOFLAGS=${CASM_SOFLAGS}" >> "$GITHUB_ENV"
 
       ### libcasm-mapping ###
       - name: restore libcasm-mapping cache
