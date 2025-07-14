@@ -27,13 +27,13 @@ jobs:
         with:
           repository: prisms-center/CASMcode_global
           path: CASMcode_global
-          ref: v2.1.0
+          ref: v2.2.0
 
       - name: test libcasm-global
         shell: bash
         run: |
           cd CASMcode_global
-          pip install libcasm-global==2.1.0
+          pip install libcasm-global==2.2.0
           pip install -r test_requirements.txt
           python -m pytest -rsap python/tests
 
@@ -53,14 +53,14 @@ jobs:
         with:
           repository: prisms-center/CASMcode_composition
           path: CASMcode_composition
-          ref: v2.1.0
+          ref: v2.2.0
 
       - name: test libcasm-composition
         if: steps.cache-libcasm-composition-restore.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cd CASMcode_composition
-          pip install libcasm-composition==2.1.0
+          pip install libcasm-composition==2.2.0
           pip install -r test_requirements.txt
           python -m pytest -rsap python/tests
 
@@ -70,13 +70,13 @@ jobs:
         with:
           repository: prisms-center/CASMcode_crystallography
           path: CASMcode_crystallography
-          ref: v2.1.0
+          ref: v2.2.0
 
       - name: test libcasm-xtal
         shell: bash
         run: |
           cd CASMcode_crystallography
-          pip install libcasm-xtal==2.1.0
+          pip install libcasm-xtal==2.2.0
           pip install -r test_requirements.txt
           python -m pytest -rsap python/tests
 
@@ -86,13 +86,13 @@ jobs:
         with:
           repository: prisms-center/CASMcode_clexulator
           path: CASMcode_clexulator
-          ref: v2.1.0
+          ref: v2.2.0
 
       - name: test libcasm-clexulator
         shell: bash
         run: |
           cd CASMcode_clexulator
-          pip install libcasm-clexulator==2.1.0
+          pip install libcasm-clexulator==2.2.0
           pip install -r test_requirements.txt
           python -m pytest -rsap python/tests
 
@@ -102,13 +102,13 @@ jobs:
         with:
           repository: prisms-center/CASMcode_configuration
           path: CASMcode_configuration
-          ref: v2.1.0
+          ref: v2.2.0
 
       - name: test libcasm-configuration
         shell: bash
         run: |
           cd CASMcode_configuration
-          pip install libcasm-configuration==2.1.0
+          pip install libcasm-configuration==2.2.0
           pip install -r test_requirements.txt
           python -m pytest -rsap python/tests
 
@@ -118,12 +118,12 @@ jobs:
         with:
           repository: prisms-center/CASMcode_monte
           path: CASMcode_monte
-          ref: v2.1.0
+          ref: v2.2.0
 
       - name: test libcasm-monte
         shell: bash
         run: |
           cd CASMcode_monte
-          pip install libcasm-monte==2.1.0
+          pip install libcasm-monte==2.2.0
           pip install -r test_requirements.txt
           python -m pytest -rsap python/tests
