@@ -36,16 +36,21 @@ std::vector<EventImpactInfo> make_prim_impact_info_list(
 /// \brief Append events to the prim event list
 void append_to_prim_event_list(std::vector<PrimEventData> &prim_event_list,
                                std::string event_type_name,
-                               std::vector<occ_events::OccEvent> const &events);
+                               std::vector<occ_events::OccEvent> const &events,
+                               occ_events::OccSystem const &event_system,
+                               bool do_make_events_atomic = false);
 
 /// \brief Construct linear list of events associated with the origin unit
 /// cell
 template <typename SystemType>
-std::vector<PrimEventData> make_prim_event_list(SystemType const &system);
+std::vector<PrimEventData> make_prim_event_list(
+    SystemType const &system, bool do_make_events_atomic = false);
 
 /// \brief Construct linear list of events associated with the origin unit cell
 std::vector<PrimEventData> make_prim_event_list(
-    std::map<std::string, OccEventTypeData> const &event_type_data);
+    std::map<std::string, OccEventTypeData> const &event_type_data,
+    occ_events::OccSystem const &event_system,
+    bool do_make_events_atomic = false);
 
 /// \brief Sets `linear_site_index` given a `unitcell_index` and
 /// `neighbor_index` list
@@ -148,8 +153,10 @@ std::vector<EventImpactInfo> make_prim_impact_info_list(
 
 /// \brief Construct linear list of events associated with the origin unit cell
 template <typename SystemType>
-std::vector<PrimEventData> make_prim_event_list(SystemType const &system) {
-  return make_prim_event_list(get_event_type_data(system));
+std::vector<PrimEventData> make_prim_event_list(SystemType const &system,
+                                                bool do_make_events_atomic) {
+  return make_prim_event_list(get_event_type_data(system),
+                              *get_event_system(system), do_make_events_atomic);
 }
 
 }  // namespace clexmonte

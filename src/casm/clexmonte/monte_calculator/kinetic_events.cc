@@ -146,7 +146,9 @@ CompleteKineticEventData<DebugMode>::CompleteKineticEventData(
         "clex.");
   }
 
-  prim_event_list = clexmonte::make_prim_event_list(*system);
+  bool do_make_events_atomic = true;
+  prim_event_list =
+      clexmonte::make_prim_event_list(*system, do_make_events_atomic);
   if (prim_event_list.empty()) {
     throw std::runtime_error(
         "Error constructing CompleteKineticEventData: "
@@ -500,7 +502,9 @@ AllowedKineticEventData<EventSelectorType, DebugMode>::AllowedKineticEventData(
         "clex.");
   }
 
-  prim_event_list = clexmonte::make_prim_event_list(*system);
+  bool do_make_events_atomic = true;
+  prim_event_list =
+      clexmonte::make_prim_event_list(*system, do_make_events_atomic);
   if (prim_event_list.empty()) {
     throw std::runtime_error(
         "Error constructing AllowedKineticEventData: "

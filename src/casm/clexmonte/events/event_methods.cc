@@ -2,11 +2,71 @@
 
 #include "casm/clexulator/ConfigDoFValues.hh"
 #include "casm/clexulator/NeighborList.hh"
+#include "casm/configuration/occ_events/OccSystem.hh"
+#include "casm/crystallography/Molecule.hh"
 #include "casm/monte/Conversions.hh"
 #include "casm/monte/events/OccLocation.hh"
 
 namespace CASM {
 namespace clexmonte {
+
+namespace {
+void check_event_positions(occ_events::OccEvent const &event,
+                           std::string const &event_type_name,
+                           occ_events::OccSystem const &event_system) {
+  for (auto const &traj : event) {
+    for (auto const &pos : traj.position) {
+      xtal::Molecule const &mol = event_system.get_occupant(pos);
+      if (pos.is_atom) {
+        if (pos.atom_position_index < 0 ||
+            pos.atom_position_index >= mol.size()) {
+          std::stringstream msg;
+          msg << "Error: invalid event definition: "
+                 "event_type_name="
+              << event_type_name << " has is_atom=true and atom_position_index="
+              << pos.atom_position_index << " but the molecule has "
+              << mol.size() << " atoms.";
+          throw std::runtime_error(msg.str());
+        }
+      } else {
+        if (pos.atom_position_index != -1) {
+          std::stringstream msg;
+          msg << "Error invalid event definition: event_type_name="
+              << event_type_name
+              << " has is_atom=false and atom_position_index="
+              << pos.atom_position_index << ".";
+          throw std::runtime_error(msg.str());
+        }
+      }
+    }
+  }
+}
+
+void make_event_atomic(occ_events::OccEvent &event,
+                       occ_events::OccSystem const &event_system,
+                       std::string const &event_type_name) {
+  for (auto &traj : event) {
+    for (auto &pos : traj.position) {
+      xtal::Molecule const &mol = event_system.get_occupant(pos);
+      if (pos.is_atom) {
+        continue;
+      }
+      if (mol.size() == 1) {
+        pos.is_atom = true;
+        pos.atom_position_index = 0;
+        continue;
+      }
+      std::stringstream msg;
+      msg << "Error making event atomic: event_type_name=" << event_type_name
+          << " has a trajectory defined in terms of a molecule with >1 atom. "
+             "The event must be defined in terms of individual atoms or "
+             "molecules with only one atom.";
+      throw std::runtime_error(msg.str());
+    }
+  }
+}
+
+}  // namespace
 
 /// \brief Append events to the prim event list
 ///
@@ -17,9 +77,11 @@ namespace clexmonte {
 /// \param events The vector of equivalent events in an orbit, which must be in
 ///     order consistent with equivalents info if the equivalent_index will be
 ///     used for getting the correct local cluster expansion.
-void append_to_prim_event_list(
-    std::vector<PrimEventData> &prim_event_list, std::string event_type_name,
-    std::vector<occ_events::OccEvent> const &events) {
+void append_to_prim_event_list(std::vector<PrimEventData> &prim_event_list,
+                               std::string event_type_name,
+                               std::vector<occ_events::OccEvent> const &events,
+                               occ_events::OccSystem const &event_system,
+                               bool do_make_events_atomic) {
   Index equivalent_index = 0;
   for (occ_events::OccEvent const &equiv : events) {
     // forward
@@ -29,18 +91,27 @@ void append_to_prim_event_list(
     data.is_forward = true;
     data.prim_event_index = prim_event_list.size();
     data.event = equiv;
+
+    // Validate event
+    check_event_positions(data.event, event_type_name, event_system);
+
+    // Optionally convert to atomic event
+    if (do_make_events_atomic) {
+      make_event_atomic(data.event, event_system, event_type_name);
+    }
+
     auto clust_occupation = make_cluster_occupation(data.event);
     data.sites = clust_occupation.first.elements();
     data.occ_init = clust_occupation.second[0];
     data.occ_final = clust_occupation.second[1];
     prim_event_list.push_back(data);
 
-    occ_events::OccEvent reverse_equiv = copy_reverse(equiv);
-    if (reverse_equiv != equiv) {
+    occ_events::OccEvent reverse_event = copy_reverse(data.event);
+    if (reverse_event != data.event) {
       PrimEventData rev_data = data;
       rev_data.is_forward = false;
       rev_data.prim_event_index = prim_event_list.size();
-      rev_data.event = reverse_equiv;
+      rev_data.event = reverse_event;
       rev_data.occ_init = data.occ_final;
       rev_data.occ_final = data.occ_init;
       prim_event_list.push_back(rev_data);
@@ -51,10 +122,12 @@ void append_to_prim_event_list(
 
 /// \brief Construct linear list of events associated with the origin unit cell
 std::vector<PrimEventData> make_prim_event_list(
-    std::map<std::string, OccEventTypeData> const &event_type_data) {
+    std::map<std::string, OccEventTypeData> const &event_type_data,
+    occ_events::OccSystem const &event_system, bool do_make_events_atomic) {
   std::vector<PrimEventData> prim_event_list;
   for (auto const &pair : event_type_data) {
-    append_to_prim_event_list(prim_event_list, pair.first, pair.second.events);
+    append_to_prim_event_list(prim_event_list, pair.first, pair.second.events,
+                              event_system, do_make_events_atomic);
   }
   return prim_event_list;
 }
@@ -149,6 +222,20 @@ monte::OccEvent &set_event(
     Index unitcell_index, monte::OccLocation const &occ_location,
     std::vector<int> neighbor_index,
     clexulator::SuperNeighborList const &supercell_nlist) {
+  for (auto const &traj : prim_event_data.event) {
+    for (auto const &pos : traj.position) {
+      // if (pos.is_in_resevoir) {
+      //   throw std::runtime_error(
+      //       "Error: KMC events exchanging with the resevoir is not
+      //       allowed.");
+      // }
+      if (!pos.is_atom) {
+        throw std::runtime_error(
+            "Error: KMC event trajectories must describe individual atoms.");
+      }
+    }
+  }
+
   // set event.new_occ --- specify new site occupation
   event.new_occ = prim_event_data.occ_final;
 

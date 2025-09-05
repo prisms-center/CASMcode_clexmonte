@@ -551,6 +551,11 @@ state_sampling_function_type make_jumps_per_event_by_type_f(
         *prev_sum_n_jumps = sum_n_jumps;
         *prev_n_events = n_events;
 
+        std::cout << "jumps_per_event_by_type: "
+                  << jumps_per_event_by_type.transpose() << std::endl;
+
+        std::cout << "Calculating jumps_per_event_by_type... DONE" << std::endl
+                  << std::endl;
         return jumps_per_event_by_type;
       });
 }
