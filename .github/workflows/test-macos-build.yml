@@ -19,7 +19,7 @@ jobs:
       - name: Set up requirements & configuration variables
         run: |
           brew update
-          brew install cmake
+          brew list cmake || brew install cmake
           pip install --upgrade pip wheel build
           git submodule update --init --recursive
           pip install -r test_requirements.txt
