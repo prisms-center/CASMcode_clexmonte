@@ -578,6 +578,7 @@ state_sampling_function_type make_jumps_per_event_by_type_f(
       R"(Mean number of jumps per event for each atom type over the last sampling period)",
       component_names,  // component names
       shape, [calculation, prev_n_events, prev_sum_n_jumps]() {
+        std::cout << "Calculating jumps_per_event_by_type..." << std::endl;
         auto const &system = *calculation->system();
         auto const &kmc_data = *calculation->kmc_data();
         auto const &occ_location = *calculation->state_data()->occ_location;
@@ -586,6 +587,14 @@ state_sampling_function_type make_jumps_per_event_by_type_f(
         auto const &name_list = event_system->atom_name_list;
         auto const &name_index_list = kmc_data.atom_name_index_list;
         auto const &n_jumps = occ_location.current_atom_n_jumps();
+        std::cout << "n_jumps: " << std::endl;
+        for (int i = 0; i < n_jumps.size(); ++i) {
+          if (n_jumps[i] != 0) {
+            std::cout << "- " << i << ": " << n_jumps[i] << " ("
+                      << name_index_list[i] << ")" << std::endl;
+          }
+        }
+        std::cout << std::endl;
 
         auto const &sampling_fixture = *kmc_data.sampling_fixture;
         auto const &counter = sampling_fixture.counter();
@@ -596,10 +605,12 @@ state_sampling_function_type make_jumps_per_event_by_type_f(
 
         // reset stored data if necessary
         if (*prev_n_events > n_events) {
+          std::cout << "resetting prev data..." << std::endl;
           *prev_sum_n_jumps = Eigen::VectorXd::Zero(name_list.size());
           *prev_n_events = 0;
         }
         double delta_n_events = n_events - *prev_n_events;
+        std::cout << "delta_n_events: " << delta_n_events << std::endl;
 
         Eigen::VectorXd n_atoms = Eigen::VectorXd::Zero(name_list.size());
         Eigen::VectorXd sum_n_jumps = Eigen::VectorXd::Zero(name_list.size());
@@ -607,7 +618,11 @@ state_sampling_function_type make_jumps_per_event_by_type_f(
           n_atoms(name_index_list[i]) += 1.0;
           sum_n_jumps(name_index_list[i]) += n_jumps[i];
         }
+        std::cout << "n_atoms: " << n_atoms.transpose() << std::endl;
+        std::cout << "sum_n_jumps: " << sum_n_jumps.transpose() << std::endl;
         Eigen::VectorXd delta_n_jumps = sum_n_jumps - *prev_sum_n_jumps;
+        std::cout << "delta_n_jumps: " << delta_n_jumps.transpose()
+                  << std::endl;
 
         // jumps_per_event_by_type = delta_n_jumps(i) / delta_n_events;
         Eigen::VectorXd jumps_per_event_by_type =
@@ -616,6 +631,11 @@ state_sampling_function_type make_jumps_per_event_by_type_f(
         *prev_sum_n_jumps = sum_n_jumps;
         *prev_n_events = n_events;
 
+        std::cout << "jumps_per_event_by_type: "
+                  << jumps_per_event_by_type.transpose() << std::endl;
+
+        std::cout << "Calculating jumps_per_event_by_type... DONE" << std::endl
+                  << std::endl;
         return jumps_per_event_by_type;
       });
 }

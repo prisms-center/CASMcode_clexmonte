@@ -1146,9 +1146,8 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path,
                 10000 /* max_size */));
       } else {
         log.indent() << "- All orbits are empty: not constructing "
-                     << event_type_name + "-all"
-                     << " or " << event_type_name + "-all-combined"
-                     << std::endl;
+                     << event_type_name + "-all" << " or "
+                     << event_type_name + "-all-combined" << std::endl;
       }
 
       log.decrease_indent();
@@ -1156,7 +1155,9 @@ void parse(InputParser<System> &parser, std::vector<fs::path> search_path,
 
     // Construct prim event list
     log.indent() << "- Constructing prim_event_list..." << std::endl;
-    system.prim_event_list = make_prim_event_list(system.event_type_data);
+    bool do_make_events_atomic = false;
+    system.prim_event_list =
+        make_prim_event_list(system, do_make_events_atomic);
     log.indent() << "- prim_event_list size: " << system.prim_event_list.size()
                  << std::endl;
     if (system.prim_event_list.size() > 0) {
