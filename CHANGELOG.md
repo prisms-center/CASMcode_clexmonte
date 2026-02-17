@@ -5,6 +5,15 @@ All notable changes to `libcasm-clexmonte` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Added `BaseMonteCalculator` Python binding, exposing read-only properties: `calculator_name`, `time_sampling_allowed`, `update_atoms`, `save_atom_info`, `is_multistate_method`.
+- Added factory functions `make_semigrand_canonical_calculator`, `make_canonical_calculator`, and `make_kinetic_calculator` that return `BaseMonteCalculator` instances.
+- `MonteCalculator` now accepts a `BaseMonteCalculator` instance in addition to a method name string, allowing external packages to provide custom calculator implementations.
+
+
 ## [2.3.0] - 2025-09-05
 
 ### Changed

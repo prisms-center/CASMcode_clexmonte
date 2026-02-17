@@ -34,15 +34,15 @@ namespace py = pybind11;
 extern "C" {
 /// \brief Returns a clexmonte::BaseMonteCalculator* owning a
 /// SemiGrandCanonicalCalculator
-CASM::clexmonte::BaseMonteCalculator *make_SemiGrandCanonicalCalculator();
+CASM::clexmonte::BaseMonteCalculator* make_SemiGrandCanonicalCalculator();
 
 /// \brief Returns a clexmonte::BaseMonteCalculator* owning a
 /// CanonicalCalculator
-CASM::clexmonte::BaseMonteCalculator *make_CanonicalCalculator();
+CASM::clexmonte::BaseMonteCalculator* make_CanonicalCalculator();
 
 /// \brief Returns a clexmonte::BaseMonteCalculator* owning a
 /// KineticCalculator
-CASM::clexmonte::BaseMonteCalculator *make_KineticCalculator();
+CASM::clexmonte::BaseMonteCalculator* make_KineticCalculator();
 }
 
 /// CASM - Python binding code
@@ -69,9 +69,9 @@ typedef monte::ResultsAnalysisFunctionMap<config_type, statistics_type>
     analysis_function_map_type;
 
 template <typename T>
-py::list as_py_list(const std::vector<T> &vec) {
+py::list as_py_list(const std::vector<T>& vec) {
   py::list py_list;
-  for (const auto &item : vec) {
+  for (const auto& item : vec) {
     py_list.append(item);
   }
   return py_list;
@@ -79,7 +79,7 @@ py::list as_py_list(const std::vector<T> &vec) {
 
 std::vector<int> as_vector_int(py::list py_list) {
   std::vector<int> vec;
-  for (const auto &item : py_list) {
+  for (const auto& item : py_list) {
     vec.push_back(py::cast<int>(item));
   }
   return vec;
@@ -87,18 +87,18 @@ std::vector<int> as_vector_int(py::list py_list) {
 
 std::vector<Index> as_vector_index(py::list py_list) {
   std::vector<Index> vec;
-  for (const auto &item : py_list) {
+  for (const auto& item : py_list) {
     vec.push_back(py::cast<Index>(item));
   }
   return vec;
 }
 
 clexmonte::MontePotential make_potential(
-    std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type &state) {
+    std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type& state) {
   // print messages to sys.stdout, sys.stderr
   py::scoped_ostream_redirect redirect;
   py::scoped_estream_redirect err_redirect;
-  monte::OccLocation *occ_location = nullptr;
+  monte::OccLocation* occ_location = nullptr;
   calculator->set_state_and_potential(state, nullptr);
   return calculator->potential();
 }
@@ -116,8 +116,8 @@ std::shared_ptr<clexmonte::EventDataSummary> make_event_data_summary(
 }
 
 clexmonte::MonteEventData make_event_data(
-    std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type &state,
-    monte::OccLocation *occ_location) {
+    std::shared_ptr<clexmonte::MonteCalculator> calculator, state_type& state,
+    monte::OccLocation* occ_location) {
   // print messages to sys.stdout, sys.stderr
   py::scoped_ostream_redirect redirect;
   py::scoped_estream_redirect err_redirect;
@@ -131,40 +131,45 @@ clexmonte::MonteEventData make_event_data(
 }
 
 std::shared_ptr<clexmonte::StateData> make_state_data(
-    std::shared_ptr<system_type> system, state_type &state,
-    monte::OccLocation *occ_location) {
+    std::shared_ptr<system_type> system, state_type& state,
+    monte::OccLocation* occ_location) {
   return std::make_shared<clexmonte::StateData>(system, &state, occ_location);
 }
 
+std::shared_ptr<clexmonte::BaseMonteCalculator>
+make_semigrand_canonical_calculator() {
+  return std::shared_ptr<clexmonte::BaseMonteCalculator>(
+      make_SemiGrandCanonicalCalculator());
+}
+
+std::shared_ptr<clexmonte::BaseMonteCalculator> make_canonical_calculator() {
+  return std::shared_ptr<clexmonte::BaseMonteCalculator>(
+      make_CanonicalCalculator());
+}
+
+std::shared_ptr<clexmonte::BaseMonteCalculator> make_kinetic_calculator() {
+  return std::shared_ptr<clexmonte::BaseMonteCalculator>(
+      make_KineticCalculator());
+}
+
 std::shared_ptr<clexmonte::MonteCalculator> make_monte_calculator(
-    std::string method, std::shared_ptr<system_type> system,
-    std::optional<nlohmann::json> params, std::shared_ptr<engine_type> engine) {
+    std::shared_ptr<clexmonte::BaseMonteCalculator> base_calculator,
+    std::shared_ptr<system_type> system, std::optional<nlohmann::json> params,
+    std::shared_ptr<engine_type> engine) {
   // print messages to sys.stdout, sys.stderr
   py::scoped_ostream_redirect redirect;
   py::scoped_estream_redirect err_redirect;
   jsonParser _params = jsonParser::object();
   if (params.has_value()) {
-    jsonParser json{static_cast<nlohmann::json const &>(params.value())};
+    jsonParser json{static_cast<nlohmann::json const&>(params.value())};
     _params = json;
   }
 
-  typedef std::unique_ptr<clexmonte::BaseMonteCalculator> base_calculator_type;
-  base_calculator_type base_calculator;
   std::shared_ptr<RuntimeLibrary> lib = nullptr;
-  if (method == "semigrand_canonical") {
-    base_calculator = base_calculator_type(make_SemiGrandCanonicalCalculator());
-  } else if (method == "canonical") {
-    base_calculator = base_calculator_type(make_CanonicalCalculator());
-  } else if (method == "kinetic") {
-    base_calculator = base_calculator_type(make_KineticCalculator());
-  } else {
-    std::stringstream msg;
-    msg << "Error in make_monte_calculator: method='" << method
-        << "' is not recognized";
-    throw std::runtime_error(msg.str());
-  }
+  std::unique_ptr<clexmonte::BaseMonteCalculator> cloned =
+      base_calculator->clone();
   return clexmonte::make_monte_calculator(_params, system, engine,
-                                          std::move(base_calculator), lib);
+                                          std::move(cloned), lib);
 }
 
 std::shared_ptr<clexmonte::MonteCalculator> make_custom_monte_calculator(
@@ -180,7 +185,7 @@ std::shared_ptr<clexmonte::MonteCalculator> make_custom_monte_calculator(
 
   jsonParser _params = jsonParser::object();
   if (params.has_value()) {
-    jsonParser json{static_cast<nlohmann::json const &>(params.value())};
+    jsonParser json{static_cast<nlohmann::json const&>(params.value())};
     _params = json;
   }
 
@@ -196,7 +201,7 @@ std::shared_ptr<clexmonte::MonteCalculator> make_custom_monte_calculator(
 
   std::vector<fs::path> _search_path;
   if (search_path.has_value()) {
-    for (auto const &tpath : search_path.value()) {
+    for (auto const& tpath : search_path.value()) {
       _search_path.emplace_back(tpath);
     }
   }
@@ -209,9 +214,9 @@ std::shared_ptr<clexmonte::MonteCalculator> make_custom_monte_calculator(
 }
 
 std::shared_ptr<run_manager_type> monte_calculator_run(
-    calculator_type &self, state_type &state,
+    calculator_type& self, state_type& state,
     std::shared_ptr<run_manager_type> run_manager,
-    monte::OccLocation *occ_location) {
+    monte::OccLocation* occ_location) {
   // print errors and warnings to sys.stdout
   py::scoped_ostream_redirect redirect;
   py::scoped_estream_redirect err_redirect;
@@ -237,9 +242,9 @@ std::shared_ptr<run_manager_type> monte_calculator_run(
 }
 
 std::shared_ptr<sampling_fixture_type> monte_calculator_run_fixture(
-    calculator_type &self, state_type &state,
-    sampling_fixture_params_type &sampling_fixture_params,
-    std::shared_ptr<engine_type> engine, monte::OccLocation *occ_location) {
+    calculator_type& self, state_type& state,
+    sampling_fixture_params_type& sampling_fixture_params,
+    std::shared_ptr<engine_type> engine, monte::OccLocation* occ_location) {
   // print messages to sys.stdout, sys.stderr
   py::scoped_ostream_redirect redirect;
   py::scoped_estream_redirect err_redirect;
@@ -289,6 +294,43 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
   py::bind_vector<std::vector<Index>>(m, "LongVector");
   py::bind_vector<std::vector<xtal::UnitCellCoord>>(m, "SiteVector");
 
+  py::class_<clexmonte::BaseMonteCalculator,
+             std::shared_ptr<clexmonte::BaseMonteCalculator>>(
+      m, "BaseMonteCalculator",
+      R"pbdoc(
+      Base class for Monte Carlo calculator implementations
+
+      This is an abstract base class. Instances are created by factory functions
+      such as :func:`make_semigrand_canonical_calculator`,
+      :func:`make_canonical_calculator`, :func:`make_kinetic_calculator`,
+      or by external packages that implement custom calculators.
+      )pbdoc")
+      .def_readonly("calculator_name",
+                    &clexmonte::BaseMonteCalculator::calculator_name,
+                    R"pbdoc(
+          str: The calculator name.
+          )pbdoc")
+      .def_readonly("time_sampling_allowed",
+                    &clexmonte::BaseMonteCalculator::time_sampling_allowed,
+                    R"pbdoc(
+          bool: True if time-based sampling is allowed.
+          )pbdoc")
+      .def_readonly("update_atoms",
+                    &clexmonte::BaseMonteCalculator::update_atoms,
+                    R"pbdoc(
+          bool: True if atom positions are tracked.
+          )pbdoc")
+      .def_readonly("save_atom_info",
+                    &clexmonte::BaseMonteCalculator::save_atom_info,
+                    R"pbdoc(
+          bool: True if atom info is saved.
+          )pbdoc")
+      .def_readonly("is_multistate_method",
+                    &clexmonte::BaseMonteCalculator::is_multistate_method,
+                    R"pbdoc(
+          bool: True if this is a multi-state method.
+          )pbdoc");
+
   py::class_<clexmonte::StateData, std::shared_ptr<clexmonte::StateData>>(
       m, "StateData",
       R"pbdoc(
@@ -313,7 +355,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               location list is not required for evaluating the potential.
         )pbdoc",
            py::arg("system"), py::arg("state"),
-           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+           py::arg("occ_location") = static_cast<monte::OccLocation*>(nullptr))
       .def_readonly("system", &clexmonte::StateData::system, R"pbdoc(
           System : System data.
           )pbdoc")
@@ -338,7 +380,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def_property_readonly(
           "convert",
-          [](clexmonte::StateData &m) -> monte::Conversions const & {
+          [](clexmonte::StateData& m) -> monte::Conversions const& {
             return *m.convert;
           },
           R"pbdoc(
@@ -346,7 +388,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def(
           "corr",
-          [](clexmonte::StateData &m,
+          [](clexmonte::StateData& m,
              std::string key) -> std::shared_ptr<clexulator::Correlations> {
             return m.corr.at(key);
           },
@@ -367,7 +409,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("key"))
       .def(
           "local_corr",
-          [](clexmonte::StateData &m, std::string key)
+          [](clexmonte::StateData& m, std::string key)
               -> std::shared_ptr<clexulator::LocalCorrelations> {
             return m.local_corr.at(key);
           },
@@ -388,7 +430,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("key"))
       .def(
           "clex",
-          [](clexmonte::StateData &m,
+          [](clexmonte::StateData& m,
              std::string key) -> std::shared_ptr<clexulator::ClusterExpansion> {
             return m.clex.at(key);
           },
@@ -409,7 +451,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("key"))
       .def(
           "multiclex",
-          [](clexmonte::StateData &m, std::string key)
+          [](clexmonte::StateData& m, std::string key)
               -> std::pair<std::shared_ptr<clexulator::MultiClusterExpansion>,
                            std::map<std::string, Index>> {
             return m.multiclex.at(key);
@@ -436,7 +478,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("key"))
       .def(
           "local_clex",
-          [](clexmonte::StateData &m, std::string key)
+          [](clexmonte::StateData& m, std::string key)
               -> std::shared_ptr<clexulator::LocalClusterExpansion> {
             return m.local_clex.at(key);
           },
@@ -457,7 +499,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("key"))
       .def(
           "local_multiclex",
-          [](clexmonte::StateData &m, std::string key)
+          [](clexmonte::StateData& m, std::string key)
               -> std::pair<
                   std::shared_ptr<clexulator::MultiLocalClusterExpansion>,
                   std::map<std::string, Index>> {
@@ -485,7 +527,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("key"))
       .def(
           "order_parameter",
-          [](clexmonte::StateData &m,
+          [](clexmonte::StateData& m,
              std::string key) -> std::shared_ptr<clexulator::OrderParameter> {
             return m.order_parameters.at(key);
           },
@@ -506,7 +548,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("key"))
       .def(
           "local_orbit_composition_calculator",
-          [](clexmonte::StateData &m, std::string key)
+          [](clexmonte::StateData& m, std::string key)
               -> std::shared_ptr<clexmonte::LocalOrbitCompositionCalculator> {
             return m.local_orbit_composition_calculators.at(key);
           },
@@ -548,8 +590,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def_property_readonly(
           "sampling_fixture",
-          [](clexmonte::BaseMonteCalculator::kmc_data_type &self)
-              -> sampling_fixture_type const & {
+          [](clexmonte::BaseMonteCalculator::kmc_data_type& self)
+              -> sampling_fixture_type const& {
             if (self.sampling_fixture == nullptr) {
               throw std::runtime_error(
                   "Error in KineticsData.sampling_fixture: "
@@ -747,7 +789,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def(
           "to_dict",
-          [](clexmonte::PrimEventData &self,
+          [](clexmonte::PrimEventData& self,
              std::optional<std::reference_wrapper<occ_events::OccSystem const>>
                  system,
              bool include_cluster, bool include_cluster_occupation,
@@ -789,7 +831,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("include_cluster") = true,
           py::arg("include_cluster_occupation") = true,
           py::arg("include_event_invariants") = true)
-      .def("__repr__", [](clexmonte::PrimEventData &self) -> nlohmann::json {
+      .def("__repr__", [](clexmonte::PrimEventData& self) -> nlohmann::json {
         std::stringstream ss;
         jsonParser json;
         occ_events::OccEventOutputOptions opt;
@@ -848,32 +890,32 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def(py::self == py::self, "Compare EventID.")
       .def(py::self != py::self, "Compare EventID.")
       .def("__hash__",
-           [](clexmonte::EventID const &self) {
+           [](clexmonte::EventID const& self) {
              return py::hash(
                  py::make_tuple(self.prim_event_index, self.unitcell_index));
            })
       .def(
           "copy",
-          [](clexmonte::EventID const &self) {
+          [](clexmonte::EventID const& self) {
             return clexmonte::EventID(self);
           },
           "Create a copy of the EventID.")
       .def("__copy__",
-           [](clexmonte::EventID const &self) {
+           [](clexmonte::EventID const& self) {
              return clexmonte::EventID(self);
            })
-      .def("__deepcopy__", [](clexmonte::EventID const &self,
+      .def("__deepcopy__", [](clexmonte::EventID const& self,
                               py::dict) { return clexmonte::EventID(self); })
       .def(
           "to_dict",
-          [](clexmonte::EventID const &self) {
+          [](clexmonte::EventID const& self) {
             jsonParser json;
             to_json(self, json);
             return static_cast<nlohmann::json>(json);
           },
           "Represent the EventID as a Python dict.")
       .def("__repr__",
-           [](clexmonte::EventID const &self) {
+           [](clexmonte::EventID const& self) {
              std::stringstream ss;
              jsonParser json;
              to_json(self, json);
@@ -882,7 +924,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
            })
       .def_static(
           "from_dict",
-          [](nlohmann::json const &data) {
+          [](nlohmann::json const& data) {
             // print messages to sys.stdout, sys.stderr
             py::scoped_ostream_redirect redirect;
             py::scoped_estream_redirect err_redirect;
@@ -920,13 +962,13 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def(
           "to_dict",
-          [](clexmonte::EventData const &self) {
+          [](clexmonte::EventData const& self) {
             jsonParser json;
             to_json(self, json);
             return static_cast<nlohmann::json>(json);
           },
           "Represent the EventData as a Python dict.")
-      .def("__repr__", [](clexmonte::EventData const &self) {
+      .def("__repr__", [](clexmonte::EventData const& self) {
         std::stringstream ss;
         jsonParser json;
         to_json(self, json);
@@ -944,7 +986,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def_property_readonly(
           "formation_energy_delta_corr",
-          [](clexmonte::EventState const &self) {
+          [](clexmonte::EventState const& self) {
             if (self.formation_energy_delta_corr == nullptr) {
               throw std::runtime_error(
                   "Error in EventState.formation_energy_delta_corr: "
@@ -962,7 +1004,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def_property_readonly(
           "local_corr",
-          [](clexmonte::EventState const &self) {
+          [](clexmonte::EventState const& self) {
             if (self.local_corr == nullptr) {
               throw std::runtime_error(
                   "Error in EventState.local_corr: "
@@ -1012,13 +1054,13 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def(
           "to_dict",
-          [](clexmonte::EventState const &self) {
+          [](clexmonte::EventState const& self) {
             jsonParser json;
             to_json(self, json);
             return static_cast<nlohmann::json>(json);
           },
           "Represent the EventState as a Python dict.")
-      .def("__repr__", [](clexmonte::EventState const &self) {
+      .def("__repr__", [](clexmonte::EventState const& self) {
         std::stringstream ss;
         jsonParser json;
         to_json(self, json);
@@ -1184,7 +1226,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def(
           "to_dict",
-          [](clexmonte::SelectedEvent const &self,
+          [](clexmonte::SelectedEvent const& self,
              std::optional<std::reference_wrapper<occ_events::OccSystem const>>
                  system,
              bool include_cluster, bool include_cluster_occupation,
@@ -1228,7 +1270,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("include_cluster_occupation") = true,
           py::arg("include_event_invariants") = true)
       .def("__repr__",
-           [](clexmonte::SelectedEvent const &self) -> nlohmann::json {
+           [](clexmonte::SelectedEvent const& self) -> nlohmann::json {
              std::stringstream ss;
              jsonParser json;
              occ_events::OccEventOutputOptions opt;
@@ -1251,7 +1293,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def("total_rate", &clexmonte::MonteEventList::total_rate)
       .def(
           "__iter__",
-          [](clexmonte::MonteEventList const &self) {
+          [](clexmonte::MonteEventList const& self) {
             return py::make_iterator(self.begin(), self.end());
           },
           py::keep_alive<
@@ -1385,7 +1427,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
            py::arg("output_dir") = std::nullopt, py::arg("tol") = CASM::TOL)
       .def(
           "__call__",
-          [](clexmonte::BasicAbnormalEventHandler &f, Index n_abnormal_events,
+          [](clexmonte::BasicAbnormalEventHandler& f, Index n_abnormal_events,
              std::reference_wrapper<clexmonte::EventState> event_state,
              std::reference_wrapper<clexmonte::EventData const> event_data,
              std::reference_wrapper<clexmonte::PrimEventData const>
@@ -1467,7 +1509,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           )pbdoc",
            py::arg("calculator"), py::arg("state"),
-           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+           py::arg("occ_location") = static_cast<monte::OccLocation*>(nullptr))
       .def_property_readonly("output_dir",
                              &clexmonte::MonteEventData::output_dir,
                              R"pbdoc(
@@ -1475,8 +1517,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def_property_readonly(
           "prim_event_list",
-          [](clexmonte::MonteEventData &self)
-              -> std::vector<clexmonte::PrimEventData> const & {
+          [](clexmonte::MonteEventData& self)
+              -> std::vector<clexmonte::PrimEventData> const& {
             return self.prim_event_list();
           },
           R"pbdoc(
@@ -1486,8 +1528,8 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def(
           "prim_event_required_update_neighborhood",
-          [](clexmonte::MonteEventData &self, int prim_event_index) {
-            auto const &neighborhood = self.prim_impact_info_list()
+          [](clexmonte::MonteEventData& self, int prim_event_index) {
+            auto const& neighborhood = self.prim_impact_info_list()
                                            .at(prim_event_index)
                                            .required_update_neighborhood;
             return std::vector<xtal::UnitCellCoord>(neighborhood.begin(),
@@ -1829,23 +1871,16 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           Parameters
           ----------
-          method : str
-              Monte Carlo method name. The options are:
-
-              - "semigrand_canonical": Metropolis algorithm in the semi-grand
-                canonical ensemble. Input states require `"temperature"` and
-                `"param_chem_pot"` conditions.
-              - "canonical": Metropolis algorithm in the canonical ensemble.
-                Input states require `"temperature"` and one of
-                `"param_composition"` or `"mol_composition"` conditions.
-              - "kinetic": Kinetic Monte Carlo method. Input states require
-                `"temperature"` and one of `"param_composition"` or
-                `"mol_composition"` conditions.
+          base_calculator : libcasm.clexmonte.BaseMonteCalculator
+              A base Monte Carlo calculator implementation. Built-in options
+              can be constructed using :func:`make_semigrand_canonical_calculator`,
+              :func:`make_canonical_calculator`, or
+              :func:`make_kinetic_calculator`. External packages may provide
+              additional implementations.
 
           system : libcasm.clexmonte.System
               Cluster expansion model system data. The required data depends on
-              the calculation method. See links under `method` for what system
-              data is required for each method.
+              the calculation method.
 
           params: Optional[dict] = None
               Monte Carlo calculation method parameters. Expected values
@@ -1856,11 +1891,11 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               seeded from std::random_device.
 
           )pbdoc",
-           py::arg("method"), py::arg("system"),
+           py::arg("base_calculator"), py::arg("system"),
            py::arg("params") = std::nullopt, py::arg("engine") = nullptr)
       .def(
           "make_default_sampling_fixture_params",
-          [](std::shared_ptr<calculator_type> &self, std::string label,
+          [](std::shared_ptr<calculator_type>& self, std::string label,
              bool write_results, bool write_trajectory, bool write_observations,
              bool write_status, std::optional<std::string> output_dir,
              std::optional<std::string> log_file,
@@ -1960,7 +1995,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("log_frequency_in_s") = 600.0)
       .def(
           "make_sampling_fixture_params_from_dict",
-          [](std::shared_ptr<calculator_type> &self, const nlohmann::json &data,
+          [](std::shared_ptr<calculator_type>& self, const nlohmann::json& data,
              std::string label) -> sampling_fixture_params_type {
             jsonParser json{data};
             bool time_sampling_allowed = false;
@@ -2018,7 +2053,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
 
           )pbdoc",
            py::arg("state"),
-           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+           py::arg("occ_location") = static_cast<monte::OccLocation*>(nullptr))
       .def("make_occ_location", &calculator_type::make_occ_location,
            R"pbdoc(
           Make and initialize an occupant location list for the current state
@@ -2097,7 +2132,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
               The input `run_manager` with collected results.
           )pbdoc",
            py::arg("state"), py::arg("run_manager"),
-           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+           py::arg("occ_location") = static_cast<monte::OccLocation*>(nullptr))
       .def("run_fixture", &monte_calculator_run_fixture,
            R"pbdoc(
           Perform a single run, evolving the input state
@@ -2126,7 +2161,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc",
            py::arg("state"), py::arg("sampling_fixture_params"),
            py::arg("engine") = nullptr,
-           py::arg("occ_location") = static_cast<monte::OccLocation *>(nullptr))
+           py::arg("occ_location") = static_cast<monte::OccLocation*>(nullptr))
       .def_readwrite("sampling_functions", &calculator_type::sampling_functions,
                      R"pbdoc(
           libcasm.monte.sampling.StateSamplingFunctionMap: Sampling functions
@@ -2175,7 +2210,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def(
           "add_generic_function",
-          [](calculator_type &self, std::string name, std::string description,
+          [](calculator_type& self, std::string name, std::string description,
              bool requires_event_state, std::function<void()> function,
              std::function<bool()> has_value_function, Index order) {
             // -- Validation --
@@ -2248,7 +2283,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("has_value_functions") = nullptr, py::arg("order") = 0)
       .def(
           "add_discrete_vector_int_function",
-          [](calculator_type &self, std::string name, std::string description,
+          [](calculator_type& self, std::string name, std::string description,
              /*std::vector<Index>*/ py::typing::List<int> _shape,
              bool requires_event_state,
              std::function<Eigen::VectorXl()> function,
@@ -2285,7 +2320,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                 function, has_value_function, max_size);
 
             if (value_labels.has_value()) {
-              for (auto const &pair : value_labels.value()) {
+              for (auto const& pair : value_labels.value()) {
                 f.value_labels->emplace(pair.first, pair.second);
               }
             }
@@ -2372,7 +2407,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("max_size") = 10000, py::arg("value_labels") = std::nullopt)
       .def(
           "add_discrete_vector_float_function",
-          [](calculator_type &self, std::string name, std::string description,
+          [](calculator_type& self, std::string name, std::string description,
              /*std::vector<Index>*/ py::typing::List<int> _shape,
              bool requires_event_state,
              std::function<Eigen::VectorXd()> function,
@@ -2411,7 +2446,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
                 function, has_value_function, max_size, tol);
 
             if (value_labels.has_value()) {
-              for (auto const &pair : value_labels.value()) {
+              for (auto const& pair : value_labels.value()) {
                 f.value_labels->emplace(pair.first, pair.second);
               }
             }
@@ -2500,7 +2535,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("value_labels") = std::nullopt)
       .def(
           "add_partitioned_histogram_function",
-          [](calculator_type &self, std::string name, std::string description,
+          [](calculator_type& self, std::string name, std::string description,
              bool requires_event_state, std::function<double()> function,
              std::string partition_type, bool is_log, double initial_begin,
              double bin_width, Index max_size) {
@@ -2633,7 +2668,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
       .def_property(
           "selected_event_function_params",
           &calculator_type::selected_event_function_params,
-          [](calculator_type &self,
+          [](calculator_type& self,
              std::shared_ptr<monte::SelectedEventFunctionParams>
                  selected_event_function_params) {
             self.set_selected_event_function_params(
@@ -2654,7 +2689,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def(
           "collect_hop_correlations",
-          [](calculator_type &self, Index jumps_per_position_sample,
+          [](calculator_type& self, Index jumps_per_position_sample,
              Index max_n_position_samples, bool output_incomplete_samples,
              bool stop_run_when_complete) {
             auto params_ptr = self.selected_event_function_params();
@@ -2702,7 +2737,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("stop_run_when_complete") = false)
       .def(
           "do_not_collect_hop_correlations",
-          [](calculator_type &self) {
+          [](calculator_type& self) {
             auto params_ptr = self.selected_event_function_params();
             if (params_ptr) {
               params_ptr->correlations_data_params = std::nullopt;
@@ -2719,7 +2754,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def(
           "evaluate",
-          [](calculator_type &self, std::string name,
+          [](calculator_type& self, std::string name,
              std::optional<Index> order = std::nullopt) {
             auto params_ptr = self.selected_event_function_params();
             if (params_ptr == nullptr) {
@@ -2756,7 +2791,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("name"), py::arg("order") = std::nullopt)
       .def(
           "collect",
-          [](calculator_type &self, std::string name,
+          [](calculator_type& self, std::string name,
              std::optional<double> tol = std::nullopt,
              std::optional<double> bin_width = std::nullopt,
              std::optional<double> initial_begin = std::nullopt,
@@ -2815,7 +2850,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           py::arg("spacing") = std::nullopt, py::arg("max_size") = std::nullopt)
       .def(
           "do_not_collect",
-          [](calculator_type &self, std::string name) {
+          [](calculator_type& self, std::string name) {
             auto params_ptr = self.selected_event_function_params();
             if (params_ptr) {
               params_ptr->do_not_collect(name);
@@ -2879,7 +2914,7 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
           )pbdoc")
       .def(
           "event_data_summary",
-          [](calculator_type &calculator, double energy_bin_width,
+          [](calculator_type& calculator, double energy_bin_width,
              double freq_bin_width, double rate_bin_width) {
             return std::make_shared<clexmonte::EventDataSummary>(
                 calculator.state_data(), calculator.event_data(),
@@ -3018,6 +3053,37 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
         py::arg("so_options") = std::nullopt,
         py::arg("search_path") = std::nullopt);
 
+  m.def("make_semigrand_canonical_calculator",
+        &make_semigrand_canonical_calculator, R"pbdoc(
+      Make a semi-grand canonical Monte Carlo calculator implementation.
+
+      Returns
+      -------
+      base_calculator : libcasm.clexmonte.BaseMonteCalculator
+          A semi-grand canonical base calculator that can be passed to
+          :class:`MonteCalculator`.
+      )pbdoc");
+
+  m.def("make_canonical_calculator", &make_canonical_calculator, R"pbdoc(
+      Make a canonical Monte Carlo calculator implementation.
+
+      Returns
+      -------
+      base_calculator : libcasm.clexmonte.BaseMonteCalculator
+          A canonical base calculator that can be passed to
+          :class:`MonteCalculator`.
+      )pbdoc");
+
+  m.def("make_kinetic_calculator", &make_kinetic_calculator, R"pbdoc(
+      Make a kinetic Monte Carlo calculator implementation.
+
+      Returns
+      -------
+      base_calculator : libcasm.clexmonte.BaseMonteCalculator
+          A kinetic base calculator that can be passed to
+          :class:`MonteCalculator`.
+      )pbdoc");
+
   pyMonteEventDataSummary
       .def(py::init<>(&make_event_data_summary),
            R"pbdoc(
@@ -3037,10 +3103,10 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
            py::arg("calculator"), py::arg("energy_bin_width") = 0.1,
            py::arg("freq_bin_width") = 0.1, py::arg("rate_bin_width") = 0.1)
       .def("__repr__",
-           [](clexmonte::EventDataSummary const &event_data_summary) {
+           [](clexmonte::EventDataSummary const& event_data_summary) {
              std::stringstream ss;
              jsonParser json;
-             auto const &x = event_data_summary;
+             auto const& x = event_data_summary;
              json["rate_total"]["total"] = x.total_rate;
              json["n_events_total"]["total"] = x.n_events_allowed;
              json["memory_used"] = convert_size(x.resident_bytes_used);
@@ -3048,14 +3114,14 @@ PYBIND11_MODULE(_clexmonte_monte_calculator, m) {
              return ss.str();
            })
       .def("__str__",
-           [](clexmonte::EventDataSummary const &event_data_summary) {
+           [](clexmonte::EventDataSummary const& event_data_summary) {
              OStringStreamLog log;
              print(log, event_data_summary);
              return log.ss().str();
            })
       .def(
           "to_dict",
-          [](clexmonte::EventDataSummary const &event_data_summary)
+          [](clexmonte::EventDataSummary const& event_data_summary)
               -> nlohmann::json {
             jsonParser json;
             to_json(event_data_summary, json);

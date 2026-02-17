@@ -43,6 +43,34 @@ def test_constructors_1(Clex_ZrO_Occ_System):
     assert isinstance(potential, clexmonte.MontePotential)
 
 
+def test_constructors_base_calculator(Clex_ZrO_Occ_System):
+    """Test constructing MonteCalculator with a BaseMonteCalculator instance"""
+    system = Clex_ZrO_Occ_System
+
+    base_calculator = clexmonte.make_semigrand_canonical_calculator()
+    assert isinstance(base_calculator, clexmonte.BaseMonteCalculator)
+    assert base_calculator.calculator_name == "SemiGrandCanonicalCalculator"
+
+    calculator = clexmonte.MonteCalculator(
+        method=base_calculator,
+        system=system,
+    )
+    assert isinstance(calculator, clexmonte.MonteCalculator)
+
+    state = clexmonte.MonteCarloState(
+        configuration=system.make_default_configuration(
+            transformation_matrix_to_super=np.eye(3, dtype="int") * 2,
+        ),
+        conditions={
+            "temperature": 300.0,
+            "param_chem_pot": [0.0],
+        },
+    )
+    calculator.set_state_and_potential(state=state)
+    assert isinstance(calculator.potential, clexmonte.MontePotential)
+    assert isinstance(calculator.state_data, clexmonte.StateData)
+
+
 def test_run_fixture_1(Clex_ZrO_Occ_System, tmp_path):
     """A single run, using a fixture"""
     system = Clex_ZrO_Occ_System

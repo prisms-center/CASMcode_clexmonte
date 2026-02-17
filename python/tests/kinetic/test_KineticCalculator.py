@@ -119,6 +119,36 @@ def test_constructors_1(FCCBinaryVacancy_kmc_System):
     assert len(event_data.event_list) == 0
 
 
+def test_constructors_base_calculator(FCCBinaryVacancy_kmc_System):
+    """Test constructing MonteCalculator with a BaseMonteCalculator instance"""
+    system = FCCBinaryVacancy_kmc_System
+
+    base_calculator = clexmonte.make_kinetic_calculator()
+    assert isinstance(base_calculator, clexmonte.BaseMonteCalculator)
+    assert base_calculator.calculator_name == "KineticCalculator"
+    assert base_calculator.time_sampling_allowed is True
+
+    calculator = clexmonte.MonteCalculator(
+        method=base_calculator,
+        system=system,
+    )
+    assert isinstance(calculator, clexmonte.MonteCalculator)
+
+    state = clexmonte.MonteCarloState(
+        configuration=system.make_default_configuration(
+            transformation_matrix_to_super=np.eye(3, dtype="int") * 2,
+        ),
+        conditions={
+            "temperature": 300.0,
+            "param_composition": [0.0, 0.0],
+        },
+    )
+    calculator.set_state_and_potential(state=state)
+    assert isinstance(calculator.potential, clexmonte.MontePotential)
+    assert isinstance(calculator.state_data, clexmonte.StateData)
+    assert isinstance(calculator.event_data, clexmonte.MonteEventData)
+
+
 def test_event_data_1(FCCBinaryVacancy_kmc_System):
     system = FCCBinaryVacancy_kmc_System
     calculator = clexmonte.MonteCalculator(

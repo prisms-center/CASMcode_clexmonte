@@ -10,6 +10,7 @@ from ._clexmonte_functions import (
     enforce_composition,
 )
 from ._clexmonte_monte_calculator import (
+    BaseMonteCalculator,
     EventData,
     EventID,
     EventState,
@@ -25,6 +26,9 @@ from ._clexmonte_monte_calculator import (
     PrimEventList,
     SelectedEvent,
     StateData,
+    make_canonical_calculator,
+    make_kinetic_calculator,
+    make_semigrand_canonical_calculator,
 )
 from ._clexmonte_run_management import (
     Results,

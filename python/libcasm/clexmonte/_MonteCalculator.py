@@ -1,5 +1,5 @@
 import textwrap
-from typing import Optional
+from typing import Optional, Union
 
 from libcasm.local_configuration import (
     LocalConfiguration,
@@ -7,7 +7,11 @@ from libcasm.local_configuration import (
 )
 
 from ._clexmonte_monte_calculator import (
+    BaseMonteCalculator,
     MonteCalculatorCore,
+    make_canonical_calculator,
+    make_kinetic_calculator,
+    make_semigrand_canonical_calculator,
 )
 from ._clexmonte_system import (
     System,
@@ -17,11 +21,17 @@ from ._system_methods import (
     read_abnormal_events,
 )
 
+_method_factories = {
+    "semigrand_canonical": make_semigrand_canonical_calculator,
+    "canonical": make_canonical_calculator,
+    "kinetic": make_kinetic_calculator,
+}
+
 
 class MonteCalculator(MonteCalculatorCore):
     def __init__(
         self,
-        method: str,
+        method: Union[str, BaseMonteCalculator],
         system: System,
         params: Optional[dict] = None,
     ):
@@ -30,8 +40,10 @@ class MonteCalculator(MonteCalculatorCore):
 
         Parameters
         ----------
-        method : str
-            Monte Carlo method name. The options are:
+        method : Union[str, libcasm.clexmonte.BaseMonteCalculator]
+            Monte Carlo method name or a :class:`BaseMonteCalculator` instance.
+
+            If a string, the options are:
 
             - "semigrand_canonical": Metropolis algorithm in the semi-grand
               canonical ensemble. Input states require `"temperature"` and
@@ -43,6 +55,10 @@ class MonteCalculator(MonteCalculatorCore):
               `"temperature"` and one of `"param_composition"` or
               `"mol_composition"` conditions.
 
+            If a :class:`BaseMonteCalculator` instance, it is used directly.
+            This allows external packages to provide custom calculator
+            implementations.
+
         system : libcasm.clexmonte.System
             Cluster expansion model system data. The required data depends on
             the calculation method. See links under `method` for what system
@@ -53,8 +69,22 @@ class MonteCalculator(MonteCalculatorCore):
             depends on the calculation method.
 
         """
+        if isinstance(method, str):
+            if method not in _method_factories:
+                raise ValueError(
+                    f"Unknown method: '{method}'. "
+                    f"Options are: {list(_method_factories.keys())}"
+                )
+            base_calculator = _method_factories[method]()
+        elif isinstance(method, BaseMonteCalculator):
+            base_calculator = method
+        else:
+            raise TypeError(
+                f"'method' must be a str or BaseMonteCalculator, "
+                f"got {type(method).__name__}"
+            )
         super().__init__(
-            method=method,
+            base_calculator=base_calculator,
             system=system,
             params=params,
         )
