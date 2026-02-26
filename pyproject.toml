@@ -7,7 +7,7 @@ requires = [
     "ninja",
     "pybind11~=3.0",
     "libcasm-global>=2.2.0",
-    "libcasm-xtal>=2.2.0",
+    "libcasm-xtal>=2.2.0,<3",
     "libcasm-composition>=2.2.0",
     "libcasm-clexulator>=2.2.0",
     "libcasm-configuration>=2.2.0",
@@ -33,7 +33,7 @@ classifiers = [
 ]
 dependencies = [
     "libcasm-global>=2.2.0",
-    "libcasm-xtal>=2.2.0",
+    "libcasm-xtal>=2.2.0,<3",
     "libcasm-composition>=2.2.0",
     "libcasm-clexulator>=2.2.0",
     "libcasm-configuration>=2.2.0",
