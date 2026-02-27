@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stop building for Python 3.9
 - Restrict requires-python to ">=3.10,<3.15"
 - Restrict `libcasm-xtal` dependency to `>=2.2.0,<3`
+- Stop building MacOS x86_64 wheels
 
 
 ## [2.3.0] - 2025-09-05
