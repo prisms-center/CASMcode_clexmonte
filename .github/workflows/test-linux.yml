@@ -115,7 +115,7 @@ jobs:
 
       - name: upload docs
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: libcasm-clexmonte-docs
           path: python/doc/_build/html
