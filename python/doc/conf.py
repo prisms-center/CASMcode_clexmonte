@@ -2,19 +2,19 @@ import os
 
 # -- package specific configuration --
 project = "libcasm-clexmonte"
-version = "2.4"  # The short X.Y version.
-release = "2.4.0"  # The full version, including alpha/beta/rc tags.
+version = "3.0"  # The short X.Y version.
+release = "3.0a1"  # The full version, including alpha/beta/rc tags.
 project_desc = "CASM cluster expansion Monte Carlo simulations"
 logo_text = "libcasm-clexmonte"
 github_url = "https://github.com/prisms-center/CASMcode_clexmonte/"
 pypi_url = "https://pypi.org/project/libcasm-clexmonte/"
 intersphinx_libcasm_packages = [
     ("global", "2.0"),
-    ("xtal", "2.0"),
+    ("xtal", "3"),
     ("composition", "2.0"),
-    ("clexulator", "2.0"),
-    ("configuration", "2.0"),
-    ("monte", "2.0"),
+    ("clexulator", "3"),
+    ("configuration", "3"),
+    ("monte", "3"),
 ]
 
 # -- CASM common configuration ---
