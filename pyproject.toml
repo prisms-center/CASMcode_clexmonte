@@ -7,7 +7,7 @@ requires = [
     "ninja",
     "pybind11~=3.0",
     "libcasm-global>=2.2.0",
-    "libcasm-xtal>=2.2.0",
+    "libcasm-xtal>=2.2.0,<3",
     "libcasm-composition>=2.2.0",
     "libcasm-clexulator>=2.2.0",
     "libcasm-configuration>=2.2.0",
@@ -17,13 +17,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "libcasm-clexmonte"
-version = "2.3.0"
+version = "2.4.0"
 authors = [
   { name="CASM developers", email="casm-developers@lists.engr.ucsb.edu" },
 ]
 description = "CASM cluster expansion Monte Carlo"
 readme = "README.md"
-requires-python = ">=3.9,<3.14"
+requires-python = ">=3.10,<3.15"
 license = "LGPL-2.1-or-later"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -33,7 +33,7 @@ classifiers = [
 ]
 dependencies = [
     "libcasm-global>=2.2.0",
-    "libcasm-xtal>=2.2.0",
+    "libcasm-xtal>=2.2.0,<3",
     "libcasm-composition>=2.2.0",
     "libcasm-clexulator>=2.2.0",
     "libcasm-configuration>=2.2.0",
@@ -58,8 +58,8 @@ known-first-party = ["libcasm", "casm"]
 
 
 [tool.cibuildwheel]
-# Build for python3.9, 3.10, 3.11, 3.12, 3.13
-build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+# Build for python3.10, 3.11, 3.12, 3.13, 3.14
+build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
 
 # Checkout submodules
 before-all = "git submodule update --init --recursive"
@@ -77,7 +77,7 @@ test-command = [
 
 [tool.cibuildwheel.macos]
 # C++17
-environment = { MACOSX_DEPLOYMENT_TARGET="10.15" }
+environment = { MACOSX_DEPLOYMENT_TARGET="11.0" }
 
 repair-wheel-command = ""
 

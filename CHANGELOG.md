@@ -5,6 +5,7 @@ All notable changes to `libcasm-clexmonte` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## [Unreleased]
 
 ### Added
@@ -12,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `BaseMonteCalculator` Python binding, exposing read-only properties: `calculator_name`, `time_sampling_allowed`, `update_atoms`, `save_atom_info`, `is_multistate_method`.
 - Added factory functions `make_semigrand_canonical_calculator`, `make_canonical_calculator`, and `make_kinetic_calculator` that return `BaseMonteCalculator` instances.
 - `MonteCalculator` now accepts a `BaseMonteCalculator` instance in addition to a method name string, allowing external packages to provide custom calculator implementations.
+
+
+## [2.4.0] - 2026-02-27
+
+### Changed
+
+- Build for Python 3.14
+- Stop building for Python 3.9
+- Restrict requires-python to ">=3.10,<3.15"
+- Restrict `libcasm-xtal` dependency to `>=2.2.0,<3`
+- Stop building MacOS x86_64 wheels
 
 
 ## [2.3.0] - 2025-09-05
