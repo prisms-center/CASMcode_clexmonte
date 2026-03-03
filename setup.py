@@ -2,7 +2,7 @@ from skbuild import setup
 
 setup(
     name="libcasm-clexmonte",
-    version="2.4.0",
+    version="3.0a1",
     packages=[
         "libcasm",
         "libcasm.clexmonte",
