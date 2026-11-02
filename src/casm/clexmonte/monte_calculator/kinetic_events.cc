@@ -167,23 +167,30 @@ CompleteKineticEventData<DebugMode>::CompleteKineticEventData(
     event_filters = _event_filters.value();
   }
 
-  set_encountered_abnormal_event_handling(BasicAbnormalEventHandler(
+  BasicAbnormalEventHandler encountered_abnormal_event_handling_f(
       "encountered" /*std::string _event_kind*/,
       options.throw_if_encountered_event_is_abnormal /*bool _do_throw*/,
       options.warn_if_encountered_event_is_abnormal /*bool _do_warn*/,
       options.disallow_if_encountered_event_is_abnormal /*bool _disallow*/,
       options.n_write_if_encountered_event_is_abnormal /*int _n_write*/,
       options.output_dir /*fs::path _output_dir*/,
-      options.local_corr_compare_tol /*double _tol*/));
+      options.local_corr_compare_tol /*double _tol*/);
+  set_encountered_abnormal_event_handling(
+      encountered_abnormal_event_handling_f);
+  this->encountered_abnormal_event_handling_on =
+      encountered_abnormal_event_handling_f.handling_on();
 
-  set_selected_abnormal_event_handling(BasicAbnormalEventHandler(
+  BasicAbnormalEventHandler selected_abnormal_event_handling_f(
       "selected" /*std::string _event_kind*/,
       options.throw_if_selected_event_is_abnormal /*bool _do_throw*/,
       options.warn_if_selected_event_is_abnormal /*bool _do_warn*/,
       false /*bool _disallow*/,
       options.n_write_if_selected_event_is_abnormal /*int _n_write*/,
       options.output_dir /*fs::path _output_dir*/,
-      options.local_corr_compare_tol /*double _tol*/));
+      options.local_corr_compare_tol /*double _tol*/);
+  set_selected_abnormal_event_handling(selected_abnormal_event_handling_f);
+  this->selected_abnormal_event_handling_on =
+      selected_abnormal_event_handling_f.handling_on();
 }
 
 /// \brief Update for given state, conditions, occupants, event filters
@@ -194,6 +201,9 @@ CompleteKineticEventData<DebugMode>::CompleteKineticEventData(
 /// - If there are no event filters and the supercell remains unchanged from
 ///   the previous update, then the event list and impact table are not
 ///   re-constructed, but the event rates are still re-calculated.
+/// - The event state calculators and event calculator are always
+///   re-constructed, so that changes to custom event state calculation
+///   functions and abnormal event handling are applied.
 /// - Resets the `n_encountered_abnormal` and `n_selected_abnormal`
 ///   counters.
 template <bool DebugMode>
@@ -206,66 +216,62 @@ void CompleteKineticEventData<DebugMode>::update(
   state_type const &state = *state_data->state;
   monte::OccLocation const &occ_location = *state_data->occ_location;
 
-  // if same supercell && no event filters
-  // -> just re-set state & avoid re-constructing event list
-  if (this->transformation_matrix_to_super ==
-          get_transformation_matrix_to_super(state) &&
-      !_event_filters.has_value()) {
-    for (auto &event_state_calculator : prim_event_calculators) {
-      event_state_calculator.set(&state);
+  // These are constructed/re-constructed so cluster expansions point
+  // at the current state
+  prim_event_calculators.clear();
+  for (auto const &prim_event_data : prim_event_list) {
+    prim_event_calculators.emplace_back(system,
+                                        prim_event_data.event_type_name);
+    prim_event_calculators.back().set(&state);
+
+    // Set a custom event state calculation function if it exists:
+    auto it =
+        custom_event_state_calculation_f.find(prim_event_data.event_type_name);
+    if (it != custom_event_state_calculation_f.end()) {
+      prim_event_calculators.back().set_custom_event_state_calculation(
+          it->second);
     }
-  } else {
+  }
+
+  // if same supercell && no event filters
+  // -> avoid re-constructing event list
+  if (this->transformation_matrix_to_super !=
+          get_transformation_matrix_to_super(state) ||
+      _event_filters.has_value()) {
     if (_event_filters.has_value()) {
       event_filters = _event_filters.value();
-    }
-
-    // These are constructed/re-constructed so cluster expansions point
-    // at the current state
-    prim_event_calculators.clear();
-    for (auto const &prim_event_data : prim_event_list) {
-      prim_event_calculators.emplace_back(system,
-                                          prim_event_data.event_type_name);
-      prim_event_calculators.back().set(&state);
-
-      // Set a custom event state calculation function if it exists:
-      auto it = custom_event_state_calculation_f.find(
-          prim_event_data.event_type_name);
-      if (it != custom_event_state_calculation_f.end()) {
-        prim_event_calculators.back().set_custom_event_state_calculation(
-            it->second);
-      }
     }
 
     // Construct CompleteEventList
     event_list = clexmonte::make_complete_event_list(
         prim_event_list, prim_impact_info_list, occ_location, event_filters);
 
-    // Reset "not normal" event counters
-    n_encountered_abnormal.clear();
-    n_selected_abnormal.clear();
-
-    // Construct CompleteEventCalculator
-    if (encountered_abnormal_event_handling_on == true &&
-        encountered_abnormal_event_handling_f == nullptr) {
-      throw std::runtime_error(
-          "Error in CompleteKineticEventData::update: "
-          "encountered_abnormal_event_handling_on == true && "
-          "encountered_abnormal_event_handling_f == nullptr");
-    }
-    if (selected_abnormal_event_handling_on == true &&
-        selected_abnormal_event_handling_f == nullptr) {
-      throw std::runtime_error(
-          "Error in CompleteKineticEventData::update: "
-          "selected_abnormal_event_handling_on == true && "
-          "selected_abnormal_event_handling_f == nullptr");
-    }
-    event_calculator = std::make_shared<CompleteEventCalculator<DebugMode>>(
-        prim_event_list, prim_event_calculators, event_list.events,
-        encountered_abnormal_event_handling_on,
-        encountered_abnormal_event_handling_f, n_encountered_abnormal);
-
     transformation_matrix_to_super = get_transformation_matrix_to_super(state);
   }
+
+  // Reset "not normal" event counters
+  n_encountered_abnormal.clear();
+  n_selected_abnormal.clear();
+
+  // Construct CompleteEventCalculator
+  if (encountered_abnormal_event_handling_on == true &&
+      encountered_abnormal_event_handling_f == nullptr) {
+    throw std::runtime_error(
+        "Error in CompleteKineticEventData::update: "
+        "encountered_abnormal_event_handling_on == true && "
+        "encountered_abnormal_event_handling_f == nullptr");
+  }
+  if (selected_abnormal_event_handling_on == true &&
+      selected_abnormal_event_handling_f == nullptr) {
+    throw std::runtime_error(
+        "Error in CompleteKineticEventData::update: "
+        "selected_abnormal_event_handling_on == true && "
+        "selected_abnormal_event_handling_f == nullptr");
+  }
+  event_calculator = std::make_shared<CompleteEventCalculator<DebugMode>>(
+      prim_event_list, prim_event_calculators, event_list.events,
+      encountered_abnormal_event_handling_on,
+      encountered_abnormal_event_handling_f, n_encountered_abnormal);
 
   Index n_unitcells = transformation_matrix_to_super.determinant();
 
