@@ -154,7 +154,7 @@ class CanonicalCalculator : public BaseMonteCalculator {
                             {},                     // required_local_multiclex,
                             {},                     // required_dof_spaces,
                             {},                     // required_params,
-                            {},                     // optional_params,
+                            {"verbosity"},          // optional_params,
                             false,                  // time_sampling_allowed,
                             false,                  // update_atoms,
                             false,                  // save_atom_info,
