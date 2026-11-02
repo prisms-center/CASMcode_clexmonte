@@ -801,8 +801,20 @@ void KineticCalculator::_reset() {
               base / "selected_events" / "throw", true);
 
   read_option(parser, log,
-              this->event_data_options.n_write_if_encountered_event_is_abnormal,
+              this->event_data_options.n_write_if_selected_event_is_abnormal,
               base / "selected_events" / "n_write", 100);
+
+  // "disallow" for selected events is not implemented
+  bool disallow_if_selected_event_is_abnormal = false;
+  parser.optional(disallow_if_selected_event_is_abnormal,
+                  base / "selected_events" / "disallow");
+  if (disallow_if_selected_event_is_abnormal) {
+    parser.insert_error(base / "selected_events" / "disallow",
+                        "Error: \"disallow\" is not implemented for selected "
+                        "events. Use \"encountered_events\": {\"disallow\": "
+                        "true} to prevent abnormal events from being "
+                        "selected.");
+  }
 
   // Read "impact_table_type" (optional, only takes affect for "low_memory")
   this->event_data_options.use_neighborlist_impact_table = true;
